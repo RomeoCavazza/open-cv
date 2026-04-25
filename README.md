@@ -4,8 +4,9 @@ Dépôt centralisant l'écosystème de recherche d'alternance de Roméo Cavazza.
 
 ## Architecture
 
-- `/cv-web` : Moteur de rendu CV haute fidélité (HTML/CSS/JS).
-- `/cv` : Banque de CV générés (Markdown).
+- `/cv/web` : Moteur de rendu CV haute fidélité (HTML/CSS/JS).
+- `/cv/markdown` : Banque de CV générés (Markdown).
+- `/cv/pdf` : Banque de CV générés (PDF).
 - `/offres` : Analyse et suivi des offres d'emploi.
 - `/portfolio` : Source de vérité (profil.md) et détails des projets.
 - `/docs` : Documentation technique et consignes agent.
