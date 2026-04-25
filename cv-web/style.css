@@ -335,18 +335,26 @@ body {
 
 
 @media print {
-    body {
-        background: none;
-        padding: 0;
+    html, body {
+        background: white !important;
+        background-color: white !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        width: 210mm;
+        height: 297mm;
     }
 
     .no-print {
-        display: none;
+        display: none !important;
     }
 
     .a4-page {
-        border: none;
-        margin: 0;
+        box-shadow: none !important;
+        border: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 210mm !important;
+        height: 297mm !important;
     }
 
     @page {
