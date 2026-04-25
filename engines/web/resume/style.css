@@ -22,6 +22,26 @@ body {
     line-height: 1.25;
 }
 
+/* Hide actions and padding when framed */
+@media screen {
+    body:not(:only-child), 
+    body:has(iframe),
+    html:has(> body) { /* This is tricky, let's use a class via JS in next step or just a more robust CSS */ }
+}
+/* simpler approach: just target the actions and body padding */
+@media screen {
+    @container (min-width: 0px) { /* container queries might not be supported well here */ }
+}
+
+/* Let's just add it at the end of body or use a specific selector */
+body.is-framed {
+    padding: 0 !important;
+    background: transparent !important;
+}
+body.is-framed .no-print.actions {
+    display: none !important;
+}
+
 .no-print {
     margin-bottom: 20px;
 }
@@ -125,7 +145,7 @@ body {
 }
 
 #pitch {
-    font-size: 0.63rem;
+    font-size: 0.7rem;
     line-height: 1.4;
     text-align: justify;
     opacity: 1;
@@ -134,7 +154,7 @@ body {
 }
 
 .header-meta {
-    font-size: 0.73rem;
+    font-size: 0.7rem;
     /* Légère augmentation pour lisibilité */
     font-weight: 600;
     display: flex;

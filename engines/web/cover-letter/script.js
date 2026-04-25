@@ -1,123 +1,129 @@
-async function loadCV() {
-    try {
-        const response = await fetch('data.json');
-        const data = await response.json();
-        
-        // Profile Basic
-        document.getElementById('name').textContent = data.profile.name;
-        document.getElementById('title').textContent = data.profile.title;
-        document.getElementById('pitch').textContent = data.profile.pitch;
-        document.getElementById('profile-img').src = data.profile.image;
-        
-        // Sidebar Contact
-        document.getElementById('location').textContent = data.profile.location;
-        document.getElementById('email').textContent = data.profile.email;
-        document.getElementById('phone').textContent = data.profile.phone;
-        
-        document.getElementById('website').textContent = data.profile.website;
-        safeSetHref('website-link', "https://" + data.profile.website);
-        
-        document.getElementById('linkedin').textContent = data.profile.linkedin;
-        safeSetHref('linkedin-link', "https://www.linkedin.com/" + data.profile.linkedin);
-        
-        document.getElementById('github').textContent = data.profile.github;
-        safeSetHref('github-link', "https://" + data.profile.github);
-        
-        // Header Meta
-        document.getElementById('duration').textContent = data.apprenticeship.duration + ' — à partir de ' + data.apprenticeship.start;
-        document.getElementById('rhythm').textContent = data.apprenticeship.rhythm;
-            
-        // Skills (FIXED)
-        const skillsContainer = document.getElementById('skills-container');
-        skillsContainer.innerHTML = '';
-        data.skills.forEach(cat => {
-            const div = document.createElement('div');
-            div.className = 'skill-category';
-            div.innerHTML = `<h4>${cat.category}</h4><div class="skill-items">${cat.items.join(', ')}</div>`;
-            skillsContainer.appendChild(div);
-        });
+async function loadCoverLetter() {
+  try {
+    const response = await fetch("data.json");
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
 
-        // Languages (FIXED)
-        const langContainer = document.getElementById('languages-container');
-        langContainer.innerHTML = '';
-        data.languages.forEach(lang => {
-            const div = document.createElement('div');
-            div.className = 'contact-item'; 
-            div.innerHTML = `<strong>${lang.name} :</strong> ${lang.level}`;
-            langContainer.appendChild(div);
-        });
+    const data = await response.json();
+    const { profile, letter } = data;
 
-        // Experiences & Projects (FIXED)
-        const expContainer = document.getElementById('experiences-container');
-        expContainer.innerHTML = '';
-        data.experiences.forEach(exp => {
-            const div = document.createElement('div');
-            div.className = 'exp-item';
-            
-            if (exp.role) {
-                // Style Emploi
-                div.innerHTML = `
-                    <h4>${exp.role}</h4>
-                    <div class="company">${exp.company}</div>
-                    <div class="period">Stage de 6 mois (${exp.period})</div>
-                    <ul>${exp.description.map(line => `<li>${line}</li>`).join('')}</ul>
-                `;
-            } else {
-                // Style Projet/Hackathon (Gras-Italique, Inline)
-                div.innerHTML = `
-                    <div class="project-line">
-                        <span class="company-bold">${exp.company}</span> <span class="period">(${exp.period})</span>
-                    </div>
-                    <ul>${exp.description.map(line => `<li>${line}</li>`).join('')}</ul>
-                `;
-            }
-            expContainer.appendChild(div);
-        });
+    setText("author-name", profile.name);
+    setText("author-address", profile.address);
+    setText("author-phone", profile.phone);
+    setText("author-email", profile.email);
 
-        // Education
-        const eduContainer = document.getElementById('education-container');
-        eduContainer.innerHTML = '';
-        data.education.forEach(edu => {
-            const div = document.createElement('div');
-            div.className = 'edu-item';
-            div.innerHTML = `
-                <strong>${edu.school}</strong> ${edu.period ? `<span class="period">(${edu.period})</span>` : ''}
-                <span class="degree">${edu.degree}</span>
-            `;
-            eduContainer.appendChild(div);
-        });
+    setLink("author-linkedin", profile.links?.linkedin);
+    setLink("author-github", profile.links?.github);
+    setLink("author-website", profile.links?.website);
 
-        lucide.createIcons();
-    } catch (error) { console.error(error); }
+    setText("letter-company", letter.company);
+    setText("letter-date", letter.date);
+    setText("letter-subject", letter.subject);
+    setText("letter-greeting", letter.greeting);
+    setPitchBlock(letter);
+
+    const paragraphsContainer = document.getElementById("letter-paragraphs");
+    if (paragraphsContainer) {
+      paragraphsContainer.innerHTML = "";
+      (letter.paragraphs || []).forEach((text) => {
+        const paragraph = document.createElement("p");
+        paragraph.className = "paragraph";
+        paragraph.textContent = text;
+        paragraphsContainer.appendChild(paragraph);
+      });
+    }
+
+    setText("letter-closing", letter.closing);
+
+    const signatureEl = document.getElementById("letter-signature");
+    if (signatureEl && letter.signature) {
+      signatureEl.innerHTML = letter.signature
+        .split("\n")
+        .map((line) => line.trim())
+        .filter(Boolean)
+        .join("<br>");
+    }
+
+    if (window.lucide?.createIcons) {
+      window.lucide.createIcons();
+    }
+  } catch (error) {
+    console.error("Unable to load cover letter data:", error);
+  }
 }
 
-function safeSetHref(id, url) {
-    const el = document.getElementById(id);
-    if (el) el.href = url;
+function setPitchBlock(letter) {
+  const el = document.getElementById("letter-pitch");
+  if (!el) return;
+
+  const collectLines = (input, target) => {
+    if (Array.isArray(input)) {
+      input.forEach((item) => collectLines(item, target));
+      return;
+    }
+    if (input == null) return;
+    const trimmed = String(input).trim();
+    if (trimmed) {
+      target.push(trimmed);
+    }
+  };
+
+  const pitchLines = [];
+  const metadataLines = [];
+
+  collectLines(letter.pitch, pitchLines);
+  collectLines(letter.metadata, metadataLines);
+
+  const combined = pitchLines.concat(metadataLines);
+  if (!combined.length) {
+    el.remove();
+    return;
+  }
+
+  el.innerHTML = "";
+  combined.forEach((line, index) => {
+    if (index > 0) {
+      el.appendChild(document.createElement("br"));
+    }
+    const span = document.createElement("span");
+    span.className = "pitch-line";
+    
+    // Bold labels (text before :)
+    if (line.includes(" :")) {
+      const parts = line.split(" :");
+      span.innerHTML = `<strong>${parts[0]} :</strong>${parts[1]}`;
+    } else {
+      span.textContent = line;
+    }
+    
+    el.appendChild(span);
+  });
 }
 
-document.getElementById('download-pdf').addEventListener('click', () => window.print());
-document.getElementById('download-pdf').addEventListener('click', () => window.print());
+function setText(id, value) {
+  const el = document.getElementById(id);
+  if (el && value) {
+    el.textContent = value;
+  }
+}
 
-// Navigation Logic
-document.querySelectorAll('.dot').forEach(dot => {
-    dot.addEventListener('click', () => {
-        const target = dot.getAttribute('data-target');
-        
-        // Update dots
-        document.querySelectorAll('.dot').forEach(d => d.classList.remove('active'));
-        dot.classList.add('active');
-        
-        // Update pages
-        document.querySelectorAll('.a4-page').forEach(page => {
-            if (page.id === target) {
-                page.classList.remove('hidden');
-            } else {
-                page.classList.add('hidden');
-            }
-        });
-    });
+function setLink(id, value) {
+  const el = document.getElementById(id);
+  if (!el || !value) return;
+
+  const href = /^https?:\/\//i.test(value) ? value : `https://${value}`;
+  el.href = href;
+}
+
+const downloadButton = document.getElementById("download-pdf");
+if (downloadButton) {
+  downloadButton.addEventListener("click", () => window.print());
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  if (window.self !== window.top) {
+    document.body.classList.add("is-framed");
+  }
+  loadCoverLetter();
 });
-
-window.addEventListener('DOMContentLoaded', loadCV);
-

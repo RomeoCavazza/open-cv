@@ -1,37 +1,85 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CAVAZZA_Roméo_Cover_Letter</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/lucide@latest"></script>
-</head>
-<body>
-    <div class="no-print actions">
-        <button id="download-pdf" class="btn">
-            <i data-lucide="download"></i> Download PDF (A4)
-        </button>
-    </div>
-
-    <main id="cl" class="a4-page">
-        <div class="cl-content" style="padding: 50px 50px 0 50px; flex: 1; display: flex; flex-direction: column; justify-content: flex-start;">
-            <h1 style="margin-bottom: 20px;">Lettre de Motivation</h1>
-            <p style="font-size: 1.1rem; line-height: 1.8;">
-                Madame, Monsieur,<br><br>
-                [Le contenu de votre lettre viendra ici]<br><br>
-                Ce moteur est prêt pour le rendu typographique de vos motivations.
-            </p>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>CAVAZZA_Roméo_Cover_Letter</title>
+        <link rel="stylesheet" href="style.css" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap"
+            rel="stylesheet"
+        />
+        <script src="https://unpkg.com/lucide@latest"></script>
+    </head>
+    <body>
+        <div class="no-print actions">
+            <button id="download-pdf" class="btn">
+                <i data-lucide="download"></i> Download PDF (A4)
+            </button>
         </div>
-    </div>
 
-    <script src="script.js"></script>
+        <main id="cl" class="a4-page">
+            <header class="cl-header">
+                <div class="author-block">
+                    <h1 id="author-name"></h1>
+                    <div class="author-contact">
+                        <div id="author-address"></div>
+                        <div id="author-phone"></div>
+                        <div id="author-email"></div>
+                    </div>
+                    <div class="author-links">
+                        <a
+                            id="author-linkedin"
+                            href="#"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            >LinkedIn</a
+                        >
+                        <span class="divider">|</span>
+                        <a
+                            id="author-github"
+                            href="#"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            >GitHub</a
+                        >
+                        <span class="divider">|</span>
+                        <a
+                            id="author-website"
+                            href="#"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            >Site web</a
+                        >
+                    </div>
+                </div>
+                <div class="letter-meta">
+                    <div id="letter-company"></div>
+                    <div id="letter-date"></div>
+                </div>
+            </header>
+
+            <section class="cl-body">
+                <h2 id="letter-subject"></h2>
+                <p id="letter-greeting"></p>
+                <div id="letter-paragraphs"></div>
+                <p id="letter-closing" class="closing"></p>
+                <p id="letter-signature" class="signature"></p>
+            </section>
+        </main>
+
+        <script src="script.js"></script>
         <script>
-            if (window.lucide) window.lucide.createIcons();
-            else document.addEventListener('DOMContentLoaded', () => window.lucide && window.lucide.createIcons());
+            if (window.lucide) {
+                window.lucide.createIcons();
+            } else {
+                document.addEventListener(
+                    "DOMContentLoaded",
+                    () => window.lucide && window.lucide.createIcons(),
+                );
+            }
         </script>
-</body>
+    </body>
 </html>
