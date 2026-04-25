@@ -19,7 +19,11 @@ async function loadCoverLetter() {
 
     setText("letter-company", letter.company);
     setText("letter-date", letter.date);
-    setText("letter-subject", letter.subject);
+    
+    // Bold only the "ALTERNANCE" part of the subject
+    const subjectContent = letter.subject.replace(/^\s*(ALTERNANCE)/i, '<strong>$1</strong>');
+    setText("letter-subject", subjectContent, true);
+    
     setText("letter-greeting", letter.greeting);
     setPitchBlock(letter);
 
@@ -101,10 +105,14 @@ function setPitchBlock(letter) {
   });
 }
 
-function setText(id, value) {
+function setText(id, value, html = false) {
   const el = document.getElementById(id);
   if (el && value) {
-    el.textContent = value;
+    if (html) {
+      el.innerHTML = value;
+    } else {
+      el.textContent = value;
+    }
   }
 }
 

@@ -1,5 +1,5 @@
 :root {
-    --font-main: "Inter", sans-serif;
+    --font-main: "Arimo", "Open Sans", sans-serif;
     --color-body: #1f2933;
     --color-muted: #a6a6a6;
     --color-accent: #88b7e1;
@@ -150,7 +150,7 @@ body.is-framed .no-print.actions {
 .cl-body {
     padding: 0 56px 56px;
     display: grid;
-    gap: 16px;
+    gap: 24px;
     font-size: 16px;
     line-height: 1.75;
     color: var(--color-body);
@@ -159,10 +159,14 @@ body.is-framed .no-print.actions {
 #letter-subject {
     text-transform: uppercase;
     font-size: 15px;
-    letter-spacing: 0.2em;
+    letter-spacing: 0.02em;
     color: var(--color-accent);
-    font-weight: 700;
+    font-weight: 400;
     margin-top: 8px;
+}
+
+#letter-subject strong {
+    font-weight: 700;
 }
 
 #letter-greeting {
