@@ -78,7 +78,7 @@ body.is-framed .no-print.actions {
 .cl-header {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
+    align-items: flex-end;
     padding: 48px 56px 32px;
     position: relative;
     overflow: hidden;
@@ -91,10 +91,10 @@ body.is-framed .no-print.actions {
 }
 
 .author-block h1 {
-    font-size: 26px;
+    font-size: 24px;
     font-weight: 700;
     letter-spacing: 0.02em;
-    margin-bottom: 10px;
+    margin-bottom: 4px;
     color: var(--color-body);
     text-transform: uppercase;
 }
@@ -104,7 +104,7 @@ body.is-framed .no-print.actions {
     gap: 4px;
     font-size: 14px;
     color: var(--color-muted);
-    margin-bottom: 12px;
+    margin-bottom: 8px;
 }
 
 .author-links {
@@ -135,22 +135,30 @@ body.is-framed .no-print.actions {
 .letter-meta {
     text-align: right;
     display: grid;
-    gap: 6px;
-    align-items: flex-end;
+    gap: 2px;
     font-size: 15px;
     font-weight: 600;
     color: var(--color-body);
 }
 
 .letter-meta #letter-company {
-    font-size: 18px;
-    letter-spacing: 0.08em;
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    color: var(--color-body);
+}
+
+.letter-meta #letter-date {
+    color: var(--color-accent);
+    font-size: 14px;
+    font-weight: 500;
 }
 
 .cl-body {
     padding: 0 56px 56px;
     display: grid;
-    gap: 24px;
+    gap: 32px;
+    align-content: start;
     font-size: 16px;
     line-height: 1.75;
     color: var(--color-body);
@@ -162,7 +170,6 @@ body.is-framed .no-print.actions {
     letter-spacing: 0.02em;
     color: var(--color-accent);
     font-weight: 400;
-    margin-top: 8px;
 }
 
 #letter-subject strong {
@@ -171,7 +178,6 @@ body.is-framed .no-print.actions {
 
 #letter-greeting {
     font-weight: 600;
-    margin-top: 8px;
 }
 
 .pitch {
@@ -195,12 +201,17 @@ body.is-framed .no-print.actions {
     margin-bottom: 0;
 }
 
+#letter-paragraphs {
+    display: grid;
+    gap: 32px;
+}
+
 .paragraph {
     text-align: justify;
+    margin: 0;
 }
 
 .closing {
-    margin-top: 8px;
     font-weight: 500;
 }
 
