@@ -63,20 +63,20 @@ CS50W — Web Programming with Python and JavaScript
 
 COMPETENCES
 
-Développement IA
-Python (Pandas, NumPy, Scikit-learn, PyTorch, TensorFlow), LangChain, LangGraph
+IA
+LangChain, LangGraph, RAG, Agents IA, Ollama, Qdrant, pgvector
 
-Architectures LLM
-RAG (Retrieval-Augmented Generation), Agents IA autonomes, Vecteurs DB (Qdrant, pgvector)
+Python
+NumPy, Pandas, Scikit-learn, PyTorch, TensorFlow
 
-Infrastructure & DevOps
-Docker, Kubernetes, Linux (NixOS), Git, GitLab CI/CD
+DevOps
+Docker, Kubernetes, NixOS, GitLab CI/CD, GitHub Actions
 
-Backend & API
-FastAPI, Flask, PostgreSQL, SQL, REST, Industrialisation d'APIs
+Backend
+FastAPI, PostgreSQL, Redis, Rust, Bash, SQLAlchemy
 
-Sécurité & Qualité
-Testing (Pytest), Documentation technique, Conformité (GDPR/ISO), Modèles de guardrail
+Qualité
+Pytest, GDB, Valgrind, Guardrails, ISO
 
 ---
 

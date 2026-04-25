@@ -66,10 +66,11 @@ Avant toute rédaction, l'IA doit impérativement s'imprégner du contexte dans 
 - **Précision :** Utiliser les metrics et détails techniques issus du profil.md et des README.
 - **Honnêteté :** Interdiction de mentir ou d'inventer des faits.
 
-### 4. Compétences
-- **Stratégie :** Fixer à 5 familles de compétences maximum.
-- **Priorité :** L'ordre des familles et des outils doit refléter les priorités de l'offre.
-- **Qualité :** Noms de technos uniquement, pas de mots-clés vagues.
+### 4. Compétences (Standard Technique)
+- **Structure :** Fixer à **5 thématiques** courtes et adaptées à l'offre (ex: IA, DevOps, Backend).
+- **Wording :** Titre de catégorie de 1 ou 2 mots maximum. Éviter le symbole "&".
+- **Formatage :** Lister uniquement les outils/technos. Interdiction d'utiliser des parenthèses.
+- **Priorisation :** Classer les technos par pertinence décroissante par rapport à l'offre cible.
 
 ---
 
