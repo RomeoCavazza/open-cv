@@ -6,8 +6,14 @@
     <title>CV & Lettre de Motivation</title>
     <style>
         :root {
-            --bg-color: #f1f5f9;
-            --page-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            --bg-color: #f8fafc;
+            --sidebar-width: 320px;
+            --page-shadow: none; /* Shadow removed */
+            --primary-color: #1d4ed8;
+            --sidebar-bg: #ffffff;
+            --sidebar-text: #1e293b;
+            --border-color: #e2e8f0;
+            --hover-bg: #f1f5f9;
         }
         body {
             background: var(--bg-color);
@@ -17,29 +23,150 @@
             height: 100vh;
             overflow: hidden;
             display: flex;
-            flex-direction: column;
-            align-items: center;
         }
+        
+        /* Sidebar Styles (IDE Style Tree) */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--sidebar-bg);
+            color: var(--sidebar-text);
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--border-color);
+            z-index: 100;
+        }
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .sidebar-header h2 {
+            margin: 0;
+            font-size: 0.95rem;
+            font-weight: 800;
+            color: var(--sidebar-text);
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+        .sidebar-header p {
+            margin: 4px 0 0;
+            font-size: 0.7rem;
+            color: #64748b;
+            font-weight: 500;
+        }
+        .offers-tree {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px 0;
+        }
+        
+        .tree-group {
+            margin-bottom: 2px;
+        }
+        .tree-header {
+            display: flex;
+            align-items: center;
+            padding: 6px 16px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            transition: background 0.2s;
+            user-select: none;
+        }
+        .tree-header:hover {
+            background: var(--hover-bg);
+        }
+        .tree-header::before {
+            content: '▶';
+            display: inline-block;
+            font-size: 0.6rem;
+            margin-right: 8px;
+            transition: transform 0.2s;
+            color: #94a3b8;
+        }
+        .tree-group.open .tree-header::before {
+            transform: rotate(90deg);
+        }
+        
+        .tree-content {
+            display: none;
+            padding-left: 12px;
+        }
+        .tree-group.open .tree-content {
+            display: block;
+        }
+        
+        .offer-item {
+            padding: 6px 16px 6px 36px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            color: #475569;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            position: relative;
+            transition: all 0.1s;
+        }
+        .offer-item:hover {
+            background: var(--hover-bg);
+            color: var(--primary-color);
+        }
+        .offer-item.active {
+            background: #eff6ff;
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+        .offer-item.active::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: var(--primary-color);
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* Top Bar modified: No background, no border */
+        .top-bar {
+            height: 60px;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 40px;
+            box-sizing: border-box;
+            background: transparent; /* Bandeau supprimé */
+            z-index: 50;
+            position: absolute;
+            top: 0;
+        }
+
         .main-wrapper {
             flex: 1;
             width: 100%;
             display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
             padding: 20px;
             box-sizing: border-box;
+            background: var(--bg-color);
         }
         .iframe-container {
             position: relative;
-            /* A4 Ratio: 210/297 = 0.707 */
-            aspect-ratio: 210 / 297;
-            height: 90vh;
-            max-width: 95vw;
             background: white;
-            box-shadow: var(--page-shadow);
-            border-radius: 4px;
+            box-shadow: none; /* Ombre supprimée */
+            border-radius: 2px;
             overflow: hidden;
+            border: 1px solid var(--border-color);
         }
         iframe {
             width: 210mm;
@@ -54,68 +181,72 @@
         iframe.active {
             display: block;
         }
+
         .nav-dots {
             display: flex;
-            justify-content: center;
             gap: 12px;
-            margin-top: 15px;
-            margin-bottom: 10px;
-            z-index: 10;
         }
         .dot {
-            width: 16px;
-            height: 16px;
+            width: 10px;
+            height: 10px;
             border-radius: 50%;
-            background: #d1d5db;
-            transition: background 0.2s;
+            background: #cbd5e1;
             cursor: pointer;
+            transition: all 0.3s;
         }
         .dot.active {
-            background: #2563eb;
+            background: var(--primary-color);
+            transform: scale(1.1);
         }
-        .dot:hover:not(.active) {
-            background: #9ca3af;
-        }
-        .actions {
-            margin-bottom: 20px;
-        }
-        .download-btn {
-            background: #1e293b;
+
+        .btn-download {
+            background: var(--primary-color);
             color: white;
             border: none;
-            padding: 10px 24px;
-            border-radius: 8px;
+            padding: 8px 18px;
+            border-radius: 6px;
             cursor: pointer;
             font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            font-size: 0.8rem;
             transition: all 0.2s;
         }
-        .download-btn:hover {
-            background: #334155;
-            transform: translateY(-1px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        .btn-download:hover {
+            opacity: 0.9;
         }
+
+        /* Scrollbar */
+        .offers-tree::-webkit-scrollbar { width: 4px; }
+        .offers-tree::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 2px; }
     </style>
 </head>
 <body>
-    <div class="main-wrapper">
-        <div class="actions">
-            <button id="download-btn" class="download-btn">
-                <span>Télécharger en PDF (A4)</span>
-            </button>
+    <aside class="sidebar">
+        <header class="sidebar-header">
+            <h2>EXPLORATEUR D'OFFRES</h2>
+            <p id="offer-count">Calcul des offres...</p>
+        </header>
+        <nav class="offers-tree" id="offers-tree"></nav>
+    </aside>
+
+    <main class="main-content">
+        <div class="top-bar">
+            <!-- Navigation dots without background -->
+            <div class="nav-dots">
+                <div class="dot active" data-target="resume" title="CV"></div>
+                <div class="dot" data-target="cover" title="Lettre de Motivation"></div>
+            </div>
+            <!-- Download button without backgroud bar -->
+            <button id="download-btn" class="btn-download">Télécharger PDF</button>
         </div>
-        <div class="iframe-container" id="container">
-            <iframe id="iframe-resume" src="resume/index.html" class="active"></iframe>
-            <iframe id="iframe-cover" src="cover-letter/index.html"></iframe>
+
+        <div class="main-wrapper">
+            <div class="iframe-container" id="container">
+                <iframe id="iframe-resume" src="resume/index.html" class="active"></iframe>
+                <iframe id="iframe-cover" src="cover-letter/index.html"></iframe>
+            </div>
         </div>
-        <div class="nav-dots">
-            <div class="dot active" data-target="resume" title="CV"></div>
-            <div class="dot" data-target="cover" title="Lettre de Motivation"></div>
-        </div>
-    </div>
+    </main>
+
     <script>
         const container = document.getElementById('container');
         const iframes = {
@@ -123,13 +254,22 @@
             cover: document.getElementById('iframe-cover')
         };
         const dots = document.querySelectorAll('.dot');
+        const offersTree = document.getElementById('offers-tree');
+        const offerCountLabel = document.getElementById('offer-count');
 
         function updateScaling() {
-            const containerWidth = container.clientWidth;
-            const targetWidth = 210 * 3.7795275591; // 210mm in pixels at 96dpi
-
-            const scale = containerWidth / targetWidth;
+            const wrapper = document.querySelector('.main-wrapper');
+            const availableHeight = wrapper.clientHeight - 80;
+            const availableWidth = wrapper.clientWidth - 80;
             
+            const targetHeight = 297 * 3.7795275591;
+            const targetWidth = 210 * 3.7795275591;
+            
+            const scale = Math.min(availableHeight / targetHeight, availableWidth / targetWidth);
+            
+            container.style.width = `${targetWidth * scale}px`;
+            container.style.height = `${targetHeight * scale}px`;
+
             Object.values(iframes).forEach(iframe => {
                 iframe.style.transform = `scale(${scale})`;
             });
@@ -137,7 +277,6 @@
 
         window.addEventListener('resize', updateScaling);
         window.addEventListener('load', updateScaling);
-        // Trigger once immediately
         setTimeout(updateScaling, 100);
 
         dots.forEach(dot => {
@@ -154,10 +293,67 @@
 
         document.getElementById('download-btn').addEventListener('click', () => {
             const activeIframe = Object.values(iframes).find(f => f.classList.contains('active'));
-            if (activeIframe) {
-                activeIframe.contentWindow.print();
-            }
+            if (activeIframe) activeIframe.contentWindow.print();
         });
+
+        async function loadOffers() {
+            try {
+                const response = await fetch('data/offres/liste.json');
+                const data = await response.json();
+                const entries = data.entries || [];
+                
+                offerCountLabel.textContent = `${entries.length} offres synchronisées`;
+                
+                const groups = {};
+                entries.forEach(offer => {
+                    const cat = offer.category || "Autres";
+                    if (!groups[cat]) groups[cat] = [];
+                    groups[cat].push(offer);
+                });
+
+                Object.keys(groups).forEach((cat, index) => {
+                    const groupDiv = document.createElement('div');
+                    groupDiv.className = 'tree-group';
+                    if (index === 0) groupDiv.classList.add('open');
+
+                    const header = document.createElement('div');
+                    header.className = 'tree-header';
+                    header.textContent = `${cat} (${groups[cat].length})`;
+                    header.onclick = () => groupDiv.classList.toggle('open');
+
+                    const content = document.createElement('div');
+                    content.className = 'tree-content';
+
+                    groups[cat].forEach(offer => {
+                        const item = document.createElement('div');
+                        item.className = 'offer-item';
+                        item.title = offer.title;
+                        item.textContent = offer.title;
+                        item.onclick = (e) => {
+                            e.stopPropagation();
+                            document.querySelectorAll('.offer-item').forEach(i => i.classList.remove('active'));
+                            item.classList.add('active');
+                        };
+                        content.appendChild(item);
+                    });
+
+                    groupDiv.appendChild(header);
+                    groupDiv.appendChild(content);
+                    offersTree.appendChild(groupDiv);
+                });
+            } catch (err) {
+                offerCountLabel.textContent = "Erreur sync JSON";
+            }
+        }
+        loadOffers();
     </script>
+</body>
+</html>
+</body>
+</html>
+</body>
+</html>
+</body>
+</html>
 </body>
 </html>
