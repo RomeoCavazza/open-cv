@@ -38,7 +38,7 @@ Stage de 6 mois (Février-Juillet 2025)
 Veyl.io — Social Intelligence Platform (2025 – présent)
 • Pipeline d'ingestion Meta Graph API (Advanced Access) et TikTok Graph pour monitoring social
 • Moteur de recherche vectorielle hybride (Qdrant/FAISS) pour l'analyse sémantique à grande échelle
-• Orchestration de modèles Vision et LLM via FastAPI, couplée à des workflows n8n/Make
+• Orchestration de modèles Vision et LLM via FastAPI
 
 ShellGeist — Agent IA Terminal (2025 – présent)
 • Agent autonome (Python AsyncIO) pilotant des modèles locaux (Ollama)
