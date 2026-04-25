@@ -32,21 +32,23 @@ python scripts/scrape_offres.py --config /home/tco/Bureau/alternance/config/scra
 
 # 🚀 Mission : Personnalisation Massive de CV
 
-**Objectif :** Générer des CV personnalisés au format Markdown dans `/home/tco/Bureau/alternance/cv/markdown/new/`, adaptés chacun à une offre spécifique parmi celles disponibles.
+**Objectif :** Générer des CV personnalisés adaptés chacun à une offre spécifique parmi celles disponibles. 
+- **Standard (ATS) :** Fichiers Markdown dans `/cv/markdown/new/`.
+- **Premium (High-Fidelity) :** Mise à jour de `cv-web/data.json` pour export PDF via le moteur web.
 
 ## 🧭 Protocole de Boot (Ordre d'allumage)
 Avant toute rédaction, l'IA doit impérativement s'imprégner du contexte dans cet ordre :
 1. Lire /home/tco/Bureau/alternance/offres/liste.md pour voir les cibles.
 2. Lister /home/tco/Bureau/alternance/offres/offres/ pour vérifier les données RAW.
 3. Lire /home/tco/Bureau/alternance/portfolio/profil.md (Source de vérité absolue).
-4. Analyser /home/tco/Bureau/alternance/cv/markdown/modele/ et /old/ pour comprendre la structure.
+4. **Analyser /home/tco/Bureau/alternance/cv-web/data.json** (Référentiel du design actuel).
 5. Explorer les README de /home/tco/Bureau/alternance/portfolio/projets/ pour les détails techniques.
 
 ## 📂 Ressources & Sources d'Autorité
 - **Source de Vérité (Moi) :** [/portfolio/profil.md](file:///home/tco/Bureau/alternance/portfolio/profil.md) (Identité, expériences, technos, projets).
+- **Moteur High-Fidelity :** [/cv-web/](file:///home/tco/Bureau/alternance/cv-web/) (Structure HTML/CSS et données JSON pour les envois stratégiques).
 - **Détail Projets :** [/portfolio/projets/](file:///home/tco/Bureau/alternance/portfolio/projets) (Précision technique des side projects).
-- **Inspiration & Forme :** [/cv/markdown/old/](file:///home/tco/Bureau/alternance/cv/markdown/old/) (Structures thématiques par catégorie : IA, Dev, IoT...).
-- **Conteneur cible :** [/cv/markdown/new/](file:///home/tco/Bureau/alternance/cv/markdown/new/) (Destination des fichiers générés).
+- **Documentation Centrale :** [/README.md](file:///home/tco/Bureau/alternance/README.md) (Guide d'utilisation de l'écosystème).
 
 ## 🎯 Consignes de Rédaction
 
