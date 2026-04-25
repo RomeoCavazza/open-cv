@@ -1,64 +1,51 @@
-# Consignes pour l'IA (Agentic Coding)
+# Consignes d'Utilisation
 
-Ce document contient les règles d'engagement, le protocole de boot et les consignes de rédaction strictes pour toute IA intervenant sur ce dépôt.
+Ce document définit les protocoles et les règles de gestion des données pour l'automatisation des CV.
 
-## Protocole de Boot (Ordre d'allumage recommandé)
+## Protocole de Prise de Contexte
 
-Avant toute action ou rédaction, l'agent doit impérativement s'imprégner du contexte dans cet ordre :
+L'agent doit consulter les fichiers dans l'ordre suivant :
 
-1. **`README.md`** : Aperçu rapide de l'architecture.
-2. **`/data/user/profile.md`** : **Source de vérité absolue** (Identité, expériences, technos, projets).
-3. **`/docs/instructions.md`** : Présentes consignes et règles d'engagement.
-4. **`/docs/how_it_works.md`** : Compréhension technique des outils et de la structure du repo.
-5. **`/data/offres/liste.json`** : Pour identifier les cibles de candidature.
-6. **`/data/offres/raw/`** : Pour analyser les données RAW des offres scrapées.
-7. **`/engines/web/resume/data.json`** : Référentiel complet (contenu et labels dynamiques).
-8. **`/data/user/projets/`** : Pour extraire les détails techniques spécifiques des side projects via leurs README respectifs.
+1. **`README.md`** : Vue d'ensemble de l'architecture.
+2. **`/data/user/profile.md`** : Données personnelles de référence.
+3. **`/docs/how_it_works.md`** : Détails techniques sur le fonctionnement des scripts.
+4. **`/data/offres/liste.json`** : Liste des cibles de candidature.
+5. **`/data/instances/`** : Dossiers de travail pour chaque candidature.
 
 ---
 
-## Mission 1 : Scraping d'Offres
+## Mission 1 : Collecte d'Offres
 
-Si l'agent est chargé de scrapper de nouvelles offres :
-1. Explorer chaque lien de la liste fournie.
-2. Extraire l'intégralité du contenu textuel (description, prérequis, infos utiles).
-3. Restituer le texte proprement en conservant la structure.
-4. Sauvegarder chaque offre dans un fichier Markdown unique dans `/data/offres/raw/`.
-5. Utiliser des noms de fichiers clairs basés sur le poste ou l'entreprise.
+1. Extraire le contenu textuel des offres (descriptions, prérequis).
+2. Sauvegarder chaque offre au format Markdown dans `/data/offres/raw/`.
 
 ---
 
-## Mission 2 : Personnalisation de CV
+## Mission 2 : Personnalisation
 
-L'objectif est de générer des CV personnalisés adaptés chacun à une offre spécifique.
-
-### 1. Structure Générale
-- **Format** : Markdown pur pour l'ATS ou mise à jour du `data.json` pour le Web.
-- **Nommage** : Enregistrer sous `engines/output/resume/cv-[nom-de-l-offre].md` (ou `.html`).
-- **Intégrité** : Ne jamais modifier les sections CONTACT et LANGUES sans ordre explicite.
-- **Zéro Emoji** : Interdiction formelle d'utiliser des emojis dans les CV finaux.
+### 1. Structure
+- **Format** : Mise à jour des fichiers `resume.json` et `cover-letter.json` dans chaque instance.
+- **Règles strictes** : Ne pas modifier les sections CONTACT et LANGUES sans instruction spécifique.
+- **Style** : Professionnel, sans emojis.
 
 ### 2. Adaptation du Profil
-- **Titre** : Doit être l'intitulé exact de l'offre (concis).
-- **Pitch** : Reformuler l'accroche pour qu'elle résonne directement avec les besoins de l'entreprise.
-- **Formations** : Sélectionner le parcours spécifique le plus pertinent.
+- **Titre** : Reprendre l'intitulé de l'offre.
+- **Accroche** : Adapter le paragraphe d'introduction en fonction de l'entreprise.
+- **Formation** : Adapter l'intitulé du Master Epitech selon le domaine.
 
 ### 3. Expériences & Projets
-- **Pivot Technologique** : Réordonner les projets pour mettre en valeur ceux utilisant la stack de l'offre.
-- **Précision** : Utiliser les metrics et détails techniques issus du `profil.md` et des README de projets.
-- **Honnêteté** : Interdiction stricte de mentir ou d'inventer des faits.
+- **Pertinence** : Prioriser les projets utilisant la stack technologique demandée.
+- **Précision** : Utiliser les détails techniques issus du profil et des README de projets.
+- **Données** : Ne pas inventer d'expériences.
 
-### 4. Compétences (Standard Technique)
-- **Structure** : Fixer à **5 thématiques** courtes et adaptées (ex: IA, DevOps, Backend).
-- **Wording** : Titre de catégorie de 1 ou 2 mots maximum. Éviter le symbole "&".
-- **Formatage** : Lister uniquement les outils/technos. Interdiction d'utiliser des parenthèses.
-- **Priorisation** : Classer les technos par pertinence décroissante par rapport à l'offre.
+### 4. Compétences
+- **Structure** : Organiser en 5 catégories thématiques.
+- **Formatage** : Lister les technologies sans parenthèses.
 
 ---
 
-## Critères de Qualité
+## Critères de Validation
 
-- **ATS Compatible** : Optimisation pour les outils de lecture automatique.
-- **Esthétique** : Respecter les séparateurs "--- SECTION ---" et les sauts de ligne pour l'aération.
-- **Style** : Wording professionnel, orienté impact et résultats (verbes d'action).
-- **Bootstrapping** : Toujours vérifier les sources d'autorité (profil.md) avant de générer du contenu.
+- **Cohérence** : Vérifier que les informations sont synchronisées entre le CV et la lettre de motivation.
+- **Aération** : Veiller à la lisibilité des documents exportés.
+- **Sources** : Toujours utiliser `/data/user/profile.md` comme base de données principale.
