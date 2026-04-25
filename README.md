@@ -2,7 +2,7 @@
 
 Dépôt centralisant l'écosystème de recherche d'alternance de Roméo Cavazza.
 
-## 🏗️ Architecture
+## Architecture
 
 - `/cv-web` : Moteur de rendu CV haute fidélité (HTML/CSS/JS).
 - `/cv` : Banque de CV générés (Markdown).
@@ -11,7 +11,7 @@ Dépôt centralisant l'écosystème de recherche d'alternance de Roméo Cavazza.
 - `/docs` : Documentation technique et consignes agent.
 - `/scripts` : Outils d'automatisation (Python, Nix).
 
-## 🤖 Boot for AI
+## Boot for AI
 
 Si vous êtes un agent IA arrivant sur ce repo, suivez cet ordre de lecture pour une immersion optimale :
 1. `./README.md` (Vous êtes ici)
@@ -19,7 +19,7 @@ Si vous êtes un agent IA arrivant sur ce repo, suivez cet ordre de lecture pour
 3. `./docs/instructions.md` (Protocole et règles d'engagement)
 4. `./docs/how_it_works.md` (Détails techniques et scripts)
 
-## ⚖️ Principes Fondamentaux
+## Principes Fondamentaux
 
 - **CV-as-Code** : La donnée est séparée de la présentation.
 - **Source de Vérité Unique** : Tout contenu provient du dossier `/portfolio`.

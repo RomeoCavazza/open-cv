@@ -2,7 +2,7 @@
 
 Ce document détaille l'architecture technique et le fonctionnement opérationnel de l'écosystème de candidature.
 
-## 📁 Architecture du Dépôt
+## Architecture du Dépôt
 
 ### 1. Autodocumentation & Sources
 - `/portfolio/profil.md` : **Source de vérité absolue**. Contient l'identité, l'historique complet et les compétences.
@@ -21,7 +21,7 @@ Ce document détaille l'architecture technique et le fonctionnement opérationne
 
 ---
 
-## 🛠️ Scripts & Automatisation
+## Scripts & Automatisation
 
 Le dépôt utilise une stack technique légère pour l'automatisation :
 
@@ -36,7 +36,7 @@ Le dépôt utilise une stack technique légère pour l'automatisation :
 
 ---
 
-## 🚀 Fonctionnement du CV Web
+## Fonctionnement du CV Web
 
 Le CV Web est conçu pour remplacer les éditeurs graphiques par une approche "CV-as-Code".
 
@@ -53,7 +53,7 @@ Le CV Web est conçu pour remplacer les éditeurs graphiques par une approche "C
 
 ---
 
-## 📋 Commandes Utiles
+## Commandes Utiles
 
 | Action | Commande |
 | :--- | :--- |

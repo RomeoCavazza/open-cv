@@ -2,7 +2,7 @@
 
 Ce document contient les règles d'engagement et le protocole que tout LLM/Agent doit suivre en arrivant sur ce dépôt.
 
-## 🧭 Protocole de Boot (Ordre recommandé)
+## Protocole de Boot (Ordre recommandé)
 
 Pour garantir une compréhension parfaite du contexte, l'agent doit explorer le dépôt dans cet ordre :
 
@@ -14,7 +14,7 @@ Pour garantir une compréhension parfaite du contexte, l'agent doit explorer le 
 
 ---
 
-## 🎯 Mission Principal : Personnalisation de CV
+## Mission Principale : Personnalisation de CV
 
 L'objectif est de transformer les données brutes du profil en un CV parfaitement adapté à une offre spécifique.
 
@@ -32,7 +32,7 @@ L'objectif est de transformer les données brutes du profil en un CV parfaitemen
 
 ---
 
-## 🛡️ Critères de Qualité
+## Critères de Qualité
 
 1. **Cohérence Visuelle** : Respecter la structure des templates existants.
 2. **Impact** : Utiliser un vocabulaire orienté résultats (Action Verbs).
