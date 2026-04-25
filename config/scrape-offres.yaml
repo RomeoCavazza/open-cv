@@ -1,0 +1,12 @@
+input:
+  format: json
+  path: /home/tco/Bureau/alternance/config/offres-urls.raw.json
+
+output_dir: /home/tco/Bureau/alternance/offres/offres
+html_dir: null
+report: null
+legacy_dir: /home/tco/Bureau/alternance/offres/offres
+
+timeout: 90
+retries: 3
+overwrite: true
