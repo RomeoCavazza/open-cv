@@ -12,7 +12,7 @@ Avant toute action ou rédaction, l'agent doit impérativement s'imprégner du c
 4. **`/docs/how_it_works.md`** : Compréhension technique des outils et de la structure du repo.
 5. **`/offres/liste.md`** : Pour identifier les cibles de candidature.
 6. **`/offres/offres/`** : Pour analyser les données RAW des offres scrapées.
-7. **`/cv/web/data.json`** : Référentiel actuel pour le design High-Fidelity.
+7. **`/resume/web/data.json`** : Référentiel actuel pour le design High-Fidelity.
 8. **`/portfolio/projets/`** : Pour extraire les détails techniques spécifiques des side projects via leurs README respectifs.
 
 ---
@@ -34,7 +34,7 @@ L'objectif est de générer des CV personnalisés adaptés chacun à une offre s
 
 ### 1. Structure Générale
 - **Format** : Markdown pur pour l'ATS ou mise à jour du `data.json` pour le Web.
-- **Nommage Markdown** : Enregistrer sous `cv/markdown/new/cv-[nom-de-l-offre].md`.
+- **Nommage Markdown** : Enregistrer sous `resume/markdown/new/cv-[nom-de-l-offre].md`.
 - **Intégrité** : Ne jamais modifier les sections CONTACT et LANGUES sans ordre explicite.
 - **Zéro Emoji** : Interdiction formelle d'utiliser des emojis dans les CV finaux.
 

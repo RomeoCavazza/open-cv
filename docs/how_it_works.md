@@ -14,8 +14,8 @@ Ce document détaille l'architecture technique et le fonctionnement opérationne
 - `/offres/offres/` : Banque de fichiers Markdown contenant le texte brut de chaque offre scrapée.
 
 ### 3. Moteurs de CV
-- `/cv/markdown/` : Stockage des CV générés en format Markdown (standard ATS).
-- `/cv/web/` : **Moteur High-Fidelity**. Système basé sur HTML/CSS/JS pour générer des CV "Premium".
+- `/resume/markdown/` : Stockage des CV générés en format Markdown (standard ATS).
+- `/resume/web/` : **Moteur High-Fidelity**. Système basé sur HTML/CSS/JS pour générer des CV "Premium".
     - `data.json` : Le référentiel de données utilisé par le moteur web.
     - `index.html` / `style.css` / `script.js` : Logique de rendu et design.
 
@@ -49,7 +49,7 @@ Le CV Web est conçu pour remplacer les éditeurs graphiques par une approche "C
 ### Commandes Générales
 1. **Lancement du serveur** (nécessaire pour charger `data.json` via fetch) :
    ```bash
-   cd cv/web
+   cd resume/web
    python3 -m http.server 8000
    ```
 2. **Export PDF** :
@@ -65,5 +65,5 @@ Le CV Web est conçu pour remplacer les éditeurs graphiques par une approche "C
 | :--- | :--- |
 | Entrer dans l'environnement | `nix-shell` |
 | Lancer le scraper | `python scripts/scrape_offres.py --config config/scrape-offres.yaml` |
-| Servir le CV Web | `python3 -m http.server 8000 --directory cv/web` |
+| Servir le CV Web | `python3 -m http.server 8000 --directory resume/web` |
 | Standardiser un CV MD | `python3 scripts/cv_tool.py [chemin_du_fichier.md]` |
