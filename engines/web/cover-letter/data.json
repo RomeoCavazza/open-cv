@@ -27,6 +27,13 @@
       "L'environnement technique de MBDA me permettrait d'apprendre sur des problématiques exigeantes et concrètes, et je serais heureux d'y apporter en retour mon goût pour l'instrumentation, l'analyse de données et mes premiers modèles développés avec scikit-learn."
     ],
     "closing": "Je reste à votre disposition pour échanger sur ma candidature.",
-    "signature": "Cordialement,\nRoméo Cavazza"
+    "signature": "Cordialement,\nRoméo Cavazza",
+    "boldKeyword": "ALTERNANCE",
+    "labels": {
+      "linkedin": "LinkedIn",
+      "github": "GitHub",
+      "website": "Site web",
+      "download": "Télécharger en PDF (A4)"
+    }
   }
 }

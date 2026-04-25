@@ -99,5 +99,18 @@
     { "name": "Français", "level": "natif" },
     { "name": "Anglais", "level": "C1" },
     { "name": "Allemand", "level": "B1" }
-  ]
+  ],
+  "labels": {
+    "duration": "Durée :",
+    "rhythm": "Rythme :",
+    "contact": "CONTACT",
+    "skills": "COMPÉTENCES",
+    "languages": "LANGUES",
+    "experiences": "EXPÉRIENCES",
+    "education": "FORMATIONS",
+    "linkedin": "LinkedIn",
+    "github": "GitHub",
+    "website": "Site web",
+    "download": "Télécharger en PDF (A4)"
+  }
 }

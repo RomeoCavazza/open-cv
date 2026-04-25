@@ -23,6 +23,34 @@ async function loadCV() {
         document.getElementById('github').textContent = data.profile.github;
         safeSetHref('github-link', "https://" + data.profile.github);
         
+        // Labels and Sections
+        if (data.labels) {
+            const labelMap = {
+                'duration-label': 'duration',
+                'rhythm-label': 'rhythm',
+                'contact-title': 'contact',
+                'skills-title': 'skills',
+                'languages-title': 'languages',
+                'experiences-title': 'experiences',
+                'education-title': 'education',
+                'website': 'website',
+                'linkedin': 'linkedin',
+                'github': 'github'
+            };
+            Object.entries(labelMap).forEach(([id, key]) => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = data.labels[key];
+            });
+            
+            const downloadBtn = document.getElementById('download-pdf');
+            if (downloadBtn && data.labels.download) {
+                const icon = downloadBtn.querySelector('i');
+                downloadBtn.textContent = '';
+                if (icon) downloadBtn.appendChild(icon);
+                downloadBtn.appendChild(document.createTextNode(' ' + data.labels.download));
+            }
+        }
+
         // Header Meta
         document.getElementById('duration').textContent = data.apprenticeship.duration + ' — à partir de ' + data.apprenticeship.start;
         document.getElementById('rhythm').textContent = data.apprenticeship.rhythm;
@@ -59,7 +87,7 @@ async function loadCV() {
                 div.innerHTML = `
                     <h4>${exp.role}</h4>
                     <div class="company">${exp.company}</div>
-                    <div class="period">Stage de 6 mois (${exp.period})</div>
+                    <div class="period">${exp.period}</div>
                     <ul>${exp.description.map(line => `<li>${line}</li>`).join('')}</ul>
                 `;
             } else {

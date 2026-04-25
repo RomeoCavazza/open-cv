@@ -17,11 +17,32 @@ async function loadCoverLetter() {
     setLink("author-github", profile.links?.github);
     setLink("author-website", profile.links?.website);
 
+    // Set Labels
+    if (letter.labels) {
+      setText("author-linkedin", letter.labels.linkedin);
+      setText("author-github", letter.labels.github);
+      setText("author-website", letter.labels.website);
+      
+      const downloadBtn = document.getElementById("download-pdf");
+      if (downloadBtn) {
+        const span = downloadBtn.querySelector("span") || downloadBtn;
+        // If we want to preserve icons, we should be careful. 
+        // But index.html current structure doesn't have a span.
+        // Let's just update the text and preserve icon if we find it.
+        const icon = downloadBtn.querySelector("i");
+        downloadBtn.textContent = "";
+        if (icon) downloadBtn.appendChild(icon);
+        downloadBtn.appendChild(document.createTextNode(" " + letter.labels.download));
+      }
+    }
+
     setText("letter-company", letter.company);
     setText("letter-date", letter.date);
     
-    // Bold only the "ALTERNANCE" part of the subject
-    const subjectContent = letter.subject.replace(/^\s*(ALTERNANCE)/i, '<strong>$1</strong>');
+    // Bold only the specific keyword part of the subject
+    const boldKeyword = letter.boldKeyword || "ALTERNANCE";
+    const subjectRegex = new RegExp(`^\\s*(${boldKeyword})`, 'i');
+    const subjectContent = letter.subject.replace(subjectRegex, '<strong>$1</strong>');
     setText("letter-subject", subjectContent, true);
     
     setText("letter-greeting", letter.greeting);

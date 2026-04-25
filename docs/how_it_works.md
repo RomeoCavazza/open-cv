@@ -15,9 +15,9 @@ Ce document détaille l'architecture technique et le fonctionnement opérationne
 
 ### 3. Moteurs de CV
 - `/engines/web/` : **Moteur High-Fidelity**. Système basé sur HTML/CSS/JS pour générer des CV "Premium".
-    - `resume/data.json` : Le référentiel de données utilisé par le moteur web.
-    - `resume/index.html` / `resume/style.css` / `resume/script.js` : Logique de rendu et design.
-    - `cover-letter/index.html` / `cover-letter/style.css` / `cover-letter/script.js` : Rendu des lettres de motivation.
+    - `/engines/web/resume/data.json` : Référentiel complet (contenu et labels dynamiques).
+    - `cover-letter/data.json` : Référentiel de données (contenu + labels) pour la lettre.
+    - `resume/` & `cover-letter/` : Dossiers contenants la logique de rendu (HTML/CSS/JS).
 - `/engines/output/` : Exports générés (PDF, HTML, etc.).
 - `/data/user/resume-template/` : Modèles Markdown standardisés (ATS).
 
@@ -49,13 +49,13 @@ Le dépôt utilise une stack technique légère pour l'automatisation :
 Le CV Web est conçu pour remplacer les éditeurs graphiques par une approche "CV-as-Code".
 
 ### Commandes Générales
-1. **Lancement du serveur** (nécessaire pour charger `data.json` via fetch) :
+1. **Lancement du serveur** :
    ```bash
-   cd resume/web
+   cd engines/web
    python3 -m http.server 8000
    ```
 2. **Export PDF** :
-   - Ouvrir `http://localhost:8000`.
+   - Ouvrir `http://localhost:8000` (wrapper CV + Lettre).
    - Utiliser le bouton "Download PDF" ou `Ctrl+P`.
    - **Important** : Désactiver les marges et activer les graphiques d'arrière-plan dans les options d'impression du navigateur.
 
