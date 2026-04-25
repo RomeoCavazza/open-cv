@@ -1,41 +1,27 @@
-# Alternance — Pipeline de Candidature de Haute Fidélité
+# Alternance : Pipeline de Candidature
 
-Ce dépôt contient l'écosystème complet pour ma recherche d'alternance (Master Robotique & IoT). Il centralise les offres, le portfolio et le système de génération de CV automatisé.
+Dépôt centralisant l'écosystème de recherche d'alternance de Roméo Cavazza.
 
-## 🚀 CV-as-Code (`cv-web`)
+## 🏗️ Architecture
 
-Le dossier `cv-web` contient un système de génération de CV haute fidélité basé sur les technologies web (HTML/CSS/JS). Ce système remplace mon ancien workflow Canva par une approche automatisée et plus précise.
+- `/cv-web` : Moteur de rendu CV haute fidélité (HTML/CSS/JS).
+- `/cv` : Banque de CV générés (Markdown).
+- `/offres` : Analyse et suivi des offres d'emploi.
+- `/portfolio` : Source de vérité (profil.md) et détails des projets.
+- `/docs` : Documentation technique et consignes agent.
+- `/scripts` : Outils d'automatisation (Python, Nix).
 
-### Structure du projet
-- `data.json` : **Source de vérité**. Contient toutes les informations (expériences, formations, compétences). C'est le seul fichier à modifier pour mettre à jour le contenu.
-- `index.html` : Structure sémantique du CV.
-- `style.css` : Design "Premium" avec header en capsule, photo en relief et grille A4 stricte.
-- `script.js` : Moteur de rendu dynamique.
+## 🤖 Boot for AI
 
-### Comment générer un PDF ?
-1. Lancer un serveur local dans le dossier `cv-web` :
-   ```bash
-   python3 -m http.server 8000
-   ```
-2. Ouvrir `http://localhost:8000` dans un navigateur (Chrome/Edge recommandé).
-3. Cliquer sur le bouton **"Download PDF (A4)"** ou faire `Ctrl+P`.
-4. **Paramètres d'impression critiques** :
-   - Destination : Enregistrer au format PDF.
-   - Taille du papier : **A4**.
-   - Marges : **Aucune** (très important pour respecter le design).
-   - Graphiques d'arrière-plan : **Activés**.
+Si vous êtes un agent IA arrivant sur ce repo, suivez cet ordre de lecture pour une immersion optimale :
+1. `./README.md` (Vous êtes ici)
+2. `./portfolio/profil.md` (Source de vérité absolue)
+3. `./docs/instructions.md` (Protocole et règles d'engagement)
+4. `./docs/how_it_works.md` (Détails techniques et scripts)
 
-## 📁 Organisation du Dépôt
-- `/cv-web` : Moteur de CV haute fidélité.
-- `/offres` : Suivi et analyse des offres d'alternance (Markdown).
-- `/portfolio` : Projets techniques détaillés.
-- `/scripts` : Outils de scraping et d'automatisation.
+## ⚖️ Principes Fondamentaux
 
-## 🛠️ Workflow de Personnalisation
-Pour chaque offre :
-1. Analyser l'offre dans `/offres`.
-2. Mettre à jour les mots-clés et le pitch dans `cv-web/data.json`.
-3. Générer le PDF correspondant.
-
----
-*Maintenu par Roméo Cavazza — 2026*
+- **CV-as-Code** : La donnée est séparée de la présentation.
+- **Source de Vérité Unique** : Tout contenu provient du dossier `/portfolio`.
+- **Zéro Emoji** : Sobriété professionnelle dans tous les livrables.
+- **Automation First** : Utilisation de scripts pour le scraping et le formattage.
