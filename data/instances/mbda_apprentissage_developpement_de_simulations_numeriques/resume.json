@@ -52,7 +52,7 @@
       "period": "2026",
       "description": [
         "Modélisation et optimisation du placement d'antennes via Python, Numba et CUDA",
-        "Heuristiques de couverture et traitement de données spatiales sous NumPy"
+        "Heuristiques de couverture et traitement de données spatiales avec NumPy"
       ]
     }
   ],

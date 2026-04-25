@@ -41,7 +41,7 @@ Home Lab — Plateforme inertielle (2025–présent)
 
 Hackathon — Algorithmique appliquée à la couverture 5G (2026)
  • Modélisation et optimisation du placement d’antennes via Python, Numba et CUDA
- • Heuristiques de couverture et traitement de données spatiales sous NumPy
+ • Heuristiques de couverture et traitement de données spatiales avec NumPy
 
 ---
 

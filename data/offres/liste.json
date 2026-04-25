@@ -30,7 +30,8 @@
       "title": "Dassault Systèmes - Apprentissage Ingénieur Développement Outils et IA (547835)",
       "url": "https://www.3ds.com/careers/jobs/apprentissage-ingenieur-developpement-outils-et-ia-f-h-547835",
       "category": "Intelligence Artificielle & GenAI",
-      "job_id": "dassault_systemes_apprentissage_ingenieur_developpement_outils_et_ia_547835"
+      "job_id": "dassault_systemes_apprentissage_ingenieur_developpement_outils_et_ia_547835",
+      "status": "ready"
     },
     {
       "title": "ITONICS - Data & AI Engineer (Apprenticeship)",
@@ -87,7 +88,8 @@
       "title": "Société Générale - IA Officer",
       "url": "https://epitech.jobteaser.com/en/job-offers/0421b96f-b48c-41d1-a25e-6edc284a5616-societe-generale-ia-officer",
       "category": "Intelligence Artificielle & GenAI",
-      "job_id": "societe_generale_ia_officer"
+      "job_id": "societe_generale_ia_officer",
+      "status": "ready"
     },
     {
       "title": "Stelogy - Alternance Développeur IA",
@@ -111,7 +113,8 @@
       "title": "Thales - Alternance Ingénieur DevOps IA GenIA (F/H)",
       "url": "https://epitech.jobteaser.com/en/job-offers/d2136c34-8623-4f57-991f-05ea578cd3f0-thales-alternance-ingenieur-devops-ia-genia-f-h",
       "category": "Intelligence Artificielle & GenAI",
-      "job_id": "thales_alternance_ingenieur_devops_ia_genia_f_h"
+      "job_id": "thales_alternance_ingenieur_devops_ia_genia_f_h",
+      "status": "ready"
     },
     {
       "title": "Thales - Alternance Développement d'agents IA dans les logiciels de cybersécurité (F/H)",
