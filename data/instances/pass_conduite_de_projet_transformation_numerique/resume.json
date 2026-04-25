@@ -9,7 +9,7 @@
     "website": "www.romeocavazza.com",
     "linkedin": "in/romeo-cavazza/",
     "github": "github.com/RomeoCavazza",
-    "pitch": "Étudiant en Master Cloud, passionné par les infrastructures scalables, je souhaite mettre à profit mes compétences en architecture distribuée et Cloud au sein de PASS."
+    "pitch": "Étudiant en Master Robotique & IoT, passionné par les systèmes embarqués, je souhaite développer et mettre en pratique mes compétences en instrumentation, bas niveau et programmation système au sein de PASS."
   },
   "apprenticeship": {
     "duration": "24 mois",
@@ -59,12 +59,12 @@
   "education": [
     {
       "school": "EPITECH, Paris, France",
-      "degree": "Master of Science — Cloud",
+      "degree": "Master of Science — Robotique & IoT",
       "period": "2026 – 2028"
     },
     {
       "school": "EPITECH, Paris, France",
-      "degree": "Pré-MSc — JavaScript, PHP, Java, SQL, Rust, Next.js, Docker.",
+      "degree": "Pré-MSc — Rust, Linux, Python, Java, Bash, Réseaux.",
       "period": "2025 – 2026"
     },
     {

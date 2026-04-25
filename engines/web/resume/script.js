@@ -138,7 +138,6 @@ function safeSetHref(id, url) {
 }
 
 document.getElementById('download-pdf').addEventListener('click', () => window.print());
-document.getElementById('download-pdf').addEventListener('click', () => window.print());
 window.addEventListener('DOMContentLoaded', () => {
     if (window.self !== window.top) {
         document.body.classList.add('is-framed');

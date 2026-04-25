@@ -14,50 +14,40 @@ Ce document détaille l'architecture technique et le fonctionnement opérationne
 - `/data/offres/raw/` : Banque de fichiers Markdown contenant le texte brut de chaque offre scrapée.
 
 ### 3. Moteurs de CV
-- `/engines/web/` : **Moteur High-Fidelity**. Système basé sur HTML/CSS/JS pour générer des CV "Premium".
-    - `/engines/web/resume/data.json` : Référentiel complet (contenu et labels dynamiques).
-    - `cover-letter/data.json` : Référentiel de données (contenu + labels) pour la lettre.
-    - `resume/` & `cover-letter/` : Dossiers contenants la logique de rendu (HTML/CSS/JS).
+### 3. Moteurs de CV
+- `/engines/web/` : **Moteur High-Fidelity**. Système dynamique HTML/CSS/JS.
+    - Le dashboard (`index.html`) utilise le paramètre `?id=job_id` pour charger dynamiquement les fichiers JSON depuis `/data/instances/`.
+    - `/engines/web/data/` : Contient des symlinks vers le dossier `/data` pour permettre l'accès aux instances par le navigateur.
 - `/engines/output/` : Exports générés (PDF, HTML, etc.).
-- `/data/user/resume-template/` : Modèles Markdown standardisés (ATS).
+- `/data/templates/` : Modèles JSON de base utilisés par `cv_tool.py init`.
 
 ---
 
 ## Scripts & Automatisation
 
-Le dépôt utilise une stack technique légère pour l'automatisation :
+### Gestion des Instances
+- **Initialisation** : `python3 engines/scripts/cv_tool.py init-all` (Crée les dossiers d'instances pour chaque offre).
+*   **Personnalisation** : `python3 engines/scripts/personalize_all.py` (Applique le mapping IA/Cloud/Embarqué, synchronise les noms d'entreprises et nettoie le jargon sur tous les fichiers).
 
-### Scraping & Automatisation
+### Scraping
 - **Script principal** : `/engines/scripts/scrape_offres.py`
-- **Configuration YAML** : `/scrape-offres.yaml` (à la racine)
+- **Configuration YAML** : `/scrape-offres.yaml`
 - **Source des URLs** : `/data/offres/liste.json`
-- **Utilitaire CV** : `/engines/scripts/cv_tool.py` (Standardisation Markdown)
-
-### Conventions du Scraper
-- Les offres générées (RAW Markdown) sont stockées dans `/data/offres/raw/`.
-- Les snapshots HTML et les rapports JSON sont désactivés par défaut.
-- L'option `--overwrite` est recommandée pour mettre à jour les offres existantes.
-
-### Environnement (Nix)
-- `shell.nix` : Définit l'environnement reproductible (Python, dépendances, outils PDF).
-- Pour entrer dans l'environnement : `nix-shell`
 
 ---
 
 ## Fonctionnement du CV Web
 
-Le CV Web est conçu pour remplacer les éditeurs graphiques par une approche "CV-as-Code".
+Le Dashboard (`engines/web/index.html`) est l'interface centrale.
 
-### Commandes Générales
 1. **Lancement du serveur** :
    ```bash
-   cd engines/web
-   python3 -m http.server 8000
+   python3 -m http.server 8000 --directory engines/web
    ```
-2. **Export PDF** :
-   - Ouvrir `http://localhost:8000` (wrapper CV + Lettre).
-   - Utiliser le bouton "Download PDF" ou `Ctrl+P`.
-   - **Important** : Désactiver les marges et activer les graphiques d'arrière-plan dans les options d'impression du navigateur.
+2. **Utilisation** :
+   - Sélectionner une offre dans la barre latérale.
+   - Le CV et la Lettre se mettent à jour instantanément.
+   - Utiliser le bouton "Télécharger PDF" (ou `Ctrl+P`).
 
 ---
 
@@ -65,7 +55,7 @@ Le CV Web est conçu pour remplacer les éditeurs graphiques par une approche "C
 
 | Action | Commande |
 | :--- | :--- |
-| Entrer dans l'environnement | `nix-shell` |
+| Initialiser toutes le instances | `python3 engines/scripts/cv_tool.py init-all` |
+| Personnaliser tout (Audit) | `python3 engines/scripts/personalize_all.py` |
 | Lancer le scraper | `python engines/scripts/scrape_offres.py --config scrape-offres.yaml` |
-| Sync & Scrape | `python engines/scripts/scrape_offres.py --sync` |
-| Standardiser un CV MD | `python3 engines/scripts/cv_tool.py [chemin_du_fichier.md]` |
+
