@@ -15,7 +15,7 @@ pkgs.mkShell {
   ];
 
   shellHook = ''
-    export SCRAPER_CONFIG="/home/tco/Bureau/alternance/config/scrape-offres.yaml"
+    export SCRAPER_CONFIG="$PWD/config/scrape-offres.yaml"
 
     echo "Environnement scraper prêt."
     echo "Config: $SCRAPER_CONFIG"

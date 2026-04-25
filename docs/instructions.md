@@ -7,13 +7,13 @@ Ce document contient les règles d'engagement, le protocole de boot et les consi
 Avant toute action ou rédaction, l'agent doit impérativement s'imprégner du contexte dans cet ordre :
 
 1. **`README.md`** : Aperçu rapide de l'architecture.
-2. **`/portfolio/profil.md`** : **Source de vérité absolue** (Identité, expériences, technos, projets).
+2. **`/data/user/profile.md`** : **Source de vérité absolue** (Identité, expériences, technos, projets).
 3. **`/docs/instructions.md`** : Présentes consignes et règles d'engagement.
 4. **`/docs/how_it_works.md`** : Compréhension technique des outils et de la structure du repo.
-5. **`/offres/liste.md`** : Pour identifier les cibles de candidature.
-6. **`/offres/offres/`** : Pour analyser les données RAW des offres scrapées.
-7. **`/resume/web/data.json`** : Référentiel actuel pour le design High-Fidelity.
-8. **`/portfolio/projets/`** : Pour extraire les détails techniques spécifiques des side projects via leurs README respectifs.
+5. **`/data/offres/liste.md`** : Pour identifier les cibles de candidature.
+6. **`/data/offres/raw/`** : Pour analyser les données RAW des offres scrapées.
+7. **`/engines/web/resume/data.json`** : Référentiel actuel pour le design High-Fidelity.
+8. **`/data/user/projets/`** : Pour extraire les détails techniques spécifiques des side projects via leurs README respectifs.
 
 ---
 
@@ -23,7 +23,7 @@ Si l'agent est chargé de scrapper de nouvelles offres :
 1. Explorer chaque lien de la liste fournie.
 2. Extraire l'intégralité du contenu textuel (description, prérequis, infos utiles).
 3. Restituer le texte proprement en conservant la structure.
-4. Sauvegarder chaque offre dans un fichier Markdown unique dans `/offres/offres/`.
+4. Sauvegarder chaque offre dans un fichier Markdown unique dans `/data/offres/raw/`.
 5. Utiliser des noms de fichiers clairs basés sur le poste ou l'entreprise.
 
 ---

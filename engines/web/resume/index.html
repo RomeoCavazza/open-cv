@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CAVAZZA_Roméo_Resume</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+    <div class="no-print actions">
+        <button id="download-pdf" class="btn">
+            <i data-lucide="download"></i> Download PDF (A4)
+        </button>
+    </div>
+
+    <main id="cv" class="a4-page">
+        <!-- Header (Bubble Right, Photo Left) -->
+        <header class="cv-header">
+            <div class="profile-img-container">
+                <img src="assets/profile-picture.jpg" id="profile-img" alt="Profile">
+            </div>
+            <div class="header-overlay">
+                <div class="header-text">
+                    <h1 id="name"></h1>
+                    <p id="title" class="title-main"></p>
+                    <p id="pitch"></p>
+                    <div class="header-meta">
+                        <p><strong id="duration-label">Durée :</strong> <span id="duration"></span></p>
+                        <p><strong id="rhythm-label">Rythme :</strong> <span id="rhythm"></span></p>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="content-wrapper">
+            <!-- Sidebar with rounded border (Stuck to Left Margin) -->
+            <aside class="sidebar-border">
+                <div class="sidebar-content">
+                    <section class="section">
+                        <h3>CONTACT</h3>
+                        <div class="contact-info">
+                            <div class="contact-item"><span id="location"></span></div>
+                            <div class="contact-item"><span id="phone"></span></div>
+                            <div class="contact-item"><span id="email"></span></div>
+                            <div class="contact-item link"><img src="assets/web.png" class="icon-img"> <a id="website-link" href="#" target="_blank"><span id="website"></span></a></div>
+                            <div class="contact-item link"><img src="assets/linkedin.png" class="icon-img"> <a id="linkedin-link" href="#" target="_blank"><span id="linkedin"></span></a></div>
+                            <div class="contact-item link"><img src="assets/github.png" class="icon-img"> <a id="github-link" href="#" target="_blank"><span id="github"></span></a></div>
+
+                        </div>
+                    </section>
+
+                    <section class="section">
+                        <h3>COMPÉTENCES</h3>
+                        <div id="skills-container"></div>
+                    </section>
+
+                    <section class="section">
+                        <h3>LANGUES</h3>
+                        <div id="languages-container"></div>
+                    </section>
+                </div>
+            </aside>
+
+            <!-- Main content -->
+            <div class="main-body">
+                <section class="section">
+                    <h2>EXPERIENCES</h2>
+                    <div id="experiences-container" class="list-container"></div>
+                </section>
+
+                <section class="section">
+                    <h2>FORMATIONS</h2>
+                    <div id="education-container" class="list-container"></div>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>

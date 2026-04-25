@@ -47,9 +47,11 @@ import yaml  # noqa: E402
 
 
 ENTRY_RE = re.compile(r"- \[(.*?)\]\((https?://[^)]+)\)")
-DEFAULT_CONFIG_PATH = "/home/tco/Bureau/alternance/config/scrape-offres.yaml"
-DEFAULT_LIST_PATH = "/home/tco/Bureau/alternance/offres/liste.md"
-DEFAULT_OUTPUT_DIR = "/home/tco/Bureau/alternance/offres/offres"
+REPO_ROOT = Path(__file__).resolve().parent.parent
+
+DEFAULT_CONFIG_PATH = str(REPO_ROOT / "config/scrape-offres.yaml")
+DEFAULT_LIST_PATH = str(REPO_ROOT / "data/offres/liste.md")
+DEFAULT_OUTPUT_DIR = str(REPO_ROOT / "data/offres/raw")
 DEFAULT_HTML_DIR = None
 DEFAULT_REPORT_PATH = None
 REQUEST_HEADERS = {
@@ -616,7 +618,7 @@ def resolve_settings(args: argparse.Namespace) -> dict[str, Any]:
     overwrite_value = args.overwrite if args.overwrite is not None else bool(config.get("overwrite", False))
 
     output_dir = Path(output_dir_value)
-    legacy_dir_value = args.legacy_dir or config.get("legacy_dir") or str(output_dir / "offres")
+    legacy_dir_value = args.legacy_dir or config.get("legacy_dir") or str(output_dir)
 
     return {
         "config_path": config_path,
