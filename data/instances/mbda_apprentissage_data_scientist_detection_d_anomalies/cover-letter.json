@@ -13,20 +13,20 @@
   "letter": {
     "company": "MBDA",
     "date": "25 avril 2026",
-    "subject": "ALTERNANCE - ALTERNANCE — DATA SCIENTIST",
-    "pitch": "Étudiant en Master Robotique & IoT, passionné par la détection d'anomalies, je souhaite développer et mettre en pratique mes compétences en programmation scientifique, acquisition de données et apprentissage automatique au sein de MBDA.",
+    "subject": "APPRENTISSAGE — Data Scientist : Détection d'anomalies",
+    "pitch": "Spécialisé dans l'analyse de données complexes et la détection d'anomalies sur capteurs inertiels, je souhaite mettre mon expertise technique au service de la fiabilité des systèmes de défense de MBDA.",
     "metadata": [
       "Durée : 24 mois — à partir de septembre 2026",
       "Rythme : 6 semaines en entreprise / 2 semaines en cours"
     ],
     "greeting": "Madame, Monsieur,",
     "paragraphs": [
-      "Actuellement étudiant en Master Robotique & IoT à EPITECH Paris, je souhaite rejoindre MBDA dans le cadre de l'alternance DATA SCIENTIST.",
-      "Ma formation en informatique m'a permis de développer des bases solides en Python/SciPy, algorithmique, Linux et Docker. En parallèle, j'ai mené plusieurs projets personnels autour de l'acquisition instrumentée et du traitement du signal, d'une station inertielle à un programme expérimental optique/RF en cours de développement. Ces travaux m'ont donné une première expérience concrète de pipelines de données scientifiques et de modèles de détection d'anomalies.",
-      "Cette offre me motive particulièrement car elle se situe à l'intersection de l'acquisition de signaux physiques, de la simulation numérique et du machine learning, trois domaines dans lesquels je souhaite construire mon parcours.",
-      "L'environnement technique de MBDA me permettrait d'apprendre sur des problématiques exigeantes et concrètes, et je serais heureux d'y apporter en retour mon goût pour l'instrumentation, l'analyse de données et mes premiers modèles développés avec scikit-learn."
+      "Actuellement étudiant en Master Intelligence Artificielle à EPITECH Paris, c'est avec un vif intérêt que je postule pour l'apprentissage de DATA SCIENTIST au sein de MBDA au Plessis-Robinson.",
+      "Le sujet de la détection d'anomalies dans des jeux de données complexes est au cœur de mes préoccupations techniques. Dans mon projet personnel Home Lab — Plateforme inertielle, j'ai implémenté des algorithmes d'analyse fréquentielle et de détection d'anomalies sur des flux de données capteurs (MPU6050). Cette expérience concrète du traitement du signal et de l'analyse de données physiques est un atout majeur pour contribuer à la fiabilité de vos systèmes stratégiques.",
+      "En complément, ma maîtrise des agents autonomes et de l'automatisation (projet Shellgeist), couplée à une solide culture DevOps, me permet d'appréhender l'industrialisation de modèles de détection performants. Je suis convaincu que l'hybridation entre analyse de données classique et raisonnement IA est la clé de la supériorité technologique.",
+      "Rejoindre MBDA, référence mondiale dans le secteur missile, représenterait pour moi une opportunité unique de mettre mon excellence technique au service de la protection de la souveraineté nationale."
     ],
-    "closing": "Je reste à votre disposition pour échanger sur ma candidature.",
+    "closing": "Je reste à votre entière disposition pour vous présenter mon parcours lors d'un entretien.",
     "signature": "Cordialement,\nRoméo Cavazza",
     "boldKeyword": "ALTERNANCE",
     "labels": {

@@ -11,22 +11,22 @@
     }
   },
   "letter": {
-    "company": "Safran",
+    "company": "Safran Helicopter Engines",
     "date": "25 avril 2026",
-    "subject": "ALTERNANCE - ALTERNANCE — INGÉNIEUR LLM",
-    "pitch": "Étudiant en Master Robotique & IoT, passionné par la détection d'anomalies, je souhaite développer et mettre en pratique mes compétences en programmation scientifique, acquisition de données et apprentissage automatique au sein de Safran.",
+    "subject": "ALTERNANCE — IA : Mise en place de LLM (Logiciel Embarqué)",
+    "pitch": "Passionné par l'IA générative et les systèmes embarqués, je souhaite mettre mon expertise en agents IA et programmation système au service de l'automatisation des tests et du développement logiciel chez Safran.",
     "metadata": [
       "Durée : 24 mois — à partir de septembre 2026",
       "Rythme : 6 semaines en entreprise / 2 semaines en cours"
     ],
     "greeting": "Madame, Monsieur,",
     "paragraphs": [
-      "Actuellement étudiant en Master Robotique & IoT à EPITECH Paris, je souhaite rejoindre Safran dans le cadre de l'alternance INGÉNIEUR LLM.",
-      "Ma formation en informatique m'a permis de développer des bases solides en Python/SciPy, algorithmique, Linux et Docker. En parallèle, j'ai mené plusieurs projets personnels autour de l'acquisition instrumentée et du traitement du signal, d'une station inertielle à un programme expérimental optique/RF en cours de développement. Ces travaux m'ont donné une première expérience concrète de pipelines de données scientifiques et de modèles de détection d'anomalies.",
-      "Cette offre me motive particulièrement car elle se situe à l'intersection de l'acquisition de signaux physiques, de la simulation numérique et du machine learning, trois domaines dans lesquels je souhaite construire mon parcours.",
-      "L'environnement technique de Safran me permettrait d'apprendre sur des problématiques exigeantes et concrètes, et je serais heureux d'y apporter en retour mon goût pour l'instrumentation, l'analyse de données et mes premiers modèles développés avec scikit-learn."
+      "Actuellement étudiant en Master Intelligence Artificielle à EPITECH Paris, c'est avec un vif intérêt que je postule pour l'alternance d'INGÉNIEUR IA au sein du Centre de Compétences Systèmes de Régulation de Safran Helicopter Engines à Bordes.",
+      "Le déploiement de Large Language Models pour assister le développement logiciel et automatiser la génération de procédures de tests résonne parfaitement avec mon parcours hybride. Avec mon projet Shellgeist, j'ai conçu un agent autonome capable de manipuler du code et d'interagir avec des outils de développement via des mécanismes de Tool Calling. Cette approche agentique est, selon moi, la clé pour transformer les méthodes de travail au sein du service Calculateurs Logiciels et Outillages.",
+      "Par ailleurs, ma passion pour les systèmes embarqués m'a conduit à développer une plateforme d'acquisition inertielle complète (MPU6050/GPS) avec un firmware en C++ et un traitement de données en temps réel. Cette expérience me permet de comprendre les contraintes de performance et de fiabilité inhérentes aux logiciels de régulation aéronautique, et d'envisager sereinement l'intégration de briques d'IA au service de l'ingénierie système.",
+      "Rejoindre Safran Helicopter Engines, leader mondial de la motorisation d'hélicoptères, représenterait pour moi une opportunité unique de mettre mon excellence technique au service de la souveraineté industrielle et de l'innovation aéronautique."
     ],
-    "closing": "Je reste à votre disposition pour échanger sur ma candidature.",
+    "closing": "Je reste à votre entière disposition pour vous présenter mon parcours lors d'un entretien.",
     "signature": "Cordialement,\nRoméo Cavazza",
     "boldKeyword": "ALTERNANCE",
     "labels": {

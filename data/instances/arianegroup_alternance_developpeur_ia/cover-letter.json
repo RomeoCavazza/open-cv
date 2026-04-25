@@ -21,9 +21,9 @@
     ],
     "greeting": "Madame, Monsieur,",
     "paragraphs": [
-      "Actuellement en Master Robotique & IoT à EPITECH Paris, je postule avec enthousiasme pour l'alternance de DÉVELOPPEUR IA.",
-      "L'intégration de l'IA au service de l'industrie aérospatiale est un défi passionnant. Mon parcours informatique m'a permis de développer une solide expertise en Python et dans l'utilisation de bibliothèques comme PyTorch et Langchain. Je suis particulièrement motivé par la conception de pipelines de traitement de données intégrant du RAG (Retrieval-Augmented Generation) et le développement d'agents IA autonomes capables de structurer des workflows complexes.",
-      "Maîtrisant les outils de containerisation (Docker, Kubernetes) et les pratiques CI/CD, je suis prêt à m'investir dans l'optimisation des performances et de la scalabilité de vos plateformes IA. Évoluer dans un département dédié à l'innovation, où la rigueur et la sécurité sont primordiales, correspond parfaitement à mes aspirations professionnelles.",
+      "Actuellement étudiant en Master Intelligence Artificielle à EPITECH Paris, c'est avec une grande motivation que je postule pour cette alternance de DÉVELOPPEUR IA au sein d'ArianeGroup.",
+      "Mes projets récents, notamment le développement d'un agent de terminal autonome Shellgeist et l'implémentation d'une plateforme d'acquisition inertielle (MPU6050/GPS), m'ont permis de maîtriser l'orchestration de modèles via LangChain ainsi que le traitement de données capteurs en temps réel via C++ et Python. Je suis passionné par l'application de l'IA à des problématiques de télémesure et de navigation, enjeux critiques pour les lanceurs d'ArianeGroup.",
+      "Au-delà de la couche algorithmique, je possède une solide culture MLOps : de la containerisation sous Docker/Kubernetes au déploiement via des pipelines CI/CD GitLab. Ma rigueur et mon goût pour l'excellence technique sont en parfaite adéquation avec les exigences d'ArianeGroup, où la performance et la fiabilité des systèmes de défense et civils sont primordiales.",
       "Travailler pour ArianeGroup, fleuron de la souveraineté européenne, serait pour moi une immense fierté et une opportunité unique d'allier audace technique et excellence industrielle."
     ],
     "closing": "Je reste à votre entière disposition pour vous présenter mon parcours lors d'un entretien.",

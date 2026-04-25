@@ -4,7 +4,8 @@
       "title": "ArianeGroup - Alternance Développeur IA",
       "url": "https://arianegroup.wd3.myworkdayjobs.com/EXTERNALALL/job/Le-Haillan/ALTERNANCE---Dveloppeuse---Dveloppeur-IA_JR-2026123",
       "category": "Intelligence Artificielle & GenAI",
-      "job_id": "arianegroup_alternance_developpeur_ia"
+      "job_id": "arianegroup_alternance_developpeur_ia",
+      "status": "ready"
     },
     {
       "title": "Crédit Agricole - Stage/Alternance (IA - 2026-110627)",
@@ -16,7 +17,8 @@
       "title": "Dassault Systèmes - Apprentissage Ingénieur IA (547531)",
       "url": "https://www.3ds.com/careers/jobs/apprentissage-ingenieur-ia-f-h-547531",
       "category": "Intelligence Artificielle & GenAI",
-      "job_id": "dassault_systemes_apprentissage_ingenieur_ia_547531"
+      "job_id": "dassault_systemes_apprentissage_ingenieur_ia_547531",
+      "status": "ready"
     },
     {
       "title": "Dassault Systèmes - Apprentissage Ingénieur Intelligence Artificielle (547433)",
@@ -46,7 +48,8 @@
       "title": "MBDA - Apprentissage Data Scientist détection d'anomalies",
       "url": "https://www.mbda-systems.com/country-fr/careers/apprentissage-ingenieur-data-scientist-en-detection-danomalies-fh",
       "category": "Intelligence Artificielle & GenAI",
-      "job_id": "mbda_apprentissage_data_scientist_detection_d_anomalies"
+      "job_id": "mbda_apprentissage_data_scientist_detection_d_anomalies",
+      "status": "ready"
     },
     {
       "title": "MBDA - Systèmes autonomes intelligents",
@@ -58,7 +61,8 @@
       "title": "Renault Group - Apprenti Ingénieur IA",
       "url": "https://alliancewd.wd3.myworkdayjobs.com/renault-group-careers/job/Boulogne-Billancourt/Apprenti-Ingnieur-IA--H-F-_JOBREQ_50249267",
       "category": "Intelligence Artificielle & GenAI",
-      "job_id": "renault_group_apprenti_ingenieur_ia"
+      "job_id": "renault_group_apprenti_ingenieur_ia",
+      "status": "ready"
     },
     {
       "title": "Safran - Alternance IA Automation (Plaisir)",
@@ -70,7 +74,8 @@
       "title": "Safran - Alternance IA Mise en place LLM (Bordes)",
       "url": "https://www.safran-group.com/fr/offres/france/bordes/alternance-ia-mise-place-llm-cadre-developpement-logiciel-embarque-fh-174273",
       "category": "Intelligence Artificielle & GenAI",
-      "job_id": "safran_alternance_ia_mise_en_place_llm_bordes"
+      "job_id": "safran_alternance_ia_mise_en_place_llm_bordes",
+      "status": "ready"
     },
     {
       "title": "Safran - Alternance Data Scientist Corporate AI Squad (Tarnos)",
@@ -112,7 +117,8 @@
       "title": "Thales - Alternance Développement d'agents IA dans les logiciels de cybersécurité (F/H)",
       "url": "https://epitech.jobteaser.com/en/job-offers/30e93d55-a357-434f-b8a9-56eaa949815e-thales-alternance-developpement-d-agents-ia-dans-les-logiciels-de-cybersecurite-f-h",
       "category": "Intelligence Artificielle & GenAI",
-      "job_id": "thales_alternance_developpement_d_agents_ia_dans_les_logiciels_de_cybersecurite_f_h"
+      "job_id": "thales_alternance_developpement_d_agents_ia_dans_les_logiciels_de_cybersecurite_f_h",
+      "status": "ready"
     },
     {
       "title": "Thales - Alternance Développement multi-agents de solutions d’aide à la stratégie (F/H)",

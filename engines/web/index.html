@@ -127,6 +127,11 @@
             width: 3px;
             background: var(--primary-color);
         }
+        
+        .offer-item.ready {
+            color: #059669 !important;
+            font-weight: 700;
+        }
 
         .main-content {
             flex: 1;
@@ -329,7 +334,8 @@
                         item.className = 'offer-item';
                         item.dataset.jobId = offer.job_id;
                         item.title = offer.title;
-                        item.textContent = offer.title;
+                        item.textContent = (offer.status === "ready" ? "✓ " : "") + offer.title;
+                        if (offer.status === "ready") item.classList.add('ready');
                         item.onclick = (e) => {
                             e.stopPropagation();
                             document.querySelectorAll('.offer-item').forEach(i => i.classList.remove('active'));

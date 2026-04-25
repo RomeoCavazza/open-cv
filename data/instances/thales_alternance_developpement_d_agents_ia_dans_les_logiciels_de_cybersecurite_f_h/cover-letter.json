@@ -13,20 +13,20 @@
   "letter": {
     "company": "Thales",
     "date": "25 avril 2026",
-    "subject": "ALTERNANCE - ALTERNANCE — DÉVELOPPEUR AGENTS IA",
-    "pitch": "Étudiant en Master Robotique & IoT, passionné par la détection d'anomalies, je souhaite développer et mettre en pratique mes compétences en programmation scientifique, acquisition de données et apprentissage automatique au sein de Thales.",
+    "subject": "ALTERNANCE - Développement d'agents IA dans les logiciels de cybersécurité",
+    "pitch": "Passionné par l'IA générative et son application à la cybersécurité, je souhaite rejoindre le laboratoire LGE de Thales pour prototyper des agents IA innovants au service de la sécurité numérique.",
     "metadata": [
       "Durée : 24 mois — à partir de septembre 2026",
       "Rythme : 6 semaines en entreprise / 2 semaines en cours"
     ],
     "greeting": "Madame, Monsieur,",
     "paragraphs": [
-      "Actuellement étudiant en Master Robotique & IoT à EPITECH Paris, je souhaite rejoindre Thales dans le cadre de l'alternance DÉVELOPPEUR AGENTS IA.",
-      "Ma formation en informatique m'a permis de développer des bases solides en Python/SciPy, algorithmique, Linux et Docker. En parallèle, j'ai mené plusieurs projets personnels autour de l'acquisition instrumentée et du traitement du signal, d'une station inertielle à un programme expérimental optique/RF en cours de développement. Ces travaux m'ont donné une première expérience concrète de pipelines de données scientifiques et de modèles de détection d'anomalies.",
-      "Cette offre me motive particulièrement car elle se situe à l'intersection de l'acquisition de signaux physiques, de la simulation numérique et du machine learning, trois domaines dans lesquels je souhaite construire mon parcours.",
-      "L'environnement technique de Thales me permettrait d'apprendre sur des problématiques exigeantes et concrètes, et je serais heureux d'y apporter en retour mon goût pour l'instrumentation, l'analyse de données et mes premiers modèles développés avec scikit-learn."
+      "Actuellement étudiant en Master Intelligence Artificielle à EPITECH Paris, c'est avec une grande motivation que je postule pour cette alternance de DÉVELOPPEMENT D'AGENTS IA au sein du laboratoire LGE de Thales Cholet.",
+      "L'étude et le prototypage d'agents IA appliqués à la cybersécurité, qu'il s'agisse de chatbots de support contextuel, d'agents de détection d'attaques EDR ou de solutions d'authentification Zero-Knowledge Proofs, sont au cœur de mes intérêts techniques. Mon expertise en architecture RAG (Veyl.io) et en orchestration d'agents (Shellgeist) démontre ma capacité à concevoir des briques logicielles capables d'intercepter et d'exploiter intelligemment de la documentation technique via des LLM.",
+      "Au-delà de la couche agentique, je possède une solide culture SecOps et une maîtrise de la stack Linux (NixOS, Ansible), complétée par un pipeline d'observabilité Prometheus et Grafana. Ma rigueur et mon goût pour l'excellence technique sont en parfaite adéquation avec les exigences de Thales, où la fiabilité des infrastructures de gestion de cybersécurité est une priorité stratégique.",
+      "Rejoindre Thales, leader mondial de la défense et de la sécurité, représenterait pour moi une opportunité unique d'allier audace technique et protection de la souveraineté numérique."
     ],
-    "closing": "Je reste à votre disposition pour échanger sur ma candidature.",
+    "closing": "Je reste à votre entière disposition pour vous présenter mon parcours lors d'un entretien.",
     "signature": "Cordialement,\nRoméo Cavazza",
     "boldKeyword": "ALTERNANCE",
     "labels": {

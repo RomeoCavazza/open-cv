@@ -13,20 +13,20 @@
   "letter": {
     "company": "Dassault Systèmes",
     "date": "25 avril 2026",
-    "subject": "ALTERNANCE - ALTERNANCE — INGÉNIEUR IA",
-    "pitch": "Passionné par l'IA appliquée à l'ingénierie système et la modélisation complexe, je souhaite rejoindre l'équipe CATIA Cyber System pour développer des assistants IA de pointe et optimiser le MBSE.",
+    "subject": "ALTERNANCE - Ingénieur IA (CATIA Cyber System)",
+    "pitch": "Passionné par la modélisation de systèmes complexes et l'IA générative, je souhaite rejoindre Dassault Systèmes pour infuser des capacités d'intelligence artificielle au cœur des outils d'ingénierie CATIA.",
     "metadata": [
       "Durée : 24 mois — à partir de septembre 2026",
       "Rythme : 6 semaines en entreprise / 2 semaines en cours"
     ],
     "greeting": "Madame, Monsieur,",
     "paragraphs": [
-      "Actuellement étudiant en Master Robotique & IoT à EPITECH Paris, je postule avec enthousiasme pour l'alternance d'Ingénieur IA au sein du département CATIA Cyber System de Dassault Systèmes.",
-      "Le futur de l'ingénierie repose sur la capacité à modéliser et simuler des systèmes de plus en plus complexes. Mon parcours informatique m'a permis de développer un fort intérêt pour l'infusion de l'intelligence artificielle dans les cycles de conception. Je suis particulièrement motivé par l'exploration de modèles avancés tels que les GNN (Graph Neural Networks) et les LLM pour le code (SysML v2), afin d'assister les ingénieurs dans l'automatisation de leurs tâches de modélisation.",
-      "Maîtrisant Python et possédant une solide base en programmation orientée objet, je suis prêt à m'investir dans le prototypage de solutions innovantes au sein de l'écosystème CATIA. La perspective de travailler sur des systèmes autonomes (véhicules, drones) au sein de la marque de référence mondiale CATIA est pour moi une source de motivation majeure.",
-      "Curieux et rigoureux, je serais honoré d'apporter ma proactivité et ma volonté d'apprendre à vos équipes R&D pour imaginer de nouveaux horizons technologiques."
+      "Actuellement étudiant en Master Intelligence Artificielle à EPITECH Paris, c'est avec un vif intérêt que je postule pour l'alternance d'INGÉNIEUR IA au sein du département CATIA Cyber System de Dassault Systèmes à Vélizy.",
+      "Votre mission d'infuser des capacités d'IA dans les outils de conception pour assister les ingénieurs dans la modélisation de systèmes complexes résonne particulièrement avec mon parcours. Avec mon projet Shellgeist, j'ai développé un agent autonome capable d'automatiser des tâches d'édition de code complexes, démontrant ainsi ma capacité à concevoir des briques d'IA agissant comme de véritables assistants d'ingénierie.",
+      "Ma maîtrise du C++ et du calcul scientifique (CUDA, Numba), illustrée par ma 2ème place au Hackathon IA & 5G, me permet d'appréhender les enjeux de performance inhérents aux logiciels de simulation de pointe. Passionné par l'IA générative (LangChain, LangGraph), je suis convaincu que l'hybridation entre modélisation système et raisonnement agentique est la clé pour créer les outils de conception de demain.",
+      "Rejoindre Dassault Systèmes, fleuron mondial de l'innovation logicielle, représenterait pour moi une opportunité unique de contribuer au développement de CATIA, la référence mondiale pour l'ingénierie de pointe."
     ],
-    "closing": "Je reste à votre entière disposition pour vous rencontrer lors d'un entretien.",
+    "closing": "Je reste à votre entière disposition pour vous présenter mon parcours lors d'un entretien.",
     "signature": "Cordialement,\nRoméo Cavazza",
     "boldKeyword": "ALTERNANCE",
     "labels": {
