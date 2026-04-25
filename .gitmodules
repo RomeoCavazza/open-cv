@@ -1,42 +1,42 @@
-[submodule "portfolio/projets/Hyprchroma"]
-	path = portfolio/projets/Hyprchroma
+[submodule "data/user/projets/Hyprchroma"]
+	path = data/user/projets/Hyprchroma
 	url = https://github.com/RomeoCavazza/Hyprchroma.git
-[submodule "portfolio/projets/Hyprspace"]
-	path = portfolio/projets/Hyprspace
+[submodule "data/user/projets/Hyprspace"]
+	path = data/user/projets/Hyprspace
 	url = git@github.com:RomeoCavazza/Hyprspace.git
-[submodule "portfolio/projets/dashboard"]
-	path = portfolio/projets/dashboard
+[submodule "data/user/projets/dashboard"]
+	path = data/user/projets/dashboard
 	url = https://github.com/RomeoCavazza/dashboard.git
-[submodule "portfolio/projets/e-commerce"]
-	path = portfolio/projets/e-commerce
+[submodule "data/user/projets/e-commerce"]
+	path = data/user/projets/e-commerce
 	url = https://github.com/RomeoCavazza/e-commerce.git
-[submodule "portfolio/projets/hypr-canvas"]
-	path = portfolio/projets/hypr-canvas
+[submodule "data/user/projets/hypr-canvas"]
+	path = data/user/projets/hypr-canvas
 	url = https://github.com/RomeoCavazza/hypr-canvas.git
-[submodule "portfolio/projets/landing-page"]
-	path = portfolio/projets/landing-page
+[submodule "data/user/projets/landing-page"]
+	path = data/user/projets/landing-page
 	url = https://github.com/RomeoCavazza/landing-page.git
-[submodule "portfolio/projets/no-low-code"]
-	path = portfolio/projets/no-low-code
+[submodule "data/user/projets/no-low-code"]
+	path = data/user/projets/no-low-code
 	url = https://github.com/RomeoCavazza/no-low-code.git
-[submodule "portfolio/projets/nvim-config"]
-	path = portfolio/projets/nvim-config
+[submodule "data/user/projets/nvim-config"]
+	path = data/user/projets/nvim-config
 	url = https://github.com/RomeoCavazza/nvim-config.git
-[submodule "portfolio/projets/piscine-epitech"]
-	path = portfolio/projets/piscine-epitech
+[submodule "data/user/projets/piscine-epitech"]
+	path = data/user/projets/piscine-epitech
 	url = https://github.com/RomeoCavazza/piscine-epitech.git
-[submodule "portfolio/projets/setup-os"]
-	path = portfolio/projets/setup-os
+[submodule "data/user/projets/setup-os"]
+	path = data/user/projets/setup-os
 	url = https://github.com/RomeoCavazza/setup-os.git
-[submodule "portfolio/projets/shellgeist"]
-	path = portfolio/projets/shellgeist
+[submodule "data/user/projets/shellgeist"]
+	path = data/user/projets/shellgeist
 	url = https://github.com/RomeoCavazza/shellgeist.git
-[submodule "portfolio/projets/tco-core"]
-	path = portfolio/projets/tco-core
+[submodule "data/user/projets/tco-core"]
+	path = data/user/projets/tco-core
 	url = https://github.com/RomeoCavazza/tco-core.git
-[submodule "portfolio/projets/ventoy-toolkit"]
-	path = portfolio/projets/ventoy-toolkit
+[submodule "data/user/projets/ventoy-toolkit"]
+	path = data/user/projets/ventoy-toolkit
 	url = https://github.com/RomeoCavazza/ventoy-toolkit.git
-[submodule "portfolio/projets/veyl.io"]
-	path = portfolio/projets/veyl.io
+[submodule "data/user/projets/veyl.io"]
+	path = data/user/projets/veyl.io
 	url = https://github.com/RomeoCavazza/veyl.io.git
