@@ -1,6 +1,6 @@
 input:
   format: json
-  path: config/offres-urls.raw.json
+  path: data/offres/liste.json
 
 output_dir: data/offres/raw
 html_dir: null

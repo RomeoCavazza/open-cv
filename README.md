@@ -9,8 +9,9 @@ Dépôt centralisant l'écosystème de recherche d'alternance de Roméo Cavazza.
 - `/data/offres` : Analyse, suivi et données RAW des offres d'emploi.
 - `/data/user` : Source de vérité (profile.md) et projets versionnés.
 - `/docs` : Documentation technique et consignes agent.
-- `/config` : Paramétrage du scraper (`scrape-offres.yaml`, `offres-urls.raw.json`).
-- `/scripts` : Outils d'automatisation (Python, Nix).
+- `/scrape-offres.yaml` : Paramétrage principal du scraper.
+- `/data/offres/liste.json` : Source de vérité des URLs (synchronisable depuis liste.md).
+- `/engines/scripts` : Outils d'automatisation (Python, Nix).
 
 ## Boot for AI
 

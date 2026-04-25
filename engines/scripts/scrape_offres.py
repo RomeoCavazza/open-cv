@@ -49,8 +49,8 @@ import yaml  # noqa: E402
 ENTRY_RE = re.compile(r"- \[(.*?)\]\((https?://[^)]+)\)")
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
-DEFAULT_CONFIG_PATH = str(REPO_ROOT / "config/scrape-offres.yaml")
-DEFAULT_LIST_PATH = str(REPO_ROOT / "data/offres/liste.md")
+DEFAULT_CONFIG_PATH = str(REPO_ROOT / "scrape-offres.yaml")
+DEFAULT_LIST_PATH = str(REPO_ROOT / "data/offres/liste.json")
 DEFAULT_OUTPUT_DIR = str(REPO_ROOT / "data/offres/raw")
 DEFAULT_HTML_DIR = None
 DEFAULT_REPORT_PATH = None
@@ -186,6 +186,11 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         default=None,
         help="Réécrit les fichiers .md et .html déjà présents.",
+    )
+    parser.add_argument(
+        "--sync",
+        action="store_true",
+        help="Synchronise data/offres/liste.json à partir de data/offres/liste.md avant le scraping.",
     )
     return parser.parse_args()
 
@@ -608,7 +613,7 @@ def resolve_settings(args: argparse.Namespace) -> dict[str, Any]:
     config = load_config(config_path)
     input_config = config.get("input", {}) if isinstance(config.get("input", {}), dict) else {}
 
-    input_format = args.input_format or input_config.get("format") or "markdown"
+    input_format = args.input_format or input_config.get("format") or "json"
     input_path_value = args.input_path or args.list or input_config.get("path") or DEFAULT_LIST_PATH
     output_dir_value = args.output_dir or config.get("output_dir") or DEFAULT_OUTPUT_DIR
     html_dir_value = args.html_dir or config.get("html_dir") or DEFAULT_HTML_DIR
@@ -648,6 +653,21 @@ def main() -> int:
     if html_dir is not None:
         dirs_to_create.append(html_dir)
     ensure_dirs(dirs_to_create)
+
+    # Sync JSON from Markdown if requested
+    if getattr(args, "sync", False):
+        md_src = REPO_ROOT / "data/offres/liste.md"
+        json_dst = REPO_ROOT / "data/offres/liste.json"
+        if md_src.exists():
+            print(f"Sync: {md_src.name} -> {json_dst.name}")
+            raw_entries = parse_markdown_entries(md_src)
+            json_dst.write_text(
+                json.dumps({"entries": raw_entries}, ensure_ascii=False, indent=2) + "\n",
+                encoding="utf-8"
+            )
+        else:
+            print(f"Sync: {md_src} introuvable.")
+
     entries = load_entries(input_path, input_format)
     legacy_by_url = load_legacy_by_url(legacy_dir)
     report: list[dict[str, object]] = []

@@ -10,7 +10,7 @@ Avant toute action ou rédaction, l'agent doit impérativement s'imprégner du c
 2. **`/data/user/profile.md`** : **Source de vérité absolue** (Identité, expériences, technos, projets).
 3. **`/docs/instructions.md`** : Présentes consignes et règles d'engagement.
 4. **`/docs/how_it_works.md`** : Compréhension technique des outils et de la structure du repo.
-5. **`/data/offres/liste.md`** : Pour identifier les cibles de candidature.
+5. **`/data/offres/liste.json`** : Pour identifier les cibles de candidature.
 6. **`/data/offres/raw/`** : Pour analyser les données RAW des offres scrapées.
 7. **`/engines/web/resume/data.json`** : Référentiel complet (contenu et labels dynamiques).
 8. **`/data/user/projets/`** : Pour extraire les détails techniques spécifiques des side projects via leurs README respectifs.

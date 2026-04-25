@@ -15,10 +15,10 @@ pkgs.mkShell {
   ];
 
   shellHook = ''
-    export SCRAPER_CONFIG="$PWD/config/scrape-offres.yaml"
+    export SCRAPER_CONFIG="$PWD/scrape-offres.yaml"
 
     echo "Environnement scraper prêt."
     echo "Config: $SCRAPER_CONFIG"
-    echo "Lancer: python scripts/scrape_offres.py --config \"$SCRAPER_CONFIG\" --overwrite"
+    echo "Lancer: python engines/scripts/scrape_offres.py --config \"$SCRAPER_CONFIG\" --overwrite"
   '';
 }

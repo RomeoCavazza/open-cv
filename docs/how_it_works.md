@@ -10,7 +10,7 @@ Ce document détaille l'architecture technique et le fonctionnement opérationne
 - `/docs/` : Documentation structurelle et consignes pour l'agent.
 
 ### 2. Candidatures & Offres
-- `/data/offres/liste.md` : Liste centralisée des offres cibles.
+- `/data/offres/liste.json` : Liste centralisée des offres cibles.
 - `/data/offres/raw/` : Banque de fichiers Markdown contenant le texte brut de chaque offre scrapée.
 
 ### 3. Moteurs de CV
@@ -28,10 +28,10 @@ Ce document détaille l'architecture technique et le fonctionnement opérationne
 Le dépôt utilise une stack technique légère pour l'automatisation :
 
 ### Scraping & Automatisation
-- **Script principal** : `/scripts/scrape_offres.py`
-- **Configuration YAML** : `/config/scrape-offres.yaml`
-- **Source des URLs** : `/config/offres-urls.raw.json`
-- **Utilitaire CV** : `/scripts/cv_tool.py` (Standardisation Markdown)
+- **Script principal** : `/engines/scripts/scrape_offres.py`
+- **Configuration YAML** : `/scrape-offres.yaml` (à la racine)
+- **Source des URLs** : `/data/offres/liste.json`
+- **Utilitaire CV** : `/engines/scripts/cv_tool.py` (Standardisation Markdown)
 
 ### Conventions du Scraper
 - Les offres générées (RAW Markdown) sont stockées dans `/data/offres/raw/`.
@@ -66,6 +66,6 @@ Le CV Web est conçu pour remplacer les éditeurs graphiques par une approche "C
 | Action | Commande |
 | :--- | :--- |
 | Entrer dans l'environnement | `nix-shell` |
-| Lancer le scraper | `python scripts/scrape_offres.py --config config/scrape-offres.yaml` |
-| Servir le CV Web | `python3 -m http.server 8000 --directory engines/web` |
-| Standardiser un CV MD | `python3 scripts/cv_tool.py [chemin_du_fichier.md]` |
+| Lancer le scraper | `python engines/scripts/scrape_offres.py --config scrape-offres.yaml` |
+| Sync & Scrape | `python engines/scripts/scrape_offres.py --sync` |
+| Standardiser un CV MD | `python3 engines/scripts/cv_tool.py [chemin_du_fichier.md]` |
