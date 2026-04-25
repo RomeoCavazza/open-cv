@@ -133,6 +133,11 @@
             font-weight: 700;
         }
 
+        .offer-item.pending {
+            color: #d97706 !important;
+            font-weight: 700;
+        }
+
         .main-content {
             flex: 1;
             display: flex;
@@ -336,6 +341,7 @@
                         item.title = offer.title;
                         item.textContent = (offer.status === "ready" ? "✓ " : "") + offer.title;
                         if (offer.status === "ready") item.classList.add('ready');
+                        if (offer.status === "pending") item.classList.add('pending');
                         item.onclick = (e) => {
                             e.stopPropagation();
                             document.querySelectorAll('.offer-item').forEach(i => i.classList.remove('active'));

@@ -9,7 +9,7 @@
     "website": "www.romeocavazza.com",
     "linkedin": "in/romeo-cavazza/",
     "github": "github.com/RomeoCavazza",
-    "pitch": "Étudiant en Master Intelligence Artificielle, passionné par l'IA générative, je souhaite développer et mettre en pratique mes compétences en Computer Vision, NLP et IA appliquée au sein de Stelogy."
+    "pitch": "Étudiant en Master IA, passionné par la GenIA et l'automatisation, je souhaite concevoir des agents intelligents au service de la transformation digitale de Stelogy."
   },
   "apprenticeship": {
     "duration": "24 mois",
@@ -38,21 +38,21 @@
       ]
     },
     {
-      "company": "Home Lab — Plateforme inertielle",
+      "company": "Shellgeist — AI Terminal Agent",
       "role": "",
-      "period": "2025–présent",
+      "period": "2025 — Présent",
       "description": [
-        "Acquisition inertielle/GPS (MPU6050, NEO-6M) via firmware C++ et gateway Python",
-        "Analyse fréquentielle, détection d'anomalies et monitoring InfluxDB/Grafana"
+        "Agent autonome local en Python et Lua éditant du code par Tool Calling et IPC",
+        "Intégration hybride de modèles locaux Ollama et propriétaires OpenAI ou Claude"
       ]
     },
     {
-      "company": "Hackathon — Algorithmique appliquée à la couverture 5G",
+      "company": "Veyl.io — Social Intelligence Platform",
       "role": "",
-      "period": "2026",
+      "period": "2025 — Présent",
       "description": [
-        "Modélisation et optimisation du placement d'antennes via Python, Numba et CUDA",
-        "Heuristiques de couverture et traitement de données spatiales avec NumPy"
+        "Architecture RAG avec Qdrant pour l'analyse de tendances et microservices FastAPI",
+        "Orchestration de workflows LLM et déploiement de pipelines de données cloud"
       ]
     }
   ],
@@ -75,53 +75,58 @@
   ],
   "skills": [
     {
-      "category": "Intelligence Artificielle",
+      "category": "Programmation",
       "items": [
         "Python",
+        "C++",
+        "Java",
+        "Rust",
+        "FastAPI",
+        "Git"
+      ]
+    },
+    {
+      "category": "Algorithmie",
+      "items": [
+        "Numba",
+        "CUDA",
+        "IPC",
+        "Sockets",
+        "GDB",
+        "Valgrind"
+      ]
+    },
+    {
+      "category": "Machine Learning",
+      "items": [
+        "PyTorch",
+        "TensorFlow",
+        "Pandas",
         "NumPy",
         "SciPy",
-        "pandas",
-        "scikit-learn",
-        "PyTorch"
-      ]
-    },
-    {
-      "category": "Ingénierie des données",
-      "items": [
-        "SQL",
-        "PostgreSQL",
-        "InfluxDB",
-        "TimescaleDB"
-      ]
-    },
-    {
-      "category": "Calcul scientifique",
-      "items": [
-        "Jupyter",
-        "Numba",
-        "CUDA"
+        "Jupyter"
       ]
     },
     {
       "category": "DevOps",
       "items": [
-        "Linux",
         "Docker",
-        "Git",
-        "GitHub Actions",
-        "Pytest"
+        "Kubernetes",
+        "GitLab CI/CD",
+        "Linux",
+        "NixOS",
+        "Ansible"
       ]
     },
     {
-      "category": "Instrumentation",
+      "category": "MLOps",
       "items": [
-        "C",
-        "C++",
-        "Arduino",
-        "I2C",
-        "SPI",
-        "UART",
-        "USB"
+        "LangChain",
+        "LangGraph",
+        "pgvector",
+        "Ollama",
+        "Prometheus",
+        "Grafana"
       ]
     }
   ],
