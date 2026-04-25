@@ -36,14 +36,12 @@ Stage de 6 mois (Février-Juillet 2025)
 • Déploiement de workflows LLM pour la détection et l'analyse de signaux faibles
 
 Veyl.io — Social Intelligence Platform (2025 – présent)
-• Pipeline d'ingestion Meta Graph API (Advanced Access) et TikTok Graph pour monitoring social
-• Moteur de recherche vectorielle hybride (Qdrant/FAISS) pour l'analyse sémantique à grande échelle
-• Orchestration de modèles Vision et LLM via FastAPI
+• Ingestion Meta Graph API (Advanced Access) et recherche vectorielle
+• Orchestration de modèles Vision/LLM via FastAPI
 
 ShellGeist — Agent IA Terminal (2025 – présent)
-• Agent autonome (Python AsyncIO) pilotant des modèles locaux (Ollama)
-• Flux de données haute performance entre daemon et éditeur via IPC (Unix sockets/JSON-RPC)
-• Interface agentique Neovim (Lua) permettant l'édition de code et la gestion de diffs en temps réel
+• Agent autonome (Python AsyncIO) pilotant Ollama via Unix sockets
+• Interface agentique Neovim (Lua) gérant l'édition de code et les diffs
 
 ---
 

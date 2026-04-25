@@ -21,6 +21,20 @@ github.com/RomeoCavazza
 
 EXPERIENCES
 
+AI Consultant & Formateur
+FCNet, Paris, France
+Stage de 6 mois (Janvier-Juin 2026)
+• Conception de modules de formation sur l'IA générative et les workflows agentiques
+• Animation de cours sur l'adoption de l'IA appliquée aux enjeux métier
+• Développement de supports de démonstration techniques (APIs et prototypes LLM)
+
+AI Automation Engineer – R&D Intern
+Revolvr, Paris, France
+Stage de 6 mois (Février-Juillet 2025)
+• Automatisation de la veille stratégique et analyse de tendances via pipelines IA
+• Intégration d'APIs sociales dans des workflows de monitoring automatisés
+• Déploiement de workflows LLM pour la détection et l'analyse de signaux faibles
+
 Tco-core — Pipeline de Données Haute Fréquence (2025 – présent)
 • Système d'acquisition 100 Hz : firmware Arduino C++ et gateway Python
 • Traitement de signal, stockage InfluxDB et monitoring Grafana
@@ -28,20 +42,6 @@ Tco-core — Pipeline de Données Haute Fréquence (2025 – présent)
 Setup-os — Infrastructure NixOS (2025 – présent)
 • Système Linux déclaratif avec Nix Flakes, Docker et automatisation d'environnements
 • Stack d'observabilité avec Grafana, Prometheus, Loki et secrets via SOPS
-
-AI Automation Engineer – R&D Intern
-Revolvr, Paris, France
-Stage de 6 mois (Février-Juillet 2025)
-• Automatisation de la veille et analyse de tendances avec IA
-• Coordination technique autour d'APIs sociales (TikTok, Meta)
-• Déploiement de workflows LLM pour livrables de veille et signaux stratégiques
-
-AI Consultant & Formateur
-FCNet, Paris, France
-Stage de 6 mois (Janvier-Juin 2026)
-• Conception de modules de formation IA générative et stratégies d'adoption
-• Animation de cours en ligne et vulgarisation de cas d'usage métiers
-• Production de supports de formation techniques et documentaires
 
 ---
 

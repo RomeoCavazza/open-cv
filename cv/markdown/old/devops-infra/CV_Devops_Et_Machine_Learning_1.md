@@ -21,6 +21,13 @@ github.com/RomeoCavazza
 
 EXPERIENCES
 
+AI Automation Engineer – R&D Intern
+Revolvr, Paris, France
+Stage de 6 mois (Février-Juillet 2025)
+• Automatisation de la veille stratégique et analyse de tendances via pipelines IA
+• Intégration d'APIs sociales dans des workflows de monitoring automatisés
+• Déploiement de workflows LLM pour la détection et l'analyse de signaux faibles
+
 Setup-os — Infrastructure NixOS (2025 – présent)
 • Système Linux déclaratif avec Nix Flakes, Docker et automatisation d'environnements
 • Stack d'observabilité avec Grafana, Prometheus, Loki et secrets via SOPS
@@ -32,13 +39,6 @@ ShellGeist — Agent IA Terminal (2025 – présent)
 Tco-core — Pipeline de Données Haute Fréquence (2025 – présent)
 • Système d'acquisition 100 Hz : firmware Arduino C++ et gateway Python
 • Traitement de signal, stockage InfluxDB et monitoring Grafana
-
-AI Automation Engineer – R&D Intern
-Revolvr, Paris, France
-Stage de 6 mois (Février-Juillet 2025)
-• Automatisation de la veille et analyse de tendances avec IA
-• Coordination technique autour d'APIs sociales (TikTok, Meta)
-• Déploiement de workflows LLM pour livrables de veille et signaux stratégiques
 
 ---
 

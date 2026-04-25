@@ -21,6 +21,20 @@ github.com/RomeoCavazza
 
 EXPERIENCES
 
+AI Consultant & Formateur
+FCNet, Paris, France
+Stage de 6 mois (Janvier-Juin 2026)
+• Conception de modules de formation sur l'IA générative et les workflows agentiques
+• Animation de cours sur l'adoption de l'IA appliquée aux enjeux métier
+• Développement de supports de démonstration techniques (APIs et prototypes LLM)
+
+AI Automation Engineer – R&D Intern
+Revolvr, Paris, France
+Stage de 6 mois (Février-Juillet 2025)
+• Automatisation de la veille stratégique et analyse de tendances via pipelines IA
+• Intégration d'APIs sociales dans des workflows de monitoring automatisés
+• Déploiement de workflows LLM pour la détection et l'analyse de signaux faibles
+
 ShellGeist — Agent IA Terminal (2025 – présent)
 • Agent IA local en Python pour exécuter et superviser des tâches de développement
 • Plugin Neovim en Lua, IPC socket, LLM et environnement Nix
@@ -28,20 +42,6 @@ ShellGeist — Agent IA Terminal (2025 – présent)
 Veyl.io — Social Intelligence Platform (2025 – présent)
 • Monitoring Instagram/TikTok avec React, TypeScript et FastAPI
 • PostgreSQL, Qdrant, OAuth et intégrations Meta/TikTok
-
-AI Consultant & Formateur
-FCNet, Paris, France
-Stage de 6 mois (Janvier-Juin 2026)
-• Conception de modules IA générative orientés applications pratiques
-• Animation de cours en ligne sur l'IA appliquée au marketing et à l'automatisation
-• Développement de supports de démonstration web, API et workflows
-
-AI Automation Engineer – R&D Intern
-Revolvr, Paris, France
-Stage de 6 mois (Février-Juillet 2025)
-• Automatisation de la veille et analyse de tendances avec IA
-• Intégration d'APIs sociales (TikTok, Meta) dans des workflows métier
-• Déploiement de workflows LLM pour monitoring et détection de signaux
 
 ---
 

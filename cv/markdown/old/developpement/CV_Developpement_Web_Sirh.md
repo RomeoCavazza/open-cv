@@ -21,6 +21,20 @@ github.com/RomeoCavazza
 
 EXPERIENCES
 
+AI Consultant & Formateur
+FCNet, Paris, France
+Stage de 6 mois (Janvier-Juin 2026)
+• Conception de modules de formation sur l'IA générative et les workflows agentiques
+• Animation de cours sur l'adoption de l'IA appliquée aux enjeux métier
+• Développement de supports de démonstration techniques (APIs et prototypes LLM)
+
+AI Automation Engineer – R&D Intern
+Revolvr, Paris, France
+Stage de 6 mois (Février-Juillet 2025)
+• Automatisation de la veille stratégique et analyse de tendances via pipelines IA
+• Intégration d'APIs sociales dans des workflows de monitoring automatisés
+• Déploiement de workflows LLM pour la détection et l'analyse de signaux faibles
+
 Job Board — Plateforme de recrutement (2025)
 • PHP 8, MySQL, API REST et JavaScript ES6
 • Authentification, profils candidats/recruteurs et sécurité CSRF/XSS/SQL
@@ -28,20 +42,6 @@ Job Board — Plateforme de recrutement (2025)
 DRYVIA — E-commerce Fullstack (2025)
 • Monorepo Next.js 14, Express/TypeScript et MongoDB
 • Interfaces web, API backend et déploiement Vercel
-
-AI Automation Engineer – R&D Intern
-Revolvr, Paris, France
-Stage de 6 mois (Février-Juillet 2025)
-• Automatisation de la veille et analyse de tendances avec IA
-• Intégration d'APIs sociales (TikTok, Meta) dans des workflows métier
-• Déploiement de workflows LLM pour monitoring et détection de signaux
-
-AI Consultant & Formateur
-FCNet, Paris, France
-Stage de 6 mois (Janvier-Juin 2026)
-• Conception de modules IA générative orientés applications pratiques
-• Animation de cours en ligne sur l'IA appliquée au marketing et à l'automatisation
-• Développement de supports de démonstration web, API et workflows
 
 ---
 
