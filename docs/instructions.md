@@ -34,7 +34,7 @@ L'objectif est de générer des CV personnalisés adaptés chacun à une offre s
 
 ### 1. Structure Générale
 - **Format** : Markdown pur pour l'ATS ou mise à jour du `data.json` pour le Web.
-- **Nommage Markdown** : Enregistrer sous `resume/markdown/new/cv-[nom-de-l-offre].md`.
+- **Nommage** : Enregistrer sous `engines/output/resume/cv-[nom-de-l-offre].md` (ou `.html`).
 - **Intégrité** : Ne jamais modifier les sections CONTACT et LANGUES sans ordre explicite.
 - **Zéro Emoji** : Interdiction formelle d'utiliser des emojis dans les CV finaux.
 
