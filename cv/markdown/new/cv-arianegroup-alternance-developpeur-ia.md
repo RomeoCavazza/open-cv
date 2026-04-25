@@ -36,14 +36,14 @@ Stage de 6 mois (Février-Juillet 2025)
 • Déploiement de workflows LLM pour la détection et l'analyse de signaux faibles
 
 Veyl.io — Social Intelligence Platform (2025 – présent)
-• Plateforme monorepo avec backend FastAPI, PostgreSQL et vector DB Qdrant
-• Monitoring automatisé et indexation vectorielle pour analyse sémantique
-• Containerisation et déploiement via pipelines CI/CD automatisés
+• Pipeline d'ingestion Meta Graph API (Advanced Access) et TikTok Graph pour monitoring social
+• Moteur de recherche vectorielle hybride (Qdrant/FAISS) pour l'analyse sémantique à grande échelle
+• Orchestration de modèles Vision et LLM via FastAPI, couplée à des workflows n8n/Make
 
 ShellGeist — Agent IA Terminal (2025 – présent)
-• Architecture agentic pour l'exécution et la supervision de tâches de développement
-• Orchestration de modèles locaux (Ollama) et distants (OpenAI/Anthropic)
-• Implémentation de mécanismes de tool calling et supervision humaine (Human-in-the-loop)
+• Agent autonome (Python AsyncIO) pilotant des modèles locaux (Ollama)
+• Flux de données haute performance entre daemon et éditeur via IPC (Unix sockets/JSON-RPC)
+• Interface agentique Neovim (Lua) permettant l'édition de code et la gestion de diffs en temps réel
 
 ---
 
@@ -64,7 +64,7 @@ CS50W — Web Programming with Python and JavaScript
 COMPETENCES
 
 IA
-LangChain, LangGraph, RAG, Agents IA, Ollama, Qdrant, pgvector
+Ollama, LangChain, LangGraph, RAG, Agents IA, Qdrant, pgvector
 
 Python
 NumPy, Pandas, Scikit-learn, PyTorch, TensorFlow
