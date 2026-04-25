@@ -1,0 +1,39 @@
+{
+  "profile": {
+    "name": "Roméo CAVAZZA",
+    "address": "88ter Avenue Parmentier, 75011 Paris",
+    "phone": "06 99 25 67 58",
+    "email": "romeo.cavazza@gmail.com",
+    "links": {
+      "linkedin": "linkedin.com/in/romeo-cavazza",
+      "github": "github.com/RomeoCavazza",
+      "website": "www.romeocavazza.com"
+    }
+  },
+  "letter": {
+    "company": "THALES",
+    "date": "25 avril 2026",
+    "subject": "ALTERNANCE — DEVOPS & GENAI",
+    "pitch": "Étudiant en Master Robotique & IoT, passionné par l'orchestration système et l'intelligence artificielle, je souhaite contribuer au maintien et à l'évolution des services d'IA managés du Cloud Center of Excellence de Thales.",
+    "metadata": [
+      "Durée : 24 mois — à partir de septembre 2026",
+      "Rythme : 6 semaines en entreprise / 2 semaines en cours"
+    ],
+    "greeting": "Madame, Monsieur,",
+    "paragraphs": [
+      "Actuellement étudiant en Master Robotique & IoT à EPITECH Paris, je suis vivement intéressé par l'alternance d'Ingénieur DevOps IA/GenIA au sein de Thales Global Services à Toulouse.",
+      "Ma formation et mes projets personnels m'ont permis de forger une solide base technique en Linux, Docker et CI/CD. J'ai particulièrement développé un intérêt pour Kubernetes et l'automatisation GitOps, que je considère comme les piliers de l'industrialisation de l'IA moderne. Mon expérience en Python et en intégration d'APIs me permet de faire le pont entre les besoins des data scientists et les contraintes d'infrastructure souveraine.",
+      "Rejoindre l'équipe GenAI IS/IT de Thales représente pour moi une opportunité exceptionnelle de travailler sur des plateformes Kubernetes privées de grande envergure et de participer activement au cycle de vie (Build & Run) de services d'IA de pointe.",
+      "Rigoureux et autonome, je serais ravi de mettre mon enthousiasme pour les technologies cloud et l'IA générative au service de vos projets innovants."
+    ],
+    "closing": "Je reste à votre disposition pour un entretien afin de vous exposer plus amplement mes motivations.",
+    "signature": "Cordialement,\nRoméo Cavazza",
+    "boldKeyword": "ALTERNANCE",
+    "labels": {
+      "linkedin": "LinkedIn",
+      "github": "GitHub",
+      "website": "Site web",
+      "download": "Télécharger en PDF (A4)"
+    }
+  }
+}

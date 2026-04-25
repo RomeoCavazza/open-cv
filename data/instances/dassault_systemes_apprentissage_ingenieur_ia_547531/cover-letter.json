@@ -1,0 +1,39 @@
+{
+  "profile": {
+    "name": "Roméo CAVAZZA",
+    "address": "88ter Avenue Parmentier, 75011 Paris",
+    "phone": "06 99 25 67 58",
+    "email": "romeo.cavazza@gmail.com",
+    "links": {
+      "linkedin": "linkedin.com/in/romeo-cavazza",
+      "github": "github.com/RomeoCavazza",
+      "website": "www.romeocavazza.com"
+    }
+  },
+  "letter": {
+    "company": "DASSAULT SYSTÈMES",
+    "date": "25 avril 2026",
+    "subject": "ALTERNANCE — INGÉNIEUR IA",
+    "pitch": "Passionné par l'IA appliquée à l'ingénierie système et la modélisation complexe, je souhaite rejoindre l'équipe CATIA Cyber System pour développer des assistants IA de pointe et optimiser le MBSE.",
+    "metadata": [
+      "Durée : 24 mois — à partir de septembre 2026",
+      "Rythme : 6 semaines en entreprise / 2 semaines en cours"
+    ],
+    "greeting": "Madame, Monsieur,",
+    "paragraphs": [
+      "Actuellement étudiant en Master Robotique & IoT à EPITECH Paris, je postule avec enthousiasme pour l'alternance d'Ingénieur IA au sein du département CATIA Cyber System de Dassault Systèmes.",
+      "Le futur de l'ingénierie repose sur la capacité à modéliser et simuler des systèmes de plus en plus complexes. Mon parcours informatique m'a permis de développer un fort intérêt pour l'infusion de l'intelligence artificielle dans les cycles de conception. Je suis particulièrement motivé par l'exploration de modèles avancés tels que les GNN (Graph Neural Networks) et les LLM pour le code (SysML v2), afin d'assister les ingénieurs dans l'automatisation de leurs tâches de modélisation.",
+      "Maîtrisant Python et possédant une solide base en programmation orientée objet, je suis prêt à m'investir dans le prototypage de solutions innovantes au sein de l'écosystème CATIA. La perspective de travailler sur des systèmes autonomes (véhicules, drones) au sein de la marque de référence mondiale CATIA est pour moi une source de motivation majeure.",
+      "Curieux et rigoureux, je serais honoré d'apporter ma proactivité et ma volonté d'apprendre à vos équipes R&D pour imaginer de nouveaux horizons technologiques."
+    ],
+    "closing": "Je reste à votre entière disposition pour vous rencontrer lors d'un entretien.",
+    "signature": "Cordialement,\nRoméo Cavazza",
+    "boldKeyword": "ALTERNANCE",
+    "labels": {
+      "linkedin": "LinkedIn",
+      "github": "GitHub",
+      "website": "Site web",
+      "download": "Télécharger en PDF (A4)"
+    }
+  }
+}

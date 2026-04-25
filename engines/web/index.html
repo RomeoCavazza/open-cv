@@ -327,12 +327,14 @@
                     groups[cat].forEach(offer => {
                         const item = document.createElement('div');
                         item.className = 'offer-item';
+                        item.dataset.jobId = offer.job_id;
                         item.title = offer.title;
                         item.textContent = offer.title;
                         item.onclick = (e) => {
                             e.stopPropagation();
                             document.querySelectorAll('.offer-item').forEach(i => i.classList.remove('active'));
                             item.classList.add('active');
+                            updatePreview(offer.job_id, offer.title);
                         };
                         content.appendChild(item);
                     });
@@ -345,6 +347,22 @@
                 offerCountLabel.textContent = "Erreur sync JSON";
             }
         }
+
+        function updatePreview(jobId, title) {
+            const resumeIframe = document.getElementById('iframe-resume');
+            const coverIframe = document.getElementById('iframe-cover');
+            
+            // Pass the jobId to the iframes
+            resumeIframe.src = `resume/index.html?id=${jobId}`;
+            coverIframe.src = `cover-letter/index.html?id=${jobId}`;
+            
+            // Update UI feedback (optional but good)
+            const activeOfferLabel = document.createElement('div');
+            // If we have a place for active offer name, update it.
+            // For now, let's just make sure the iframes refresh.
+            console.log(`Loading instance: ${jobId}`);
+        }
+
         loadOffers();
     </script>
 </body>

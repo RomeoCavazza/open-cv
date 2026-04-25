@@ -1,0 +1,39 @@
+{
+  "profile": {
+    "name": "Roméo CAVAZZA",
+    "address": "88ter Avenue Parmentier, 75011 Paris",
+    "phone": "06 99 25 67 58",
+    "email": "romeo.cavazza@gmail.com",
+    "links": {
+      "linkedin": "linkedin.com/in/romeo-cavazza",
+      "github": "github.com/RomeoCavazza",
+      "website": "www.romeocavazza.com"
+    }
+  },
+  "letter": {
+    "company": "MBDA",
+    "date": "25 avril 2026",
+    "subject": "ALTERNANCE — DATA ENGINEER",
+    "pitch": "Passionné par la structuration de la donnée et les outils d'aide à la décision, je souhaite rejoindre la Direction Technical de MBDA pour concevoir des solutions de Data Management au service de la R&D.",
+    "metadata": [
+      "Durée : 24 mois — à partir de septembre 2026",
+      "Rythme : 6 semaines en entreprise / 2 semaines en cours"
+    ],
+    "greeting": "Madame, Monsieur,",
+    "paragraphs": [
+      "Étudiant en Master Robotique & IoT à EPITECH Paris, je suis vivement intéressé par l'alternance de Data Engineer au sein de la Direction Technical de MBDA au Plessis-Robinson.",
+      "Le pilotage des investissements technologiques nécessite une donnée fiable et structurée. Mon parcours m'a permis d'acquérir de solides bases en Python et en gestion de bases de données (PostgreSQL), outils essentiels pour l'exploration de data models et la définition de schémas opérationnels. Je suis particulièrement motivé par la perspective de transformer des données complexes en outils de visualisation clairs via Power BI pour accompagner vos équipes R&D.",
+      "Porter un projet de sa phase de prototypage à la réalisation d'un démonstrateur opérationnel est un défi qui correspond parfaitement à mon profil autonome et orienté impact. Travailler dans le secteur de la défense, au cœur de la souveraineté européenne, ajoute une dimension stratégique passionnante à cette mission d'ingénierie.",
+      "Rigoureux et doté d'un bon esprit d'analyse, je suis prêt à m'investir pleinement pour faire émerger des solutions innovantes au sein de vos équipes."
+    ],
+    "closing": "Je reste à votre entière disposition pour un entretien afin de vous détailler mon projet.",
+    "signature": "Cordialement,\nRoméo Cavazza",
+    "boldKeyword": "ALTERNANCE",
+    "labels": {
+      "linkedin": "LinkedIn",
+      "github": "GitHub",
+      "website": "Site web",
+      "download": "Télécharger en PDF (A4)"
+    }
+  }
+}

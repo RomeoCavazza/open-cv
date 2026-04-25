@@ -1,6 +1,19 @@
 async function loadCV() {
     try {
-        const response = await fetch('data.json');
+        const urlParams = new URLSearchParams(window.location.search);
+        const jobId = urlParams.get('id');
+        let dataPath = (jobId && jobId !== 'null') ? `../data/instances/${jobId}/resume.json` : '../data/templates/resume.json';
+        
+        let response = await fetch(dataPath);
+        if (!response.ok) {
+            console.warn(`Instance ${jobId} not found, falling back to template.`);
+            response = await fetch('../data/templates/resume.json');
+        }
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+
         const data = await response.json();
         
         // Profile Basic

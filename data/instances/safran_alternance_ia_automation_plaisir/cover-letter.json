@@ -1,0 +1,39 @@
+{
+  "profile": {
+    "name": "Roméo CAVAZZA",
+    "address": "88ter Avenue Parmentier, 75011 Paris",
+    "phone": "06 99 25 67 58",
+    "email": "romeo.cavazza@gmail.com",
+    "links": {
+      "linkedin": "linkedin.com/in/romeo-cavazza",
+      "github": "github.com/RomeoCavazza",
+      "website": "www.romeocavazza.com"
+    }
+  },
+  "letter": {
+    "company": "SAFRAN",
+    "date": "25 avril 2026",
+    "subject": "ALTERNANCE — INGÉNIEUR IA",
+    "pitch": "Motivé par la transformation digitale et l'optimisation des flux métiers, je souhaite rejoindre la Digital Factory de Safran Seats pour concevoir des solutions innovantes basées sur la Power Platform et l'IA.",
+    "metadata": [
+      "Durée : 24 mois — à partir de septembre 2026",
+      "Rythme : 6 semaines en entreprise / 2 semaines en cours"
+    ],
+    "greeting": "Madame, Monsieur,",
+    "paragraphs": [
+      "Étudiant en Master Robotique & IoT à EPITECH Paris, je postule avec enthousiasme pour l'alternance d'Ingénieur IA & Automation au sein de Safran Seats à Plaisir.",
+      "Mon parcours informatique m'a permis de développer une double compétence en développement classique et en analyse de données. Je suis convaincu que l'avenir de l'efficacité industrielle repose sur l'hybridation des outils low-code et de l'intelligence artificielle. Ma maîtrise de Python et ma curiosité pour les solutions Microsoft Power Platform (Power Apps, Power Automate) me permettront de transformer rapidement les besoins métiers en applications opérationnelles et fluides.",
+      "Rejoindre la Digital Factory de Safran Seats représente pour moi l'opportunité idéale de mettre mes compétences au service d'un environnement industriel exigeant. Je suis particulièrement motivé par l'intégration de cas d'usage IA (AI Builder, Copilot) pour augmenter les capacités des équipes opérationnelles.",
+      "Orienté solution et doté d'une réelle appétence pour l'innovation, je suis prêt à m'investir pleinement dans vos projets de transformation digitale."
+    ],
+    "closing": "Je reste à votre disposition pour vous présenter mon parcours et mes motivations lors d'un entretien.",
+    "signature": "Cordialement,\nRoméo Cavazza",
+    "boldKeyword": "ALTERNANCE",
+    "labels": {
+      "linkedin": "LinkedIn",
+      "github": "GitHub",
+      "website": "Site web",
+      "download": "Télécharger en PDF (A4)"
+    }
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "profile": {
+    "name": "Roméo CAVAZZA",
+    "address": "88ter Avenue Parmentier, 75011 Paris",
+    "phone": "06 99 25 67 58",
+    "email": "romeo.cavazza@gmail.com",
+    "links": {
+      "linkedin": "linkedin.com/in/romeo-cavazza",
+      "github": "github.com/RomeoCavazza",
+      "website": "www.romeocavazza.com"
+    }
+  },
+  "letter": {
+    "company": "ARIANEGROUP",
+    "date": "25 avril 2026",
+    "subject": "ALTERNANCE — DÉVELOPPEUR IA",
+    "pitch": "Passionné par l'IA générative et l'orchestration de workflows complexes, je souhaite rejoindre ArianeGroup pour développer des agents IA performants et sécurisés au sein d'un environnement stratégique.",
+    "metadata": [
+      "Durée : 24 mois — à partir de septembre 2026",
+      "Rythme : 6 semaines en entreprise / 2 semaines en cours"
+    ],
+    "greeting": "Madame, Monsieur,",
+    "paragraphs": [
+      "Actuellement en Master Robotique & IoT à EPITECH Paris, je postule avec enthousiasme pour l'alternance de DÉVELOPPEUR IA.",
+      "L'intégration de l'IA au service de l'industrie aérospatiale est un défi passionnant. Mon parcours informatique m'a permis de développer une solide expertise en Python et dans l'utilisation de bibliothèques comme PyTorch et Langchain. Je suis particulièrement motivé par la conception de pipelines de traitement de données intégrant du RAG (Retrieval-Augmented Generation) et le développement d'agents IA autonomes capables de structurer des workflows complexes.",
+      "Maîtrisant les outils de containerisation (Docker, Kubernetes) et les pratiques CI/CD, je suis prêt à m'investir dans l'optimisation des performances et de la scalabilité de vos plateformes IA. Évoluer dans un département dédié à l'innovation, où la rigueur et la sécurité sont primordiales, correspond parfaitement à mes aspirations professionnelles.",
+      "Travailler pour ArianeGroup, fleuron de la souveraineté européenne, serait pour moi une immense fierté et une opportunité unique d'allier audace technique et excellence industrielle."
+    ],
+    "closing": "Je reste à votre entière disposition pour vous présenter mon parcours lors d'un entretien.",
+    "signature": "Cordialement,\nRoméo Cavazza",
+    "boldKeyword": "ALTERNANCE",
+    "labels": {
+      "linkedin": "LinkedIn",
+      "github": "GitHub",
+      "website": "Site web",
+      "download": "Télécharger en PDF (A4)"
+    }
+  }
+}
