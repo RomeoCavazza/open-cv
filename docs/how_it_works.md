@@ -57,3 +57,12 @@ L'interface permet de prévisualiser les documents avant export.
 | Créer les dossiers d'instances | `python3 engines/scripts/cv_tool.py init-all` |
 | Harmoniser les contenus | `python3 engines/scripts/personalize_all.py` |
 | Récupérer de nouvelles offres | `python engines/scripts/scrape_offres.py --config scrape-offres.yaml` |
+
+---
+
+## Standard de Données JSON
+Pour garantir un rendu "Limpide" et professionnel, les fichiers `resume.json` doivent respecter les formats suivants :
+- **Compétences** : `"category": "Backend"`, `"items": ["FastAPI", "Rust"]`. 
+  - *Note : Jamais de versions (Next.js 14 -> Next.js) ni de parenthèses.*
+- **Périodes** : Utiliser `"2025 – Présent"` pour les projets en cours de maintenance.
+- **Réalisations** : Un titre descriptif suivi de 2 à 3 points factuels d'une seule ligne.

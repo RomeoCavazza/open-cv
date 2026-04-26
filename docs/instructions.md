@@ -1,11 +1,9 @@
-# Consignes d'Utilisation
+# Consignes d'Utilisation (Industrialisation Haute-Fidélité)
 
-Ce document définit les protocoles et les règles de gestion des données pour l'automatisation des CV.
+Ce document définit les protocoles et les règles de gestion des données pour l'automatisation des CV avec un standard de qualité "Zéro Bloat".
 
 ## Protocole de Prise de Contexte
-
 L'agent doit consulter les fichiers dans l'ordre suivant :
-
 1. **`README.md`** : Vue d'ensemble de l'architecture.
 2. **`/data/user/profile.md`** : Données personnelles de référence.
 3. **`/docs/how_it_works.md`** : Détails techniques sur le fonctionnement des scripts.
@@ -15,37 +13,32 @@ L'agent doit consulter les fichiers dans l'ordre suivant :
 ---
 
 ## Mission 1 : Collecte d'Offres
-
 1. Extraire le contenu textuel des offres (descriptions, prérequis).
 2. Sauvegarder chaque offre au format Markdown dans `/data/offres/raw/`.
 
 ---
 
-## Mission 2 : Personnalisation
+## Mission 2 : Personnalisation (Standard "Limpide")
 
-### 1. Structure
+### 1. Structure du CV (Strict)
+- **Hiérarchie** : 2 Expériences Pro (3 bullets) / 2 Projets Perso (2 bullets). Point barre.
 - **Format** : Mise à jour des fichiers `resume.json` et `cover-letter.json` dans chaque instance.
-- **Règles strictes** : Ne pas modifier les sections CONTACT et LANGUES sans instruction spécifique.
-- **Style** : Professionnel, sans emojis.
+- **Pitch** : 1 à 2 lignes. Posture : Proactif ("mettre mes compétences au service de...") et humble.
+- **Brevité** : **Une seule ligne** par bullet point. Supprimer les adjectifs (robuste, excellent).
 
-### 2. Adaptation du Profil
-- **Titre** : Reprendre l'intitulé de l'offre.
-- **Accroche** : Adapter le paragraphe d'introduction en fonction de l'entreprise.
-- **Formation** : Adapter l'intitulé du Master Epitech selon le domaine.
+### 2. Adaptation & Wording
+- **Style "Limpide"** : Valeur ajoutée d'abord, stack technique discrète entre parenthèses à la fin.
+- **Terminologie** : Utiliser "Applications" (pas "Apps"), "Messagerie instantanée" (pas "Client de").
+- **Dates** : Pour les projets actifs, utiliser systématiquement **"2025 – Présent"**.
 
-### 3. Expériences & Projets
-- **Pertinence** : Prioriser les projets utilisant la stack technologique demandée.
-- **Précision** : Utiliser les détails techniques issus du profil et des README de projets.
-- **Données** : Ne pas inventer d'expériences.
-
-### 4. Compétences
-- **Structure** : Organiser en 5 catégories thématiques.
-- **Formatage** : Lister les technologies sans parenthèses.
+### 3. Compétences (Anti-Bloat)
+- **Catégories** : Titres de 1 ou 2 mots maximum (Backend, Web, Cloud, Data, IA).
+- **Formatage** : Pas de "&", pas de versions (Next.js, pas Next.js 14), pas de parenthèses (FastAPI, pas FastAPI (Python)).
+- **Focus** : Hard skills uniquement. Exclure Agile, Clean Code, SOLID (doivent transparaître dans les projets).
 
 ---
 
 ## Critères de Validation
-
-- **Cohérence** : Vérifier que les informations sont synchronisées entre le CV et la lettre de motivation.
-- **Aération** : Veiller à la lisibilité des documents exportés.
-- **Sources** : Toujours utiliser `/data/user/profile.md` comme base de données principale.
+- **Sobriété** : Vérifier l'absence de jargon "Startup" ou de termes marketing vides.
+- **Densité** : Le document doit être aéré mais techniquement dense.
+- **Sources** : Toujours utiliser `/data/user/profile.md` comme source de vérité unique.
