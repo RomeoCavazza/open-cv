@@ -206,8 +206,9 @@ body.is-framed .no-print.actions {
 .contact-item {
     display: flex;
     align-items: center;
-    gap: 8px;
-    margin-bottom: 6px;
+    gap: 10px;
+    margin-bottom: 8px;
+    line-height: 1; /* Aligne le texte sur l icone */
 }
 
 .contact-item i {
@@ -228,10 +229,10 @@ body.is-framed .no-print.actions {
 }
 
 .icon-img {
-    width: 0.8rem;
-    /* Légèrement plus grand pour compenser le gras des PNG */
-    height: 0.8rem;
+    width: 0.9rem;
+    height: 0.9rem;
     object-fit: contain;
+    image-rendering: -webkit-optimize-contrast; /* Plus net au print */
 }
 
 .skill-category h4 {
@@ -244,7 +245,9 @@ body.is-framed .no-print.actions {
 .skill-items {
     font-size: 0.75rem;
     color: #000;
-    margin-top: 4px;
+    margin-top: 5px;
+    line-height: 1.4;
+    word-break: break-word;
 }
 
 

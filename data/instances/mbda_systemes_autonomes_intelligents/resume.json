@@ -1,7 +1,7 @@
 {
   "profile": {
     "name": "ROMEO CAVAZZA",
-    "title": "ALTERNANCE — INGÉNIEUR SYSTÈMES AUTONOMES",
+    "title": "ALTERNANCE — INGÉNIEUR IA",
     "image": "assets/profile-picture.jpg",
     "location": "Paris, 11e",
     "email": "romeo.cavazza@gmail.com",
@@ -9,7 +9,7 @@
     "website": "www.romeocavazza.com",
     "linkedin": "in/romeo-cavazza/",
     "github": "github.com/RomeoCavazza",
-    "pitch": "Étudiant en Master IA, passionné par la robotique et les agents intelligents, je souhaite concevoir des systèmes autonomes robustes au service de MBDA."
+    "pitch": "Étudiant en Master IA, passionné par la robotique et les agents intelligents, je souhaite concevoir des systèmes autonomes innovants en environnement critique au sein de MBDA."
   },
   "apprenticeship": {
     "duration": "24 mois",
@@ -59,7 +59,7 @@
   "education": [
     {
       "school": "EPITECH, Paris, France",
-      "degree": "Master of Science — Intelligence artificielle",
+      "degree": "Master of Science — Intelligence Artificielle",
       "period": "2026 – 2028"
     },
     {
@@ -69,7 +69,7 @@
     },
     {
       "school": "HarvardX, edX",
-      "degree": "CS50W — Introduction to Computer Science<br>CS50W — Web Programming with Python and JavaScript",
+      "degree": "CS50x — Introduction to Computer Science<br>CS50w — Web Programming with Python and JavaScript",
       "period": ""
     }
   ],
@@ -77,56 +77,49 @@
     {
       "category": "Programmation",
       "items": [
-        "Python",
         "C++",
-        "Java",
-        "Rust",
-        "FastAPI",
-        "Git"
+        "Python",
+        "CMake",
+        "Git",
+        "Lua"
       ]
     },
     {
-      "category": "Algorithmie",
+      "category": "Systèmes",
       "items": [
-        "Numba",
-        "CUDA",
+        "Linux",
+        "RTOS",
         "IPC",
         "Sockets",
-        "GDB",
-        "Valgrind"
+        "ARM"
+      ]
+    },
+    {
+      "category": "Robotique",
+      "items": [
+        "ROS",
+        "OpenCV",
+        "CUDA",
+        "Numba",
+        "Sensing"
       ]
     },
     {
       "category": "Machine Learning",
       "items": [
         "PyTorch",
-        "TensorFlow",
-        "Pandas",
-        "NumPy",
-        "SciPy",
-        "Jupyter"
+        "TensorRT",
+        "ONNX",
+        "Anomalie Detection"
       ]
     },
     {
-      "category": "DevOps",
+      "category": "Infrastructure",
       "items": [
         "Docker",
-        "Kubernetes",
-        "GitLab CI/CD",
-        "Linux",
-        "NixOS",
-        "Ansible"
-      ]
-    },
-    {
-      "category": "MLOps",
-      "items": [
-        "LangChain",
-        "LangGraph",
-        "pgvector",
-        "Ollama",
-        "Prometheus",
-        "Grafana"
+        "CI/CD",
+        "Grafana",
+        "NixOS"
       ]
     }
   ],

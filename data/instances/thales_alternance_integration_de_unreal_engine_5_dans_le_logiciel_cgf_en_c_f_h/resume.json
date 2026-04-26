@@ -1,7 +1,7 @@
 {
   "profile": {
     "name": "ROMEO CAVAZZA",
-    "title": "ALTERNANCE — INGÉNIEUR LOGICIEL IA (UE5/C++)",
+    "title": "ALTERNANCE — INGÉNIEUR LOGICIEL",
     "image": "assets/profile-picture.jpg",
     "location": "Paris, 11e",
     "email": "romeo.cavazza@gmail.com",
@@ -9,7 +9,7 @@
     "website": "www.romeocavazza.com",
     "linkedin": "in/romeo-cavazza/",
     "github": "github.com/RomeoCavazza",
-    "pitch": "Étudiant en Master IA, je souhaite mettre mon expertise en C++ et moteurs de jeu au service de l'intégration de l'IA sous Unreal Engine 5 chez Thales."
+    "pitch": "Étudiant en Master IA, je souhaite mettre mon expertise en C++ et moteurs de jeu au service du développement de solutions d'IA intégrées sous Unreal Engine 5 chez Thales."
   },
   "apprenticeship": {
     "duration": "24 mois",
@@ -19,112 +19,107 @@
   "experiences": [
     {
       "company": "FCNet, Paris, France",
-      "role": "AI Consultant & Formateur",
+      "role": "Développeur Logiciel & Formateur",
       "period": "Janvier-Juin 2026",
       "description": [
-        "Conception de modules d'IA appliquée et démonstrateurs techniques",
-        "Animation de formations et production de documentation technique",
-        "Vulgarisation de cas d'usage data et automatisation"
+        "Développement d'outils logiciels et production de documentation technique",
+        "Conception de démonstrateurs technologiques et supports pédagogiques",
+        "Support technique et vulgarisation de solutions logicielles"
       ]
     },
     {
-      "company": "Revolvr, Paris, France",
-      "role": "AI Automation Engineer – R&D Intern",
-      "period": "Février-Juillet 2025",
-      "description": [
-        "Développement de pipelines d'ingestion et analyse automatisée de données",
-        "Intégration d'APIs et industrialisation d'outils de détection de signaux",
-        "Production de workflows d'analyse pour usages métier"
-      ]
-    },
-    {
-      "company": "Home Lab — Plateforme inertielle",
+      "company": "Plugins Système Wayland — Développement C++",
       "role": "",
-      "period": "2025 — Présent",
+      "period": "2025 – Présent",
       "description": [
-        "Acquisition et fusion de données capteurs (GPS, Gyroscope) via firmware C++",
-        "Traitement du signal, détection d'anomalies et visualisation via Grafana"
+        "Conception et maintenance de 3 plugins pour Hyprland (logiciel en C++)",
+        "Gestion de la mémoire vive, calculs matriciels pour le rendu graphique et hooks système"
       ]
     },
     {
-      "company": "Hackathon IA & 5G — SNCF/Bouygues",
+      "company": "Setup-os — Configuration NixOS",
       "role": "",
-      "period": "2026",
+      "period": "2025 – Présent",
       "description": [
-        "Algorithme de clustering et optimisation pour l'allocation de ressources radio 5G",
-        "Accélération GPU via Numba et CUDA pour le traitement massivement parallèle"
+        "Système Linux (Nix Flakes, Docker, NixOps) paramétré pour l'automatisation",
+        "Stack d'observabilité (Grafana, Prometheus, Loki) et gestion de secrets via SOPS"
+      ]
+    },
+    {
+      "company": "Tco-core — Système IoT & Acquisition Binaire",
+      "role": "",
+      "period": "2025 – Présent",
+      "description": [
+        "Développement C++ sur microcontrôleurs pour acquisition de données haute fréquence",
+        "Implémentation de protocoles de communication binaires bas-niveau avec CRC8"
       ]
     }
   ],
   "education": [
     {
       "school": "EPITECH, Paris, France",
-      "degree": "Master of Science — Intelligence artificielle",
+      "degree": "Master of Science — Systèmes Immersifs et Réalités Virtuelles",
       "period": "2026 – 2028"
     },
     {
       "school": "EPITECH, Paris, France",
-      "degree": "Pré-MSc — Python, CUDA, NumPy, Pandas, Rust, Algorithmique.",
+      "degree": "Pré-MSc – C, Python, Rust, Linux, interfaces 2D/3D, dev fullstack APIs et POO",
       "period": "2025 – 2026"
     },
     {
       "school": "HarvardX, edX",
-      "degree": "CS50W — Introduction to Computer Science<br>CS50W — Web Programming with Python and JavaScript",
+      "degree": "CS50x — Introduction to Computer Science<br>CS50w — Web Programming with Python and JavaScript",
       "period": ""
     }
   ],
   "skills": [
     {
-      "category": "Programmation",
+      "category": "Moteur & Graphismes",
       "items": [
-        "Python",
-        "C++",
-        "Java",
-        "Rust",
-        "CMake",
-        "Git"
+        "Unreal Engine 5",
+        "HLSL",
+        "Niagara",
+        "Chaos Physics",
+        "Blender"
       ]
     },
     {
-      "category": "Algorithmie",
+      "category": "Programmation",
       "items": [
-        "Numba",
-        "CUDA",
-        "IPC",
-        "Sockets",
+        "C++20",
+        "C",
+        "Python",
+        "Rust",
+        "ZeroMQ",
+        "CMake"
+      ]
+    },
+    {
+      "category": "Systèmes & Performance",
+      "items": [
+        "Linux NixOS",
+        "POSIX Sockets",
+        "Multithreading",
         "GDB",
         "Valgrind"
       ]
     },
     {
-      "category": "Machine Learning",
+      "category": "IA & Simulation",
       "items": [
+        "LibTorch",
         "PyTorch",
-        "TensorFlow",
-        "Pandas",
-        "NumPy",
-        "SciPy",
-        "Jupyter"
+        "Recast/Detour",
+        "Behavior Trees"
       ]
     },
     {
-      "category": "DevOps",
+      "category": "Infrastructure & Outils",
       "items": [
         "Docker",
-        "Kubernetes",
-        "GitLab CI/CD",
-        "Linux",
-        "NixOS",
-        "Ansible"
-      ]
-    },
-    {
-      "category": "MLOps",
-      "items": [
-        "LangChain",
-        "LangGraph",
-        "pgvector",
-        "Ollama",
+        "Git",
+        "Perforce",
+        "GitHub Actions",
         "Prometheus",
         "Grafana"
       ]

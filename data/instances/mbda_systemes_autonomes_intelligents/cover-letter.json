@@ -13,7 +13,7 @@
   "letter": {
     "company": "ArianeGroup",
     "date": "25 avril 2026",
-    "subject": "ALTERNANCE - ALTERNANCE — DÉVELOPPEUR IA",
+    "subject": "ALTERNANCE - ALTERNANCE — INGÉNIEUR IA",
     "pitch": "Passionné par l'IA générative et l'orchestration de workflows complexes, je souhaite rejoindre ArianeGroup pour développer des agents IA performants et sécurisés au sein d'un environnement stratégique.",
     "metadata": [
       "Durée : 24 mois — à partir de septembre 2026",
@@ -21,7 +21,7 @@
     ],
     "greeting": "Madame, Monsieur,",
     "paragraphs": [
-      "Actuellement étudiant en Master Intelligence Artificielle à EPITECH Paris, c'est avec une grande motivation que je postule pour cette alternance de DÉVELOPPEUR IA au sein d'ArianeGroup.",
+      "Actuellement étudiant en Master Intelligence Artificielle à EPITECH Paris, c'est avec une grande motivation que je postule pour cette alternance de INGÉNIEUR IA au sein d'ArianeGroup.",
       "Mes projets récents, notamment le développement d'un agent de terminal autonome Shellgeist et l'implémentation d'une plateforme d'acquisition inertielle (MPU6050/GPS), m'ont permis de maîtriser l'orchestration de modèles via LangChain ainsi que le traitement de données capteurs en temps réel via C++ et Python. Je suis passionné par l'application de l'IA à des problématiques de télémesure et de navigation, enjeux critiques pour les lanceurs d'ArianeGroup.",
       "Au-delà de la couche algorithmique, je possède une solide culture MLOps : de la containerisation sous Docker/Kubernetes au déploiement via des pipelines CI/CD GitLab. Ma rigueur et mon goût pour l'excellence technique sont en parfaite adéquation avec les exigences d'ArianeGroup, où la performance et la fiabilité des systèmes de défense et civils sont primordiales.",
       "Travailler pour ArianeGroup, fleuron de la souveraineté européenne, serait pour moi une immense fierté et une opportunité unique d'allier audace technique et excellence industrielle."

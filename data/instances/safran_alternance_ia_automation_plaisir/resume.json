@@ -1,7 +1,7 @@
 {
   "profile": {
     "name": "ROMEO CAVAZZA",
-    "title": "ALTERNANCE — INGÉNIEUR IA",
+    "title": "ALTERNANCE — INGÉNIEUR IA & AUTOMATION",
     "image": "assets/profile-picture.jpg",
     "location": "Paris, 11e",
     "email": "romeo.cavazza@gmail.com",
@@ -9,7 +9,7 @@
     "website": "www.romeocavazza.com",
     "linkedin": "in/romeo-cavazza/",
     "github": "github.com/RomeoCavazza",
-    "pitch": "Étudiant en Master Intelligence Artificielle, passionné par l'IA générative, je souhaite développer et mettre en pratique mes compétences en Computer Vision, NLP et IA appliquée au sein de Safran."
+    "pitch": "Étudiant en Master IA, je souhaite concevoir des solutions d'automatisation intelligente et optimiser les flux de données industriels au profit des équipes de Safran Plaisir."
   },
   "apprenticeship": {
     "duration": "24 mois",
@@ -38,28 +38,28 @@
       ]
     },
     {
-      "company": "Home Lab — Plateforme inertielle",
+      "company": "Shellgeist — AI Terminal Agent",
       "role": "",
-      "period": "2025–présent",
+      "period": "2025 — Présent",
       "description": [
-        "Acquisition inertielle/GPS (MPU6050, NEO-6M) via firmware C++ et gateway Python",
-        "Analyse fréquentielle, détection d'anomalies et monitoring InfluxDB/Grafana"
+        "Agent autonome local en Python et Lua éditant du code par Tool Calling et IPC",
+        "Intégration hybride de modèles locaux Ollama et propriétaires OpenAI ou Claude"
       ]
     },
     {
-      "company": "Hackathon — Algorithmique appliquée à la couverture 5G",
+      "company": "Veyl.io — Social Intelligence Platform",
       "role": "",
-      "period": "2026",
+      "period": "2025 — Présent",
       "description": [
-        "Modélisation et optimisation du placement d'antennes via Python, Numba et CUDA",
-        "Heuristiques de couverture et traitement de données spatiales avec NumPy"
+        "Architecture RAG avec Qdrant pour l'analyse de tendances et microservices FastAPI",
+        "Orchestration de workflows LLM et déploiement de pipelines de données cloud"
       ]
     }
   ],
   "education": [
     {
       "school": "EPITECH, Paris, France",
-      "degree": "Master of Science — Intelligence artificielle",
+      "degree": "Master of Science — Intelligence Artificielle",
       "period": "2026 – 2028"
     },
     {
@@ -69,59 +69,59 @@
     },
     {
       "school": "HarvardX, edX",
-      "degree": "CS50W — Introduction to Computer Science<br>CS50W — Web Programming with Python and JavaScript",
+      "degree": "CS50x — Introduction to Computer Science<br>CS50w — Web Programming with Python and JavaScript",
       "period": ""
     }
   ],
   "skills": [
     {
-      "category": "Intelligence Artificielle",
+      "category": "Programmation",
       "items": [
         "Python",
-        "NumPy",
-        "SciPy",
-        "pandas",
-        "scikit-learn",
-        "PyTorch"
+        "JavaScript",
+        "TypeScript",
+        "FastAPI",
+        "Git"
       ]
     },
     {
-      "category": "Ingénierie des données",
+      "category": "Automatisation",
       "items": [
-        "SQL",
-        "PostgreSQL",
-        "InfluxDB",
-        "TimescaleDB"
+        "n8n",
+        "Make",
+        "Zapier",
+        "Power Automate",
+        "VBA"
       ]
     },
     {
-      "category": "Calcul scientifique",
+      "category": "IA",
       "items": [
-        "Jupyter",
-        "Numba",
-        "CUDA"
+        "LangChain",
+        "OpenAI API",
+        "Ollama",
+        "pgvector",
+        "Pandas"
       ]
     },
     {
       "category": "DevOps",
       "items": [
-        "Linux",
         "Docker",
-        "Git",
-        "GitHub Actions",
-        "Pytest"
+        "CI/CD",
+        "Nginx",
+        "Linux",
+        "SSH"
       ]
     },
     {
-      "category": "Instrumentation",
+      "category": "Data",
       "items": [
-        "C",
-        "C++",
-        "Arduino",
-        "I2C",
-        "SPI",
-        "UART",
-        "USB"
+        "SQL",
+        "PostgreSQL",
+        "Jupyter",
+        "DBeaver",
+        "NumPy"
       ]
     }
   ],

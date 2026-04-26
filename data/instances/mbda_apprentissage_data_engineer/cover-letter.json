@@ -11,22 +11,22 @@
     }
   },
   "letter": {
-    "company": "MBDA",
+    "company": "Renault Digital",
     "date": "25 avril 2026",
-    "subject": "ALTERNANCE - ALTERNANCE — DATA ENGINEER",
-    "pitch": "Passionné par la structuration de la donnée et les outils d'aide à la décision, je souhaite rejoindre la Direction Technical de MBDA pour concevoir des solutions de Data Management au service de la R&D.",
+    "subject": "ALTERNANCE — Apprenti Ingénieur IA",
+    "pitch": "Passionné par l'automatisation et l'IA générative, je souhaite rejoindre Renault Digital pour optimiser la gestion des bases de connaissances opérationnelles via des assistants intelligents et l'industrialisation de pipelines RAG.",
     "metadata": [
       "Durée : 24 mois — à partir de septembre 2026",
       "Rythme : 6 semaines en entreprise / 2 semaines en cours"
     ],
     "greeting": "Madame, Monsieur,",
     "paragraphs": [
-      "Étudiant en Master Robotique & IoT à EPITECH Paris, je suis vivement intéressé par l'alternance de Data Engineer au sein de la Direction Technical de MBDA au Plessis-Robinson.",
-      "Le pilotage des investissements technologiques nécessite une donnée fiable et structurée. Mon parcours m'a permis d'acquérir de solides bases en Python et en gestion de bases de données (PostgreSQL), outils essentiels pour l'exploration de data models et la définition de schémas opérationnels. Je suis particulièrement motivé par la perspective de transformer des données complexes en outils de visualisation clairs via Power BI pour accompagner vos équipes R&D.",
-      "Porter un projet de sa phase de prototypage à la réalisation d'un démonstrateur opérationnel est un défi qui correspond parfaitement à mon profil autonome et orienté impact. Travailler dans le secteur de la défense, au cœur de la souveraineté européenne, ajoute une dimension stratégique passionnante à cette mission d'ingénierie.",
-      "Rigoureux et doté d'un bon esprit d'analyse, je suis prêt à m'investir pleinement pour faire émerger des solutions innovantes au sein de vos équipes."
+      "Actuellement étudiant en Master Intelligence Artificielle à EPITECH Paris, c'est avec un vif intérêt que je postule pour l'alternance d'APPRENTI INGÉNIEUR IA au sein de Renault Digital à Boulogne-Billancourt.",
+      "Votre mission visant à outiller la rédaction et la maintenance de votre base de connaissances via l'IA résonne parfaitement avec mes réalisations. Avec mon projet Veyl.io, j'ai conçu une plateforme d'intelligence sémantique utilisant le RAG et des bases vectorielles (Qdrant) pour l'indexation de contenus complexes. Cette expertise, couplée à mon projet Shellgeist — un agent autonome automatisant des tâches techniques par Tool Calling — me permet de concevoir des assistants capables de générer des articles structurés et de faciliter l'accès à l'information pour vos équipes support.",
+      "Au-delà de la couche algorithmique, je possède une solide culture DevOps et une maîtrise de l'automatisation via Python et API. Habitué à industrialiser des solutions sur des environnements complexes (Linux, Docker), je suis prêt à m'investir dans l'optimisation de vos workflows pour accélérer la résolution d'incidents au sein de l'équipe End-to-End RUN.",
+      "Rejoindre Renault Digital, moteur de l'innovation du groupe, représenterait pour moi une opportunité unique de mettre mon expertise GenAI au service de solutions concrètes et impactantes pour vos collaborateurs."
     ],
-    "closing": "Je reste à votre entière disposition pour un entretien afin de vous détailler mon projet.",
+    "closing": "Je reste à votre entière disposition pour vous présenter mon parcours lors d'un entretien.",
     "signature": "Cordialement,\nRoméo Cavazza",
     "boldKeyword": "ALTERNANCE",
     "labels": {

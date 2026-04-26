@@ -1,7 +1,7 @@
 {
   "profile": {
     "name": "ROMEO CAVAZZA",
-    "title": "DATA SCIENTIST",
+    "title": "ALTERNANCE — DATA SCIENTIST",
     "image": "assets/profile-picture.jpg",
     "location": "Paris, 11e",
     "email": "romeo.cavazza@gmail.com",
@@ -38,12 +38,12 @@
       ]
     },
     {
-      "company": "Shellgeist — AI Terminal Agent",
+      "company": "Hackathon IA & 5G — SNCF / Bouygues",
       "role": "",
-      "period": "2025 — Présent",
+      "period": "2026",
       "description": [
-        "Agent autonome local en Python et Lua éditant du code par Tool Calling et IPC",
-        "Intégration hybride de modèles locaux Ollama et propriétaires OpenAI ou Claude"
+        "Algorithme de clustering et optimisation pour l'allocation de ressources radio 5G",
+        "Accélération GPU via Numba et CUDA pour le traitement massivement parallèle"
       ]
     },
     {
@@ -59,7 +59,7 @@
   "education": [
     {
       "school": "EPITECH, Paris, France",
-      "degree": "Master of Science — Intelligence artificielle",
+      "degree": "Master of Science — Intelligence Artificielle",
       "period": "2026 – 2028"
     },
     {
@@ -69,7 +69,7 @@
     },
     {
       "school": "HarvardX, edX",
-      "degree": "CS50W — Introduction to Computer Science<br>CS50W — Web Programming with Python and JavaScript",
+      "degree": "CS50x — Introduction to Computer Science<br>CS50w — Web Programming with Python and JavaScript",
       "period": ""
     }
   ],
@@ -79,54 +79,45 @@
       "items": [
         "Python",
         "C++",
-        "Java",
-        "Rust",
-        "FastAPI",
-        "Git"
+        "Git",
+        "Jupyter",
+        "CMake"
       ]
     },
     {
-      "category": "Algorithmie",
+      "category": "Analyse",
       "items": [
-        "Numba",
-        "CUDA",
-        "IPC",
-        "Sockets",
-        "GDB",
-        "Valgrind"
+        "Matplotlib",
+        "Seaborn",
+        "Pandas",
+        "NumPy",
+        "SciPy"
       ]
     },
     {
       "category": "Machine Learning",
       "items": [
         "PyTorch",
-        "TensorFlow",
-        "Pandas",
-        "NumPy",
-        "SciPy",
-        "Jupyter"
+        "Scikit-learn",
+        "Statsmodels"
       ]
     },
     {
-      "category": "DevOps",
+      "category": "Données",
+      "items": [
+        "PostgreSQL",
+        "InfluxDB",
+        "DBeaver",
+        "SQL"
+      ]
+    },
+    {
+      "category": "Infrastructure",
       "items": [
         "Docker",
-        "Kubernetes",
-        "GitLab CI/CD",
-        "Linux",
-        "NixOS",
-        "Ansible"
-      ]
-    },
-    {
-      "category": "MLOps",
-      "items": [
-        "LangChain",
-        "LangGraph",
-        "pgvector",
-        "Ollama",
-        "Prometheus",
-        "Grafana"
+        "CI/CD",
+        "Grafana",
+        "Linux"
       ]
     }
   ],

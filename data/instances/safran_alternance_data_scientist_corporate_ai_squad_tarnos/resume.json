@@ -9,7 +9,7 @@
     "website": "www.romeocavazza.com",
     "linkedin": "in/romeo-cavazza/",
     "github": "github.com/RomeoCavazza",
-    "pitch": "Étudiant en Master Big Data, passionné par l'ingénierie des données, je souhaite développer et mettre en pratique mes compétences en pipelines ETL, analyse statistique et Cloud au sein de Safran."
+    "pitch": "Étudiant en Master IA, je souhaite rejoindre la Corporate AI Squad de Safran pour industrialiser des modèles de Data Science et extraire de la valeur des données critiques du groupe."
   },
   "apprenticeship": {
     "duration": "24 mois",
@@ -38,28 +38,28 @@
       ]
     },
     {
-      "company": "Home Lab — Plateforme inertielle",
-      "role": "",
-      "period": "2025–présent",
-      "description": [
-        "Acquisition inertielle/GPS (MPU6050, NEO-6M) via firmware C++ et gateway Python",
-        "Analyse fréquentielle, détection d'anomalies et monitoring InfluxDB/Grafana"
-      ]
-    },
-    {
-      "company": "Hackathon — Algorithmique appliquée à la couverture 5G",
+      "company": "Hackathon IA & 5G — SNCF / Bouygues",
       "role": "",
       "period": "2026",
       "description": [
-        "Modélisation et optimisation du placement d'antennes via Python, Numba et CUDA",
-        "Heuristiques de couverture et traitement de données spatiales avec NumPy"
+        "Algorithme de clustering et optimisation pour l'allocation de ressources radio 5G",
+        "Accélération GPU via Numba et CUDA pour le traitement massivement parallèle"
+      ]
+    },
+    {
+      "company": "Home Lab — Plateforme inertielle",
+      "role": "",
+      "period": "2025 – Présent",
+      "description": [
+        "Acquisition inertielle/GPS (MPU6050, NEO-6M) via firmware C++ et gateway Python",
+        "Analyse fréquentielle, détection d'anomalies et monitoring InfluxDB/Grafana"
       ]
     }
   ],
   "education": [
     {
       "school": "EPITECH, Paris, France",
-      "degree": "Master of Science — Big Data",
+      "degree": "Master of Science — Intelligence Artificielle",
       "period": "2026 – 2028"
     },
     {
@@ -69,59 +69,59 @@
     },
     {
       "school": "HarvardX, edX",
-      "degree": "CS50W — Introduction to Computer Science<br>CS50W — Web Programming with Python and JavaScript",
+      "degree": "CS50x — Introduction to Computer Science<br>CS50w — Web Programming with Python and JavaScript",
       "period": ""
     }
   ],
   "skills": [
     {
-      "category": "Intelligence Artificielle",
+      "category": "Programmation",
       "items": [
         "Python",
-        "NumPy",
-        "SciPy",
-        "pandas",
-        "scikit-learn",
-        "PyTorch"
+        "Git",
+        "DBeaver",
+        "Bash",
+        "Shell"
       ]
     },
     {
-      "category": "Ingénierie des données",
+      "category": "Data",
       "items": [
         "SQL",
         "PostgreSQL",
         "InfluxDB",
-        "TimescaleDB"
+        "Pandas",
+        "NumPy"
       ]
     },
     {
-      "category": "Calcul scientifique",
+      "category": "Machine Learning",
       "items": [
-        "Jupyter",
-        "Numba",
-        "CUDA"
+        "PyTorch",
+        "Scikit-learn",
+        "MLflow",
+        "Optuna",
+        "Ray"
       ]
     },
     {
-      "category": "DevOps",
+      "category": "IA Générative",
       "items": [
-        "Linux",
+        "LangChain",
+        "LangGraph",
+        "Ollama",
+        "Qdrant",
+        "FAISS"
+      ]
+    },
+    {
+      "category": "Infrastructure",
+      "items": [
         "Docker",
-        "Git",
-        "GitHub Actions",
-        "Pytest"
-      ]
-    },
-    {
-      "category": "Instrumentation",
-      "items": [
-        "C",
-        "C++",
-        "Arduino",
-        "I2C",
-        "SPI",
-        "UART",
-        "USB"
+        "CI/CD",
+        "Grafana",
+        "Linux",
+        "Prometheus"
       ]
     }
   ],

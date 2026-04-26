@@ -59,7 +59,7 @@
   "education": [
     {
       "school": "EPITECH, Paris, France",
-      "degree": "Master of Science — Intelligence artificielle",
+      "degree": "Master of Science — Intelligence Artificielle",
       "period": "2026 – 2028"
     },
     {
@@ -69,64 +69,59 @@
     },
     {
       "school": "HarvardX, edX",
-      "degree": "CS50W — Introduction to Computer Science<br>CS50W — Web Programming with Python and JavaScript",
+      "degree": "CS50x — Introduction to Computer Science<br>CS50w — Web Programming with Python and JavaScript",
       "period": ""
     }
   ],
   "skills": [
     {
-      "category": "Programmation",
+      "category": "IA & Agents",
+      "items": [
+        "LangChain",
+        "LangGraph",
+        "Ollama",
+        "pgvector",
+        "Qdrant"
+      ]
+    },
+    {
+      "category": "Sécurité",
+      "items": [
+        "GDB",
+        "Valgrind",
+        "Wireshark",
+        "Loki",
+        "Fail2ban"
+      ]
+    },
+    {
+      "category": "Backend",
       "items": [
         "Python",
-        "C++",
-        "Java",
-        "Rust",
+        "SQL",
         "FastAPI",
-        "Git"
-      ]
-    },
-    {
-      "category": "Algorithmie",
-      "items": [
-        "Numba",
-        "CUDA",
-        "IPC",
-        "Sockets",
-        "GDB",
-        "Valgrind"
-      ]
-    },
-    {
-      "category": "Machine Learning",
-      "items": [
-        "PyTorch",
-        "TensorFlow",
-        "Pandas",
-        "NumPy",
-        "SciPy",
-        "Jupyter"
+        "Git",
+        "ZeroMQ"
       ]
     },
     {
       "category": "DevOps",
       "items": [
         "Docker",
-        "Kubernetes",
-        "GitLab CI/CD",
+        "GitHub Actions",
+        "Nginx",
         "Linux",
-        "NixOS",
-        "Ansible"
+        "NixOS"
       ]
     },
     {
-      "category": "MLOps",
+      "category": "Analyse",
       "items": [
-        "LangChain",
-        "LangGraph",
-        "pgvector",
-        "Ollama",
-        "Prometheus",
-        "Grafana"
+        "PyTorch",
+        "Scikit-learn",
+        "Pandas",
+        "NumPy",
+        "SciPy"
       ]
     }
   ],

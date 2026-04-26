@@ -9,7 +9,7 @@
     "website": "www.romeocavazza.com",
     "linkedin": "in/romeo-cavazza/",
     "github": "github.com/RomeoCavazza",
-    "pitch": "Étudiant en Master IA, passionné par la GenIA et l'automatisation, je souhaite concevoir des agents intelligents au service de la transformation digitale de Stelogy."
+    "pitch": "Étudiant en Master IA, je souhaite concevoir des agents intelligents et des solutions d'automatisation IA au service de la transformation digitale et de la performance de Stelogy."
   },
   "apprenticeship": {
     "duration": "24 mois",
@@ -51,7 +51,7 @@
       "role": "",
       "period": "2025 — Présent",
       "description": [
-        "Architecture RAG avec Qdrant pour l'analyse de tendances et microservices FastAPI",
+        "Architecture RAG avec Qdrant pour l analyse de tendances et microservices FastAPI",
         "Orchestration de workflows LLM et déploiement de pipelines de données cloud"
       ]
     }
@@ -59,7 +59,7 @@
   "education": [
     {
       "school": "EPITECH, Paris, France",
-      "degree": "Master of Science — Intelligence artificielle",
+      "degree": "Master of Science — Intelligence Artificielle",
       "period": "2026 – 2028"
     },
     {
@@ -69,7 +69,7 @@
     },
     {
       "school": "HarvardX, edX",
-      "degree": "CS50W — Introduction to Computer Science<br>CS50W — Web Programming with Python and JavaScript",
+      "degree": "CS50x — Introduction to Computer Science<br>CS50w — Web Programming with Python and JavaScript",
       "period": ""
     }
   ],
@@ -78,55 +78,50 @@
       "category": "Programmation",
       "items": [
         "Python",
-        "C++",
-        "Java",
-        "Rust",
-        "FastAPI",
+        "TypeScript",
+        "SQL",
+        "Bash",
         "Git"
       ]
     },
     {
-      "category": "Algorithmie",
+      "category": "Frameworks",
       "items": [
-        "Numba",
-        "CUDA",
-        "IPC",
-        "Sockets",
-        "GDB",
-        "Valgrind"
+        "React",
+        "Next.js",
+        "FastAPI",
+        "Node.js",
+        "Radix UI"
       ]
     },
     {
-      "category": "Machine Learning",
+      "category": "Backend",
       "items": [
-        "PyTorch",
-        "TensorFlow",
-        "Pandas",
-        "NumPy",
-        "SciPy",
-        "Jupyter"
+        "PostgreSQL",
+        "MongoDB Atlas",
+        "Redis",
+        "Qdrant",
+        "pgvector"
+      ]
+    },
+    {
+      "category": "AI / ML",
+      "items": [
+        "LangChain",
+        "LangGraph",
+        "Multi-Agent Systems",
+        "Ollama",
+        "PyTorch"
       ]
     },
     {
       "category": "DevOps",
       "items": [
         "Docker",
-        "Kubernetes",
-        "GitLab CI/CD",
-        "Linux",
+        "CI/CD (GitHub Actions)",
+        "AWS",
         "NixOS",
-        "Ansible"
-      ]
-    },
-    {
-      "category": "MLOps",
-      "items": [
-        "LangChain",
-        "LangGraph",
-        "pgvector",
-        "Ollama",
-        "Prometheus",
-        "Grafana"
+        "Nginx"
       ]
     }
   ],

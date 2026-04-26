@@ -12,7 +12,7 @@
       "url": "https://groupecreditagricole.jobs/fr/nos-offres-emploi/2026-110627/",
       "category": "Intelligence Artificielle & GenAI",
       "job_id": "credit_agricole_stage_alternance_ia_2026_110627",
-      "status": "pending"
+      "status": "ready"
     },
     {
       "title": "Dassault Systèmes - Apprentissage Ingénieur IA (547531)",
@@ -26,7 +26,7 @@
       "url": "https://www.3ds.com/careers/jobs/apprentissage-ingenieur-intelligence-artificielle-f-h-547433",
       "category": "Intelligence Artificielle & GenAI",
       "job_id": "dassault_systemes_apprentissage_ingenieur_intelligence_artificielle_547433",
-      "status": "pending"
+      "status": "ready"
     },
     {
       "title": "Dassault Systèmes - Apprentissage Ingénieur Développement Outils et IA (547835)",
@@ -40,14 +40,14 @@
       "url": "https://epitech.jobteaser.com/en/job-offers/9f147325-9520-4b2e-a5d4-10ee5c3dbc71-itonics-internship-apprenticeship-data-ai-engineer-python-langchain-llms",
       "category": "Intelligence Artificielle & GenAI",
       "job_id": "itonics_data_and_ai_engineer_apprenticeship",
-      "status": "pending"
+      "status": "ready"
     },
     {
       "title": "MBDA - Contrat Pro Portage d'algorithme IA sur calculateur embarqué",
       "url": "https://www.mbda-systems.com/country-fr/careers/contrat-pro-ingenieur-portage-dalgorithme-ia-sur-calculateur-embarque-fh",
       "category": "Intelligence Artificielle & GenAI",
       "job_id": "mbda_contrat_pro_portage_d_algorithme_ia_sur_calculateur_embarque",
-      "status": "pending"
+      "status": "ready"
     },
     {
       "title": "MBDA - Apprentissage Data Scientist détection d'anomalies",
@@ -61,7 +61,7 @@
       "url": "https://www.mbda-systems.com/country-fr/careers/contrat-pro-ingenieur-en-systemes-autonomes-intelligents-fh",
       "category": "Intelligence Artificielle & GenAI",
       "job_id": "mbda_systemes_autonomes_intelligents",
-      "status": "pending"
+      "status": "ready"
     },
     {
       "title": "Renault Group - Apprenti Ingénieur IA",
@@ -74,7 +74,8 @@
       "title": "Safran - Alternance IA Automation (Plaisir)",
       "url": "https://www.safran-group.com/fr/offres/france/plaisir/alternance-ia-automation-fh-177903",
       "category": "Intelligence Artificielle & GenAI",
-      "job_id": "safran_alternance_ia_automation_plaisir"
+      "job_id": "safran_alternance_ia_automation_plaisir",
+      "status": "ready"
     },
     {
       "title": "Safran - Alternance IA Mise en place LLM (Bordes)",
@@ -87,7 +88,8 @@
       "title": "Safran - Alternance Data Scientist Corporate AI Squad (Tarnos)",
       "url": "https://www.safran-group.com/fr/offres/france/tarnos/alternance-data-scientist-corporate-ai-squad-fh-174547",
       "category": "Intelligence Artificielle & GenAI",
-      "job_id": "safran_alternance_data_scientist_corporate_ai_squad_tarnos"
+      "job_id": "safran_alternance_data_scientist_corporate_ai_squad_tarnos",
+      "status": "ready"
     },
     {
       "title": "Société Générale - IA Officer",
@@ -101,21 +103,21 @@
       "url": "https://epitech.jobteaser.com/en/job-offers/1c0b1f47-80de-4f65-a923-670b36b98bf5-stelogy-alternance-developpeur-ia",
       "category": "Intelligence Artificielle & GenAI",
       "job_id": "stelogy_alternance_developpeur_ia",
-      "status": "pending"
+      "status": "ready"
     },
     {
       "title": "Thales - Alternance Ingénieur Logiciel IA",
       "url": "https://careers.thalesgroup.com/global/en/job/TGPTGWGLOBALR0324964EXTERNALENGLOBAL/Alternance-Ing-nieur-Logiciel-IA",
       "category": "Intelligence Artificielle & GenAI",
       "job_id": "thales_alternance_integration_de_unreal_engine_5_dans_le_logiciel_cgf_en_c_f_h",
-      "status": "pending"
+      "status": "ready"
     },
     {
       "title": "Thales - Alternance Ingénieur Data / IA (F/H)",
       "url": "https://careers.thalesgroup.com/global/en/job/TGPTGWGLOBALR0321231EXTERNALENGLOBAL/ALTERNANCE-Ing-nieur-Data-IA-F-H",
       "category": "Intelligence Artificielle & GenAI",
-      "job_id": "thales_alternance_developpement_multi_agents_de_solutions_daide_a_la_strategie_f_h",
-      "status": "pending"
+      "job_id": "thales_alternance_ingenieur_data_ia",
+      "status": "ready"
     },
     {
       "title": "Thales - Alternance Ingénieur DevOps IA GenIA (F/H)",
@@ -136,7 +138,7 @@
       "url": "https://epitech.jobteaser.com/en/job-offers/797cc733-db98-4f2d-9011-60c80557083b-thales-alternance-developpement-multi-agents-de-solutions-d-aide-a-la-strategie-f-h",
       "category": "Intelligence Artificielle & GenAI",
       "job_id": "thales_alternance_developpement_multi_agents_de_solutions_daide_a_la_strategie_f_h",
-      "status": "pending"
+      "status": "ready"
     },
     {
       "title": "MBDA - Apprentissage Ingénieur Data",

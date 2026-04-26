@@ -1,7 +1,7 @@
 {
   "profile": {
     "name": "ROMEO CAVAZZA",
-    "title": "APPRENTISSAGE — INGÉNIEUR IA",
+    "title": "ALTERNANCE — INGÉNIEUR IA",
     "image": "assets/profile-picture.jpg",
     "location": "Paris, 11e",
     "email": "romeo.cavazza@gmail.com",
@@ -9,7 +9,7 @@
     "website": "www.romeocavazza.com",
     "linkedin": "in/romeo-cavazza/",
     "github": "github.com/RomeoCavazza",
-    "pitch": "Étudiant en Master IA, je souhaite approfondir mes compétences en C++ et algorithmique au service de l'ingénierie Dassault Systèmes."
+    "pitch": "Étudiant en Master Intelligence Artificielle et passionné d'innovations, je souhaite approfondir mes compétences en C++ et algorithmique au service de l'ingénierie Dassault Systèmes."
   },
   "apprenticeship": {
     "duration": "24 mois",
@@ -59,7 +59,7 @@
   "education": [
     {
       "school": "EPITECH, Paris, France",
-      "degree": "Master of Science — Intelligence artificielle",
+      "degree": "Master of Science — Intelligence Artificielle",
       "period": "2026 – 2028"
     },
     {
@@ -69,7 +69,7 @@
     },
     {
       "school": "HarvardX, edX",
-      "degree": "CS50W — Introduction to Computer Science<br>CS50W — Web Programming with Python and JavaScript",
+      "degree": "CS50x — Introduction to Computer Science<br>CS50w — Web Programming with Python and JavaScript",
       "period": ""
     }
   ],

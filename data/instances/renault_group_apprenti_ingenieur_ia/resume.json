@@ -1,7 +1,7 @@
 {
   "profile": {
     "name": "ROMEO CAVAZZA",
-    "title": "APPRENTI INGÉNIEUR IA",
+    "title": "ALTERNANCE — INGÉNIEUR IA",
     "image": "assets/profile-picture.jpg",
     "location": "Paris, 11e",
     "email": "romeo.cavazza@gmail.com",
@@ -59,7 +59,7 @@
   "education": [
     {
       "school": "EPITECH, Paris, France",
-      "degree": "Master of Science — Intelligence artificielle",
+      "degree": "Master of Science — Intelligence Artificielle",
       "period": "2026 – 2028"
     },
     {
@@ -69,7 +69,7 @@
     },
     {
       "school": "HarvardX, edX",
-      "degree": "CS50W — Introduction to Computer Science<br>CS50W — Web Programming with Python and JavaScript",
+      "degree": "CS50x — Introduction to Computer Science<br>CS50w — Web Programming with Python and JavaScript",
       "period": ""
     }
   ],
@@ -79,54 +79,47 @@
       "items": [
         "Python",
         "C++",
-        "Java",
-        "Rust",
+        "Git",
         "FastAPI",
-        "Git"
+        "Bash"
       ]
     },
     {
-      "category": "Algorithmie",
-      "items": [
-        "Numba",
-        "CUDA",
-        "IPC",
-        "Sockets",
-        "GDB",
-        "Valgrind"
-      ]
-    },
-    {
-      "category": "Machine Learning",
+      "category": "IA",
       "items": [
         "PyTorch",
-        "TensorFlow",
+        "Scikit-learn",
+        "OpenCV",
         "Pandas",
-        "NumPy",
-        "SciPy",
-        "Jupyter"
+        "NumPy"
+      ]
+    },
+    {
+      "category": "Data",
+      "items": [
+        "SQL",
+        "PostgreSQL",
+        "Jupyter",
+        "InfluxDB",
+        "Matplotlib"
       ]
     },
     {
       "category": "DevOps",
       "items": [
         "Docker",
-        "Kubernetes",
-        "GitLab CI/CD",
+        "CI/CD",
         "Linux",
-        "NixOS",
-        "Ansible"
+        "Shell"
       ]
     },
     {
-      "category": "MLOps",
+      "category": "Ingénierie",
       "items": [
-        "LangChain",
-        "LangGraph",
-        "pgvector",
-        "Ollama",
-        "Prometheus",
-        "Grafana"
+        "Agile (Scrum)",
+        "Unit Testing",
+        "System Design",
+        "DBeaver"
       ]
     }
   ],

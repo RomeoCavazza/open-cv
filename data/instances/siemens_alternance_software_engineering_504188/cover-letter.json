@@ -11,24 +11,24 @@
     }
   },
   "letter": {
-    "company": "Siemens",
+    "company": "Dassault Systèmes",
     "date": "25 avril 2026",
-    "subject": "ALTERNANCE - ALTERNANCE — SOFTWARE & ENGINEERING",
-    "pitch": "Étudiant en Master Robotique & IoT, passionné par la détection d'anomalies, je souhaite développer et mettre en pratique mes compétences en programmation scientifique, acquisition de données et apprentissage automatique au sein de Siemens.",
+    "subject": "APPRENTISSAGE — Ingénieur Développement Outils & IA",
+    "pitch": "Passionné par la création d'outils d'ingénierie performants et l'IA, je souhaite mettre mon expertise en C++ et automatisation au service de l'innovation logicielle chez Dassault Systèmes.",
     "metadata": [
       "Durée : 24 mois — à partir de septembre 2026",
       "Rythme : 6 semaines en entreprise / 2 semaines en cours"
     ],
     "greeting": "Madame, Monsieur,",
     "paragraphs": [
-      "Actuellement étudiant en Master Robotique & IoT à EPITECH Paris, je souhaite rejoindre Siemens dans le cadre de l'alternance SOFTWARE & ENGINEERING.",
-      "Ma formation en informatique m'a permis de développer des bases solides en Python/SciPy, algorithmique, Linux et Docker. En parallèle, j'ai mené plusieurs projets personnels autour de l'acquisition instrumentée et du traitement du signal, d'une station inertielle à un programme expérimental optique/RF en cours de développement. Ces travaux m'ont donné une première expérience concrète de pipelines de données scientifiques et de modèles de détection d'anomalies.",
-      "Cette offre me motive particulièrement car elle se situe à l'intersection de l'acquisition de signaux physiques, de la simulation numérique et du machine learning, trois domaines dans lesquels je souhaite construire mon parcours.",
-      "L'environnement technique de Siemens me permettrait d'apprendre sur des problématiques exigeantes et concrètes, et je serais heureux d'y apporter en retour mon goût pour l'instrumentation, l'analyse de données et mes premiers modèles développés avec scikit-learn."
+      "Actuellement étudiant en Master Intelligence Artificielle à EPITECH Paris, c'est avec un vif intérêt que je postule pour l'apprentissage d'INGÉNIEUR DÉVELOPPEMENT OUTILS & IA au sein de Dassault Systèmes.",
+      "Le développement d'outils d'ingénierie performants exige une double compétence en programmation système et en intelligence artificielle. Avec mon projet Shellgeist, j'ai conçu un agent de terminal autonome capable d'automatiser des tâches techniques complexes via des mécanismes de Tool Calling. Cette approche, couplée à mon expertise en Python et C++, me permet de proposer des solutions d'automatisation innovantes pour assister vos équipes d'ingénieurs.",
+      "Par ailleurs, ma participation au Hackathon IA & 5G, où j'ai implémenté des algorithmes d'optimisation accélérés par GPU (CUDA/Numba), démontre ma capacité à aborder des problématiques de haute performance. Je suis convaincu que l'hybridation entre outils d'ingénierie classiques et briques d'IA est le levier majeur pour décupler la productivité au sein de l'univers Dassault Systèmes.",
+      "Rejoindre Dassault Systèmes, leader mondial de la 3D et de l'innovation logicielle, représenterait pour moi une opportunité unique de mettre mon expertise GenAI au service de la création de vos solutions d'avenir."
     ],
-    "closing": "Je reste à votre disposition pour échanger sur ma candidature.",
+    "closing": "Je reste à votre entière disposition pour vous présenter mon parcours lors d'un entretien.",
     "signature": "Cordialement,\nRoméo Cavazza",
-    "boldKeyword": "ALTERNANCE",
+    "boldKeyword": "APPRENTISSAGE",
     "labels": {
       "linkedin": "LinkedIn",
       "github": "GitHub",
