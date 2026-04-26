@@ -1,7 +1,7 @@
 {
   "profile": {
     "name": "ROMEO CAVAZZA",
-    "title": "ALTERNANCE — INGÉNIEUR IA",
+    "title": "ALTERNANCE — INGÉNIEUR LOGICIEL & IA",
     "image": "assets/profile-picture.jpg",
     "location": "Paris, 11e",
     "email": "romeo.cavazza@gmail.com",
@@ -9,7 +9,7 @@
     "website": "www.romeocavazza.com",
     "linkedin": "in/romeo-cavazza/",
     "github": "github.com/RomeoCavazza",
-    "pitch": "Étudiant en Master IA, je souhaite approfondir mes compétences en C++ et automatisation en environnement industriel critique au service de l'ingénierie Dassault Systèmes."
+    "pitch": "Étudiant en Master Cloud & IA passionné par l'IA agentique, je souhaite mettre mes compétences au service de projets innovants au sein de Siemens Mobility."
   },
   "apprenticeship": {
     "duration": "24 mois",
@@ -19,114 +19,99 @@
   "experiences": [
     {
       "company": "FCNet, Paris, France",
-      "role": "AI Consultant & Formateur",
-      "period": "Janvier-Juin 2026",
+      "role": "Software Engineer & Formateur IA",
+      "period": "Janvier – Juin 2026",
       "description": [
-        "Conception de modules d'IA appliquée et démonstrateurs techniques",
-        "Animation de formations et production de documentation technique",
-        "Vulgarisation de cas d'usage data et automatisation"
+        "Développement d'applications Fullstack et documentation complète",
+        "Conception de contenus pédagogiques et démonstrateurs techniques",
+        "Support technique et audit de solutions logicielles"
       ]
     },
     {
       "company": "Revolvr, Paris, France",
-      "role": "AI Automation Engineer – R&D Intern",
-      "period": "Février-Juillet 2025",
+      "role": "AI Automation Engineer — R&D Intern",
+      "period": "Février – Juillet 2025",
       "description": [
-        "Développement de pipelines d'ingestion et analyse automatisée de données",
-        "Intégration d'APIs et industrialisation d'outils de détection de signaux",
-        "Production de workflows d'analyse pour usages métier"
+        "Automatisation de la veille via intégration d'APIs sociales (Meta, TikTok)",
+        "Orchestration d'agents IA et intégration d'APIs tierces",
+        "Conception de plateformes scalables pour données massives"
       ]
     },
     {
-      "company": "Home Lab — Plateforme inertielle",
+      "company": "Veyl.io — Data Intelligence Platform",
       "role": "",
-      "period": "2025 — Présent",
+      "period": "2025 – Présent",
       "description": [
-        "Acquisition et fusion de données capteurs (GPS, Gyroscope) via firmware C++",
-        "Traitement du signal, détection d'anomalies et visualisation via Grafana"
+        "Plateforme d'analyse de tendances via intégration d'APIs Meta (Advanced Access)",
+        "Développement de workflows pour l'extraction et le monitoring de signaux sociaux"
       ]
     },
     {
-      "company": "Hackathon IA & 5G — SNCF/Bouygues",
+      "company": "Messagerie Temps Réel — Rust / Tauri",
       "role": "",
-      "period": "2026",
+      "period": "2025 – Présent",
       "description": [
-        "Algorithme de clustering et optimisation pour l'allocation de ressources radio 5G",
-        "Accélération GPU via Numba et CUDA pour le traitement massivement parallèle"
+        "Conception d’une messagerie instantanée via WebSockets (Rust, Tauri, Next.js)",
+        "Architecture avec persistance (SQL/NoSQL) et déploiement CI/CD"
       ]
     }
   ],
   "education": [
     {
       "school": "EPITECH, Paris, France",
-      "degree": "Master of Science — Intelligence artificielle",
+      "degree": "Master of Science — Cloud & IA",
       "period": "2026 – 2028"
     },
     {
       "school": "EPITECH, Paris, France",
-      "degree": "Pré-MSc — Python, CUDA, NumPy, Pandas, Rust, Algorithmique.",
+      "degree": "Pré-MSc — Dev Web, API Fullstack, Java & OOP, CI/CD",
       "period": "2025 – 2026"
     },
     {
       "school": "HarvardX, edX",
-      "degree": "CS50W — Introduction to Computer Science<br>CS50W — Web Programming with Python and JavaScript",
+      "degree": "CS50x — Certifications Computer Science & Web",
       "period": ""
     }
   ],
   "skills": [
     {
-      "category": "Programmation",
+      "category": "IA / Data",
       "items": [
+        "LLM (RAG, Agents)",
+        "LangChain",
+        "PyTorch",
+        "CUDA",
+        "NumPy / Pandas"
+      ]
+    },
+    {
+      "category": "Software",
+      "items": [
+        "Rust",
         "Python",
         "C++",
         "Java",
-        "Rust",
-        "CMake",
-        "Git"
+        "TypeScript"
       ]
     },
     {
-      "category": "Algorithmie",
-      "items": [
-        "Numba",
-        "CUDA",
-        "IPC",
-        "Sockets",
-        "GDB",
-        "Valgrind"
-      ]
-    },
-    {
-      "category": "Machine Learning",
-      "items": [
-        "PyTorch",
-        "TensorFlow",
-        "Pandas",
-        "NumPy",
-        "SciPy",
-        "Jupyter"
-      ]
-    },
-    {
-      "category": "DevOps",
+      "category": "Cloud",
       "items": [
         "Docker",
-        "Kubernetes",
-        "GitLab CI/CD",
-        "Linux",
-        "NixOS",
-        "Ansible"
+        "Git / CI-CD",
+        "GitHub Actions",
+        "AWS / Vercel",
+        "NixOS"
       ]
     },
     {
-      "category": "MLOps",
+      "category": "Data",
       "items": [
-        "LangChain",
-        "LangGraph",
-        "pgvector",
-        "Ollama",
-        "Prometheus",
-        "Grafana"
+        "PostgreSQL",
+        "MongoDB Atlas",
+        "Redis",
+        "InfluxDB",
+        "Webhooks"
       ]
     }
   ],

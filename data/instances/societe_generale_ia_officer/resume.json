@@ -9,7 +9,7 @@
     "website": "www.romeocavazza.com",
     "linkedin": "in/romeo-cavazza/",
     "github": "github.com/RomeoCavazza",
-    "pitch": "Étudiant en Master IA, je souhaite accompagner Global Markets dans l'adoption de la GenIA et approfondir mon expertise sur l'IA agentique et les architectures RAG."
+    "pitch": "Étudiant en Master IA passionné par l'IA agentique, je souhaite mettre mes compétences au service de projets innovants au sein de la Société Générale."
   },
   "apprenticeship": {
     "duration": "24 mois",
@@ -23,8 +23,8 @@
       "period": "Janvier-Juin 2026",
       "description": [
         "Analyse comparative et déploiement de solutions GenAI sur-mesure",
-        "Conception d'agents autonomes et automatisation agile des processus métier",
-        "Animation de formations sur l'IA appliquée et l'automatisation"
+        "Conception d'agents autonomes et démonstrateurs techniques",
+        "Support technique et audit de workflows d'automatisation IA"
       ]
     },
     {
@@ -75,22 +75,21 @@
   ],
   "skills": [
     {
-      "category": "IA Générative",
+      "category": "IA",
       "items": [
-        "Claude",
-        "Copilot",
+        "Claude / GPT",
         "LangGraph",
         "LangChain",
         "Ollama",
+        "Qdrant",
         "pgvector"
       ]
     },
     {
-      "category": "No-Code / Low-Code",
+      "category": "Automation",
       "items": [
         "n8n",
         "Zapier",
-        "Power Automate",
         "Make",
         "VBA"
       ]
@@ -106,23 +105,22 @@
       ]
     },
     {
-      "category": "DevOps",
+      "category": "Cloud",
       "items": [
         "Docker",
         "Kubernetes",
-        "GitLab CI/CD",
+        "CI/CD",
         "Linux",
         "Nginx"
       ]
     },
     {
-      "category": "Data Science",
+      "category": "Data",
       "items": [
         "PyTorch",
         "Pandas",
         "Scikit-learn",
-        "NumPy",
-        "Jupyter"
+        "NumPy"
       ]
     }
   ],

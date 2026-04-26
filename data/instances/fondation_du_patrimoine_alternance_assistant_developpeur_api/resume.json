@@ -9,7 +9,7 @@
     "website": "www.romeocavazza.com",
     "linkedin": "in/romeo-cavazza/",
     "github": "github.com/RomeoCavazza",
-    "pitch": "Étudiant en Master Cloud, passionné par les architectures scalables, je souhaite développer et mettre en pratique mes compétences en architecture distribuée, virtualisation et services Cloud au sein de Fondation du Patrimoine."
+    "pitch": "Étudiant en Master Cloud passionné par l'optimisation des flux de données, je souhaite mettre mes compétences au service de projets innovants au sein de la Fondation du Patrimoine."
   },
   "apprenticeship": {
     "duration": "24 mois",
@@ -19,40 +19,40 @@
   "experiences": [
     {
       "company": "FCNet, Paris, France",
-      "role": "AI Consultant & Formateur",
-      "period": "Janvier-Juin 2026",
+      "role": "Développeur Logiciel & Formateur",
+      "period": "Janvier – Juin 2026",
       "description": [
-        "Conception de modules d'IA appliquée et démonstrateurs techniques",
-        "Animation de formations et production de documentation technique",
-        "Vulgarisation de cas d'usage data et automatisation"
+        "Développement d'applications Fullstack et documentation complète",
+        "Conception de contenus pédagogiques et démonstrateurs techniques",
+        "Support technique et audit de solutions logicielles"
       ]
     },
     {
       "company": "Revolvr, Paris, France",
-      "role": "AI Automation Engineer – R&D Intern",
-      "period": "Février-Juillet 2025",
+      "role": "AI Automation Engineer — R&D Intern",
+      "period": "Février – Juillet 2025",
       "description": [
-        "Développement de pipelines d'ingestion et analyse automatisée de données",
-        "Intégration d'APIs et industrialisation d'outils de détection de signaux",
-        "Production de workflows d'analyse pour usages métier"
+        "Intégration d'APIs sociales (Meta, TikTok) et gestion des webhooks",
+        "Conception de pipelines d'ingestion automatisée de données",
+        "Développement de workflows LLM pour l'analyse de signaux"
       ]
     },
     {
-      "company": "Home Lab — Plateforme inertielle",
+      "company": "Veyl.io — Social Intelligence API",
       "role": "",
-      "period": "2025–présent",
+      "period": "2025 – Présent",
       "description": [
-        "Acquisition inertielle/GPS (MPU6050, NEO-6M) via firmware C++ et gateway Python",
-        "Analyse fréquentielle, détection d'anomalies et monitoring InfluxDB/Grafana"
+        "Intégration des APIs Meta & TikTok (Advanced Access) pour le monitoring",
+        "Architecture SaaS sous FastAPI avec authentification OAuth sécurisée"
       ]
     },
     {
-      "company": "Hackathon — Algorithmique appliquée à la couverture 5G",
+      "company": "Plateforme Job Board — API REST Fullstack",
       "role": "",
-      "period": "2026",
+      "period": "2025 – Présent",
       "description": [
-        "Modélisation et optimisation du placement d'antennes via Python, Numba et CUDA",
-        "Heuristiques de couverture et traitement de données spatiales avec NumPy"
+        "Développement d'une plateforme de recrutement avec backend PHP et MySQL",
+        "Documentation technique d'endpoints REST et sécurisation des échanges"
       ]
     }
   ],
@@ -64,64 +64,54 @@
     },
     {
       "school": "EPITECH, Paris, France",
-      "degree": "Pré-MSc — JavaScript, PHP, Java, SQL, Rust, Next.js, Docker.",
+      "degree": "Pré-MSc — Dev Web, API Fullstack, Java & OOP, CI/CD",
       "period": "2025 – 2026"
     },
     {
       "school": "HarvardX, edX",
-      "degree": "CS50W — Introduction to Computer Science<br>CS50W — Web Programming with Python and JavaScript",
+      "degree": "CS50x — Certifications Computer Science & Web",
       "period": ""
     }
   ],
   "skills": [
     {
-      "category": "Intelligence Artificielle",
+      "category": "Backend",
       "items": [
-        "Python",
-        "NumPy",
-        "SciPy",
-        "pandas",
-        "scikit-learn",
-        "PyTorch"
+        "FastAPI",
+        "Node.js",
+        "PHP",
+        "Rust",
+        "Webhooks"
       ]
     },
     {
-      "category": "Ingénierie des données",
+      "category": "Frontend",
       "items": [
-        "SQL",
-        "PostgreSQL",
-        "InfluxDB",
-        "TimescaleDB"
+        "Next.js",
+        "TypeScript",
+        "React",
+        "Tauri",
+        "Tailwind CSS"
       ]
     },
     {
-      "category": "Calcul scientifique",
+      "category": "Cloud",
       "items": [
-        "Jupyter",
-        "Numba",
-        "CUDA"
-      ]
-    },
-    {
-      "category": "DevOps",
-      "items": [
-        "Linux",
         "Docker",
-        "Git",
-        "GitHub Actions",
-        "Pytest"
+        "Git / CI-CD",
+        "AWS",
+        "Vercel",
+        "GitHub Actions"
       ]
     },
     {
-      "category": "Instrumentation",
+      "category": "Data",
       "items": [
-        "C",
-        "C++",
-        "Arduino",
-        "I2C",
-        "SPI",
-        "UART",
-        "USB"
+        "PostgreSQL",
+        "MongoDB Atlas",
+        "Redis",
+        "SQL",
+        "JSON / XML"
       ]
     }
   ],

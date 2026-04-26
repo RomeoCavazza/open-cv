@@ -192,31 +192,36 @@
       "title": "Fondation du Patrimoine - Alternance Assistant Développeur API",
       "url": "https://epitech.jobteaser.com/en/job-offers/31535885-1b42-457e-83d6-2891e1aa28e2-fondation-du-patrimoine-alternance-assistant-developpeur-api-integration-systemes-h-f",
       "category": "Développement Logiciel (Web, Mobile, Java, Full-Stack)",
-      "job_id": "fondation_du_patrimoine_alternance_assistant_developpeur_api"
+      "job_id": "fondation_du_patrimoine_alternance_assistant_developpeur_api",
+      "status": "ready"
     },
     {
       "title": "Société Générale - Software Developper",
       "url": "https://epitech.jobteaser.com/en/job-offers/22f1b2f9-7009-4ce2-b3c0-09145bd9c079-societe-generale-software-developper",
       "category": "Développement Logiciel (Web, Mobile, Java, Full-Stack)",
-      "job_id": "societe_generale_software_developper"
+      "job_id": "societe_generale_software_developper",
+      "status": "ready"
     },
     {
       "title": "Société Générale - Développeur Java",
       "url": "https://epitech.jobteaser.com/en/job-offers/b6442fe6-0b87-46eb-ad62-fc0a8d9812e1-societe-generale-developpeur-java",
       "category": "Développement Logiciel (Web, Mobile, Java, Full-Stack)",
-      "job_id": "societe_generale_developpeur_java"
+      "job_id": "societe_generale_developpeur_java",
+      "status": "ready"
     },
     {
       "title": "Société Générale - Développeur Full-Stack Agile",
       "url": "https://epitech.jobteaser.com/en/job-offers/cddf9910-31e8-411e-8cba-40a2c7281d08-societe-generale-developpeur-full-stack-agile",
       "category": "Développement Logiciel (Web, Mobile, Java, Full-Stack)",
-      "job_id": "societe_generale_developpeur_full_stack_agile"
+      "job_id": "societe_generale_developpeur_full_stack_agile",
+      "status": "ready"
     },
     {
       "title": "Siemens - Alternance Software / Engineering (504188)",
       "url": "https://jobs.siemens.com/en_US/externaljobs/JobDetail/504188",
       "category": "Développement Logiciel (Web, Mobile, Java, Full-Stack)",
-      "job_id": "siemens_alternance_software_engineering_504188"
+      "job_id": "siemens_alternance_software_engineering_504188",
+      "status": "ready"
     },
     {
       "title": "MBDA - Apprentissage Ingénieur Développement Logiciel (F/H)",

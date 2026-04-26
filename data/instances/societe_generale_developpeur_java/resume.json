@@ -9,7 +9,7 @@
     "website": "www.romeocavazza.com",
     "linkedin": "in/romeo-cavazza/",
     "github": "github.com/RomeoCavazza",
-    "pitch": "Étudiant en Master Robotique & IoT, passionné par les systèmes embarqués, je souhaite développer et mettre en pratique mes compétences en instrumentation, bas niveau et programmation système au sein de Société Générale."
+    "pitch": "Étudiant en Master Cloud passionné par les systèmes critiques, je souhaite mettre mes compétences au service de projets innovants au sein de la Société Générale."
   },
   "apprenticeship": {
     "duration": "24 mois",
@@ -19,109 +19,99 @@
   "experiences": [
     {
       "company": "FCNet, Paris, France",
-      "role": "AI Consultant & Formateur",
-      "period": "Janvier-Juin 2026",
+      "role": "Software Engineer & Formateur",
+      "period": "Janvier – Juin 2026",
       "description": [
-        "Conception de modules d'IA appliquée et démonstrateurs techniques",
-        "Animation de formations et production de documentation technique",
-        "Vulgarisation de cas d'usage data et automatisation"
+        "Développement d'applications Fullstack et documentation complète",
+        "Conception de démonstrateurs techniques et formation continue",
+        "Support technique et audit de code pour la maintenabilité"
       ]
     },
     {
       "company": "Revolvr, Paris, France",
-      "role": "AI Automation Engineer – R&D Intern",
-      "period": "Février-Juillet 2025",
+      "role": "AI Automation Engineer — R&D Intern",
+      "period": "Février – Juillet 2025",
       "description": [
-        "Développement de pipelines d'ingestion et analyse automatisée de données",
-        "Intégration d'APIs et industrialisation d'outils de détection de signaux",
-        "Production de workflows d'analyse pour usages métier"
+        "Développement de pipelines de données en Python et SQL",
+        "Modélisation de schémas de données temps réel",
+        "Intégration d'APIs tierces incluant les réseaux sociaux (Meta, TikTok)"
       ]
     },
     {
-      "company": "Home Lab — Plateforme inertielle",
+      "company": "Messagerie Temps Réel — Rust System",
       "role": "",
-      "period": "2025–présent",
+      "period": "2025 – Présent",
       "description": [
-        "Acquisition inertielle/GPS (MPU6050, NEO-6M) via firmware C++ et gateway Python",
-        "Analyse fréquentielle, détection d'anomalies et monitoring InfluxDB/Grafana"
+        "Conception d’une messagerie instantanée via WebSockets (Rust, Tauri, Next.js)",
+        "Architecture avec persistance (SQL / NoSQL) et déploiement CI/CD"
       ]
     },
     {
-      "company": "Hackathon — Algorithmique appliquée à la couverture 5G",
+      "company": "Plateforme Job Board — Fullstack Architecture",
       "role": "",
-      "period": "2026",
+      "period": "2025 – Présent",
       "description": [
-        "Modélisation et optimisation du placement d'antennes via Python, Numba et CUDA",
-        "Heuristiques de couverture et traitement de données spatiales avec NumPy"
+        "Conception d'une plateforme de recrutement avec architecture REST API",
+        "Gestion rigoureuse des schémas de données SQL et des accès sécurisés"
       ]
     }
   ],
   "education": [
     {
       "school": "EPITECH, Paris, France",
-      "degree": "Master of Science — Robotique & IoT",
+      "degree": "Master of Science — Cloud",
       "period": "2026 – 2028"
     },
     {
       "school": "EPITECH, Paris, France",
-      "degree": "Pré-MSc — Rust, Linux, Python, Java, Bash, Réseaux.",
+      "degree": "Pré-MSc — Dev Web, API Fullstack, Java & OOP, CI/CD",
       "period": "2025 – 2026"
     },
     {
       "school": "HarvardX, edX",
-      "degree": "CS50W — Introduction to Computer Science<br>CS50W — Web Programming with Python and JavaScript",
+      "degree": "CS50x — Certifications Computer Science & Web",
       "period": ""
     }
   ],
   "skills": [
     {
-      "category": "Intelligence Artificielle",
+      "category": "Java",
       "items": [
-        "Python",
-        "NumPy",
-        "SciPy",
-        "pandas",
-        "scikit-learn",
-        "PyTorch"
+        "Java",
+        "Spring Boot",
+        "JUnit",
+        "Gradle / Maven",
+        "SOLID"
       ]
     },
     {
-      "category": "Ingénierie des données",
+      "category": "Backend",
       "items": [
-        "SQL",
+        "Node.js",
+        "FastAPI",
+        "Rust",
         "PostgreSQL",
-        "InfluxDB",
-        "TimescaleDB"
+        "AWS"
       ]
     },
     {
-      "category": "Calcul scientifique",
+      "category": "Web",
       "items": [
-        "Jupyter",
-        "Numba",
-        "CUDA"
+        "React / Next.js",
+        "TypeScript",
+        "Tailwind CSS",
+        "Tauri",
+        "Radix UI"
       ]
     },
     {
-      "category": "DevOps",
+      "category": "Cloud",
       "items": [
-        "Linux",
         "Docker",
-        "Git",
+        "Git / CI-CD",
         "GitHub Actions",
-        "Pytest"
-      ]
-    },
-    {
-      "category": "Instrumentation",
-      "items": [
-        "C",
-        "C++",
-        "Arduino",
-        "I2C",
-        "SPI",
-        "UART",
-        "USB"
+        "NixOS",
+        "VirtualBox"
       ]
     }
   ],
