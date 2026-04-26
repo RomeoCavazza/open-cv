@@ -9,7 +9,7 @@
     "website": "www.romeocavazza.com",
     "linkedin": "in/romeo-cavazza/",
     "github": "github.com/RomeoCavazza",
-    "pitch": "Étudiant en Master IA, je souhaite contribuer à l'industrialisation des pipelines de données et au déploiement de modèles d'IA performants au sein de la plateforme digitale de Thales."
+    "pitch": "Étudiant en Master Robotique & IoT, je souhaite approfondir mes compétences en programmation et machine learning au sein d'un environnement exigeant comme Thales."
   },
   "apprenticeship": {
     "duration": "24 mois",
@@ -22,9 +22,9 @@
       "role": "AI Consultant & Formateur",
       "period": "Janvier-Juin 2026",
       "description": [
-        "Conception de modules d'IA appliquée et démonstrateurs techniques",
-        "Animation de formations et production de documentation technique",
-        "Vulgarisation de cas d'usage data et automatisation"
+        "Développement de prototypes techniques IA et pipelines de traitement de données",
+        "Support technique et audit de solutions logicielles d'automatisation intelligente",
+        "Conception de démonstrateurs techniques pour l'analyse de flux complexes"
       ]
     },
     {
@@ -32,18 +32,9 @@
       "role": "AI Automation Engineer – R&D Intern",
       "period": "Février-Juillet 2025",
       "description": [
-        "Développement de pipelines d'ingestion et analyse automatisée de données",
-        "Intégration d'APIs et industrialisation d'outils de détection de signaux",
-        "Production de workflows d'analyse pour usages métier"
-      ]
-    },
-    {
-      "company": "Hackathon IA & 5G — SNCF / Bouygues",
-      "role": "",
-      "period": "2026",
-      "description": [
-        "Algorithme de clustering et optimisation pour l'allocation de ressources radio 5G",
-        "Accélération GPU via Numba et CUDA pour le traitement massivement parallèle"
+        "Architecture de pipelines d'ingestion et automatisation de l'analyse de données",
+        "Intégration d'APIs sociales dans des workflows de monitoring stratégique",
+        "Industrialisation d'outils de détection de signaux faibles via workflows LLM"
       ]
     },
     {
@@ -51,25 +42,34 @@
       "role": "",
       "period": "2025 — Présent",
       "description": [
-        "Architecture RAG avec Qdrant pour l'analyse de tendances et microservices FastAPI",
+        "Architecture RAG haute performance avec Qdrant et microservices FastAPI",
         "Orchestration de workflows LLM et déploiement de pipelines de données cloud"
+      ]
+    },
+    {
+      "company": "TCO-Core — Data Pipeline Haute Fréquence",
+      "role": "",
+      "period": "2026",
+      "description": [
+        "Système d'acquisition et de traitement de données capteurs en temps réel (100 Hz)",
+        "Traitement de signal en Python, stockage InfluxDB et monitoring Grafana"
       ]
     }
   ],
   "education": [
     {
       "school": "EPITECH, Paris, France",
-      "degree": "Master of Science — Intelligence Artificielle",
+      "degree": "Master of Science — Robotique & IoT",
       "period": "2026 – 2028"
     },
     {
       "school": "EPITECH, Paris, France",
-      "degree": "Pré-MSc — Python, CUDA, NumPy, Pandas, Rust, Algorithmique.",
+      "degree": "Pré-MSc Pro — Python, SQL, APIs, Docker, Linux et Ingénierie Data",
       "period": "2025 – 2026"
     },
     {
       "school": "HarvardX, edX",
-      "degree": "CS50x — Introduction to Computer Science<br>CS50w — Web Programming with Python and JavaScript",
+      "degree": "CS50x — Introduction to Computer Science",
       "period": ""
     }
   ],
@@ -78,50 +78,55 @@
       "category": "Programmation",
       "items": [
         "Python",
-        "Git",
-        "DBeaver",
+        "TypeScript",
         "FastAPI",
+        "Node.js",
+        "REST",
         "Bash"
+      ]
+    },
+    {
+      "category": "AI",
+      "items": [
+        "PyTorch",
+        "LangChain",
+        "LangGraph",
+        "Ollama",
+        "Computer Vision",
+        "CUDA"
       ]
     },
     {
       "category": "Data",
       "items": [
-        "PySpark",
-        "SQL",
-        "PostgreSQL",
         "Pandas",
-        "NumPy"
-      ]
-    },
-    {
-      "category": "ML / IA",
-      "items": [
-        "PyTorch",
+        "NumPy",
         "Scikit-learn",
-        "LangChain",
-        "Ollama",
-        "pgvector"
+        "SciPy",
+        "Jupyter",
+        "PySpark"
       ]
     },
     {
-      "category": "DevOps",
+      "category": "Base de données",
+      "items": [
+        "PostgreSQL",
+        "Qdrant",
+        "InfluxDB",
+        "pgvector",
+        "SQLAlchemy",
+        "Alembic"
+      ]
+    },
+    {
+      "category": "DEVOPS",
       "items": [
         "Docker",
+        "Linux",
+        "NixOS",
         "CI/CD",
-        "MLflow",
         "AWS",
-        "Kubernetes"
-      ]
-    },
-    {
-      "category": "Observabilité",
-      "items": [
-        "Grafana",
-        "Prometheus",
-        "InfluxDB",
-        "Nginx",
-        "Ansible"
+        "Git"
       ]
     }
   ],

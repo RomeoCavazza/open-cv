@@ -1,7 +1,7 @@
 {
   "profile": {
     "name": "ROMEO CAVAZZA",
-    "title": "ALTERNANCE — DATA ANALYST",
+    "title": "ALTERNANCE — DATA ANALYSTE",
     "image": "assets/profile-picture.jpg",
     "location": "Paris, 11e",
     "email": "romeo.cavazza@gmail.com",
@@ -9,7 +9,7 @@
     "website": "www.romeocavazza.com",
     "linkedin": "in/romeo-cavazza/",
     "github": "github.com/RomeoCavazza",
-    "pitch": "Étudiant en Master Big Data passionné par l'exploitation des données, je souhaite mettre mes compétences en visualisation et analyse au service de la performance de Safran Aircraft Engines."
+    "pitch": "Étudiant en Master Robotique & IoT passionné par l'exploitation des données, je souhaite mettre mes compétences en visualisation et analyse au service de la performance de Safran Aircraft Engines."
   },
   "apprenticeship": {
     "duration": "24 mois",
@@ -18,48 +18,48 @@
   },
   "experiences": [
     {
+      "company": "FCNet, Paris, France",
+      "role": "AI Consultant & Formateur",
+      "period": "Janvier-Gvun 2026",
+      "description": [
+        "Conception de modules d'IA appliquée et démonstrateurs techniques",
+        "Animation de formations et production de documentation technique",
+        "Vulgarisation de cas d'usage data et automatisation"
+      ]
+    },
+    {
       "company": "Revolvr, Paris, France",
       "role": "AI Automation Engineer – R&D Intern",
       "period": "Février-Juillet 2025",
       "description": [
-        "Architecture de pipelines d'ingestion et automatisation de l'analyse de données",
-        "Intégration d'APIs sociales dans des workflows de monitoring stratégique",
-        "Développement de dashboards d'analyse automatisés pour l'aide à la décision"
+        "Développement de pipelines d'ingestion et analyse automatisée de données",
+        "Intégration d'APIs et industrialisation d'outils de détection de signaux",
+        "Production de workflows d'analyse pour usages métier"
       ]
     },
     {
-      "company": "FCNet, Paris, France",
-      "role": "AI Consultant & Formateur",
-      "period": "Janvier-Juin 2026",
-      "description": [
-        "Conception de démonstrateurs techniques pour l'analyse de données complexes",
-        "Support technique et audit de solutions logicielles d'automatisation",
-        "Vulgarisation de cas d'usage IA appliqués aux processus métier"
-      ]
-    },
-    {
-      "company": "TCO-Core — Data Pipeline & Monitoring",
+      "company": "Home Lab — Station Inertielle",
       "role": "",
-      "period": "2025 — Présent",
+      "period": "2025–présent",
       "description": [
-        "Système d'acquisition et de traitement de données capteurs en temps réel",
-        "Stockage sur base de données séries temporelles et monitoring via Grafana"
+        "Acquisition inertielle/GPS (MPU6050, NEO-6M) via firmware C++ et gateway Python",
+        "Analyse fréquentielle, détection d'anomalies et monitoring InfluxDB/Grafana"
       ]
     },
     {
-      "company": "Veyl.io — Social Intelligence API",
+      "company": "Hackathon — Algorithmique appliquée (SNCF)",
       "role": "",
-      "period": "2025 — Présent",
+      "period": "2026",
       "description": [
-        "Plateforme d'analyse et de structuration de signaux sociaux via APIs Meta",
-        "Architecture de données hybride optimisant le stockage et la requête"
+        "Modélisation et optimisation du placement d'antennes 5G via Python, Numba et CUDA",
+        "Heuristiques de couverture et traitement de données spatiales sous NumPy"
       ]
     }
   ],
   "education": [
     {
       "school": "EPITECH, Paris, France",
-      "degree": "Master of Science — Big Data",
+      "degree": "Master of Science — Robotique & IoT",
       "period": "2026 – 2028"
     },
     {
@@ -69,40 +69,64 @@
     },
     {
       "school": "HarvardX, edX",
-      "degree": "CS50x — Introduction to Computer Science<br>CS50w — Web Programming with Python and JavaScript",
+      "degree": "CS50x — Introduction to Computer Science",
       "period": ""
     }
   ],
   "skills": [
     {
-      "category": "Data",
+      "category": "Programmation",
       "items": [
         "Python",
-        "SQL",
+        "FastAPI",
+        "Node.js",
+        "TypeScript",
+        "REST",
+        "Bash"
+      ]
+    },
+    {
+      "category": "AI",
+      "items": [
+        "Pandas",
+        "Scikit-learn",
+        "NumPy",
+        "PyTorch",
+        "LangChain",
+        "Vision"
+      ]
+    },
+    {
+      "category": "Data",
+      "items": [
+        "Matplotlib",
+        "Seaborn",
+        "Plotly",
+        "Jupyter",
+        "Tableau",
+        "Excel"
+      ]
+    },
+    {
+      "category": "Base de données",
+      "items": [
         "PostgreSQL",
         "InfluxDB",
         "Grafana",
-        "Jupyter"
+        "Qdrant",
+        "SQLAlchemy",
+        "Alembic"
       ]
     },
     {
-      "category": "IA",
+      "category": "DEVOPS",
       "items": [
-        "Pandas",
-        "NumPy",
-        "Scikit-learn",
-        "PyTorch",
-        "Ollama"
-      ]
-    },
-    {
-      "category": "Dev",
-      "items": [
-        "FastAPI",
         "Docker",
-        "Git",
+        "Linux",
+        "NixOS",
         "CI/CD",
-        "Linux"
+        "AWS",
+        "Git"
       ]
     }
   ],

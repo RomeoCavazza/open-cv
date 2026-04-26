@@ -9,7 +9,7 @@
     "website": "www.romeocavazza.com",
     "linkedin": "in/romeo-cavazza/",
     "github": "github.com/RomeoCavazza",
-    "pitch": "Étudiant en Master IA passionné par les systèmes multi-agents, je souhaite mettre mes compétences en orchestration de LLM au service de la stratégie chez Thales."
+    "pitch": "Étudiant en Master Robotique & IoT, je souhaite approfondir mes compétences en programmation et machine learning au sein d'un environnement exigeant comme Thales."
   },
   "apprenticeship": {
     "duration": "24 mois",
@@ -59,7 +59,7 @@
   "education": [
     {
       "school": "EPITECH, Paris, France",
-      "degree": "Master of Science — Intelligence Artificielle",
+      "degree": "Master of Science — Robotique & IoT",
       "period": "2026 – 2028"
     },
     {

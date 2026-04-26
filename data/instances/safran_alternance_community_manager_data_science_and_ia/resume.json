@@ -1,7 +1,7 @@
 {
   "profile": {
     "name": "ROMEO CAVAZZA",
-    "title": "ALTERNANCE — CHARGÉ DE MISSION DATA & IA",
+    "title": "ALTERNANCE — COMMUNITY MANAGER DATA / IA",
     "image": "assets/profile-picture.jpg",
     "location": "Paris, 11e",
     "email": "romeo.cavazza@gmail.com",
@@ -9,7 +9,7 @@
     "website": "www.romeocavazza.com",
     "linkedin": "in/romeo-cavazza/",
     "github": "github.com/RomeoCavazza",
-    "pitch": "Étudiant en Master IA passionné par la vulgarisation technique, je souhaite mettre mes compétences en IA et Low-code au service de l'animation de la communauté Data Science de Safran."
+    "pitch": "Étudiant en Master Robotique & IoT, je souhaite mettre ma passion pour l'IA et mes compétences en vulgarisation technique au service de l'animation de la communauté Data Science de Safran."
   },
   "apprenticeship": {
     "duration": "24 mois",
@@ -20,50 +20,51 @@
     {
       "company": "FCNet, Paris, France",
       "role": "AI Consultant & Formateur",
-      "period": "Janvier-Juin 2026",
+      "period": "Janvier-Gvun 2026",
       "description": [
-        "Conception de modules de formation sur l'IA générative et l'automatisation",
-        "Animation de masterclass techniques et production de supports pédagogiques",
-        "Vulgarisation de cas d'usage data complexes pour des publics variés"
+        "Conception de modules d'IA appliquée et démonstrateurs techniques",
+        "Animation de formations et production de documentation pédagogique",
+        "Vulgarisation de cas d'usage IA et automatisation pour les métiers"
       ]
     },
     {
-      "company": "no-low-code — Automatisation Métier",
-      "role": "Lead Automation",
-      "period": "2024 — Présent",
+      "company": "Revolvr, Paris, France",
+      "role": "AI Automation Engineer – R&D Intern",
+      "period": "Février-Juillet 2025",
       "description": [
-        "Conception de workflows d'automatisation avancés via n8n et Make",
-        "Intégration d'outils IA pour optimiser la productivité et les flux de communication"
+        "Développement de pipelines d'ingestion et analyse automatisée de données",
+        "Intégration d'APIs et industrialisation d'outils de détection de signaux",
+        "Production de supports visuels et techniques pour la présentation de résultats"
       ]
     },
     {
-      "company": "Shellgeist — Assistant IA Interactif",
+      "company": "Home Lab — Station Inertielle",
       "role": "",
-      "period": "2025 — Présent",
+      "period": "2025–présent",
       "description": [
-        "Développement d'un agent IA facilitant l'interaction homme-machine",
-        "Mise en œuvre de stratégies de prompting et orchestration de modèles locaux"
+        "Acquisition inertielle/GPS (C++, Python) et monitoring InfluxDB/Grafana",
+        "Projet technique servant de base à la vulgarisation de flux IoT complexes"
       ]
     },
     {
-      "company": "Landing Pages — Design Premium",
+      "company": "Hackathon — Algorithmique appliquée (SNCF)",
       "role": "",
-      "period": "2024 — Présent",
+      "period": "2026",
       "description": [
-        "Conception d'interfaces utilisateurs modernes et engageantes (React, Radix UI)",
-        "Focus sur l'expérience utilisateur et la clarté de l'information technique"
+        "Modélisation et optimisation du placement d'antennes 5G (Python, CUDA)",
+        "Challenge technique mettant en avant la capacité à résoudre des problèmes complexes"
       ]
     }
   ],
   "education": [
     {
       "school": "EPITECH, Paris, France",
-      "degree": "Master of Science — Intelligence Artificielle",
+      "degree": "Master of Science — Robotique & IoT",
       "period": "2026 – 2028"
     },
     {
       "school": "EPITECH, Paris, France",
-      "degree": "Pré-MSc Pro — Python, SQL, APIs, Docker, Linux et IA appliquée",
+      "degree": "Pré-MSc Pro — Python, SQL, APIs, Docker, Linux et Ingénierie Data",
       "period": "2025 – 2026"
     },
     {
@@ -74,35 +75,58 @@
   ],
   "skills": [
     {
-      "category": "IA",
+      "category": "Programmation",
       "items": [
-        "Prompt Engineering",
-        "Ollama",
-        "GPT-4",
-        "Claude",
-        "LangChain",
-        "Vibe Coding"
-      ]
-    },
-    {
-      "category": "Low-code",
-      "items": [
-        "n8n",
-        "Make",
-        "Zapier",
-        "Airtable",
-        "Automation"
-      ]
-    },
-    {
-      "category": "Web",
-      "items": [
-        "React",
-        "Tailwind CSS",
-        "Radix UI",
+        "Python",
+        "FastAPI",
+        "REST",
         "TypeScript",
-        "Figma",
-        "Sass"
+        "Node.js",
+        "Bash"
+      ]
+    },
+    {
+      "category": "AI",
+      "items": [
+        "LangChain",
+        "Generative AI",
+        "Ollama",
+        "Pandas",
+        "NumPy",
+        "Prompt Engineering"
+      ]
+    },
+    {
+      "category": "Data",
+      "items": [
+        "Visualisation",
+        "Grafana",
+        "Tableau",
+        "Excel",
+        "Jupyter",
+        "Reporting"
+      ]
+    },
+    {
+      "category": "Base de données",
+      "items": [
+        "SQL",
+        "InfluxDB",
+        "PostgreSQL",
+        "Qdrant",
+        "SQLAlchemy",
+        "Alembic"
+      ]
+    },
+    {
+      "category": "DEVOPS",
+      "items": [
+        "Docker",
+        "Git",
+        "CI/CD",
+        "Linux",
+        "AWS",
+        "Automation"
       ]
     }
   ],

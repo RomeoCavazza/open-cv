@@ -9,7 +9,7 @@
     "website": "www.romeocavazza.com",
     "linkedin": "in/romeo-cavazza/",
     "github": "github.com/RomeoCavazza",
-    "pitch": "Étudiant en Master Big Data, je souhaite mettre mes compétences en analyse et pilotage de données au service de la performance industrielle du site Safran de Roche la Molière."
+    "pitch": "Étudiant en Master Robotique & IoT, je souhaite mettre mes compétences en analyse et pilotage de données au service de la performance industrielle du site Safran de Roche la Molière."
   },
   "apprenticeship": {
     "duration": "24 mois",
@@ -18,48 +18,48 @@
   },
   "experiences": [
     {
+      "company": "FCNet, Paris, France",
+      "role": "AI Consultant & Formateur",
+      "period": "Janvier-Gvun 2026",
+      "description": [
+        "Conception de modules d'IA appliquée et démonstrateurs techniques",
+        "Animation de formations et production de documentation technique",
+        "Vulgarisation de cas d'usage data et automatisation"
+      ]
+    },
+    {
       "company": "Revolvr, Paris, France",
       "role": "AI Automation Engineer – R&D Intern",
       "period": "Février-Juillet 2025",
       "description": [
-        "Architecture de pipelines d'ingestion et automatisation de l'analyse de données",
-        "Intégration d'APIs sociales dans des workflows de monitoring stratégique",
-        "Développement de dashboards d'indicateurs (KPIs) pour l'aide à la décision"
+        "Développement de pipelines d'ingestion et analyse automatisée de données",
+        "Intégration d'APIs et industrialisation d'outils de détection de signaux",
+        "Production de workflows d'analyse pour usages métier"
       ]
     },
     {
-      "company": "FCNet, Paris, France",
-      "role": "AI Consultant & Formateur",
-      "period": "Janvier-Juin 2026",
-      "description": [
-        "Conception de démonstrateurs techniques pour l'analyse de données complexes",
-        "Audit de solutions d'automatisation et support technique aux métiers",
-        "Vulgarisation de cas d'usage IA appliqués au pilotage de la performance"
-      ]
-    },
-    {
-      "company": "TCO-Core — Data Pipeline & Monitoring",
+      "company": "Home Lab — Station Inertielle",
       "role": "",
-      "period": "2025 — Présent",
+      "period": "2025–présent",
       "description": [
-        "Système d'acquisition et de traitement de données capteurs en temps réel",
-        "Exploitation de données temporelles et visualisation dynamique via Grafana"
+        "Acquisition inertielle/GPS (MPU6050, NEO-6M) via firmware C++ et gateway Python",
+        "Analyse fréquentielle, détection d'anomalies et monitoring InfluxDB/Grafana"
       ]
     },
     {
-      "company": "Veyl.io — Social Intelligence API",
+      "company": "Hackathon — Algorithmique appliquée (SNCF)",
       "role": "",
-      "period": "2025 — Présent",
+      "period": "2026",
       "description": [
-        "Plateforme d'analyse et de structuration de signaux sociaux via APIs Meta",
-        "Pipeline de données hybride optimisant le traitement de volumes importants"
+        "Modélisation et optimisation du placement d'antennes 5G via Python, Numba et CUDA",
+        "Heuristiques de couverture et traitement de données spatiales sous NumPy"
       ]
     }
   ],
   "education": [
     {
       "school": "EPITECH, Paris, France",
-      "degree": "Master of Science — Big Data",
+      "degree": "Master of Science — Robotique & IoT",
       "period": "2026 – 2028"
     },
     {
@@ -69,40 +69,64 @@
     },
     {
       "school": "HarvardX, edX",
-      "degree": "CS50x — Introduction to Computer Science<br>CS50w — Web Programming with Python and JavaScript",
+      "degree": "CS50x — Introduction to Computer Science",
       "period": ""
     }
   ],
   "skills": [
     {
-      "category": "Data",
+      "category": "Programmation",
       "items": [
         "Python",
-        "SQL",
-        "PostgreSQL",
-        "InfluxDB",
-        "Grafana",
-        "Jupyter"
+        "FastAPI",
+        "TypeScript",
+        "Node.js",
+        "REST",
+        "Bash"
       ]
     },
     {
-      "category": "IA",
+      "category": "AI",
       "items": [
         "Pandas",
         "NumPy",
         "Scikit-learn",
         "PyTorch",
-        "LangChain"
+        "LangChain",
+        "Ollama"
       ]
     },
     {
-      "category": "Dev",
+      "category": "Data",
       "items": [
-        "FastAPI",
+        "Matplotlib",
+        "Seaborn",
+        "Plotly",
+        "Jupyter",
+        "Grafana",
+        "Excel"
+      ]
+    },
+    {
+      "category": "Base de données",
+      "items": [
+        "PostgreSQL",
+        "InfluxDB",
+        "Qdrant",
+        "Redis",
+        "SQLAlchemy",
+        "Alembic"
+      ]
+    },
+    {
+      "category": "DEVOPS",
+      "items": [
         "Docker",
-        "Git",
+        "Linux",
+        "NixOS",
         "CI/CD",
-        "Linux"
+        "AWS",
+        "Git"
       ]
     }
   ],
