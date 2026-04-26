@@ -329,6 +329,11 @@
                     const header = document.createElement('div');
                     header.className = 'tree-header';
                     header.textContent = `${cat} (${groups[cat].length})`;
+                    
+                    if (cat === "Intelligence Artificielle & GenAI") {
+                        header.style.color = "#059669";
+                        header.style.fontWeight = "800";
+                    }
                     header.onclick = () => groupDiv.classList.toggle('open');
 
                     const content = document.createElement('div');
