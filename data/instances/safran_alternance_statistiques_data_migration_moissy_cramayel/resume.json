@@ -1,7 +1,7 @@
 {
   "profile": {
     "name": "ROMEO CAVAZZA",
-    "title": "ALTERNANCE — DATA ENGINEER",
+    "title": "ALTERNANCE — DATA ENGINEER (MIGRATION)",
     "image": "assets/profile-picture.jpg",
     "location": "Paris, 11e",
     "email": "romeo.cavazza@gmail.com",
@@ -9,7 +9,7 @@
     "website": "www.romeocavazza.com",
     "linkedin": "in/romeo-cavazza/",
     "github": "github.com/RomeoCavazza",
-    "pitch": "Étudiant en Master Big Data, passionné par l'ingénierie des données, je souhaite développer et mettre en pratique mes compétences en pipelines ETL, analyse statistique et Cloud au sein de Safran."
+    "pitch": "Étudiant en Master Big Data, je souhaite mettre ma rigueur en migration et traitement de données au service de la fiabilité des flux de Safran Aircraft Engines."
   },
   "apprenticeship": {
     "duration": "24 mois",
@@ -18,41 +18,41 @@
   },
   "experiences": [
     {
-      "company": "FCNet, Paris, France",
-      "role": "AI Consultant & Formateur",
-      "period": "Janvier-Juin 2026",
-      "description": [
-        "Conception de modules d'IA appliquée et démonstrateurs techniques",
-        "Animation de formations et production de documentation technique",
-        "Vulgarisation de cas d'usage data et automatisation"
-      ]
-    },
-    {
       "company": "Revolvr, Paris, France",
       "role": "AI Automation Engineer – R&D Intern",
       "period": "Février-Juillet 2025",
       "description": [
-        "Développement de pipelines d'ingestion et analyse automatisée de données",
-        "Intégration d'APIs et industrialisation d'outils de détection de signaux",
-        "Production de workflows d'analyse pour usages métier"
+        "Architecture de pipelines d'ingestion et automatisation de l'analyse de données",
+        "Intégration d'APIs sociales et sécurisation des flux de données",
+        "Industrialisation d'outils de détection de signaux via workflows automatisés"
       ]
     },
     {
-      "company": "Home Lab — Plateforme inertielle",
-      "role": "",
-      "period": "2025–présent",
+      "company": "FCNet, Paris, France",
+      "role": "AI Consultant & Formateur",
+      "period": "Janvier-Juin 2026",
       "description": [
-        "Acquisition inertielle/GPS (MPU6050, NEO-6M) via firmware C++ et gateway Python",
-        "Analyse fréquentielle, détection d'anomalies et monitoring InfluxDB/Grafana"
+        "Audit technique de solutions logicielles et support au déploiement",
+        "Conception de démonstrateurs techniques pour la validation de flux complexes",
+        "Production de documentation technique sur l'adoption d'architectures data"
       ]
     },
     {
-      "company": "Hackathon — Algorithmique appliquée à la couverture 5G",
+      "company": "Veyl.io — Social Intelligence API",
       "role": "",
-      "period": "2026",
+      "period": "2025 — Présent",
       "description": [
-        "Modélisation et optimisation du placement d'antennes via Python, Numba et CUDA",
-        "Heuristiques de couverture et traitement de données spatiales avec NumPy"
+        "Gestion de schéma et migrations SQL complexes via Alembic et SQLAlchemy",
+        "Architecture de base de données hybride optimisant l'intégrité des données"
+      ]
+    },
+    {
+      "company": "Setup-os — Infrastructure Déclarative",
+      "role": "",
+      "period": "2025 — Présent",
+      "description": [
+        "Configuration système 100% déclarative via Nix Flakes et modules NixOS",
+        "Automatisation d'environnements de développement reproductibles et isolés"
       ]
     }
   ],
@@ -64,64 +64,46 @@
     },
     {
       "school": "EPITECH, Paris, France",
-      "degree": "Pré-MSc — Python, CUDA, NumPy, Pandas, Rust, Algorithmique.",
+      "degree": "Pré-MSc Pro — Python, SQL, APIs, Docker, Linux et Ingénierie Data",
       "period": "2025 – 2026"
     },
     {
       "school": "HarvardX, edX",
-      "degree": "CS50W — Introduction to Computer Science<br>CS50W — Web Programming with Python and JavaScript",
+      "degree": "CS50x — Introduction to Computer Science<br>CS50w — Web Programming with Python and JavaScript",
       "period": ""
     }
   ],
   "skills": [
     {
-      "category": "Intelligence Artificielle",
+      "category": "Data",
       "items": [
         "Python",
-        "NumPy",
-        "SciPy",
-        "pandas",
-        "scikit-learn",
-        "PyTorch"
-      ]
-    },
-    {
-      "category": "Ingénierie des données",
-      "items": [
         "SQL",
         "PostgreSQL",
-        "InfluxDB",
-        "TimescaleDB"
+        "Alembic",
+        "SQLAlchemy",
+        "InfluxDB"
       ]
     },
     {
-      "category": "Calcul scientifique",
+      "category": "Cloud",
       "items": [
-        "Jupyter",
-        "Numba",
-        "CUDA"
-      ]
-    },
-    {
-      "category": "DevOps",
-      "items": [
-        "Linux",
         "Docker",
-        "Git",
-        "GitHub Actions",
-        "Pytest"
+        "NixOS",
+        "Linux",
+        "Ansible",
+        "CI/CD",
+        "AWS"
       ]
     },
     {
-      "category": "Instrumentation",
+      "category": "Dev",
       "items": [
-        "C",
-        "C++",
-        "Arduino",
-        "I2C",
-        "SPI",
-        "UART",
-        "USB"
+        "Bash",
+        "FastAPI",
+        "Git",
+        "Neovim",
+        "Lua"
       ]
     }
   ],

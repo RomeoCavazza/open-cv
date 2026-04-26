@@ -1,7 +1,7 @@
 {
   "profile": {
     "name": "ROMEO CAVAZZA",
-    "title": "ALTERNANCE — COMMUNITY MANAGER DATA & IA",
+    "title": "ALTERNANCE — CHARGÉ DE MISSION DATA & IA",
     "image": "assets/profile-picture.jpg",
     "location": "Paris, 11e",
     "email": "romeo.cavazza@gmail.com",
@@ -9,7 +9,7 @@
     "website": "www.romeocavazza.com",
     "linkedin": "in/romeo-cavazza/",
     "github": "github.com/RomeoCavazza",
-    "pitch": "Étudiant en Master Intelligence Artificielle, passionné par l'IA générative, je souhaite développer et mettre en pratique mes compétences en Computer Vision, NLP et IA appliquée au sein de Safran."
+    "pitch": "Étudiant en Master IA passionné par la vulgarisation technique, je souhaite mettre mes compétences en IA et Low-code au service de l'animation de la communauté Data Science de Safran."
   },
   "apprenticeship": {
     "duration": "24 mois",
@@ -22,106 +22,87 @@
       "role": "AI Consultant & Formateur",
       "period": "Janvier-Juin 2026",
       "description": [
-        "Conception de modules d'IA appliquée et démonstrateurs techniques",
-        "Animation de formations et production de documentation technique",
-        "Vulgarisation de cas d'usage data et automatisation"
+        "Conception de modules de formation sur l'IA générative et l'automatisation",
+        "Animation de masterclass techniques et production de supports pédagogiques",
+        "Vulgarisation de cas d'usage data complexes pour des publics variés"
       ]
     },
     {
-      "company": "Revolvr, Paris, France",
-      "role": "AI Automation Engineer – R&D Intern",
-      "period": "Février-Juillet 2025",
+      "company": "no-low-code — Automatisation Métier",
+      "role": "Lead Automation",
+      "period": "2024 — Présent",
       "description": [
-        "Développement de pipelines d'ingestion et analyse automatisée de données",
-        "Intégration d'APIs et industrialisation d'outils de détection de signaux",
-        "Production de workflows d'analyse pour usages métier"
+        "Conception de workflows d'automatisation avancés via n8n et Make",
+        "Intégration d'outils IA pour optimiser la productivité et les flux de communication"
       ]
     },
     {
-      "company": "Home Lab — Plateforme inertielle",
+      "company": "Shellgeist — Assistant IA Interactif",
       "role": "",
-      "period": "2025–présent",
+      "period": "2025 — Présent",
       "description": [
-        "Acquisition inertielle/GPS (MPU6050, NEO-6M) via firmware C++ et gateway Python",
-        "Analyse fréquentielle, détection d'anomalies et monitoring InfluxDB/Grafana"
+        "Développement d'un agent IA facilitant l'interaction homme-machine",
+        "Mise en œuvre de stratégies de prompting et orchestration de modèles locaux"
       ]
     },
     {
-      "company": "Hackathon — Algorithmique appliquée à la couverture 5G",
+      "company": "Landing Pages — Design Premium",
       "role": "",
-      "period": "2026",
+      "period": "2024 — Présent",
       "description": [
-        "Modélisation et optimisation du placement d'antennes via Python, Numba et CUDA",
-        "Heuristiques de couverture et traitement de données spatiales avec NumPy"
+        "Conception d'interfaces utilisateurs modernes et engageantes (React, Radix UI)",
+        "Focus sur l'expérience utilisateur et la clarté de l'information technique"
       ]
     }
   ],
   "education": [
     {
       "school": "EPITECH, Paris, France",
-      "degree": "Master of Science — Intelligence artificielle",
+      "degree": "Master of Science — Intelligence Artificielle",
       "period": "2026 – 2028"
     },
     {
       "school": "EPITECH, Paris, France",
-      "degree": "Pré-MSc — Python, CUDA, NumPy, Pandas, Rust, Algorithmique.",
+      "degree": "Pré-MSc Pro — Python, SQL, APIs, Docker, Linux et IA appliquée",
       "period": "2025 – 2026"
     },
     {
       "school": "HarvardX, edX",
-      "degree": "CS50W — Introduction to Computer Science<br>CS50W — Web Programming with Python and JavaScript",
+      "degree": "CS50x — Introduction to Computer Science",
       "period": ""
     }
   ],
   "skills": [
     {
-      "category": "Intelligence Artificielle",
+      "category": "IA",
       "items": [
-        "Python",
-        "NumPy",
-        "SciPy",
-        "pandas",
-        "scikit-learn",
-        "PyTorch"
+        "Prompt Engineering",
+        "Ollama",
+        "GPT-4",
+        "Claude",
+        "LangChain",
+        "Vibe Coding"
       ]
     },
     {
-      "category": "Ingénierie des données",
+      "category": "Low-code",
       "items": [
-        "SQL",
-        "PostgreSQL",
-        "InfluxDB",
-        "TimescaleDB"
+        "n8n",
+        "Make",
+        "Zapier",
+        "Airtable",
+        "Automation"
       ]
     },
     {
-      "category": "Calcul scientifique",
+      "category": "Web",
       "items": [
-        "Jupyter",
-        "Numba",
-        "CUDA"
-      ]
-    },
-    {
-      "category": "DevOps",
-      "items": [
-        "Linux",
-        "Docker",
-        "Git",
-        "GitHub Actions",
-        "Pytest"
-      ]
-    },
-    {
-      "category": "Instrumentation",
-      "items": [
-        "C",
-        "C++",
-        "Arduino",
-        "I2C",
-        "SPI",
-        "UART",
-        "USB"
+        "React",
+        "Tailwind CSS",
+        "Radix UI",
+        "TypeScript",
+        "Figma",
+        "Sass"
       ]
     }
   ],

@@ -1,7 +1,7 @@
 {
   "profile": {
     "name": "ROMEO CAVAZZA",
-    "title": "ALTERNANCE — DATA & AI ENGINEER",
+    "title": "ALTERNANCE — DATA ENGINEER",
     "image": "assets/profile-picture.jpg",
     "location": "Paris, 11e",
     "email": "romeo.cavazza@gmail.com",
@@ -9,7 +9,7 @@
     "website": "www.romeocavazza.com",
     "linkedin": "in/romeo-cavazza/",
     "github": "github.com/RomeoCavazza",
-    "pitch": "Étudiant en Master IA, je souhaite concevoir des solutions RAG et des pipelines de données innovants au service de la plateforme ITONICS."
+    "pitch": "Étudiant en Master Big Data passionné par l'industrialisation des données, je souhaite mettre mes compétences au service des projets souverains de MBDA."
   },
   "apprenticeship": {
     "duration": "24 mois",
@@ -22,9 +22,10 @@
       "role": "AI Consultant & Formateur",
       "period": "Janvier-Juin 2026",
       "description": [
-        "Conception de modules d'IA appliquée et démonstrateurs techniques",
-        "Animation de formations et production de documentation technique",
-        "Vulgarisation de cas d'usage data et automatisation"
+      "description": [
+        "Développement de prototypes techniques IA et pipelines de démonstration",
+        "Support technique et audit de solutions logicielles d'automatisation",
+        "Documentation technique et accompagnement sur l'adoption d'outils data"
       ]
     },
     {
@@ -32,18 +33,18 @@
       "role": "AI Automation Engineer – R&D Intern",
       "period": "Février-Juillet 2025",
       "description": [
-        "Développement de pipelines d'ingestion et analyse automatisée de données",
-        "Intégration d'APIs et industrialisation d'outils de détection de signaux",
-        "Production de workflows d'analyse pour usages métier"
+        "Architecture de pipelines d'ingestion et automatisation de l'analyse de données",
+        "Intégration d'APIs sociales dans des workflows de monitoring stratégique",
+        "Industrialisation d'outils de détection de signaux faibles via workflows LLM"
       ]
     },
     {
-      "company": "Shellgeist — AI Terminal Agent",
+      "company": "TCO-Core — Data Pipeline Haute Fréquence",
       "role": "",
       "period": "2025 — Présent",
       "description": [
-        "Agent autonome local en Python et Lua éditant du code par Tool Calling et IPC",
-        "Intégration hybride de modèles locaux Ollama et propriétaires OpenAI ou Claude"
+        "Conception d'un pipeline d'acquisition et traitement haute fréquence (100 Hz)",
+        "Stockage sur base de données séries temporelles (InfluxDB) et monitoring Grafana"
       ]
     },
     {
@@ -51,20 +52,20 @@
       "role": "",
       "period": "2025 — Présent",
       "description": [
-        "Architecture RAG avec Qdrant pour l'analyse de tendances et microservices FastAPI",
-        "Orchestration de workflows LLM et déploiement de pipelines de données cloud"
+        "Plateforme SaaS d'ingestion et d'analyse de données sociales via APIs Meta",
+        "Architecture hybride (SQL/Vector) et orchestration de workflows de données cloud"
       ]
     }
   ],
   "education": [
     {
       "school": "EPITECH, Paris, France",
-      "degree": "Master of Science — Intelligence artificielle",
+      "degree": "Master of Science — Big Data",
       "period": "2026 – 2028"
     },
     {
       "school": "EPITECH, Paris, France",
-      "degree": "Pré-MSc — Python, CUDA, NumPy, Pandas, Rust, Algorithmique.",
+      "degree": "Pré-MSc — Python, SQL, APIs, Docker et ingénierie data",
       "period": "2025 – 2026"
     },
     {
@@ -75,58 +76,34 @@
   ],
   "skills": [
     {
-      "category": "Programmation",
+      "category": "Data",
       "items": [
         "Python",
-        "C++",
-        "Java",
-        "Rust",
-        "FastAPI",
-        "Git"
-      ]
-    },
-    {
-      "category": "Algorithmie",
-      "items": [
-        "Numba",
-        "CUDA",
-        "IPC",
-        "Sockets",
-        "GDB",
-        "Valgrind"
-      ]
-    },
-    {
-      "category": "Machine Learning",
-      "items": [
+        "SQL",
+        "InfluxDB",
+        "Grafana",
         "PyTorch",
-        "TensorFlow",
-        "Pandas",
-        "NumPy",
-        "SciPy",
-        "Jupyter"
+        "Qdrant"
       ]
     },
     {
-      "category": "DevOps",
+      "category": "Java",
+      "items": [
+        "Java",
+        "Spring Boot",
+        "JUnit",
+        "Maven",
+        "OOP"
+      ]
+    },
+    {
+      "category": "Cloud",
       "items": [
         "Docker",
         "Kubernetes",
-        "GitLab CI/CD",
+        "CI/CD",
         "Linux",
-        "NixOS",
-        "Ansible"
-      ]
-    },
-    {
-      "category": "MLOps",
-      "items": [
-        "LangChain",
-        "LangGraph",
-        "pgvector",
-        "Ollama",
-        "Prometheus",
-        "Grafana"
+        "AWS"
       ]
     }
   ],

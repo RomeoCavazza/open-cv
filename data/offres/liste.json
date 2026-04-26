@@ -144,49 +144,57 @@
       "title": "MBDA - Apprentissage Ingénieur Data",
       "url": "https://www.mbda-systems.com/country-fr/careers/apprentissage-ingenieur-data-fh",
       "category": "Data Engineering & Data Science",
-      "job_id": "mbda_apprentissage_data_scientist_detection_d_anomalies"
+      "job_id": "mbda_apprentissage_data_scientist_detection_d_anomalies",
+      "status": "ready"
     },
     {
       "title": "MBDA - Apprentissage Data Engineer",
       "url": "https://www.mbda-systems.com/country-fr/careers/apprentissage-data-engineer-fh",
       "category": "Data Engineering & Data Science",
-      "job_id": "mbda_apprentissage_data_engineer"
+      "job_id": "mbda_apprentissage_data_engineer",
+      "status": "ready"
     },
     {
       "title": "Safran - Apprentissage Data Analyste (Corbeil-Essonnes)",
       "url": "https://www.safran-group.com/fr/offres/france/corbeil-essonnes/apprentie-data-analyste-fh-177959",
       "category": "Data Engineering & Data Science",
-      "job_id": "safran_apprentissage_data_analyste_corbeil_essonnes"
+      "job_id": "safran_apprentissage_data_analyste_corbeil_essonnes",
+      "status": "ready"
     },
     {
       "title": "Safran - Alternance Statistiques / Data Migration (Moissy-Cramayel)",
       "url": "https://www.safran-group.com/fr/offres/france/rond-point-rene-ravaud-77550-moissy-cramayel/alternance-statistiques-data-migration-amelioration-applications-calculs-statistiques-fh-177662",
       "category": "Data Engineering & Data Science",
-      "job_id": "safran_alternance_statistiques_data_migration_moissy_cramayel"
+      "job_id": "safran_alternance_statistiques_data_migration_moissy_cramayel",
+      "status": "ready"
     },
     {
       "title": "Safran - Alternance Data Analyst (Roche la Molière)",
       "url": "https://www.safran-group.com/fr/offres/france/roche-moliere/alternance-data-analyst-fh-177132",
       "category": "Data Engineering & Data Science",
-      "job_id": "safran_alternance_data_analyst_roche_la_moliere"
+      "job_id": "safran_alternance_data_analyst_roche_la_moliere",
+      "status": "ready"
     },
     {
       "title": "Safran - Alternance Community Manager Data Science & IA",
       "url": "https://www.safran-group.com/fr/offres/france/magny-hameaux/alternance-community-manager-data-science-intelligence-artificielle-fh-177226",
       "category": "Data Engineering & Data Science",
-      "job_id": "safran_alternance_community_manager_data_science_and_ia"
+      "job_id": "safran_alternance_community_manager_data_science_and_ia",
+      "status": "ready"
     },
     {
       "title": "Thales - Alternance Ingénieur Développement Data / IA sur plateforme digitale",
       "url": "https://careers.thalesgroup.com/global/en/job/TGPTGWGLOBALR0325052EXTERNALENGLOBAL/ALTERNANCE-Ing-nieur-D-veloppement-Data-IA-sur-plateforme-digitale-F-H",
       "category": "Data Engineering & Data Science",
-      "job_id": "thales_alternance_developpement_multi_agents_de_solutions_daide_a_la_strategie_f_h"
+      "job_id": "thales_alternance_developpement_data_ia_plateforme_digitale",
+      "status": "pending"
     },
     {
       "title": "PASS - Traitement de corpus de données massifs (Gallica)",
       "url": "https://www.pass.fonction-publique.gouv.fr/offre/alternante-ingenierie-et-traitement-de-corpus-de-donnees-massifs-pour-gallica-images",
       "category": "Data Engineering & Data Science",
-      "job_id": "pass_traitement_de_corpus_de_donnees_massifs_gallica"
+      "job_id": "pass_traitement_de_corpus_de_donnees_massifs_gallica",
+      "status": "ready"
     },
     {
       "title": "Fondation du Patrimoine - Alternance Assistant Développeur API",

@@ -1,7 +1,7 @@
 {
   "profile": {
     "name": "ROMEO CAVAZZA",
-    "title": "ALTERNANCE — DÉVELOPPEMENT MULTI-AGENTS",
+    "title": "ALTERNANCE — IA AGENTIQUE",
     "image": "assets/profile-picture.jpg",
     "location": "Paris, 11e",
     "email": "romeo.cavazza@gmail.com",
@@ -9,7 +9,7 @@
     "website": "www.romeocavazza.com",
     "linkedin": "in/romeo-cavazza/",
     "github": "github.com/RomeoCavazza",
-    "pitch": "Étudiant en Master IA, je souhaite concevoir des systèmes multi-agents complexes pour l'aide à la stratégie au service de Thales."
+    "pitch": "Étudiant en Master IA passionné par les systèmes multi-agents, je souhaite mettre mes compétences en orchestration de LLM au service de la stratégie chez Thales."
   },
   "apprenticeship": {
     "duration": "24 mois",
@@ -22,9 +22,9 @@
       "role": "AI Consultant & Formateur",
       "period": "Janvier-Juin 2026",
       "description": [
-        "Analyse comparative et déploiement de solutions GenAI sur-mesure",
-        "Conception d'agents autonomes et automatisation agile des processus métier",
-        "Animation de formations sur l'IA appliquée et l'automatisation"
+        "Conception d'agents autonomes et démonstrateurs techniques (Agentic Workflows)",
+        "Architecture de solutions GenAI sur-mesure et support à l'automatisation métier",
+        "Veille technologique et audit de solutions IA pour l'optimisation des flux"
       ]
     },
     {
@@ -32,9 +32,9 @@
       "role": "AI Automation Engineer – R&D Intern",
       "period": "Février-Juillet 2025",
       "description": [
-        "Développement de pipelines d'ingestion et analyse automatisée de données",
-        "Intégration d'APIs et industrialisation d'outils de détection de signaux",
-        "Production de workflows d'analyse pour usages métier"
+        "Automatisation de pipelines de veille stratégique via workflows LLM (NLP)",
+        "Intégration d'APIs sociales pour le monitoring et la détection de signaux faibles",
+        "Développement de workflows d'analyse automatisés pour l'aide à la décision"
       ]
     },
     {
@@ -42,8 +42,8 @@
       "role": "",
       "period": "2025 — Présent",
       "description": [
-        "Agent autonome local en Python et Lua éditant du code par Tool Calling et IPC",
-        "Intégration hybride de modèles locaux Ollama et propriétaires OpenAI ou Claude"
+        "Conception d'un agent autonome local supervisé via Tool Calling et IPC (Python, Lua)",
+        "Orchestration hybride de modèles locaux (Ollama) et propriétaires (GPT-4, Claude)"
       ]
     },
     {
@@ -51,8 +51,8 @@
       "role": "",
       "period": "2025 — Présent",
       "description": [
-        "Architecture RAG avec Qdrant pour l'analyse de tendances et microservices FastAPI",
-        "Orchestration de workflows LLM et déploiement de pipelines de données cloud"
+        "Architecture RAG pour l'analyse de tendances sociales via APIs Meta et TikTok",
+        "Pipeline d'ingestion haute performance avec base de données vectorielle (Qdrant)"
       ]
     }
   ],
@@ -64,7 +64,7 @@
     },
     {
       "school": "EPITECH, Paris, France",
-      "degree": "Pré-MSc — Python, CUDA, NumPy, Pandas, Rust, Algorithmique.",
+      "degree": "Pré-MSc Pro — Python, SQL, APIs, Docker, Rust et Systèmes.",
       "period": "2025 – 2026"
     },
     {
@@ -75,54 +75,36 @@
   ],
   "skills": [
     {
-      "category": "IA Générative",
+      "category": "IA",
       "items": [
-        "Claude",
-        "Copilot",
         "LangGraph",
         "LangChain",
         "Ollama",
-        "pgvector"
+        "Claude / GPT",
+        "PyTorch",
+        "CUDA"
       ]
     },
     {
-      "category": "No-Code / Low-Code",
-      "items": [
-        "n8n",
-        "Zapier",
-        "Power Automate",
-        "Make",
-        "VBA"
-      ]
-    },
-    {
-      "category": "Backend",
+      "category": "Data",
       "items": [
         "Python",
         "SQL",
+        "Qdrant",
+        "pgvector",
+        "InfluxDB",
+        "Pandas"
+      ]
+    },
+    {
+      "category": "Dev",
+      "items": [
         "FastAPI",
-        "Git",
-        "Bash"
-      ]
-    },
-    {
-      "category": "DevOps",
-      "items": [
         "Docker",
-        "Kubernetes",
-        "GitLab CI/CD",
-        "Linux",
-        "Nginx"
-      ]
-    },
-    {
-      "category": "Data Science",
-      "items": [
-        "PyTorch",
-        "Pandas",
-        "Scikit-learn",
-        "NumPy",
-        "Jupyter"
+        "CI/CD",
+        "NixOS",
+        "Lua",
+        "Git"
       ]
     }
   ],

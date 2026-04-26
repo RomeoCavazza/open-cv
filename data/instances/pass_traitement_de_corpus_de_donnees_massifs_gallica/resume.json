@@ -1,7 +1,7 @@
 {
   "profile": {
     "name": "ROMEO CAVAZZA",
-    "title": "ALTERNANCE — DATA SCIENTIST",
+    "title": "ALTERNANCE — INGÉNIEUR DATA (CORPUS MASSIFS)",
     "image": "assets/profile-picture.jpg",
     "location": "Paris, 11e",
     "email": "romeo.cavazza@gmail.com",
@@ -9,7 +9,7 @@
     "website": "www.romeocavazza.com",
     "linkedin": "in/romeo-cavazza/",
     "github": "github.com/RomeoCavazza",
-    "pitch": "Étudiant en Master Big Data, passionné par l'ingénierie des données, je souhaite développer et mettre en pratique mes compétences en pipelines ETL, analyse statistique et Cloud au sein de PASS."
+    "pitch": "Étudiant en Master Big Data passionné par le traitement de données à grande échelle, je souhaite mettre mes compétences en pipelines d'ingestion au service de la valorisation des fonds de Gallica (BnF)."
   },
   "apprenticeship": {
     "duration": "24 mois",
@@ -22,9 +22,9 @@
       "role": "AI Consultant & Formateur",
       "period": "Janvier-Juin 2026",
       "description": [
-        "Conception de modules d'IA appliquée et démonstrateurs techniques",
-        "Animation de formations et production de documentation technique",
-        "Vulgarisation de cas d'usage data et automatisation"
+        "Développement de prototypes techniques IA et pipelines de traitement de données",
+        "Support technique et audit de solutions logicielles d'automatisation intelligente",
+        "Documentation technique et accompagnement sur l'ingestion de flux de données"
       ]
     },
     {
@@ -32,27 +32,27 @@
       "role": "AI Automation Engineer – R&D Intern",
       "period": "Février-Juillet 2025",
       "description": [
-        "Développement de pipelines d'ingestion et analyse automatisée de données",
-        "Intégration d'APIs et industrialisation d'outils de détection de signaux",
-        "Production de workflows d'analyse pour usages métier"
+        "Architecture de pipelines d'ingestion et automatisation de l'analyse de données",
+        "Intégration d'APIs sociales dans des workflows de monitoring stratégique",
+        "Industrialisation d'outils de détection de signaux faibles via workflows LLM"
       ]
     },
     {
-      "company": "Home Lab — Plateforme inertielle",
+      "company": "Veyl.io — Social Intelligence API",
       "role": "",
       "period": "2025–présent",
       "description": [
-        "Acquisition inertielle/GPS (MPU6050, NEO-6M) via firmware C++ et gateway Python",
-        "Analyse fréquentielle, détection d'anomalies et monitoring InfluxDB/Grafana"
+        "Plateforme SaaS d'ingestion et d'analyse de données sociales (APIs Meta/TikTok)",
+        "Architecture hybride (SQL/Vector) et orchestration de workflows de données cloud"
       ]
     },
     {
-      "company": "Hackathon — Algorithmique appliquée à la couverture 5G",
+      "company": "TCO-Core — Data Pipeline Haute Fréquence",
       "role": "",
       "period": "2026",
       "description": [
-        "Modélisation et optimisation du placement d'antennes via Python, Numba et CUDA",
-        "Heuristiques de couverture et traitement de données spatiales avec NumPy"
+        "Pipeline d'acquisition et de traitement de données haute fréquence (100 Hz)",
+        "Traitement de signal en Python, stockage InfluxDB et monitoring Grafana"
       ]
     }
   ],
@@ -64,7 +64,7 @@
     },
     {
       "school": "EPITECH, Paris, France",
-      "degree": "Pré-MSc — Python, CUDA, NumPy, Pandas, Rust, Algorithmique.",
+      "degree": "Pré-MSc Pro — Python, SQL, APIs, Docker, Rust et Ingénierie Data.",
       "period": "2025 – 2026"
     },
     {
@@ -75,53 +75,34 @@
   ],
   "skills": [
     {
-      "category": "Intelligence Artificielle",
+      "category": "Data",
       "items": [
         "Python",
-        "NumPy",
-        "SciPy",
-        "pandas",
-        "scikit-learn",
-        "PyTorch"
-      ]
-    },
-    {
-      "category": "Ingénierie des données",
-      "items": [
         "SQL",
         "PostgreSQL",
         "InfluxDB",
-        "TimescaleDB"
+        "Grafana",
+        "Qdrant"
       ]
     },
     {
-      "category": "Calcul scientifique",
+      "category": "IA",
       "items": [
-        "Jupyter",
-        "Numba",
-        "CUDA"
+        "PyTorch",
+        "Pandas",
+        "Scikit-learn",
+        "NumPy",
+        "Scipy"
       ]
     },
     {
-      "category": "DevOps",
+      "category": "Cloud",
       "items": [
-        "Linux",
         "Docker",
-        "Git",
-        "GitHub Actions",
-        "Pytest"
-      ]
-    },
-    {
-      "category": "Instrumentation",
-      "items": [
-        "C",
-        "C++",
-        "Arduino",
-        "I2C",
-        "SPI",
-        "UART",
-        "USB"
+        "Linux",
+        "CI/CD",
+        "AWS",
+        "Git"
       ]
     }
   ],
