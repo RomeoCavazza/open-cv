@@ -10,15 +10,16 @@ Ce document décrit l'organisation des fichiers et les processus de génération
 - `/docs/` : Documentation technique et guides d'utilisation.
 
 ### 2. Candidatures & Offres
-- `/engines/data/offres/liste.json` : Index des offres cibles.
-- `/engines/data/offres/raw/` : Texte brut des offres d'emploi au format Markdown.
+- `/engines/data/offres/liste.json` : Index des offres cibles (Source de vérité).
+- `/engines/data/offres/json/` : Dossiers des instances personnalisées (un dossier par offre).
+- `/engines/data/offres/markdown/` : Texte brut des offres d'emploi au format Markdown.
 
 ### 3. Interface de Rendu Web
-- `/engines/web/` : Interface de visualisation dynamique.
-    - Le dashboard (`index.html`) charge les fichiers JSON depuis `/engines/data/instances/` via le paramètre `id`.
-    - `/engines/web/data/` : Point d'accès (liens symboliques) vers le dossier `/engines/data`.
-- `/engines/output/` : Emplacement des fichiers exportés.
-- `/engines/data/templates/` : Modèles JSON servant de base à la création de nouvelles instances.
+- `/engines/` : Interface de visualisation dynamique.
+    - Le dashboard (`index.html`) charge les fichiers JSON depuis `/engines/data/offres/json/` via le paramètre `id`.
+    - `/engines/resume/` : Moteur de rendu des CV.
+    - `/engines/cover-letter/` : Moteur de rendu des lettres de motivation.
+- `/engines/data/user/templates/modeles/` : Modèles JSON servant de base à la création de nouvelles instances.
 
 ---
 
@@ -26,9 +27,9 @@ Ce document décrit l'organisation des fichiers et les processus de génération
 
 ### Gestion des Dossiers
 - **Initialisation** : `python3 engines/scripts/cv_tool.py init-all`
-  - Crée l'arborescence des fichiers pour chaque offre listée.
+  - Crée l'arborescence des fichiers JSON pour chaque offre listée dans `liste.json`.
 - **Synchronisation** : `python3 engines/scripts/personalize_all.py`
-  - Applique les mappings de formation, met à jour les noms d'entreprises et harmonise le contenu des instances.
+  - Applique les mappings de formation (Master IA/Cloud/etc.) et harmonise le contenu des instances.
 
 ### Acquisition des Offres
 - **Script de scraping** : `/engines/scripts/scrape_offres.py`
@@ -42,11 +43,13 @@ L'interface permet de prévisualiser les documents avant export.
 
 1. **Serveur local** :
    ```bash
-   python3 -m http.server 8000 --directory engines/web
+   # Lancer depuis la racine du projet
+   python3 -m http.server 8000
    ```
 2. **Visualisation** :
+   - Ouvrir `http://localhost:8000/engines/`
    - Sélectionner une offre dans la barre latérale pour charger les données correspondantes.
-   - Utiliser la fonction d'impression du navigateur pour générer le PDF.
+   - Utiliser la fonction d'impression du navigateur (Ctrl+P) pour générer le PDF.
 
 ---
 
@@ -56,7 +59,7 @@ L'interface permet de prévisualiser les documents avant export.
 | :--- | :--- |
 | Créer les dossiers d'instances | `python3 engines/scripts/cv_tool.py init-all` |
 | Harmoniser les contenus | `python3 engines/scripts/personalize_all.py` |
-| Récupérer de nouvelles offres | `python engines/scripts/scrape_offres.py --config scrape-offres.yaml` |
+| Récupérer de nouvelles offres | `python3 engines/scripts/scrape_offres.py --config scrape-offres.yaml` |
 
 ---
 

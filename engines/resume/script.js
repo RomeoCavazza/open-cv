@@ -3,12 +3,12 @@ async function loadCV() {
         const urlParams = new URLSearchParams(window.location.search);
         const jobId = urlParams.get('id');
         const t = Date.now();
-        let dataPath = (jobId && jobId !== 'null') ? `../data/instances/${jobId}/resume.json?t=${t}` : `../data/templates/resume.json?t=${t}`;
+        let dataPath = (jobId && jobId !== 'null') ? `../data/offres/json/${jobId}/resume.json?t=${t}` : `../data/user/templates/modeles/resume.json?t=${t}`;
         
         let response = await fetch(dataPath);
         if (!response.ok) {
             console.warn(`Instance ${jobId} not found, falling back to template.`);
-            response = await fetch(`../data/templates/resume.json?t=${t}`);
+            response = await fetch(`../data/user/templates/modeles/resume.json?t=${t}`);
         }
         
         if (!response.ok) {
@@ -28,16 +28,12 @@ async function loadCV() {
         document.getElementById('email').textContent = data.profile.email;
         document.getElementById('phone').textContent = data.profile.phone;
         
-        document.getElementById('website').textContent = data.profile.website;
+        // Links (Data only for href)
         safeSetHref('website-link', "https://" + data.profile.website);
-        
-        document.getElementById('linkedin').textContent = data.profile.linkedin;
         safeSetHref('linkedin-link', "https://www.linkedin.com/" + data.profile.linkedin);
-        
-        document.getElementById('github').textContent = data.profile.github;
         safeSetHref('github-link', "https://" + data.profile.github);
         
-        // Labels and Sections
+        // Labels Overwrite
         if (data.labels) {
             const labelMap = {
                 'duration-label': 'duration',
@@ -69,7 +65,7 @@ async function loadCV() {
         document.getElementById('duration').textContent = data.apprenticeship.duration + ' — à partir de ' + data.apprenticeship.start;
         document.getElementById('rhythm').textContent = data.apprenticeship.rhythm;
             
-        // Skills (FIXED)
+        // Skills
         const skillsContainer = document.getElementById('skills-container');
         skillsContainer.innerHTML = '';
         data.skills.forEach(cat => {
@@ -79,7 +75,7 @@ async function loadCV() {
             skillsContainer.appendChild(div);
         });
 
-        // Languages (FIXED)
+        // Languages
         const langContainer = document.getElementById('languages-container');
         langContainer.innerHTML = '';
         data.languages.forEach(lang => {
@@ -89,7 +85,7 @@ async function loadCV() {
             langContainer.appendChild(div);
         });
 
-        // Experiences & Projects (FIXED)
+        // Experiences & Projects
         const expContainer = document.getElementById('experiences-container');
         expContainer.innerHTML = '';
         data.experiences.forEach(exp => {
@@ -97,7 +93,6 @@ async function loadCV() {
             div.className = 'exp-item';
             
             if (exp.role) {
-                // Style Emploi
                 div.innerHTML = `
                     <h4>${exp.role}</h4>
                     <div class="company">${exp.company}</div>
@@ -105,7 +100,6 @@ async function loadCV() {
                     <ul>${exp.description.map(line => `<li>${line}</li>`).join('')}</ul>
                 `;
             } else {
-                // Style Projet/Hackathon (Gras-Italique, Inline)
                 div.innerHTML = `
                     <div class="project-line">
                         <span class="company-bold">${exp.company}</span> <span class="period">(${exp.period})</span>
@@ -145,4 +139,3 @@ window.addEventListener('DOMContentLoaded', () => {
     }
     loadCV();
 });
-

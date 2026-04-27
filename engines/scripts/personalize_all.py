@@ -61,9 +61,9 @@ def personalize_instance(instance_path: Path, company_name: str):
             data = json.load(f)
         
         # Education
-        if len(data.get("education", [])) >= 2:
+        if len(data.get("education", [])) >= 1:
             data["education"][0]["degree"] = MASTERS[m_key]
-            data["education"][1]["degree"] = PRE_MSC[p_key]
+            # data["education"][1]["degree"] = PRE_MSC[p_key]
         
         # Pitch
         pitch_variant = m_key
@@ -89,7 +89,7 @@ def personalize_instance(instance_path: Path, company_name: str):
             cl_data = json.load(f)
         
         cl_data["letter"]["company"] = company_name
-        cl_data["letter"]["date"] = "25 avril 2026"
+        cl_data["letter"]["date"] = "27 avril 2026"
         
         # Sync Subject with Resume Title
         if resume_path.exists():
@@ -111,8 +111,8 @@ def personalize_instance(instance_path: Path, company_name: str):
 
 def main():
     root = Path(__file__).parent.parent.parent
-    instances_dir = root / "engines", "data" / "instances"
-    liste_path = root / "engines", "data" / "offres" / "liste.json"
+    instances_dir = root / "engines" / "data" / "offres" / "json"
+    liste_path = root / "engines" / "data" / "offres" / "liste.json"
 
     if not liste_path.exists():
         print("Error: liste.json not found.")

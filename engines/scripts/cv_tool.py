@@ -116,11 +116,11 @@ def render_markdown_cv(data: dict) -> str:
 def command_init(job_id: str, force: bool = False):
     root = Path(__file__).parent.parent.parent
     data_dir = root / "engines" / "data"
-    instances_dir = data_dir / "instances" / job_id
-    templates_dir = data_dir / "templates"
+    instances_dir = data_dir / "offres" / "json" / job_id
+    templates_dir = data_dir / "user" / "templates" / "modeles"
     
     # Path for offer
-    offer_path = data_dir / "offres" / "raw" / f"{job_id}.md"
+    offer_path = data_dir / "offres" / "markdown" / f"{job_id}.md"
     
     # 1. Existence check for source offer
     source_uri = None
@@ -156,8 +156,8 @@ def command_init(job_id: str, force: bool = False):
 
 def command_render(job_id: str):
     root = Path(__file__).parent.parent.parent
-    instance_dir = root / "engines" / "data" / "instances" / job_id
-    web_dir = root / "engines" / "web"
+    instance_dir = root / "engines" / "data" / "offres" / "json" / job_id
+    web_dir = root / "engines"
     
     if not instance_dir.exists():
         print(f"Error: Instance '{job_id}' not found. Run 'init' first.")
@@ -202,7 +202,7 @@ def command_init_all(force: bool = False):
                 # This happens if it exists and force is False
                 continue
     
-    print(f"\nBatch complete. {count} instances are ready in engines/engines/data/instances/")
+    print(f"\nBatch complete. {count} instances are ready in engines/data/offres/json/")
 
 def main():
     parser = argparse.ArgumentParser(description="CV Tool: Instance Management & Formatting.")

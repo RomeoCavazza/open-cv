@@ -22,11 +22,13 @@ Ce projet est un moteur de rendu de candidatures (CV et Lettres de Motivation) a
 
 ```text
 .
+├── docs/               # Documentation et guides d'utilisation
 ├── engines/
-│   ├── data/           # Source de vérité (Instances, Offres, Modèles)
-│   ├── scripts/        # Intelligence du projet (Scraping & Personnalisation)
-│   └── web/            # Moteur de rendu HTML/CSS dynamique
-├── shell.nix           # Environnement de développement reproductible
+│   ├── data/           # Données (Offres JSON/MD, Profil, Modèles)
+│   ├── scripts/        # Intelligence (Scraping & Personnalisation)
+│   ├── resume/         # Moteur de rendu CV
+│   └── cover-letter/   # Moteur de rendu Lettre
+├── shell.nix           # Environnement de développement
 └── README.md
 ```
 
@@ -68,7 +70,7 @@ python3 -m http.server 8000
 graph LR
     A[Offre d'emploi] -->|Scrape| B[Markdown]
     B -->|Personnalise| C[JSON Instance]
-    D[Profil Global] -->|Infection| C
+    D[Profil Global] -->|Injection| C
     C -->|Moteur Web| E[HTML/CSS]
     E -->|Print| F[Export PDF]
 ```

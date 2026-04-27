@@ -8,13 +8,13 @@ L'agent doit consulter les fichiers dans l'ordre suivant :
 2. **`/engines/data/user/profile.md`** : Données personnelles de référence.
 3. **`/docs/how_it_works.md`** : Détails techniques sur le fonctionnement des scripts.
 4. **`/engines/data/offres/liste.json`** : Liste des cibles de candidature.
-5. **`/engines/data/instances/`** : Dossiers de travail pour chaque candidature.
+5. **`/engines/data/offres/json/`** : Dossiers de travail pour chaque candidature.
 
 ---
 
 ## Mission 1 : Collecte d'Offres
 1. Extraire le contenu textuel des offres (descriptions, prérequis).
-2. Sauvegarder chaque offre au format Markdown dans `/engines/data/offres/raw/`.
+2. Sauvegarder chaque offre au format Markdown dans `/engines/data/offres/markdown/`.
 
 ---
 
