@@ -19,3 +19,6 @@ node_modules/
 __pycache__/
 .venv/
 
+
+# User data and localized project code
+engines/data/user/

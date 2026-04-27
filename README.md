@@ -1,4 +1,6 @@
-# Agent-based orchestration for job posting scraping and resume/cover letter generation.
+# Resume Builder
+
+Agent-based orchestration for job posting scraping and resume/cover letter generation.
 
 ![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
 ![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)
@@ -69,7 +71,7 @@ graph LR
     D[Profil Global] -->|Infection| C
     C -->|Moteur Web| E[HTML/CSS]
     E -->|Print| F[Export PDF]
-    style C fill:#f9f,stroke:#333,stroke-width:2px
+    style C fill:#e1f5fe,stroke:#01579b,stroke-width:2px
 ```
 
 ---

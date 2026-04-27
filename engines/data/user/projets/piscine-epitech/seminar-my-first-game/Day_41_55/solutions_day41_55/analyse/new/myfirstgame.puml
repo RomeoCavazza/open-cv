@@ -1,8 +1,0 @@
-@startuml
-!include entities.puml
-!include objects.puml
-!include world.puml
-!include systems.puml
-!include stats.puml
-!include core.puml
-@enduml
