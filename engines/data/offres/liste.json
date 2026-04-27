@@ -1,0 +1,200 @@
+{
+  "entries": [
+    {
+      "title": "MBDA - Apprentissage Ingénieur Data",
+      "url": "https://www.mbda-systems.com/country-fr/careers/apprentissage-ingenieur-data-fh",
+      "category": "Data Engineering & Data Science",
+      "job_id": "mbda_apprentissage_ingenieur_data",
+      "status": "idle"
+    },
+    {
+      "title": "MBDA - Apprentissage Data Engineer",
+      "url": "https://www.mbda-systems.com/country-fr/careers/apprentissage-data-engineer-fh",
+      "category": "Data Engineering & Data Science",
+      "job_id": "mbda_apprentissage_data_engineer",
+      "status": "idle"
+    },
+    {
+      "title": "Safran - Apprentissage Data Analyste (Corbeil-Essonnes)",
+      "url": "https://www.safran-group.com/fr/offres/france/corbeil-essonnes/apprentie-data-analyste-fh-177959",
+      "category": "Data Engineering & Data Science",
+      "job_id": "safran_apprentissage_data_analyste_corbeil_essonnes",
+      "status": "idle"
+    },
+    {
+      "title": "Safran - Alternance Statistiques / Data Migration (Moissy-Cramayel)",
+      "url": "https://www.safran-group.com/fr/offres/france/rond-point-rene-ravaud-77550-moissy-cramayel/alternance-statistiques-data-migration-amelioration-applications-calculs-statistiques-fh-177662",
+      "category": "Data Engineering & Data Science",
+      "job_id": "safran_alternance_statistiques_data_migration_moissy_cramayel",
+      "status": "idle"
+    },
+    {
+      "title": "Safran - Alternance Data Analyst (Roche la Molière)",
+      "url": "https://www.safran-group.com/fr/offres/france/roche-moliere/alternance-data-analyst-fh-177132",
+      "category": "Data Engineering & Data Science",
+      "job_id": "safran_alternance_data_analyst_roche_la_moliere",
+      "status": "idle"
+    },
+    {
+      "title": "Safran - Alternance Community Manager Data Science & IA",
+      "url": "https://www.safran-group.com/fr/offres/france/magny-hameaux/alternance-community-manager-data-science-intelligence-artificielle-fh-177226",
+      "category": "Data Engineering & Data Science",
+      "job_id": "safran_alternance_community_manager_data_science_ia",
+      "status": "idle"
+    },
+    {
+      "title": "Thales - Alternance Ingénieur Développement Data / IA sur plateforme digitale",
+      "url": "https://careers.thalesgroup.com/global/en/job/TGPTGWGLOBALR0325052EXTERNALENGLOBAL/ALTERNANCE-Ing-nieur-D-veloppement-Data-IA-sur-plateforme-digitale-F-H",
+      "category": "Data Engineering & Data Science",
+      "job_id": "thales_alternance_ingenieur_developpement_data_ia_sur_plateforme_digitale",
+      "status": "idle"
+    },
+    {
+      "title": "MBDA - Apprentissage Ingénieur Développement Logiciel (F/H)",
+      "url": "https://epitech.jobteaser.com/en/job-offers/a90b751c-f0fd-45b4-b7e7-afce75a40907-mbda-apprentissage-ingenieur-developpement-logiciel-f-h",
+      "category": "Ingénierie Logicielle Spécialisée (Embarqué, C++, Simulations, Systèmes)",
+      "job_id": "mbda_apprentissage_ingenieur_developpement_logiciel_f_h",
+      "status": "idle"
+    },
+    {
+      "title": "MBDA - Contrat Pro Algorithmes de décision pour systèmes complexes",
+      "url": "https://www.mbda-systems.com/country-fr/careers/contrat-pro-ingenieur-en-algorithmes-de-decision-pour-systemes-complexes-fh",
+      "category": "Ingénierie Logicielle Spécialisée (Embarqué, C++, Simulations, Systèmes)",
+      "job_id": "mbda_contrat_pro_algorithmes_de_decision_pour_systemes_complexes",
+      "status": "idle"
+    },
+    {
+      "title": "MBDA - Apprentissage Développement de simulations numériques",
+      "url": "https://www.mbda-systems.com/country-fr/careers/apprentissage-ingenieur-en-developpement-de-simulations-numeriques-fh",
+      "category": "Ingénierie Logicielle Spécialisée (Embarqué, C++, Simulations, Systèmes)",
+      "job_id": "mbda_apprentissage_developpement_de_simulations_numeriques",
+      "status": "idle"
+    },
+    {
+      "title": "MBDA - Contrat Pro Développement logiciel IHM",
+      "url": "https://www.mbda-systems.com/country-fr/careers/contrat-pro-ingenieur-developpement-logiciel-interface-homme-machine-fh",
+      "category": "Ingénierie Logicielle Spécialisée (Embarqué, C++, Simulations, Systèmes)",
+      "job_id": "mbda_contrat_pro_developpement_logiciel_ihm",
+      "status": "idle"
+    },
+    {
+      "title": "MBDA - Contrat Pro Développement simulateur NextGen",
+      "url": "https://www.mbda-systems.com/country-fr/careers/contrat-pro-ingenieur-developpement-simulateur-nextgen-fh",
+      "category": "Ingénierie Logicielle Spécialisée (Embarqué, C++, Simulations, Systèmes)",
+      "job_id": "mbda_contrat_pro_developpement_simulateur_nextgen",
+      "status": "idle"
+    },
+    {
+      "title": "MBDA - Contrat Pro Ingénieur Validation Automatique",
+      "url": "https://www.mbda-systems.com/country-fr/careers/contrat-pro-ingenieur-validation-automatique-fh",
+      "category": "Ingénierie Logicielle Spécialisée (Embarqué, C++, Simulations, Systèmes)",
+      "job_id": "mbda_contrat_pro_ingenieur_validation_automatique",
+      "status": "idle"
+    },
+    {
+      "title": "Safran - Alternance Ingénieur Développement Logiciel Embarqué (Fougères)",
+      "url": "https://www.safran-group.com/fr/offres/france/fougeres/alternance-ingenieur-e-developpement-logiciel-embarque-fh-173657",
+      "category": "Ingénierie Logicielle Spécialisée (Embarqué, C++, Simulations, Systèmes)",
+      "job_id": "safran_alternance_ingenieur_developpement_logiciel_embarque_fougeres",
+      "status": "idle"
+    },
+    {
+      "title": "Safran - Apprentissage Ingénieur Développement Logiciel Embarqué (Massy)",
+      "url": "https://www.safran-group.com/fr/offres/france/massy/apprenti-e-ingenieur-e-developpement-logiciel-embarque-fh-173754",
+      "category": "Ingénierie Logicielle Spécialisée (Embarqué, C++, Simulations, Systèmes)",
+      "job_id": "safran_apprentissage_ingenieur_developpement_logiciel_embarque_massy",
+      "status": "idle"
+    },
+    {
+      "title": "Safran - Apprentissage Logiciels Embarqués (Créteil)",
+      "url": "https://www.safran-group.com/fr/offres/france/creteil/apprentissage-logiciels-embarques-fh-175497",
+      "category": "Ingénierie Logicielle Spécialisée (Embarqué, C++, Simulations, Systèmes)",
+      "job_id": "safran_apprentissage_logiciels_embarques_creteil",
+      "status": "idle"
+    },
+    {
+      "title": "Thales - Alternance Intégration de Unreal Engine 5 dans le logiciel CGF en C++ (F/H)",
+      "url": "https://epitech.jobteaser.com/en/job-offers/47070f58-b374-435f-97df-12956e4ba826-thales-alternance-integration-de-unreal-engine-5-dans-le-logiciel-cgf-en-c-f-h",
+      "category": "Ingénierie Logicielle Spécialisée (Embarqué, C++, Simulations, Systèmes)",
+      "job_id": "thales_alternance_integration_de_unreal_engine_5_dans_le_logiciel_cgf_en_c_f_h",
+      "status": "idle"
+    },
+    {
+      "title": "MBDA - Apprentissage Digital Learning Designer",
+      "url": "https://www.mbda-systems.com/country-fr/careers/apprentissage-digital-learning-designer-fh",
+      "category": "Innovation, Recherche & Digital Learning",
+      "job_id": "mbda_apprentissage_digital_learning_designer",
+      "status": "idle"
+    },
+    {
+      "title": "MBDA - Apprentissage Chargé d'Innovation",
+      "url": "https://www.mbda-systems.com/country-fr/careers/apprentissage-charge-dinnovation-fh",
+      "category": "Innovation, Recherche & Digital Learning",
+      "job_id": "mbda_apprentissage_charge_d_innovation",
+      "status": "idle"
+    },
+    {
+      "title": "MBDA - Apprentissage Intelligence Technologique & Open Innovation",
+      "url": "https://www.mbda-systems.com/country-fr/careers/apprentissage-charge-dinnovation-en-intelligence-technologique-et-open-innovation-fh",
+      "category": "Innovation, Recherche & Digital Learning",
+      "job_id": "mbda_apprentissage_intelligence_technologique_open_innovation",
+      "status": "idle"
+    },
+    {
+      "title": "MBDA - Apprentissage Ingénieur R&D Électronique / Info Industrielle",
+      "url": "https://www.mbda-systems.com/country-fr/careers/apprentissage-ingenieur-rd-electronique-informatique-industrielle-fh",
+      "category": "Innovation, Recherche & Digital Learning",
+      "job_id": "mbda_apprentissage_ingenieur_r_d_electronique_info_industrielle",
+      "status": "idle"
+    },
+    {
+      "title": "Safran - Chargé Innovation Fablab (Moissy-Cramayel)",
+      "url": "https://www.safran-group.com/fr/offres/france/moissy-cramayel/charge-innovation-fablab-fh-176978",
+      "category": "Innovation, Recherche & Digital Learning",
+      "job_id": "safran_charge_innovation_fablab_moissy_cramayel",
+      "status": "idle"
+    },
+    {
+      "title": "PASS - Conception pédagogique et ingénierie de formation",
+      "url": "https://www.pass.fonction-publique.gouv.fr/offre/alternante-chargee-de-conception-pedagogique-et-dingenierie-de-formation",
+      "category": "Innovation, Recherche & Digital Learning",
+      "job_id": "pass_conception_pedagogique_et_ingenierie_de_formation",
+      "status": "idle"
+    },
+    {
+      "title": "MBDA - Apprentissage Ingénieur Chef de Projet Solutions Digital CSS",
+      "url": "https://www.mbda-systems.com/country-fr/careers/apprentissage-ingenieur-chef-de-projet-solutions-digital-css-fh",
+      "category": "Pilotage de Projet, Stratégie IT & Transformation Numérique",
+      "job_id": "mbda_apprentissage_ingenieur_chef_de_projet_solutions_digital_css",
+      "status": "idle"
+    },
+    {
+      "title": "Safran - Alternance DSI Monitoring (Vélizy)",
+      "url": "https://www.safran-group.com/fr/offres/france/velizy-villacoublay/alternance-dsi-centre-competence-engineering-plm-testvalidation-monitoring-fh-177350",
+      "category": "Pilotage de Projet, Stratégie IT & Transformation Numérique",
+      "job_id": "safran_alternance_dsi_monitoring_velizy",
+      "status": "idle"
+    },
+    {
+      "title": "TotalEnergies - Alternance Chef de projet IT",
+      "url": "https://jobs.totalenergies.com/fr_FR/careers/JobDetail/ALTERNANCE-Chef-de-projet-IT-H-F/78994",
+      "category": "Pilotage de Projet, Stratégie IT & Transformation Numérique",
+      "job_id": "totalenergies_alternance_chef_de_projet_it",
+      "status": "idle"
+    },
+    {
+      "title": "PASS - Conduite de projet transformation numérique",
+      "url": "https://www.pass.fonction-publique.gouv.fr/offre/apprentissage-conduite-de-projet-pour-la-transformation-numerique-maitrise-douvrage-2026-2027",
+      "category": "Pilotage de Projet, Stratégie IT & Transformation Numérique",
+      "job_id": "pass_conduite_de_projet_transformation_numerique",
+      "status": "idle"
+    },
+    {
+      "title": "PASS - Pilotage stratégique SI Sécurité Sociale",
+      "url": "https://www.pass.fonction-publique.gouv.fr/offre/apprentie-appui-au-pilotage-strategique-du-systeme-dinformation-de-la-securite-sociale",
+      "category": "Pilotage de Projet, Stratégie IT & Transformation Numérique",
+      "job_id": "pass_pilotage_strategique_si_securite_sociale",
+      "status": "idle"
+    }
+  ]
+}
