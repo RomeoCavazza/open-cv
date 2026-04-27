@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.irina.myfirstgame.systems.ScoreManagerTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2025-11-25T14:34:02.394Z" hostname="TCO" time="0.039">
+  <properties/>
+  <testcase name="Test 10: Ajout de points, cumul, ignore valeurs négatives, reset" classname="com.irina.myfirstgame.systems.ScoreManagerTest" time="0.039"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

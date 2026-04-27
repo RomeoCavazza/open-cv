@@ -1,0 +1,129 @@
+@startuml systems
+
+' SYSTÈMES GRAPHIQUES
+
+class Animation {
+    - libgdxAnimation: Animation<TextureRegion>
+    - stateTime: float
+    - playing: boolean
+    + Animation(frameDuration: float, frames: TextureRegion[])
+    + setPlayMode(mode: PlayMode): void
+    + play(): void
+    + pause(): void
+    + reset(): void
+    + getKeyFrame(deltaTime: float): TextureRegion
+    + isAnimationFinished(deltaTime: float): boolean
+    + getStateTime(): float
+}
+
+class Sprite {
+    - textureRegion: TextureRegion
+    - position: Vector2
+    - origin: Vector2
+    - width: float
+    - height: float
+    - flipX: boolean
+    - flipY: boolean
+    - scaleX: float
+    - scaleY: float
+    - cachedFlippedRegion: TextureRegion
+    - cachedFlipX: boolean
+    - cachedFlipY: boolean
+    + setOriginCenter(): void
+    + setPosition(pos: Vector2): void
+    + setPosition(x: float, y: float): void
+    + getPosition(): Vector2
+    + setRegion(region: TextureRegion): void
+    + flip(x: boolean, y: boolean): void
+    + isFlipX(): boolean
+    + isFlipY(): boolean
+    + setScale(scaleX: float, scaleY: float): void
+    + getWidth(): float
+    + getHeight(): float
+    + draw(batch: SpriteBatch): void
+}
+
+class ParticleSystem {
+    - emitters: List<Emitter>
+    + emit(): void
+    + update(delta: float): void
+}
+
+class Emitter {
+    - emissionRate: float
+    + emit(position: Vector2): void
+    + stop(): void
+}
+
+' SYSTÈMES IA
+
+class AI {
+    + decide(entity: Enemy): Action
+}
+
+class Pathfinding {
+    + compute(from: Vector2, to: Vector2): Path
+}
+
+class Action {
+    + execute(entity: Entity): void
+    + getTarget(): Vector2
+}
+
+class Path {
+    - waypoints: Queue<Vector2>
+    + isEmpty(): boolean
+    + peek(): Vector2
+    + next(): Vector2
+    + addWaypoint(point: Vector2): void
+    + clear(): void
+    + size(): int
+}
+
+' SYSTÈMES PHYSIQUES ET COLLISIONS
+
+class Physics {
+    + apply(entity: Entity, delta: float): void
+    + integrate(position: Vector2, velocity: Vector2, delta: float): Vector2
+}
+
+class CollisionHandler {
+    - map: Map
+    - collisionLayerName: String
+    + CollisionHandler(map: Map, collisionLayerName: String)
+    + resolve(entity: Entity, other: Collidable): void
+    + moveAndCollide(player: Player, delta: float): void
+    + isTunnel(tileX: int, tileY: int): boolean
+    + findTunnelSpawn(): Vector2
+    + constrainToGround(entity: Entity, surfaceLevel: float): void
+}
+
+class SurfaceMovementHelper <<Utility>> {
+    + {static} getGrassBottom(surfaceLevel: float, map: Map): float
+    + {static} isAtSurface(y: float, height: float, surfaceLevel: float, map: Map): boolean
+    + {static} isInPipe(x: float, y: float, width: float, height: float, surfaceLevel: float, map: Map, collisionLayer: String): boolean
+    + {static} isInSurfaceZone(y: float, height: float, surfaceLevel: float, map: Map): boolean
+    + {static} getGroundY(height: float, surfaceLevel: float, map: Map): float
+    + {static} adjustWaypointForSurface(waypoint: Vector2, x: float, y: float, width: float, height: float, surfaceLevel: float, map: Map, collisionLayer: String): void
+    + {static} adjustYForSurface(x: float, y: float, width: float, height: float, surfaceLevel: float, map: Map, collisionLayer: String): float
+    + {static} adjustVerticalMovement(dy: float, x: float, y: float, width: float, height: float, surfaceLevel: float, map: Map, collisionLayer: String): float
+}
+
+Animation --> Sprite
+ParticleSystem --> World
+ParticleSystem --> Emitter
+AI --> Enemy
+Pathfinding --> World
+Physics --> Entity : applies forces
+CollisionHandler --> Map : queries
+CollisionHandler --> CollisionGrid : updates
+CollisionHandler --> Entity : moves
+CollisionHandler --> Collidable : resolves
+SurfaceMovementHelper --> Map : queries
+SurfaceMovementHelper --> Vector2 : uses
+Ant ..> SurfaceMovementHelper : uses
+Spider ..> SurfaceMovementHelper : uses
+Action --> Vector2
+Path --> Vector2
+
+@enduml

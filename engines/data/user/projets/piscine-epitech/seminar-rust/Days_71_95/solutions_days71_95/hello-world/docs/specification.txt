@@ -1,0 +1,76 @@
+================================================================================
+hello-world-rtc — Technical Specification & Logic Dictionary
+================================================================================
+Project Type: Capstone Full-Stack Real-Time Messaging Sytem
+Architecture Pattern: Polyglot Persistence / Asynchronous Event-Driven
+
+--------------------------------------------------------------------------------
+1. GLOBAL SYSTEM ARCHITECTURE
+--------------------------------------------------------------------------------
+The application follows a distributed architecture with a clear separation
+between synchronous management (REST) and asynchronous interaction (WebSocket).
+
+Signal Path:
+  [Frontend: Next.js] -> [Auth: JWT] -> [Backend: Axum] ->
+  [State: PostgreSQL/MongoDB] -> [Real-time: WebSocket Broadcasts]
+
+--------------------------------------------------------------------------------
+2. DATA ARCHITECTURE & PERSISTENCE
+--------------------------------------------------------------------------------
+Polyglot persistence strategy:
+  - PostgreSQL (Relational): Managed by `sqlx`. Handles structured identities,
+    server hierarchies, and strict RBAC memberships.
+  - MongoDB (Document): Managed by `mongodb` crate. Handles high-volume,
+    semi-structured messaging history and rich media metadata.
+
+Core Entities (PostgreSQL):
+  - users: id (UUID), username, email, password_hash (bcrypt), status.
+  - servers: id, name, owner_id (FK -> users).
+  - channels: id, server_id (FK -> servers), name, position.
+  - invites: code (unique), server_id, created_by, expires_at.
+
+Core Entities (MongoDB):
+  - channel_messages: channel_id (UUID), author_id (UUID), content,
+    created_at, edited_at, deleted_at (Soft Delete).
+
+--------------------------------------------------------------------------------
+3. BACKEND LOGIC (backend/src/)
+--------------------------------------------------------------------------------
+Built with Rust and the Axum framework for high concurrency.
+
+Auth Logic:
+  - Protocol: JWT (jsonwebtoken crate).
+  - Standard: Expiring tokens with secure password hashing.
+
+REST Interface (API):
+  - /auth/* : Signup, login, identity management.
+  - /servers/* : Server and member lifecycle management.
+  - /channels/* : Hierarchical channel organization.
+  - /messages/* : CRUD for historical data (PostgreSQL verification + Mongo ops).
+
+WebSocket Logic (realtime/):
+  - Handshake: JWT verification on upgrade.
+  - Presence: In-memory state tracking for "Who is online".
+  - Typing: Transient events (start/stop) debounced at the frontend layer.
+  - Broadcast Engine: Multi-client fan-out based on channel/server IDs.
+
+--------------------------------------------------------------------------------
+4. FRONTEND LOGIC (frontend/src/)
+--------------------------------------------------------------------------------
+Built with Next.js 16 and TypeScript for a modern, type-safe interface.
+
+Client State:
+  - React 19 hooks for real-time state synchronization.
+  - Optimized rendering for Discord-like sidebar and message streams.
+
+Real-time Hooks:
+  - useWebSocket: Handles auto-reconnect, heartbeats, and message routing.
+  - useChatHistory: Optimistic updates for message sending before DB confirmation.
+
+--------------------------------------------------------------------------------
+5. SECURITY & GUARDRAILS
+--------------------------------------------------------------------------------
+  - RBAC (Role-Based Access Control): Member < Admin < Owner.
+  - Soft Delete Policy: Messages are flagged with `deleted_at`, never pruned.
+  - Cross-DB Logic: Resolved at the Service layer via shared UUIDs.
+  - Validation: Strict payload validation for both JSON (REST) and BSON (Mongo).

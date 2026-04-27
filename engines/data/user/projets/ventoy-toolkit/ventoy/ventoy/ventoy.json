@@ -1,0 +1,91 @@
+{
+  "control": [
+    {"VTOY_DEFAULT_SEARCH_ROOT": "/iso"},
+    {"VTOY_DEFAULT_MENU_MODE": "1"},
+    {"VTOY_TREE_VIEW_MENU_STYLE": "1"}
+  ],
+  "theme": {
+    "file": [
+      "/ventoy/theme/squid/theme-1366x768.txt",
+      "/ventoy/theme/squid/theme-1920x1080.txt",
+      "/ventoy/theme/squid/theme-2048x1080.txt",
+      "/ventoy/theme/squid/theme-3840x2160.txt"
+    ],
+    "default_file": 1,
+    "resolution_fit": 1,
+    "gfxmode": "max",
+    "ventoy_color": "#66A8D8FF",
+    "fonts": [
+      "/ventoy/theme/squid/fonts/dejavu_sans_12.pf2",
+      "/ventoy/theme/squid/fonts/dejavu_sans_14.pf2",
+      "/ventoy/theme/squid/fonts/dejavu_sans_16.pf2",
+      "/ventoy/theme/squid/fonts/dejavu_sans_24.pf2",
+      "/ventoy/theme/squid/fonts/dejavu_sans_32.pf2",
+      "/ventoy/theme/squid/fonts/dejavu_sans_48.pf2",
+      "/ventoy/theme/squid/fonts/terminus-12.pf2",
+      "/ventoy/theme/squid/fonts/terminus-14.pf2",
+      "/ventoy/theme/squid/fonts/terminus-16.pf2",
+      "/ventoy/theme/squid/fonts/terminus-18.pf2"
+    ]
+  },
+  "persistence": [
+    {
+      "image": "/iso/kali-linux-2025.4-live-amd64.iso",
+      "backend": "/kali-persistence.dat"
+    }
+  ],
+  "menu_class": [
+    { "key": "archlinux", "class": "arch" },
+    { "key": "kali", "class": "kali" },
+    { "key": "nixos", "class": "nixos" },
+    { "key": "HBCD", "class": "windows" },
+    { "key": "windows", "class": "windows" },
+
+    { "key": "rescue", "class": "rescue" },
+    { "key": "systemrescue", "class": "rescue" },
+
+    { "key": "tools", "class": "type" },
+    { "key": "clonezilla", "class": "clonezilla" },
+    { "key": "gparted", "class": "gparted" },
+    { "key": "memtest", "class": "memtest" },
+    { "key": "tails", "class": "tails" }
+  ],
+  "menu_alias": [
+    {
+      "image": "/iso/archlinux-x86_64.iso",
+      "alias": "Arch Linux"
+    },
+    {
+      "image": "/iso/kali-linux-2025.4-live-amd64.iso",
+      "alias": "Kali Linux"
+    },
+    {
+      "image": "/iso/nixos-graphical-26.05pre956934.cf59864ef8aa-x86_64-linux.iso",
+      "alias": "NixOS"
+    },
+    {
+      "image": "/iso/HBCD_PE_x64.iso",
+      "alias": "Windows"
+    },
+    {
+      "image": "/iso/rescue/systemrescue.iso",
+      "alias": "SystemRescue"
+    },
+    {
+      "image": "/iso/tools/clonezilla-live-3.2.1-9-amd64.iso",
+      "alias": "Clonezilla"
+    },
+    {
+      "image": "/iso/tools/gparted-live-1.6.0-3-amd64.iso",
+      "alias": "GParted"
+    },
+    {
+      "image": "/iso/tools/grub-memtest.iso",
+      "alias": "MemTest86+"
+    },
+    {
+      "image": "/iso/tools/tails-amd64-7.5.iso",
+      "alias": "Tails"
+    }
+  ]
+}

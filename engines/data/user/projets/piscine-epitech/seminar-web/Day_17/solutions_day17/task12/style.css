@@ -1,0 +1,19 @@
+.note {
+  border: 2px solid blue;
+  padding: 5px;
+  margin: 5px 0;
+}
+
+.email {
+  border: 2px solid green;
+  padding: 5px;
+  margin: 5px 0;
+}
+
+.todo {
+  border: 2px solid red;
+  padding: 5px;
+  margin: 5px 0;
+}
+
+

@@ -1,0 +1,132 @@
+@startuml core
+
+class Main <<libGDX.Game>> {
+    + create(): void
+    + render(): void
+    + dispose(): void
+}
+
+interface Screen <<libGDX>> {
+    + show(): void
+    + render(delta: float): void
+    + resize(width: int, height: int): void
+    + pause(): void
+    + resume(): void
+    + hide(): void
+    + dispose(): void
+}
+
+class MenuScreen
+class PlayScreen {
+    - batch: SpriteBatch
+    - world: World
+    - player: Player
+    - inputController: InputController
+    - collisionHandler: CollisionHandler
+    - assets: Assets
+    - mapRenderer: OrthogonalTiledMapRenderer
+    - tiledMap: TiledMap
+    - pipeLayer: TiledMapTileLayer
+    - overlayEnabled: boolean
+    - wobbleTime: float
+    - isPaused: boolean
+    - pauseMenu: PauseMenu
+    + show(): void
+    + render(delta: float): void
+    + resize(width: int, height: int): void
+    + dispose(): void
+}
+class GameOverScreen
+class SettingsScreen
+
+class HUD {
+    - boundWormy: Wormy
+    - scoreboard: Scoreboard
+    - time: Timer
+    + bind(worm: Wormy, scores: Scoreboard): void
+    + render(): void
+}
+
+class PauseMenu {
+    - viewport: Viewport
+    - shapeRenderer: ShapeRenderer
+    - font: BitmapFont
+    - textLayout: GlyphLayout
+    + PauseMenu(viewport: Viewport)
+    + update(isPaused: boolean): PauseAction
+    + render(batch: SpriteBatch): void
+    + resize(width: int, height: int): void
+    + dispose(): void
+    + enum PauseAction
+}
+
+class InputController {
+    - keysDown: Set<Integer>
+    - mouseX: float
+    - mouseY: float
+    - mousePressed: boolean
+    + isDown(keyCode: int): boolean
+    + isKeyPressed(keyCode: int): boolean
+    + isLeftPressed(): boolean
+    + isRightPressed(): boolean
+    + isUpPressed(): boolean
+    + isDownPressed(): boolean
+    + isClicked(): boolean
+    + getMouseX(): float
+    + getMouseY(): float
+    + update(): void
+}
+
+class Assets {
+    - textures: Map<String, Texture>
+    - sounds: Map<String, Sound>
+    + loadAll(): void
+    + loadTexture(name: String): Texture
+    + getTexture(name: String): Texture
+    + getTextureRegion(name: String): TextureRegion
+    + getSound(name: String): Sound
+    + dispose(): void
+}
+
+class Preferences {
+    - volume: float
+    - controls: Map<String, KeyCode>
+    - saveFile: String
+    + load(): void
+    + save(): void
+}
+
+class AudioManager {
+    - preferences: Preferences
+    + play(soundId: String): void
+    + stop(soundId: String): void
+    + setVolume(value: float): void
+}
+
+Main ..> PlayScreen : creates on startup
+
+Screen <|.. MenuScreen
+Screen <|.. PlayScreen
+Screen <|.. GameOverScreen
+Screen <|.. SettingsScreen
+
+PlayScreen "1" --> "1" World : manages
+PlayScreen "1" --> "1" Player : controls
+PlayScreen "1" --> "1" InputController : uses
+PlayScreen "1" --> "1" Assets : uses
+PlayScreen "1" --> "1" CollisionHandler : uses
+PlayScreen "1" --> "1" PauseMenu : uses
+
+SettingsScreen "1" --> "1" Preferences : configures
+AudioManager "1" --> "1" Preferences : reads
+
+HUD "1" --> "1" Wormy : displays
+HUD "1" --> "1" Scoreboard : displays
+HUD "1" --> "1" Timer : displays
+
+AudioManager "1" --> "1" Preferences
+
+' Spawner et LevelLoader sont dans World, pas dans Game
+' Voir world.puml pour ces relations
+
+@enduml

@@ -1,0 +1,39 @@
+{
+  "profile": {
+    "name": "Roméo CAVAZZA",
+    "address": "75011 Paris",
+    "phone": "06 99 25 67 58",
+    "email": "romeo.cavazza@gmail.com",
+    "links": {
+      "linkedin": "linkedin.com/in/romeo-cavazza",
+      "github": "github.com/RomeoCavazza",
+      "website": "www.romeocavazza.com"
+    }
+  },
+  "letter": {
+    "company": "Thales — Direction Stratégique & Marketing",
+    "date": "27 avril 2026",
+    "subject": "ALTERNANCE — Développement multi-agents de solutions d’aide à la stratégie",
+    "pitch": "Passionné par les systèmes multi-agents et l'IA agentique, je souhaite intégrer vos équipes pour prototyper et déployer des solutions de NLP et des agents intelligents au service de votre stratégie.",
+    "metadata": [
+      "Durée : 24 mois — à partir de septembre 2026",
+      "Rythme : 6 semaines en entreprise / 2 semaines en cours"
+    ],
+    "greeting": "Madame, Monsieur,",
+    "paragraphs": [
+      "Actuellement en Master Intelligence Artificielle à EPITECH Paris, c'est avec une grande motivation que je postule pour l'alternance en développement multi-agents au sein de la Direction Stratégique & Marketing de Thales à Élancourt.",
+      "L'accélération des usages de l'IA offre des opportunités inédites pour l'aide à la décision stratégique. Mon parcours m'a permis de développer une expertise solide en Python et en architectures agentiques. Avec mon projet personnel Shellgeist — un agent autonome orchestrant des LLMs via Tool Calling — j'ai acquis une expérience concrète dans la conception de solutions capables d'interagir intelligemment avec des outils et des données complexes. Cette maîtrise technique, couplée à mon expérience en Data Engineering (Veyl.io, Qdrant), me permet de transformer des besoins analystes en Preuves de Concept (PoC) robustes et scalables.",
+      "Ayant évolué dans des environnements variés (Revolvr, FCNet), j'ai appris à vulgariser mes choix techniques auprès d'interlocuteurs non techniques, une compétence clé pour collaborer efficacement au sein de votre équipe marketing. Je suis prêt à explorer vos données textuelles, à évaluer la faisabilité de nouvelles idées en tenant compte des contraintes cyber, et à m'investir dans la roadmap de passage à l'échelle de vos projets d'IA.",
+      "Rejoindre Thales, leader mondial des hautes technologies, représenterait pour moi une étape majeure de ma formation, me permettant d'appliquer l'innovation agentique à des enjeux business globaux au cœur d'un centre d'excellence technologique."
+    ],
+    "closing": "Je me tiens à votre entière disposition pour vous exposer mon projet professionnel et mes motivations lors d'un entretien.",
+    "signature": "Cordialement,\nRoméo Cavazza",
+    "boldKeyword": "ALTERNANCE",
+    "labels": {
+      "linkedin": "LinkedIn",
+      "github": "GitHub",
+      "website": "Site web",
+      "download": "Télécharger en PDF (A4)"
+    }
+  }
+}

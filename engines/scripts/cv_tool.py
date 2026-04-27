@@ -115,7 +115,7 @@ def render_markdown_cv(data: dict) -> str:
 
 def command_init(job_id: str, force: bool = False):
     root = Path(__file__).parent.parent.parent
-    data_dir = root / "data"
+    data_dir = root / "engines" / "data"
     instances_dir = data_dir / "instances" / job_id
     templates_dir = data_dir / "templates"
     
@@ -127,15 +127,15 @@ def command_init(job_id: str, force: bool = False):
     if offer_path.exists():
         source_uri = str(offer_path.relative_to(root))
     else:
-        print(f"⚠️  Warning: Source offer not found: {offer_path}")
+        print(f" Warning: Source offer not found: {offer_path}")
         
     # 2. Existence check for instance folder (Safeguard)
     if instances_dir.exists() and not force:
-        print(f"❌ Error: Instance '{job_id}' already exists. Use --force to overwrite.")
+        print(f"Error: Instance '{job_id}' already exists. Use --force to overwrite.")
         sys.exit(1)
         
     if instances_dir.exists() and force:
-        print(f"🔄 Overwriting existing instance '{job_id}'...")
+        print(f" Overwriting existing instance '{job_id}'...")
         shutil.rmtree(instances_dir)
         
     instances_dir.mkdir(parents=True)
@@ -152,11 +152,11 @@ def command_init(job_id: str, force: bool = False):
         "version": "v1"
     }
     (instances_dir / "meta.json").write_text(json.dumps(meta, indent=2, ensure_ascii=False))
-    print(f"✅ Instance '{job_id}' initialized.")
+    print(f"Instance '{job_id}' initialized.")
 
 def command_render(job_id: str):
     root = Path(__file__).parent.parent.parent
-    instance_dir = root / "data" / "instances" / job_id
+    instance_dir = root / "engines" / "data" / "instances" / job_id
     web_dir = root / "engines" / "web"
     
     if not instance_dir.exists():
@@ -166,7 +166,7 @@ def command_render(job_id: str):
     # Preview bridge: copy to web folders
     shutil.copy(instance_dir / "resume.json", web_dir / "resume" / "data.json")
     shutil.copy(instance_dir / "cover-letter.json", web_dir / "cover-letter" / "data.json")
-    print(f"🚀 Preview activated for '{job_id}'.")
+    print(f" Preview activated for '{job_id}'.")
 
 def command_clean(input_path: Path):
     files = [input_path] if input_path.is_file() else list(input_path.rglob("*.md"))
@@ -178,7 +178,7 @@ def command_clean(input_path: Path):
 
 def command_init_all(force: bool = False):
     root = Path(__file__).parent.parent.parent
-    liste_path = root / "data" / "offres" / "liste.json"
+    liste_path = root / "engines" / "data" / "offres" / "liste.json"
     
     if not liste_path.exists():
         print(f"Error: {liste_path} not found.")
@@ -188,7 +188,7 @@ def command_init_all(force: bool = False):
         data = json.load(f)
     
     entries = data.get("entries", [])
-    print(f"📦 Found {len(entries)} entries. Starting batch initialization...")
+    print(f" Found {len(entries)} entries. Starting batch initialization...")
     
     count = 0
     for entry in entries:
@@ -202,7 +202,7 @@ def command_init_all(force: bool = False):
                 # This happens if it exists and force is False
                 continue
     
-    print(f"\n✨ Batch complete. {count} instances are ready in data/instances/")
+    print(f"\nBatch complete. {count} instances are ready in engines/engines/data/instances/")
 
 def main():
     parser = argparse.ArgumentParser(description="CV Tool: Instance Management & Formatting.")

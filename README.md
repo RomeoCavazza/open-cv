@@ -1,29 +1,76 @@
-# Alternance : Pipeline de Candidature
+# Agent-based orchestration for job posting scraping and resume/cover letter generation.
 
-Dépôt centralisant l'écosystème de recherche d'alternance de Roméo Cavazza.
+![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)
+![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white)
+![JS](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
+![Nix](https://img.shields.io/badge/NixOS-5277C3?style=for-the-badge&logo=nixos&logoColor=white)
 
-## Architecture
+Ce projet est un moteur de rendu de candidatures (CV et Lettres de Motivation) automatisé et ultra-personnalisé. Il permet de transformer des offres d'emploi brutes en dossiers de candidature haute fidélité en utilisant une approche **"Data-Driven"**.
 
-- `/engines/web` : Moteur de rendu CV et lettres (HTML/CSS/JS).
-- `/engines/output` : Exports générés (PDF, HTML, etc.).
-- `/data/offres` : Analyse, suivi et données RAW des offres d'emploi.
-- `/data/user` : Source de vérité (profile.md) et projets versionnés.
-- `/docs` : Documentation technique et consignes agent.
-- `/scrape-offres.yaml` : Paramétrage principal du scraper.
-- `/data/offres/liste.json` : Source de vérité des URLs (synchronisable depuis liste.md).
-- `/engines/scripts` : Outils d'automatisation (Python, Nix).
+## Aperçus
 
-## Boot for AI
+| Curriculum Vitae | Lettre de Motivation |
+| :---: | :---: |
+| ![Resume Preview](docs/assets/preview-resume.png) | ![Letter Preview](docs/assets/preview-letter.png) |
 
-Si vous êtes un agent IA arrivant sur ce repo, suivez cet ordre de lecture pour une immersion optimale :
-1. `./README.md` (Vous êtes ici)
-2. `./data/user/profile.md` (Source de vérité absolue)
-3. `./docs/instructions.md` (Protocole et règles d'engagement)
-4. `./docs/how_it_works.md` (Détails techniques et scripts)
+---
 
-## Principes Fondamentaux
+## Architecture du Projet
 
-- **CV-as-Code** : La donnée est séparée de la présentation.
-- **Source de Vérité Unique** : Tout contenu provient du dossier `/data/user`.
-- **Zéro Emoji** : Sobriété professionnelle dans tous les livrables.
-- **Automation First** : Utilisation de scripts pour le scraping et le formattage.
+```text
+.
+├── engines/
+│   ├── data/           # Source de vérité (Instances, Offres, Modèles)
+│   ├── scripts/        # Intelligence du projet (Scraping & Personnalisation)
+│   └── web/            # Moteur de rendu HTML/CSS dynamique
+├── shell.nix           # Environnement de développement reproductible
+└── README.md
+```
+
+---
+
+## Fonctionnement
+
+Le workflow est divisé en quatre étapes clés :
+
+1.  **Scrapage** : Récupération automatique des offres d'emploi depuis diverses plateformes.
+2.  **Analyse** : Extraction des mots-clés, des compétences requises et des missions principales.
+3.  **Personnalisation** : Génération de données JSON spécifiques à chaque offre à partir du profil utilisateur et des exigences du poste (stockées dans `engines/data/`).
+4.  **Rendu** : Visualisation dynamique via le moteur web intégré permettant un export PDF parfait.
+
+### Installation
+
+```bash
+# Entrer dans l'environnement de développement (si via Nix)
+nix-shell
+
+# Lancer le serveur de visualisation
+python3 -m http.server 8000
+```
+
+---
+
+## Stack Technique
+
+- **Backend** : Python 3 (Scraping, Traitement de données).
+- **Frontend** : HTML5 moderne, CSS3 (Flexbox/Grid), JavaScript natif (pour l'injection de données).
+- **Formatage** : JSON pour les données, Markdown pour les sources d'offres.
+- **Environnement** : Nix pour la reproductibilité.
+
+---
+
+## Workflow de Production
+
+```mermaid
+graph LR
+    A[Offre d'emploi] -->|Scrape| B(Markdown)
+    B -->|Personnalise| C{JSON Instance}
+    D[Profil Global] -->|Infection| C
+    C -->|Moteur Web| E[HTML/CSS]
+    E -->|Print| F[Export PDF]
+    style C fill:#f9f,stroke:#333,stroke-width:2px
+```
+
+---
+*Ce projet a été conçu pour industrialiser la recherche d'alternance tout en maintenant une qualité de personnalisation artisanale.*

@@ -1,0 +1,276 @@
+@startuml entities
+
+interface Movable {
+    + move()
+}
+
+interface Damageable {
+    + takeDamage(amount: int)
+}
+
+interface Eater {
+    + eat(item: Eatable)
+}
+
+interface Eatable {
+    + onEatenBy(target)
+}
+
+interface Renderable {
+    + render(frame: float)
+}
+
+interface Collidable {
+    + onCollision(other: Collidable)
+}
+
+interface Stateful {
+    + getState(): String
+}
+
+interface Spawnable {
+    + onSpawn(context)
+}
+
+interface Despawnable {
+    + onDespawn(): void
+    + shouldDespawn(): boolean
+}
+
+class UUID <<ValueObject>> {
+    + value: String
+}
+class Vector2 <<ValueObject>> {
+    + x: float
+    + y: float
+}
+
+abstract class Entity {
+    - id: UUID
+    - position: Vector2
+    - velocity: Vector2
+    - width: float
+    - height: float
+    + update(delta: float): void
+    + getPosition(): Vector2
+    + setPosition(x: float, y: float): void
+    + getVelocity(): Vector2
+    + setVelocity(x: float, y: float): void
+    + getWidth(): float
+    + setWidth(width: float): void
+    + getHeight(): float
+    + setHeight(height: float): void
+    + getId(): UUID
+}
+
+class Player {
+    - name: String
+    - worm: WormState
+    - inputController: InputController
+    - speed: float
+    - width: float
+    - height: float
+    + handleInput(delta: float): void
+    + eat(item: Eatable): void
+    + update(delta: float): void
+    + getName(): String
+    + getPosition(): Vector2
+    + getWidth(): float
+    + getHeight(): float
+    + setWidth(width: float): void
+    + setHeight(height: float): void
+    + getWorm(): WormState
+    + getVelocity(): Vector2
+}
+
+abstract class Wormy {
+    - health: Health
+    - hunger: Hunger
+    - statusEffects: List<StatusEffect>
+    + burrow(): void
+    + surface(): void
+}
+
+class WormState {
+    - current: Wormy
+    + evolveTo(state: Wormy): void
+    + getCurrent(): Wormy
+    + hasCurrent(): boolean
+}
+
+class Baby {
+    - walkAnimation: Animation
+    - upAnimation: Animation
+    - turnAnimation: Animation
+    - sprite: Sprite
+    - speed: float
+    - faceLeft: boolean
+    - movingUp: boolean
+    - movingDown: boolean
+    - turningUp: boolean
+    - turningDown: boolean
+    + crawl(): void
+    + setFaceLeft(left: boolean): void
+    + isFaceLeft(): boolean
+    + setMovingUp(up: boolean): void
+    + isMovingUp(): boolean
+    + setMovingDown(down: boolean): void
+    + isMovingDown(): boolean
+    + setTurningUp(turning: boolean): void
+    + setTurningDown(turning: boolean): void
+    + getSpeed(): float
+    + setWalkAnimation(anim: Animation): void
+    + setUpAnimation(anim: Animation): void
+    + setTurnAnimation(anim: Animation): void
+    + setSprite(sprite: Sprite): void
+    + getSprite(): Sprite
+    + applyWobble(time: float): void
+    + updateAnimation(delta: float): void
+    + update(delta: float): void
+}
+
+class Adult {
+    + climb(): void
+    + update(delta: float): void
+}
+
+class Super {
+    + unleashPower(): void
+    + update(delta: float): void
+}
+
+abstract class Enemy {
+    + move(): void
+    + takeDamage(amount: int): void
+    + render(batch: SpriteBatch): void
+}
+
+abstract class SurfaceEnemy {
+    + SHEET_COLUMNS: int
+    + SHEET_ROWS: int
+    - target: Player
+    - map: Map
+    - collisionLayer: String
+    - pathfinding: Pathfinding
+    - surfaceLevel: float
+    - currentPath: Path
+    - animation: Animation
+    - sprite: Sprite
+    - repathTimer: float
+    - attackTimer: float
+    - lastPosition: Vector2
+    - stuckTimer: float
+    + update(delta: float): void
+    + render(batch: SpriteBatch): void
+    + {abstract} getMoveSpeed(): float
+    + {abstract} getAttackRange(): float
+    + {abstract} getAttackCooldown(): float
+    + {abstract} getAttackDamage(): int
+    + {abstract} getRepathInterval(): float
+    + {abstract} getTextureName(): String
+    + {abstract} getAnimationFPS(): float
+    + {protected} performAttack(target: Player): void
+    + {static} createAnimation(assets: Assets, textureName: String, fps: float): Animation
+    + {static} createSprite(assets: Assets, textureName: String): Sprite
+    + {static} setupHitbox(assets: Assets, textureName: String, enemy: SurfaceEnemy, scale: float): void
+}
+
+class Ant {
+    + getMoveSpeed(): float
+    + getAttackRange(): float
+    + getAttackCooldown(): float
+    + getAttackDamage(): int
+    + getRepathInterval(): float
+    + getTextureName(): String
+    + getAnimationFPS(): float
+}
+
+class Spider {
+    + getMoveSpeed(): float
+    + getAttackRange(): float
+    + getAttackCooldown(): float
+    + getAttackDamage(): int
+    + getRepathInterval(): float
+    + getTextureName(): String
+    + getAnimationFPS(): float
+}
+
+class Pie {
+    - state: State
+    - origin: Vector2
+    - flyAnimation: Animation
+    - diveAnimation: Animation
+    - sprite: Sprite
+    - target: Player
+    - cooldownTimer: float
+    - hoverAltitude: float
+    - minAltitude: float
+    - patrolDirection: int
+    + update(delta: float): void
+    + render(batch: SpriteBatch): void
+}
+
+class Spawner {
+    + spawnPie(world: World, assets: Assets, target: Player): Enemy
+    + spawnAnt(world: World, assets: Assets, target: Player): Enemy
+    + spawnAntAt(world: World, assets: Assets, target: Player, spawnCell: Vector2): Enemy
+    + spawnSpider(world: World, assets: Assets, target: Player): Enemy
+    + spawnSpiderAt(world: World, assets: Assets, target: Player, spawnCell: Vector2): Enemy
+    + collectDeepDirtCells(world: World, entityWidth: float, entityHeight: float): List<Vector2>
+    + takeRandomDeepCell(cells: List<Vector2>): Vector2
+    + computeAntHitboxWidth(assets: Assets): float
+    + computeAntHitboxHeight(assets: Assets): float
+    + computeSpiderHitboxWidth(assets: Assets): float
+    + computeSpiderHitboxHeight(assets: Assets): float
+}
+
+' Player N'EST PAS une Entity car il n'a pas de position propre
+' Player est un contrôleur qui possède un WormState
+Entity <|-- Wormy
+Entity <|-- Enemy
+
+Wormy <|-- Baby
+Wormy <|-- Adult
+Wormy <|-- Super
+
+Enemy <|-- SurfaceEnemy
+Enemy <|-- Pie
+SurfaceEnemy <|-- Ant
+SurfaceEnemy <|-- Spider
+
+Entity ..|> Collidable
+Entity ..|> Stateful
+
+Wormy ..|> Movable
+Wormy ..|> Damageable
+Wormy ..|> Eater
+
+Enemy ..|> Movable
+Enemy ..|> Damageable
+' Enemy hérite déjà de Collidable via Entity, pas besoin de le redéfinir
+
+Player ..|> Eater
+' Player délègue Movable et Damageable à son Wormy via WormState
+
+Entity "1" --> "1" UUID : uses
+Entity "1" --> "1" Vector2 : uses
+
+Player "1" --> "1" WormState : controls
+WormState "1" --> "1" Wormy : current
+Wormy "1" *-- "1" Health
+Wormy "1" *-- "1" Hunger
+Wormy "1" o-- "*" StatusEffect
+
+Spawner --> Enemy : spawns
+Spawner --> Food : spawns
+Spawner --> Diamond : spawns
+Spawner ..|> Spawnable
+
+Food ..|> Eatable
+Food ..|> Despawnable
+Diamond ..|> Despawnable
+Enemy ..|> Despawnable
+' Enemy disparaît quand sa vie atteint 0
+' Food/Diamond disparaissent après un temps ou quand consommés
+
+@enduml

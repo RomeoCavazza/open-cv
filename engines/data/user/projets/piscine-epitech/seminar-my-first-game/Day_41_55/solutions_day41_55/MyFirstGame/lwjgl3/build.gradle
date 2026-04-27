@@ -1,0 +1,37 @@
+plugins {
+    id 'application'
+}
+
+eclipse.project.name = appName + '-lwjgl3'
+
+sourceCompatibility = 17
+targetCompatibility = 17
+
+mainClassName = 'com.irina.myfirstgame.lwjgl3.Lwjgl3Launcher'
+
+dependencies {
+    implementation project(':core')
+    implementation "com.badlogicgames.gdx:gdx-backend-lwjgl3:$gdxVersion"
+    implementation "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
+    implementation "com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-desktop"
+}
+
+run {
+    workingDir = new File("../assets")
+    setIgnoreExitValue(true)
+}
+
+jar {
+    archiveBaseName.set(appName)
+    duplicatesStrategy(DuplicatesStrategy.EXCLUDE)
+    dependsOn configurations.runtimeClasspath
+    from { configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
+    manifest {
+        attributes 'Main-Class': project.mainClassName
+    }
+    doLast {
+        file(archiveFile).setExecutable(true, false)
+    }
+}
+
+

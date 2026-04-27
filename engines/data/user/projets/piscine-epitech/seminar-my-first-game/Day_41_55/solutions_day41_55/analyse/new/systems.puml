@@ -1,0 +1,227 @@
+@startuml
+skinparam classAttributeIconSize 0
+hide circle
+
+class Pathfinding {
+  -map: Map
+  -collisionLayer: String
+  --
+  +Pathfinding(map: Map, collisionLayer: String)
+  +compute(from: Vector2, to: Vector2): Path
+  -isWalkable(tileX: int, tileY: int): boolean
+  -clampToGrid(value: int, max: int): int
+}
+
+class Node {
+  ~x: int
+  ~y: int
+  --
+  ~Node(x: int, y: int)
+}
+
+class ItemFactory {
+  -assets: Assets
+  --
+  +ItemFactory(assets: Assets)
+}
+
+class Sprite {
+  -textureRegion: TextureRegion
+  -position: Vector2
+  -origin: Vector2
+  -width: float
+  -height: float
+  -flipX: boolean
+  -flipY: boolean
+  -scaleX: float
+  -scaleY: float
+  -rotation: float
+  -cachedFlippedRegion: TextureRegion
+  -cachedFlipX: boolean
+  -cachedFlipY: boolean
+  --
+  +Sprite(textureRegion: TextureRegion)
+  +setOriginCenter(): void
+  +setPosition(x: float, y: float): void
+  +setPosition(pos: Vector2): void
+  +getPosition(): Vector2
+  +setRegion(region: TextureRegion): void
+  +flip(x: boolean, y: boolean): void
+  +isFlipX(): boolean
+  +isFlipY(): boolean
+  +setScale(scaleX: float, scaleY: float): void
+  +setRotation(degrees: float): void
+  +getRotation(): float
+  +getOriginX(): float
+  +getOriginY(): float
+  +getScaleX(): float
+  +getScaleY(): float
+  +getWidth(): float
+  +getHeight(): float
+  +draw(batch: SpriteBatch): void
+}
+
+class Physics {
+  +apply(entity: Entity, delta: float): void
+  +integrate(position: Vector2, velocity: Vector2, delta: float): Vector2
+}
+
+class ScoreManager {
+  -{static} PREFS_NAME: String = "highscores"
+  -{static} MAX_TOP_SCORES: int = 5
+  -currentScore: int
+  -preferences: Preferences
+  --
+  +ScoreManager()
+  +addPoints(points: int): void
+  +getCurrentScore(): int
+  +resetScore(): void
+  +saveScore(playerName: String): boolean
+  +getPlayerHighScore(playerName: String): int
+  +getTopScores(): List<PlayerScore>
+  +clearAllScores(): void
+}
+
+class PlayerScore {
+  +playerName: String
+  +score: int
+  --
+  +PlayerScore(playerName: String, score: int)
+}
+
+class Animation {
+  -libgdxAnimation: com.badlogic.gdx.graphics.g2d.Animation<TextureRegion>
+  -stateTime: float
+  -playing: boolean
+  --
+  +Animation(frameDuration: float, frames: TextureRegion[])
+  +setPlayMode(mode: com.badlogic.gdx.graphics.g2d.Animation.PlayMode): void
+  +play(): void
+  +pause(): void
+  +reset(): void
+  +getKeyFrame(deltaTime: float): TextureRegion
+  +isAnimationFinished(deltaTime: float): boolean
+  +getStateTime(): float
+  +setStateTime(time: float): void
+}
+
+class ShootAtTargetAction {
+  -target: Vector2
+  --
+  +ShootAtTargetAction(target: Vector2)
+  +execute(entity: Entity): void
+  +getTarget(): Vector2
+}
+
+class SurfaceMovementHelper {
+  +{static} getGrassBottom(surfaceLevel: float, map: Map): float
+  +{static} isAtSurface(y: float, height: float, surfaceLevel: float, map: Map): boolean
+  +{static} isInPipe(x: float, y: float, width: float, height: float, surfaceLevel: float, map: Map, collisionLayer: String): boolean
+  +{static} isInSurfaceZone(y: float, height: float, surfaceLevel: float, map: Map): boolean
+  +{static} getGroundY(height: float, surfaceLevel: float, map: Map): float
+  +{static} adjustWaypointForSurface(waypoint: Vector2, x: float, y: float, width: float, height: float, surfaceLevel: float, map: Map, collisionLayer: String): void
+  +{static} adjustYForSurface(x: float, y: float, width: float, height: float, surfaceLevel: float, map: Map, collisionLayer: String): float
+  +{static} adjustVerticalMovement(dy: float, x: float, y: float, width: float, height: float, surfaceLevel: float, map: Map, collisionLayer: String): float
+}
+
+class CollisionHandler {
+  -map: Map
+  -collisionLayerName: String
+  -{static} DEFAULT_SPAWN: Vector2 = new Vector2(40, 40)
+  --
+  +CollisionHandler(map: Map, collisionLayerName: String)
+  +resolve(entity: Entity, other: Collidable): void
+  +constrainToGround(entity: Entity, surfaceLevel: float): void
+  +moveAndCollide(player: com.irina.myfirstgame.entities.Player, delta: float): void
+  +isTunnel(tileX: int, tileY: int): boolean
+  +findTunnelSpawn(): Vector2
+}
+
+class AI {
+  +decide(entity: Enemy): Action
+}
+
+class Action {
+  +execute(entity: Entity): void
+  +getTarget(): Vector2
+}
+
+class ParticleSystem {
+  -emitters: List<Emitter>
+  --
+  +emit(): void
+  +update(delta: float): void
+}
+
+class SpawnManager {
+  -{static} MIN_UNDERGROUND_ENEMIES: int = 2
+  -{static} MAX_UNDERGROUND_ENEMIES: int = 3
+  -{static} MIN_FOOD_ITEMS: int = 5
+  -{static} MAX_FOOD_ITEMS: int = 7
+  -{static} ENEMY_RESPAWN_DELAY: float = 10f
+  -{static} FOOD_RESPAWN_DELAY: float = 10f
+  -{static} DIAMOND_RESPAWN_DELAY: float = 30f
+  -random: Random = new Random()
+  -activeUndergroundEnemies: List<Enemy> = new ArrayList<>()
+  -activeFoodItems: List<Item> = new ArrayList<>()
+  -activeDiamond: Diamond = null
+  -enemyRespawnTimer: float = 0f
+  -foodRespawnTimer: float = 0f
+  -diamondRespawnTimer: float = 0f
+  -needDiamondRespawn: boolean = false
+  -pieSpawned: boolean = false
+  -targetEnemyCount: int
+  -targetFoodCount: int
+  --
+  +SpawnManager()
+  +initialize(world: World, assets: Assets, player: Player): void
+  +update(delta: float, world: World, assets: Assets, player: Player): void
+  +onUndergroundEnemyKilled(enemy: Enemy): void
+  +onFoodCollected(food: Item): void
+  +onDiamondCollected(): void
+  +onSuperPowerLost(): void
+  -spawnInitialEnemies(world: World, assets: Assets, player: Player): void
+  -spawnInitialFood(world: World, assets: Assets): void
+  -spawnRandomUndergroundEnemy(world: World, assets: Assets, player: Player): void
+  -spawnRandomFood(world: World, assets: Assets): void
+  -spawnDiamond(world: World, assets: Assets): void
+  -spawnPie(world: World, assets: Assets, player: Player): void
+  +getActiveUndergroundEnemies(): List<Enemy>
+  +getActiveFoodItems(): List<Item>
+  +getActiveDiamond(): Diamond
+}
+
+class AudioManager {
+  -preferences: Preferences
+  --
+  +play(soundId: String): void
+  +stop(soundId: String): void
+  +setVolume(value: float): void
+}
+
+class Emitter {
+  -emissionRate: float
+  --
+  +emit(position: Vector2): void
+  +stop(): void
+}
+
+class Path {
+  -waypoints: Queue<Vector2> = new LinkedList<>()
+  --
+  +Path()
+  +Path(points: List<Vector2>)
+  +addWaypoint(point: Vector2): void
+  +isEmpty(): boolean
+  +peek(): Vector2
+  +next(): Vector2
+  +clear(): void
+  +size(): int
+}
+
+Pathfinding ..> Path
+Animation *-- Animation
+ShootAtTargetAction --|> Action
+AI ..> Action
+ParticleSystem o-- Emitter
+@enduml

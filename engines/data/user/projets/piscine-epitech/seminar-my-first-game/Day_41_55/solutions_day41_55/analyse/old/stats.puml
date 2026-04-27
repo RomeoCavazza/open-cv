@@ -1,0 +1,64 @@
+@startuml stats
+
+class Health {
+    - currentHealth: int
+    - maxHealth: int
+    + takeDamage(amount: int): void
+    + heal(amount: int): void
+    + isDead(): boolean
+}
+
+class Hunger {
+    - currentHunger: int
+    - maxHunger: int
+    + decrease(amount: int): void
+    + increase(amount: int): void
+    + isStarving(): boolean
+}
+
+abstract class StatusEffect {
+    - name: String
+    - duration: float
+    - elapsed: float
+    - active: boolean
+    + apply(target: Wormy): void
+    + update(delta: float): void
+    + end(target: Wormy): void
+    + isExpired(): boolean
+}
+
+class Poison {
+    - damagePerSecond: int
+    + apply(target: Wormy): void
+    + update(delta: float): void
+}
+
+class Slow {
+    - speedMultiplier: float
+    + apply(target: Wormy): void
+    + end(target: Wormy): void
+}
+
+class Buff {
+    - bonusType: String
+    - bonusValue: float
+    + apply(target: Wormy): void
+    + end(target: Wormy): void
+}
+
+class Debuff {
+    - penaltyType: String
+    - penaltyValue: float
+    + apply(target: Wormy): void
+    + end(target: Wormy): void
+}
+
+StatusEffect <|-- Poison
+StatusEffect <|-- Slow
+StatusEffect <|-- Buff
+StatusEffect <|-- Debuff
+
+' Relations Health/Hunger/StatusEffect avec Wormy 
+' sont déjà définies dans entities.puml pour éviter duplication
+
+@enduml

@@ -1,0 +1,21 @@
+@startuml main
+
+rectangle Interfaces
+rectangle Entities
+rectangle Objects
+rectangle World
+rectangle Systems
+rectangle Stats
+rectangle Core
+
+Interfaces <.. Entities : comportements
+Entities <.. Objects : consommables
+Entities <.. Stats : état/effets
+Objects <.. Core : orchestrateur
+World <.. Core : logique monde
+Systems <.. Core : services techniques
+Interfaces <.. Core : implémentations
+Systems <.. Entities : IA/applis
+World <.. Systems : ressources
+
+@enduml

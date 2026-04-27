@@ -1,0 +1,164 @@
+@startuml world
+
+interface Diggable {
+    + dig()
+}
+
+class TileCollection <<ValueObject>> {
+    + tiles: List<Tile>
+}
+class SpawnTable <<ValueObject>> {
+    + entries: Map<String, float>
+}
+
+class World {
+    - map: Map
+    - collisions: CollisionGrid
+    - camera: Camera
+    - spawner: Spawner
+    - levelLoader: LevelLoader
+    - physics: Physics
+    - collisionLayerName: String
+    - boundPlayer: Player
+    - enemies: List<Enemy>
+    - surfaceLevel: float
+    - enemyCollisionHandler: CollisionHandler
+    + update(delta: float): void
+    + render(): void
+    + renderEnemies(batch: SpriteBatch): void
+    + getMap(): Map
+    + getCamera(): Camera
+    + getSurfaceLevel(): float
+    + getCollisionLayerName(): String
+    + setCollisionLayer(collisionLayerName: String): void
+    + bindPlayer(player: Player): void
+    + spawnInitialEnemies(assets: Assets): void
+}
+
+class Map {
+    - tiledMap: TiledMap
+    - tiles: TileCollection
+    - tileWidth: int
+    - tileHeight: int
+    - mapWidth: int
+    - mapHeight: int
+    + Map(tmxFile: String)
+    + load(tmxFile: String): void
+    + getTiledMap(): TiledMap
+    + getLayer(layerName: String): TiledMapTileLayer
+    + getTileAt(position: Vector2): Tile
+    + isSolidAt(tileX: int, tileY: int, layerName: String): boolean
+    + isSolidAt(worldX: float, worldY: float, layerName: String): boolean
+    + calculateSurfaceLevel(layerName: String): float
+    + getTileWidth(): int
+    + getTileHeight(): int
+    + getMapWidthPixels(): int
+    + getMapHeightPixels(): int
+    + dispose(): void
+    - isSolidProperty(solid: Object): boolean
+}
+
+class Level {
+    - name: String
+    - difficulty: int
+    - spawnRules: SpawnRules
+    + getSpawnRules(): SpawnRules
+}
+
+class LevelLoader {
+    + load(id: String): Level
+    + buildMap(level: Level): Map
+}
+
+class SpawnRules {
+    + enemies: SpawnTable
+    + resources: SpawnTable
+}
+
+class Underworld {
+    + depth: int
+    + density: float
+}
+
+class Surface {
+    + skyColor: String
+    + hazardLevel: int
+}
+
+abstract class Tile {
+    + isBlocking(): boolean
+    + isDiggable(): boolean
+}
+
+class Dirt {
+    + hardness: float
+}
+
+class DeepDirt {
+    + luminosity: float
+}
+
+class Sky
+
+class PipeTunnel {
+    + connect(surface: Surface, underworld: Underworld): void
+}
+
+class CollisionGrid {
+    - occupied: Set<Vector2>
+    + isOccupied(position: Vector2): boolean
+    + mark(position: Vector2): void
+    + clear(position: Vector2): void
+}
+
+class Camera {
+    - target: Player
+    - libgdxCamera: OrthographicCamera
+    - viewport: Viewport
+    - viewportWidth: float
+    - viewportHeight: float
+    + follow(player: Player): void
+    + clampTo(map: Map): void
+    + update(delta: float): void
+    + setPosition(x: float, y: float): void
+    + setViewport(viewport: Viewport): void
+    + updateViewport(width: int, height: int): void
+    + getLibgdxCamera(): OrthographicCamera
+}
+
+Tile <|-- Dirt
+Tile <|-- DeepDirt
+Tile <|-- Sky
+Tile <|-- PipeTunnel
+
+Dirt ..|> Diggable
+DeepDirt ..|> Diggable
+
+World "1" --> "1" Map
+World "1" --> "1" CollisionGrid : collisions
+World "1" --> "1" Camera
+World "1" --> "1" Spawner
+World "1" --> "1" LevelLoader
+World "1" --> "1" Physics
+World "1" --> "1" CollisionHandler : enemyCollisionHandler
+
+Level "1" --> "1" Map : defines
+Level "1" --> "1" SpawnRules
+LevelLoader --> Level : loads
+LevelLoader --> Map : builds
+LevelLoader --> SpawnRules : configures
+SpawnRules "1" --> "1" SpawnTable : enemies
+SpawnRules "1" --> "1" SpawnTable : resources
+Spawner --> SpawnRules : uses
+
+Map "1" *-- "1" TileCollection
+Map --> Underworld : contains
+Map --> Surface : contains
+TileCollection "1" *-- "*" Tile
+CollisionGrid --> Vector2 : uses
+Camera "1" --> "1" Player : follows
+Camera --> Map : clamps to
+PipeTunnel --> Underworld : connects
+PipeTunnel --> Surface : connects
+
+@enduml

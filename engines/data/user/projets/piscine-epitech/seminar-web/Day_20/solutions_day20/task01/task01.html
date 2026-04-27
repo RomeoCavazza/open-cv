@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Task 01</title>
+  <link href="../../assets/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+
+  <div class="container mt-5">
+    <h1>Task 01 – AJAX</h1>
+    <form id="myForm">
+      <input type="text" name="name" class="form-control mb-3" placeholder="Enter your name">
+      <button type="submit" class="btn btn-primary">Send</button>
+    </form>
+    <div id="alert-container" class="mt-3"></div>
+  </div>
+
+  <script src="../../assets/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="../../assets/index/main.js"></script>
+
+  <script>
+    document.querySelector('#myForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = e.target.name.value.trim();
+
+      try {
+        const response = await fetch(`task01.php?name=${encodeURIComponent(name)}`);
+        if (!response.ok) throw new Error('Server error');
+
+        const data = await response.json();
+        document.getElementById('alert-container').innerHTML = `
+          <div class="alert alert-success" role="alert">
+            Hello ${data.name}!
+          </div>`;
+      } catch (error) {
+        document.getElementById('alert-container').innerHTML = `
+          <div class="alert alert-danger" role="alert">
+            An error occurred.
+          </div>`;
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  jenkins:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: jenkins-marvin
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - ./my_marvin.yml:/var/jenkins_home/jcasc/my_marvin.yml:ro
+      - ./job_dsl.groovy:/var/jenkins_home/jcasc/job_dsl.groovy:ro
+    environment:
+      - USER_CHOCOLATEEN_PASSWORD=${USER_CHOCOLATEEN_PASSWORD}
+      - USER_VAUGIE_G_PASSWORD=${USER_VAUGIE_G_PASSWORD}
+      - USER_I_DONT_KNOW_PASSWORD=${USER_I_DONT_KNOW_PASSWORD}
+      - USER_NASSO_PASSWORD=${USER_NASSO_PASSWORD}
+      - CASC_JENKINS_CONFIG=/var/jenkins_home/jcasc/my_marvin.yml
+    restart: unless-stopped
+
+volumes:
+  jenkins_home:
+

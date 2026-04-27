@@ -1,0 +1,77 @@
+@startuml
+skinparam classAttributeIconSize 0
+hide circle
+
+class Hunger {
+  -currentHunger: int
+  -maxHunger: int
+  --
+  +decrease(amount: int): void
+  +increase(amount: int): void
+  +isStarving(): boolean
+  +setMaxHunger(maxHunger: int): void
+  +setCurrentHunger(hunger: int): void
+  +getCurrentHunger(): int
+  +getMaxHunger(): int
+}
+
+class Poison {
+  -damagePerSecond: int
+  --
+  +apply(target: Wormy): void
+  +update(delta: float): void
+}
+
+abstract class StatusEffect {
+  -name: String
+  -duration: float
+  -elapsed: float
+  -active: boolean
+  --
+  +apply(target: Wormy): void
+  +update(delta: float): void
+  +end(target: Wormy): void
+  +isExpired(): boolean
+}
+
+class Buff {
+  -bonusType: String
+  -bonusValue: float
+  --
+  +apply(target: Wormy): void
+  +end(target: Wormy): void
+}
+
+class Debuff {
+  -penaltyType: String
+  -penaltyValue: float
+  --
+  +apply(target: Wormy): void
+  +end(target: Wormy): void
+}
+
+class Slow {
+  -speedMultiplier: float
+  --
+  +apply(target: Wormy): void
+  +end(target: Wormy): void
+}
+
+class Health {
+  -currentHealth: int
+  -maxHealth: int
+  --
+  +takeDamage(amount: int): void
+  +heal(amount: int): void
+  +isDead(): boolean
+  +setMaxHealth(maxHealth: int): void
+  +setCurrentHealth(health: int): void
+  +getCurrentHealth(): int
+  +getMaxHealth(): int
+}
+
+Poison --|> StatusEffect
+Buff --|> StatusEffect
+Debuff --|> StatusEffect
+Slow --|> StatusEffect
+@enduml

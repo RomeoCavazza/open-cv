@@ -1,0 +1,28 @@
+# Fichiers système
+.DS_Store
+Thumbs.db
+
+# IDEs
+.vscode/
+.vscode
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+
+# Fichiers temporaires
+*.tmp
+
+# Environnement
+.env
+.env.local
+
+# Uploads
+uploads/
+
+# Documentation
+/docs
+

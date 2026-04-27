@@ -1,0 +1,176 @@
+@startuml
+skinparam classAttributeIconSize 0
+hide circle
+
+class SpawnerObject {
+  -random: Random = new Random()
+  +spawnBurgerInDeepTunnel(world: World, assets: Assets): Item
+  +spawnFritesInDeepTunnel(world: World, assets: Assets): Item
+  +spawnSodaInDeepTunnel(world: World, assets: Assets): Item
+  +spawnDiamondAtSurface(world: World, assets: Assets): Item
+  -findSurfaceHeightAt(world: World, x: float, defaultSurfaceLevel: float): float
+}
+
+class ScoreEntry {
+  +player: String
+  +points: int
+  +source: String
+  +timestamp: float
+  +timeSurvived: int
+  +maxEvolution: String
+}
+
+class Burger {
+  -{static} TEXTURE_NAME: String = "burger.png"
+  --
+  +Burger(assets: Assets, spawnPosition: Vector2)
+  +restore(target: Wormy): void
+}
+
+class Scoreboard {
+  -currentScore: int
+  -highScore: int
+  -maxCombo: int
+  -comboMultiplier: float
+  -lastUpdateTime: float
+  -entries: List<ScoreEntry>
+  -boundPlayer: Player
+  --
+  +add(entry: ScoreEntry): void
+  +increase(points: int, source: String): void
+  +top(n: int): List<ScoreEntry>
+  +reset(): void
+  +persist(storage: ScoreStorage): void
+}
+
+class Diamond {
+  -{static} TEXTURE_NAME: String = "diamond.png"
+  --
+  +Diamond(assets: Assets, spawnPosition: Vector2)
+  #onCollect(by: Wormy): void
+  +onSpawn(): void
+}
+
+class Timer {
+  -startTime: float
+  -duration: float
+  -running: boolean
+  -finished: boolean
+  --
+  +start(duration: float): void
+  +stop(): void
+  +restart(): void
+  +tick(delta: float): void
+  +elapsed(): float
+  +getElapsedTime(): float
+  +isExpired(): boolean
+}
+
+abstract class Food {
+  #name: String
+  #hungerPoints: int
+  #value: int
+  --
+  +update(delta: float): void
+  +onEatenBy(target: Wormy): void
+  #onCollect(by: Wormy): void
+  +restore(target: Wormy): void
+}
+
+class Gun {
+  +Gun()
+  #onCollect(by: Wormy): void
+}
+
+class Projectile {
+  -speed: float
+  -direction: Vector2
+  -damage: int
+  -active: boolean
+  -lifetime: float
+  --
+  +Projectile()
+  +launch(from: Vector2): void
+  +move(delta: float): void
+  +hit(target: Enemy): void
+  +update(delta: float): void
+  +isActive(): boolean
+  +setDirection(direction: Vector2): void
+  +setDamage(damage: int): void
+}
+
+abstract class GameObject {
+  #id: int
+  #position: Vector2 = new Vector2()
+  #active: boolean = true
+  --
+  +setActive(active: boolean): void
+  +isActive(): boolean
+  +getPosition(): Vector2
+  +update(delta: float): void
+  +render(batch: SpriteBatch): void
+}
+
+class Soda {
+  -{static} TEXTURE_NAME: String = "soda.png"
+  --
+  +Soda(assets: Assets, spawnPos: Vector2)
+  +restore(target: Wormy): void
+}
+
+class Frites {
+  -{static} TEXTURE_NAME: String = "frites.png"
+  --
+  +Frites(assets: Assets, spawnPos: Vector2)
+  +restore(target: Wormy): void
+}
+
+class ComboManager {
+  -timer: Timer
+  -wormState: WormState
+  -sodaConsumed: boolean
+  -fritesConsumed: boolean
+  -burgerConsumed: boolean
+  --
+  +register(food: Food): void
+  +isComboActive(): boolean
+  +grantEvolution(state: WormState): void
+  +checkCombo(): void
+  +reset(): void
+}
+
+class Shovel {
+  +Shovel()
+  #onCollect(by: Wormy): void
+}
+
+abstract class Item {
+  #collected: boolean = false
+  #sprite: TextureRegion
+  #bounds: Rectangle
+  #width: float = 50f
+  #height: float = 50f
+  --
+  #Item()
+  +spawn(at: Vector2): void
+  +update(delta: float): void
+  +render(batch: SpriteBatch): void
+  +getBounds(): Rectangle
+  +isCollected(): boolean
+  +collect(by: Wormy): void
+  #onCollect(by: Wormy): void
+}
+
+SpawnerObject ..> Item
+Burger --|> Food
+Scoreboard o-- ScoreEntry
+Diamond --|> Item
+Food --|> Item
+Gun --|> Item
+Soda --|> Food
+Frites --|> Food
+ComboManager *-- Timer
+ComboManager ..> Food
+Shovel --|> Item
+Item --|> GameObject
+@enduml

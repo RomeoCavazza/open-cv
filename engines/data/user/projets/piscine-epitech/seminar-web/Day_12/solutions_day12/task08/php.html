@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="CodingPedia — PHP: description, table planning cours et exemples PHP, avec navigation et mise en page sémantique.">
+    <title>CodingPedia — PHP</title>
+    <style>
+        abbr {
+            font-style: normal;
+            font-weight: 700;
+            color: #000000;
+        }
+        table, th, td {
+            border:1px solid black;
+        }
+        pre code {
+            color: #006400;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h1>Welcome to CodingPedia!</h1>
+        <nav>
+            <ul>
+                <li><a href="index.html">Index</a></li>
+                <li><a href="php.html">PHP</a></li>
+                <li><a href="sql.html">SQL</a></li>
+            </ul>
+        </nav>
+    </header>
+    
+    <main>
+
+        <h2>Articles</h2>
+
+        <article>
+            <h3>Article 1</h3>
+            <p>
+            Créé en 1994 par Rasmus Lerdorf comme simple outil de gestion de page perso, <abbr title="Hypertext Preprocessor">PHP</abbr> s’est rapidement imposé comme langage de script côté serveur dédié au web. Durant les années 2000, il a propulsé l’explosion des <abbr title="Content Management System">CMS</abbr> comme WordPress, Joomla ou Drupal, devenant l’un des piliers du web 2.0. Sa réputation a longtemps souffert d’un usage “code spaghetti” et d’un manque de rigueur, mais l’arrivée de frameworks modernes comme Symfony et Laravel lui a redonné structure et crédibilité. Aujourd’hui, même si son image est parfois jugée vieillotte face à des langages plus récents comme Node.js, Python ou Go, <abbr title="Hypertext Preprocessor">PHP</abbr> reste omniprésent dans les sites web classiques, l’e-commerce et les petites structures. Sa force est sa base installée immense (WordPress représente à lui seul plus de 40 % du web), ce qui en fait encore un langage incontournable pour de très nombreux projets web.
+            </p>
+        </article>
+       
+        <article>
+            <h3>Article 2</h3>
+             <table>
+                <caption>Course planning</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Subject</th>
+                        <th scope="col">Description</th>
+                        <th scope="col">Grade obtained</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>PHP 101</td>
+                        <td>Introduction to the language and syntax</td>
+                        <td>15</td>
+                    </tr>
+                    <tr>
+                        <td>OOP in PHP</td>
+                        <td>How to do Object-Oriented Programming in PHP</td>
+                        <td>-</td>
+                    </tr>
+                </tbody>
+            </table> 
+        </article>
+
+        <article>
+            <h3>Article 3</h3>
+            <ul>
+                <li>Langage historique du web, pionnier des sites dynamiques.</li>
+                <li>Image parfois dépassée, mais toujours massif grâce à WordPress.</li>
+                <li>Frameworks modernes (Laravel, Symfony) ont rehaussé sa crédibilité.</li>
+                <li>Présent surtout dans le web classique et les PME/agences.</li>
+            </ul>
+        </article>
+        
+        <article>
+            <h3>Article 4</h3>
+            <pre><code>
+            &lt;!--include /text/header.html--&gt;
+
+            &lt;!--getenv HTTP_USER_AGENT--&gt;
+            &lt;!--if substr $exec_result Mozilla--&gt;
+              Hey, you are using Netscape!&lt;p&gt;
+            &lt;!--endif--&gt;
+
+            &lt;!--sql database select * from table where user='$username'--&gt;
+            &lt;!--ifless $numentries 1--&gt;
+              Sorry, that record does not exist&lt;p&gt;
+            &lt;!--endif exit--&gt;
+              Welcome &lt;!--$user--&gt;!&lt;p&gt;
+              You have &lt;!--$index:0--&gt; credits left in your account.&lt;p&gt;
+
+            &lt;!--include /text/footer.html--&gt;
+            </code></pre>
+        </article>
+
+    </main>
+    
+    <aside>
+        <h2>Citations</h2>
+        <blockquote>
+            Peace is a lie, there is only passion.<br>
+            Through passion, I gain strength.<br>
+            Through strength, I gain power.<br>
+            Through power, I gain victory.<br>
+            Through victory, my chains are broken.<br>
+            The Force shall free me.
+            <br>
+            <cite>— Sith Code —</cite>
+        </blockquote>
+    </aside>
+
+    <footer>
+        <address>
+            CAVAZZA Roméo<br>
+            88TER Avenue Parmentier<br>
+            06 99 25 67 58
+        </address>
+    </footer>
+
+</body>
+</html>

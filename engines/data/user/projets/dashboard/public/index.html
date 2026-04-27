@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ligue 1 Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="main-header">
+            <div class="logo-area">
+                <img id="league-logo" src="" alt="Logo" class="league-logo">
+                <div class="header-text">
+                    <h1 id="league-name">Ligue 1</h1>
+                    <span id="season-dates" class="subtitle">Chargement...</span>
+                </div>
+            </div>
+            <div class="header-actions">
+                <div class="badge-matchday">
+                    Matchday <span id="current-matchday">-</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- KPI Section -->
+        <section class="kpi-grid">
+            <div class="kpi-card">
+                <h3>Matchs Joués</h3>
+                <div class="value" id="kpi-played">-</div>
+            </div>
+            <div class="kpi-card">
+                <h3>Total Buts</h3>
+                <div class="value" id="kpi-goals">-</div>
+            </div>
+            <div class="kpi-card">
+                <h3>Moyenne Buts</h3>
+                <div class="value" id="kpi-avg-goals">-</div>
+            </div>
+            <div class="kpi-card">
+                <h3>Leader</h3>
+                <div class="value small-text" id="kpi-leader">-</div>
+            </div>
+        </section>
+
+        <!-- Main Content -->
+        <main class="dashboard-grid">
+            <!-- Standings Table -->
+            <section class="panel standings-panel">
+                <div class="panel-header">
+                    <h2>Classement officiel</h2>
+                </div>
+                <div class="table-wrapper">
+                    <table class="standings-table">
+                        <thead>
+                            <tr>
+                                <th class="center">Pos</th>
+                                <th class="left">Club</th>
+                                <th class="center">Pts</th>
+                                <th class="center mobile-hide">J</th>
+                                <th class="center mobile-hide">G</th>
+                                <th class="center mobile-hide">N</th>
+                                <th class="center mobile-hide">P</th>
+                                <th class="center">Diff</th>
+
+                            </tr>
+                        </thead>
+                        <tbody id="standings-body">
+                            <!-- JS Injection -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Sidebar -->
+            <aside class="sidebar">
+                <!-- Chart -->
+                <section class="panel chart-panel">
+                    <div class="panel-header">
+                        <h2>Top Stats</h2>
+                    </div>
+                    <div id="chart-container" class="chart-container">
+                        <!-- CSS Bar Chart -->
+                    </div>
+                </section>
+
+                <!-- Next Matches -->
+                <section class="panel matches-panel">
+                    <div class="panel-header">
+                        <h2>A venir (J<span id="next-matchday-num"></span>)</h2>
+                    </div>
+                    <div id="matches-list" class="matches-list">
+                        <!-- JS Injection -->
+                    </div>
+                </section>
+            </aside>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>

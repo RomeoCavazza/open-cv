@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+*/venv/
+
+# OS / Editor
+.DS_Store
+*.swp
+
+# Arduino / build
+*.hex
+*.elf
+*.map
+/build/
+
+# Data / outputs
+analysis/results_*/
+analysis/**/*.png
+analysis/**/*.csv
+results_*/
+*.csv
+*.png

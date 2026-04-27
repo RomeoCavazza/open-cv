@@ -2,12 +2,13 @@ async function loadCoverLetter() {
   try {
     const urlParams = new URLSearchParams(window.location.search);
     const jobId = urlParams.get('id');
-    let dataPath = (jobId && jobId !== 'null') ? `../data/instances/${jobId}/cover-letter.json` : '../data/templates/cover-letter.json';
+    const t = Date.now();
+    let dataPath = (jobId && jobId !== 'null') ? `../data/instances/${jobId}/cover-letter.json?t=${t}` : `../data/templates/cover-letter.json?t=${t}`;
 
     let response = await fetch(dataPath);
     if (!response.ok) {
       console.warn(`Instance ${jobId} not found, falling back to template.`);
-      response = await fetch("../data/templates/cover-letter.json");
+      response = await fetch(`../data/templates/cover-letter.json?t=${t}`);
     }
     
     if (!response.ok) {

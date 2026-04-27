@@ -1,0 +1,14 @@
+### Codes Bandit ###
+
+bandit lvl0 : ZjLjTmM6FvvyRnrb2rfNWOZOTa6ip5If
+bandit lvl1 : 263JGJPfgU6LtdEvgfWU1XP5yac29mFx
+bandit lvl2 : MNk8KNH3Usiio41PRUEoDFPqfxLPlSmx
+bandit lvl3 : 2WmrDFRmJIq3IPxneAaMGhap0pFhF3NJ
+bandit lvl4 : 4oQYVPkxZOOEOO5pTW81FB8j8lxXGUQw
+bandit lvl5 : HWasnPhtq9AVKe0dmk45nxy20cvUa6EG
+bandit lvl6 : morbNTDkSW6jIlUc0ymOdMaLnOlFVAaj
+bandit lvl7 : dfwvzFQi4mU0wfNbFOe9RoWskMLg7eEc
+bandit lvl8 : 4CKMh1JI91bUIZZPXDqGanal4xvAg0JM
+bandit lvl9 : FGUW5ilLVJrxX9kMYMmlN4MgbpfMiqey
+bandit lvl10 : dtR173fZKb0RRsDFSGsg2RWnpNVj3qRr
+bandit lvl11 : 7x16WNeHIi5YkIhWsfFIqoognUTyj9Q4

@@ -1,0 +1,16 @@
+com.irina.myfirstgame
+com.irina.myfirstgame.core
+com.irina.myfirstgame.core.input
+com.irina.myfirstgame.core.screens
+com.irina.myfirstgame.core.ui
+com.irina.myfirstgame.entities
+com.irina.myfirstgame.entities.enemy
+com.irina.myfirstgame.entities.valueobjects
+com.irina.myfirstgame.entities.wormy
+com.irina.myfirstgame.interfaces
+com.irina.myfirstgame.objects
+com.irina.myfirstgame.stats
+com.irina.myfirstgame.systems
+com.irina.myfirstgame.world
+com.irina.myfirstgame.world.tiles
+com.irina.myfirstgame.world.valueobjects

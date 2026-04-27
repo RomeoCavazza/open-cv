@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="CodingPedia — SQL: description, table planning cours et exemples SQL, avec navigation et mise en page sémantique.">
+    <title>CodingPedia — SQL</title>
+    <style>
+        abbr {
+            font-style: normal;
+            font-weight: 700;
+            color: #000000;
+        }
+        table, th, td {
+            border:1px solid black;
+        }
+        pre code {
+            color: #006400;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h1>Welcome to CodingPedia!</h1>
+        <nav>
+            <ul>
+                <li><a href="index.html">Index</a></li>
+                <li><a href="php.html">PHP</a></li>
+                <li><a href="sql.html">SQL</a></li>
+            </ul>
+        </nav>
+    </header>
+    
+    <main>
+
+        <h2>Articles</h2>
+
+        <article>
+            <h3>Article 1</h3>
+            <p>
+            Né dans les années 1970 chez IBM à partir du modèle relationnel d’Edgar Codd, <abbr title="Structured Query Language">SQL</abbr> est rapidement devenu la norme universelle pour interagir avec les bases de données relationnelles. Standardisé dès les années 1980 et adopté par des géants comme Oracle, IBM DB2, Microsoft SQL Server, MySQL ou PostgreSQL, il s’est imposé comme la langue commune des données structurées. Contrairement à PHP, SQL n’a jamais souffert d’une mauvaise réputation : il est perçu comme fondamental, indémodable et indispensable à tout développeur, administrateur ou data engineer. Aujourd’hui, SQL reste au cœur des systèmes relationnels traditionnels (PostgreSQL, MySQL/MariaDB), mais s’étend aussi aux plateformes cloud et Big Data modernes (Snowflake, BigQuery, Databricks). Même face à l’essor des bases <abbr title="Not Only SQL">NoSQL</abbr> comme MongoDB ou Cassandra, SQL n’est pas remplacé mais complété, confirmant son statut de langage de données universel et durable.
+            </p>
+        </article>
+       
+        <article>
+            <h3>Article 2</h3>
+             <table>
+                <caption>Course planning</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Subject</th>
+                        <th scope="col">Description</th>
+                        <th scope="col">Grade obtained</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>SQL 101</td>
+                        <td>A quick introduction to the SQL language</td>
+                        <td>18</td>
+                    </tr>
+                    <tr>
+                        <td>SQL join</td>
+                        <td>Discovery of JOIN to combine rows from multiple tables</td>
+                        <td>13</td>
+                    </tr>
+                </tbody>
+            </table> 
+        </article>
+
+        <article>
+            <h3>Article 3</h3>
+            <ul>
+                <li>Standard universel pour gérer les bases relationnelles.</li>
+                <li>Solide et durable, utilisé depuis les années 1970.</li>
+                <li>Compétence clé pour devs, data et admins.</li>
+                <li>Toujours central, même à l’ère du NoSQL et du Cloud.</li>
+            </ul>
+        </article>
+        
+        <article>
+            <h3>Article 4</h3>
+            <pre><code>
+                SELECT
+                  department,
+                  MIN(salary) AS minimum_salary
+                FROM employees
+                GROUP BY department;
+            </code></pre>
+        </article>
+        
+    </main>
+    
+    <aside>
+        <h2>Citations</h2>
+        <blockquote>
+            Peace is a lie, there is only passion.<br>
+            Through passion, I gain strength.<br>
+            Through strength, I gain power.<br>
+            Through power, I gain victory.<br>
+            Through victory, my chains are broken.<br>
+            The Force shall free me.
+            <br>
+            <cite>— Sith Code —</cite>
+        </blockquote>
+    </aside>
+
+    <footer>
+        <address>
+            CAVAZZA Roméo<br>
+            88TER Avenue Parmentier<br>
+            06 99 25 67 58
+        </address>
+    </footer>
+
+</body>
+</html>

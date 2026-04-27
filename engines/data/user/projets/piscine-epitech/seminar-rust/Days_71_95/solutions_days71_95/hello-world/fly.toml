@@ -1,0 +1,22 @@
+app = "hello-world-backend"
+primary_region = "cdg"
+
+[build]
+  dockerfile = "backend/Dockerfile"
+
+[env]
+  PORT = "3001"
+  RUST_LOG = "info"
+
+[http_service]
+  internal_port = 3001
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ["app"]
+
+[[services]]
+  protocol = "tcp"
+  internal_port = 3001
+

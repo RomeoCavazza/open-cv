@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Récap e-mails du jour</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/style/style.css?v=1759265587" />
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+  <!-- Loading overlay -->
+  <div id="loadingOverlay" class="loading-overlay hidden">
+    <div class="spinner"></div>
+    <p>Chargement en cours...</p>
+  </div>
+
+  <header class="topbar">
+    <a href="/" class="logo" title="Recharger la page" aria-label="Retour à l'accueil">
+      <svg class="logo-icon" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Enveloppe moderne et douce -->
+        <!-- Base de l'enveloppe -->
+        <rect x="8" y="14" width="32" height="22" rx="3" fill="url(#envelopeGradient)"/>
+        <!-- Rabat supérieur fermé -->
+        <path d="M 8 14 L 24 26 L 40 14 Z" fill="url(#flapGradient)" opacity="0.9"/>
+        <!-- Ligne de pli -->
+        <path d="M 8 14 L 24 26 L 40 14" stroke="white" stroke-width="1" opacity="0.3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <!-- Point décoratif (timbre) -->
+        <circle cx="35" cy="20" r="2.5" fill="white" opacity="0.4"/>
+        <defs>
+          <linearGradient id="envelopeGradient" x1="8" y1="14" x2="40" y2="36" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#eff6ff"/>
+            <stop offset="50%" stop-color="#dbeafe"/>
+            <stop offset="100%" stop-color="#bfdbfe"/>
+          </linearGradient>
+          <linearGradient id="flapGradient" x1="24" y1="14" x2="24" y2="26" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#bfdbfe"/>
+            <stop offset="100%" stop-color="#93c5fd"/>
+          </linearGradient>
+        </defs>
+      </svg>
+      <h1 class="logo-text">maily</h1>
+    </a>
+  </header>
+
+  <main class="layout">
+    <!-- Résumé optimisé -->
+    <aside class="card summary" role="complementary" aria-label="Résumé du jour">
+      <div class="summary-header">
+        <h2>Résumé</h2>
+        <span id="urgencyBadge" class="urgency-badge-inline hidden">
+          <span id="urgencyText" class="urgency-text">—</span>
+        </span>
+      </div>
+
+      <div id="summaryBody" class="summary-body">
+        <!-- Métriques + Urgence -->
+        <div class="metric-cards">
+          <div class="metric-card">
+            <i data-lucide="calendar" class="metric-icon"></i>
+            <div class="metric-content">
+              <span class="metric-label">Date</span>
+              <strong id="sumDay" class="metric-value">—</strong>
+            </div>
+          </div>
+          <div class="metric-card">
+            <i data-lucide="mail" class="metric-icon"></i>
+            <div class="metric-content">
+              <span class="metric-label">Total</span>
+              <strong id="sumTotal" class="metric-value">—</strong>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Résumé AI généré -->
+        <div class="ai-summary">
+          <div class="ai-header">
+            <i data-lucide="sparkles" class="ai-icon"></i>
+            <span class="ai-title">Résumé IA</span>
+          </div>
+          <p id="sumTLDR" class="ai-content">—</p>
+        </div>
+
+        <!-- Emails prioritaires -->
+        <div id="prioritySection" class="summary-section hidden">
+          <div class="summary-section-header">
+            <i data-lucide="star" class="summary-icon"></i>
+            <span class="summary-section-title">À traiter en priorité</span>
+          </div>
+          <div id="sumPriority" class="priority-list">—</div>
+        </div>
+        
+        <!-- Thèmes clés -->
+        <div id="topicsSection" class="summary-section hidden">
+          <div class="summary-section-header">
+            <i data-lucide="tag" class="summary-icon"></i>
+            <span class="summary-section-title">Thèmes clés</span>
+          </div>
+          <div id="sumTopics" class="topics-inline">—</div>
+        </div>
+      </div>
+      
+      <div class="summary-actions">
+        <button id="refreshBtn" class="btn primary large" aria-label="Actualiser les e-mails">
+          <i data-lucide="refresh-cw" style="width:16px;height:16px"></i>
+          <span class="btn-text">Actualiser</span>
+        </button>
+        <span id="lastUpdated" class="last-updated" role="status" aria-live="polite">—</span>
+      </div>
+    </aside>
+
+    <!-- Liste des mails optimisée -->
+    <section class="card list" role="main" aria-label="Liste des e-mails">
+      <!-- Toolbar des filtres unifiée -->
+      <div class="filters-toolbar">
+        <!-- Recherche (pleine largeur) -->
+        <div class="search-container">
+          <i data-lucide="search" class="search-icon"></i>
+          <input 
+            id="searchInput" 
+            type="search" 
+            placeholder="Rechercher dans les emails..." 
+            class="search-input"
+            aria-label="Rechercher dans les e-mails"
+            autocomplete="off"
+          />
+          <kbd class="search-shortcut" aria-hidden="true">/</kbd>
+        </div>
+
+        <!-- Filtres (ligne en dessous) -->
+        <div class="filters-row">
+          <!-- Filtre expéditeur -->
+          <div class="filter-item">
+            <button id="senderFilterBtn" class="filter-btn" aria-haspopup="listbox" aria-expanded="false">
+              <i data-lucide="user" class="filter-icon"></i>
+              <span id="senderFilterLabel" class="filter-label">Expéditeur</span>
+              <i data-lucide="chevron-down" class="filter-chevron"></i>
+            </button>
+            <div id="senderDropdown" class="filter-dropdown-menu hidden">
+              <div class="dropdown-search">
+                <i data-lucide="search" class="dropdown-search-icon"></i>
+                <input 
+                  id="senderSearchInput" 
+                  type="search" 
+                  placeholder="Rechercher un expéditeur..."
+                  class="dropdown-search-input"
+                />
+              </div>
+              <div id="senderList" class="dropdown-list">
+                <!-- Options remplies dynamiquement -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Tri -->
+          <div class="filter-item">
+            <button id="sortBtn" class="filter-btn" aria-haspopup="listbox" aria-expanded="false">
+              <i data-lucide="arrow-down-up" class="filter-icon"></i>
+              <span id="sortLabel" class="filter-label">Tri</span>
+              <i data-lucide="chevron-down" class="filter-chevron"></i>
+            </button>
+            <div id="sortDropdown" class="filter-dropdown-menu hidden">
+              <div class="dropdown-list">
+                <button class="dropdown-item" data-sort="custom" data-sort-label="Personnalisé">
+                  <i data-lucide="grip-vertical" class="dropdown-icon"></i>
+                  <span>Ordre personnalisé</span>
+                </button>
+                <button class="dropdown-item" data-sort="dateDesc" data-sort-label="Récents d'abord">
+                  <i data-lucide="arrow-down" class="dropdown-icon"></i>
+                  <span>Plus récents</span>
+                </button>
+                <button class="dropdown-item" data-sort="dateAsc" data-sort-label="Anciens d'abord">
+                  <i data-lucide="arrow-up" class="dropdown-icon"></i>
+                  <span>Plus anciens</span>
+                </button>
+                <button class="dropdown-item" data-sort="senderAsc" data-sort-label="A → Z">
+                  <i data-lucide="arrow-up-a-z" class="dropdown-icon"></i>
+                  <span>A → Z</span>
+                </button>
+                <button class="dropdown-item" data-sort="senderDesc" data-sort-label="Z → A">
+                  <i data-lucide="arrow-down-z-a" class="dropdown-icon"></i>
+                  <span>Z → A</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Séparateur visuel -->
+          <div class="filter-separator"></div>
+
+          <!-- Toggle épinglés (plus important → en premier) -->
+          <button id="togglePinned" class="filter-toggle" data-pinned-only="false" aria-pressed="false" title="Filtrer uniquement les emails épinglés">
+            <i data-lucide="pin" class="filter-icon"></i>
+            <span id="togglePinnedLabel" class="filter-label">Tous</span>
+            <span class="filter-badge" id="countPinned">0</span>
+          </button>
+
+          <!-- Toggle affichage -->
+          <button id="toggleShowDone" class="filter-toggle" data-show-done="true" aria-pressed="true" title="Afficher tous les emails ou masquer les archivés">
+            <i data-lucide="eye" class="filter-icon"></i>
+            <span id="toggleShowLabel" class="filter-label">Complet</span>
+          </button>
+
+          <!-- Toggle corbeille (en dernier) -->
+          <button id="toggleTrash" class="filter-toggle" data-trash-only="false" aria-pressed="false" title="Afficher uniquement les emails supprimés">
+            <i data-lucide="inbox" class="filter-icon"></i>
+            <span id="toggleTrashLabel" class="filter-label">Boîte</span>
+            <span class="filter-badge" id="countTrash">0</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 📋 LISTE DES EMAILS -->
+      <div class="table-wrap" role="region" aria-label="Tableau des e-mails" tabindex="0">
+        <table class="mails">
+          <thead>
+            <tr>
+              <th class="th-grab" scope="col"></th>
+              <th class="th-sender" scope="col">Expéditeur</th>
+              <th class="th-subject" scope="col">Objet</th>
+              <th class="th-time" scope="col">Heure</th>
+              <th class="th-pinned" scope="col"></th>
+              <th class="th-status" scope="col"></th>
+              <th class="th-trash" scope="col"></th>
+            </tr>
+          </thead>
+          <tbody id="mailsTbody">
+            <!-- Rempli dynamiquement : show en haut, hide checkés en bas -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- État vide -->
+      <div id="emptyState" class="empty-state hidden" role="status">
+        <div class="empty-emoji">📭</div>
+        <h3 id="emptyTitle" class="empty-title">Aucun e-mail trouvé</h3>
+        <p id="emptyDescription" class="empty-description">Essayez de modifier vos filtres de recherche</p>
+      </div>
+    </section>
+  </main>
+
+  <!-- Toast amélioré -->
+  <div id="toast" class="toast hidden" role="alert" aria-live="assertive" aria-atomic="true"></div>
+
+  <!-- Modal détail email -->
+  <div id="emailModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-overlay"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <button id="modalPrev" class="modal-nav" aria-label="Email précédent" title="Précédent">
+          <i data-lucide="chevron-left"></i>
+        </button>
+        <h2 id="modalTitle" class="modal-title">Détail de l'email</h2>
+        <button id="modalNext" class="modal-nav" aria-label="Email suivant" title="Suivant">
+          <i data-lucide="chevron-right"></i>
+        </button>
+        <button id="modalClose" class="modal-close" aria-label="Fermer">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <!-- Sujet principal -->
+        <h3 id="modalSubject" class="modal-subject">—</h3>
+        
+        <!-- Méta minimale -->
+        <div class="modal-meta">
+          <span id="modalFrom" class="modal-from">—</span>
+          <span class="modal-dot">•</span>
+          <span id="modalDate" class="modal-date">—</span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <div class="modal-actions-left">
+          <button id="modalPin" class="btn-modal-action" title="Épingler">
+            <i data-lucide="pin" class="action-icon"></i>
+          </button>
+          <button id="modalHide" class="btn-modal-action" title="Archiver">
+            <i data-lucide="eye" class="action-icon"></i>
+          </button>
+          <button id="modalTrash" class="btn-modal-action" title="Supprimer">
+            <i data-lucide="trash-2" class="action-icon"></i>
+          </button>
+        </div>
+        <a id="modalOpenGmail" href="#" class="btn primary" target="_blank">
+          <i data-lucide="external-link" style="width:16px;height:16px"></i>
+          <span>Ouvrir dans Gmail</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Config -->
+  <script>
+    window.APP_CONFIG = {
+      // Webhook local n8n
+      webhookUrl: "http://localhost:5678/webhook/refresh-mails",
+      
+      // Fichier JSON local
+      jsonUrl: "./data/mails-today.json"
+    };
+  </script>
+  <script src="assets/script/script.js?v=1759262375" defer></script>
+  <script>
+    // Initialiser Lucide après chargement du DOM
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.lucide) {
+        lucide.createIcons();
+      }
+    });
+  </script>
+
+  <!-- Footer discret -->
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-links">
+        <a href="https://mail.google.com/mail/?view=cm&fs=1&to=romeo.cavazza@gmail.com" target="_blank" rel="noopener noreferrer" class="footer-link" title="Email" aria-label="Envoyer un email à Roméo Cavazza">
+          <i data-lucide="mail" class="footer-icon"></i>
+        </a>
+        <a href="https://www.linkedin.com/in/romeo-cavazza/" target="_blank" rel="noopener noreferrer" class="footer-link" title="LinkedIn" aria-label="LinkedIn de Roméo Cavazza">
+          <i data-lucide="linkedin" class="footer-icon"></i>
+        </a>
+        <a href="https://github.com/RomeoCavazza" target="_blank" rel="noopener noreferrer" class="footer-link" title="GitHub" aria-label="GitHub de Roméo Cavazza">
+          <i data-lucide="github" class="footer-icon"></i>
+        </a>
+      </div>
+      <p class="footer-credit">Fait par Roméo Cavazza</p>
+    </div>
+  </footer>
+</body>
+</html>

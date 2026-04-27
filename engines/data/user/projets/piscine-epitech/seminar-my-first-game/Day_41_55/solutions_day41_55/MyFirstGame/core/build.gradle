@@ -1,0 +1,96 @@
+[compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
+eclipse.project.name = appName + '-core'
+
+// SOLUTION : Désactiver le nettoyage automatique qui bloque à cause des fichiers verrouillés
+// Le problème : Gradle essaie de supprimer build/ avant compilation, mais OneDrive/IDE verrouille les fichiers
+// La solution : Utiliser uniquement la compilation incrémentale sans jamais supprimer les répertoires
+
+// SOLUTION RADICALE : Désactiver COMPLÈTEMENT le nettoyage automatique
+// Gradle nettoie build/classes avant compilation, ce qui échoue si fichiers verrouillés
+// On va intercepter et désactiver ce comportement de manière agressive
+
+// Désactiver la tâche clean
+clean {
+    enabled = false
+}
+
+// Configuration standard - le nettoyage est désactivé via les propriétés système
+tasks.withType(JavaCompile).configureEach { task ->
+  task.sourceCompatibility = JavaVersion.VERSION_17
+  task.targetCompatibility = JavaVersion.VERSION_17
+    task.options.incremental = true
+}
+
+// NOTE : Le nettoyage automatique des outputs se fait dans le code interne de Gradle
+// Il est difficile de le désactiver complètement via la configuration
+// La meilleure solution est d'utiliser -x clean lors de l'exécution
+
+// Configuration de compilation avec compilation incrémentale stricte
+compileJava {
+    options.incremental = true
+  sourceCompatibility = JavaVersion.VERSION_17
+  targetCompatibility = JavaVersion.VERSION_17
+    options.compilerArgs += ['-Xlint:unchecked']
+}
+
+compileTestJava {
+    options.incremental = true
+  sourceCompatibility = JavaVersion.VERSION_17
+  targetCompatibility = JavaVersion.VERSION_17
+    options.compilerArgs += ['-Xlint:unchecked']
+}
+
+// La configuration des tâches JavaCompile est déjà faite plus haut
+
+dependencies {
+  api "com.badlogicgames.gdx:gdx-box2d:$gdxVersion"
+  api "com.badlogicgames.gdx:gdx:$gdxVersion"
+
+  if(enableGraalNative == 'true') {
+    implementation "io.github.berstanio:gdx-svmhelper-annotations:$graalHelperVersion"
+  }
+  
+  // Tests unitaires
+  testImplementation 'org.junit.jupiter:junit-jupiter:5.9.2'
+  testImplementation 'org.assertj:assertj-core:3.24.2'
+  testImplementation 'org.mockito:mockito-core:5.5.0'
+  testImplementation 'org.mockito:mockito-junit-jupiter:5.5.0'
+  // gdx-backend-headless pour les tests (mais on va mocker Gdx.app avec Mockito)
+  testImplementation "com.badlogicgames.gdx:gdx-backend-headless:$gdxVersion"
+  testImplementation "com.badlogicgames.gdx:gdx:$gdxVersion"
+}
+
+test {
+  useJUnitPlatform()
+  ignoreFailures = false
+  
+  // Centraliser tous les rapports dans core/build/reports
+  reports {
+    html.outputLocation.set(file("${project.buildDir}/reports/tests"))
+    junitXml.outputLocation.set(file("${project.buildDir}/reports/test-results"))
+  }
+  
+  // Désactiver la création de test-results dans build/ (tout doit être dans reports/)
+  // Les fichiers binaires de cache seront dans reports/test-results/binary/
+  testResultsDirName = file("${project.buildDir}/reports/test-results")
+}
+
+// Tâche personnalisée qui compile et teste SANS nettoyer les répertoires
+// Utilise uniquement la compilation incrémentale
+task testWithoutClean(type: Test) {
+    group = 'verification'
+    description = 'Compile et exécute les tests sans nettoyer les répertoires (pour éviter les erreurs de fichiers verrouillés)'
+    
+    useJUnitPlatform()
+    dependsOn compileTestJava
+    
+    // Ne dépend pas de clean, et ne déclenche pas de nettoyage
+    mustRunAfter compileJava
+    
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    
+    doFirst {
+        println "✓ Compilation et tests sans nettoyage (contourne les fichiers verrouillés)"
+    }
+}

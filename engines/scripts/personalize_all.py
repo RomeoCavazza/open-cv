@@ -111,8 +111,8 @@ def personalize_instance(instance_path: Path, company_name: str):
 
 def main():
     root = Path(__file__).parent.parent.parent
-    instances_dir = root / "data" / "instances"
-    liste_path = root / "data" / "offres" / "liste.json"
+    instances_dir = root / "engines", "data" / "instances"
+    liste_path = root / "engines", "data" / "offres" / "liste.json"
 
     if not liste_path.exists():
         print("Error: liste.json not found.")
@@ -123,17 +123,17 @@ def main():
     
     company_map = {o["job_id"]: o["title"].split(" - ")[0] for o in offres}
 
-    print("🛠️  Syncing and Personalizing all instances...")
+    print("️  Syncing and Personalizing all instances...")
     count = 0
     for instance_path in instances_dir.iterdir():
         if not instance_path.is_dir(): continue
         job_id = instance_path.name
         company = company_map.get(job_id, "votre entreprise")
         personalize_instance(instance_path, company)
-        print(f"✅ {job_id} synchronized.")
+        print(f"{job_id} synchronized.")
         count += 1
     
-    print(f"\n✨ Done. {count} instances personalized.")
+    print(f"\nDone. {count} instances personalized.")
 
 if __name__ == "__main__":
     main()

@@ -1,0 +1,107 @@
+@startuml RTC_Classes
+title Diagramme de Classes - Hello World RTC
+
+skinparam classAttributeIconSize 0
+skinparam backgroundColor #1a1a1a
+skinparam class {
+  BackgroundColor #2d2d2d
+  BorderColor #4FDFFF
+  FontColor #ffffff
+  AttributeFontColor #cccccc
+}
+skinparam enum {
+  BackgroundColor #3d3d3d
+  BorderColor #FF3333
+  FontColor #ffffff
+}
+skinparam arrow {
+  Color #4FDFFF
+}
+hide empty methods
+
+package "PostgreSQL" {
+  enum UserStatus {
+    ONLINE
+    OFFLINE
+    DND
+    INVISIBLE
+  }
+
+  enum MemberRole {
+    OWNER
+    ADMIN
+    MEMBER
+  }
+
+  class User {
+    - id: UUID
+    - email: String
+    - password_hash: String
+    - username: String
+    - avatar_url: String?
+    - status: UserStatus
+    - created_at: DateTime
+  }
+
+  class Server {
+    - id: UUID
+    - name: String
+    - owner_id: UUID
+    - created_at: DateTime
+    - updated_at: DateTime
+  }
+
+  class ServerMember {
+    - server_id: UUID
+    - user_id: UUID
+    - role: MemberRole
+    - joined_at: DateTime
+  }
+
+  class Channel {
+    - id: UUID
+    - server_id: UUID
+    - name: String
+    - position: Int
+    - created_at: DateTime
+    - updated_at: DateTime
+  }
+
+  class Invite {
+    - id: UUID
+    - server_id: UUID
+    - code: String
+    - created_by: UUID
+    - expires_at: DateTime?
+    - max_uses: Int?
+    - uses_count: Int
+    - created_at: DateTime
+  }
+}
+
+package "MongoDB" {
+  class ChannelMessage {
+    - message_id: UUID
+    - server_id: UUID
+    - channel_id: UUID
+    - author_id: UUID
+    - content: String
+    - created_at: DateTime
+    - edited_at: DateTime?
+    - deleted_at: DateTime?
+    - deleted_by: UUID?
+  }
+}
+
+' ====== RELATIONS ======
+User "1" <-- "0..*" Server : owner_id
+User "1" <-- "0..*" ServerMember
+Server "1" <-- "0..*" ServerMember
+Server "1" <-- "0..*" Channel
+Server "1" <-- "0..*" Invite
+User "1" <-- "0..*" Invite : created_by
+Channel "1" <-- "0..*" ChannelMessage
+Server "1" <-- "0..*" ChannelMessage
+User "1" <-- "0..*" ChannelMessage : author_id
+
+@enduml

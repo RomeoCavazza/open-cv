@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.irina.myfirstgame.entities.wormy.WormStateTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2025-11-25T14:34:01.749Z" hostname="TCO" time="0.471">
+  <properties/>
+  <testcase name="Test 7: Enregistrement correct des 3 types d'aliments" classname="com.irina.myfirstgame.entities.wormy.WormStateTest" time="0.391"/>
+  <testcase name="Test 8: Évolution Baby vers Adult quand les 3 aliments sont mangés" classname="com.irina.myfirstgame.entities.wormy.WormStateTest" time="0.021"/>
+  <testcase name="Test 9: Position et vélocité sont préservées lors de l'évolution" classname="com.irina.myfirstgame.entities.wormy.WormStateTest" time="0.051"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

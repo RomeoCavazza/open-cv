@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Task 03</title>
+  <link href="../../assets/bootstrap/css/bootstrap.min.css" rel="stylesheet" />
+</head>
+<body>
+  <div class="container mt-5">
+    <h1>Task 03</h1>
+
+    <div class="d-flex gap-2 my-3">
+      <button id="loadBtn" class="btn btn-primary">Load countries</button>
+      <div id="alertContainer" class="flex-grow-1"></div>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-bordered table-striped align-middle">
+        <thead class="table-light">
+          <tr>
+            <th scope="col">country-code</th>
+            <th scope="col">name</th>
+          </tr>
+        </thead>
+        <tbody id="countriesBody">
+
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script src="../../assets/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const btn = document.getElementById('loadBtn');
+    const tbody = document.getElementById('countriesBody');
+    const alertContainer = document.getElementById('alertContainer');
+
+    function showAlert(message, type) {
+      alertContainer.innerHTML = `
+        <div class="alert alert-${type} alert-dismissible fade show mb-0" role="alert">
+          ${message}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>`;
+    }
+
+    btn.addEventListener('click', async () => {
+      tbody.innerHTML = '';
+      alertContainer.innerHTML = '';
+
+      try {
+        const res = await fetch('../../assets/annexes/countries.json');
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+
+        const data = await res.json();
+
+        let rows = [];
+        if (Array.isArray(data)) {
+          rows = data.map(({ code, name }) => [code, name]);
+        } else if (data && typeof data === 'object') {
+          rows = Object.entries(data);
+        }
+
+        if (rows.length === 0) {
+          showAlert('No countries found in file.', 'warning');
+          return;
+        }
+
+        const frag = document.createDocumentFragment();
+        for (const [code, name] of rows) {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td>${code}</td><td>${name}</td>`;
+          frag.appendChild(tr);
+        }
+        tbody.appendChild(frag);
+        showAlert(`Loaded ${rows.length} countries.`, 'success');
+      } catch (e) {
+        showAlert('Failed to load countries.json (' + e.message + ').', 'danger');
+      }
+    });
+  </script>
+</body>
+</html>

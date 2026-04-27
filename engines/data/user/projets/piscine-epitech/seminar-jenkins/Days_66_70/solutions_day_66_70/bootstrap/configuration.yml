@@ -1,0 +1,12 @@
+jenkins:
+  systemMessage: "Hello! Welcome to my Jenkins instance :)"
+  securityRealm:
+    local:
+      allowsSignup: false
+      users:
+        - id: "jigglypuff"
+          name: "Jigglypuff"
+          password: "jigglypuff"
+  authorizationStrategy:
+    loggedInUsersCanDoAnything:
+      allowAnonymousRead: false

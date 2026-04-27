@@ -1,0 +1,49 @@
+@startuml rofi-launcher-flow
+!theme plain
+skinparam backgroundColor #0d1117
+skinparam defaultFontColor #c9d1d9
+skinparam shadowing false
+
+skinparam participant {
+  BackgroundColor #161b22
+  BorderColor #30363d
+  FontColor #c9d1d9
+}
+
+skinparam sequenceArrowColor #94e2d5
+skinparam sequenceLifeLineBorderColor #30363d
+skinparam sequenceLifeLineBackgroundColor #161b22
+skinparam sequenceGroupBackgroundColor #161b22
+skinparam sequenceGroupBorderColor #30363d
+skinparam sequenceGroupFontColor #94e2d5
+skinparam sequenceGroupHeaderFontColor #94e2d5
+skinparam sequenceGroupBodyBackgroundColor #0d1117
+skinparam sequenceDividerBackgroundColor #161b22
+skinparam sequenceDividerBorderColor #30363d
+skinparam sequenceDividerFontColor #94e2d5
+skinparam sequenceBoxBackgroundColor #0d1117
+skinparam sequenceBoxBorderColor #30363d
+
+participant "rofi-push.sh" as Push
+participant "rofi-grid.sh" as Grid
+participant "Rofi" as Rofi
+participant "Hyprland" as Hypr
+participant "Waybar" as Waybar
+
+group Sidebar Launcher
+  Push -> Hypr : widen left gap (gaps_out)
+  Push -> Rofi : launch with column-tco.rasi
+  Rofi -> Rofi : user selects app
+  Push -> Hypr : restore gaps on exit
+end
+
+group App Grid Launcher
+  Grid -> Hypr : save & increase blur_size
+  Grid -> Waybar : kill process
+  Grid -> Rofi : launch with apps-grid.rasi
+  Rofi -> Rofi : user selects app
+  Grid -> Hypr : restore blur_size
+  Grid -> Waybar : relaunch
+end
+
+@enduml

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Task 06 - Mini Chat</title>
+  <link rel="stylesheet" href="../../assets/bootstrap/css/bootstrap.min.css">
+  <style>
+    #chat { height: 400px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; margin-bottom: 10px; }
+  </style>
+</head>
+<body>
+  <div class="container mt-3">
+    <h3>Mini Chat</h3>
+    <div id="chat"></div>
+    <div class="mb-2">
+      <label>Nom :</label>
+      <input type="text" id="name" class="form-control" placeholder="Nom">
+    </div>
+    <div class="mb-2">
+      <label>Message :</label>
+      <input type="text" id="text" class="form-control" placeholder="Message">
+    </div>
+    <button id="send" class="btn btn-primary">Envoyer</button>
+    <button id="reset" class="btn btn-secondary" style="display:none;">Reset</button>
+  </div>
+  <script src="task06.js"></script>
+</body>
+</html>
+

@@ -50,8 +50,8 @@ ENTRY_RE = re.compile(r"- \[(.*?)\]\((https?://[^)]+)\)")
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
 DEFAULT_CONFIG_PATH = str(REPO_ROOT / "scrape-offres.yaml")
-DEFAULT_LIST_PATH = str(REPO_ROOT / "data/offres/liste.json")
-DEFAULT_OUTPUT_DIR = str(REPO_ROOT / "data/offres/raw")
+DEFAULT_LIST_PATH = str(REPO_ROOT / "engines/engines/engines/data/offres/liste.json")
+DEFAULT_OUTPUT_DIR = str(REPO_ROOT / "engines/engines/engines/data/offres/raw")
 DEFAULT_HTML_DIR = None
 DEFAULT_REPORT_PATH = None
 REQUEST_HEADERS = {
@@ -190,7 +190,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--sync",
         action="store_true",
-        help="Synchronise data/offres/liste.json à partir de data/offres/liste.md avant le scraping.",
+        help="Synchronise engines/data/offres/liste.json à partir de engines/data/offres/liste.md avant le scraping.",
     )
     return parser.parse_args()
 
@@ -656,8 +656,8 @@ def main() -> int:
 
     # Sync JSON from Markdown if requested
     if getattr(args, "sync", False):
-        md_src = REPO_ROOT / "data/offres/liste.md"
-        json_dst = REPO_ROOT / "data/offres/liste.json"
+        md_src = REPO_ROOT / "engines/engines/engines/data/offres/liste.md"
+        json_dst = REPO_ROOT / "engines/engines/engines/data/offres/liste.json"
         if md_src.exists():
             print(f"Sync: {md_src.name} -> {json_dst.name}")
             raw_entries = parse_markdown_entries(md_src)

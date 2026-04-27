@@ -1,0 +1,61 @@
+# squid theme - vertical blue glass style
+
+# Global Property
+title-text: ""
+desktop-image: "background-1920.png"
+desktop-color: "#08111f"
+terminal-font: "Terminus Regular 18"
+terminal-box: "terminal_box_*.png"
+terminal-left: "0"
+terminal-top: "0"
+terminal-width: "100%"
+terminal-height: "100%"
+terminal-border: "0"
+
+# Vertical centered boot menu
++ boot_menu {
+  left = 18%
+  top = 14%
+  width = 32%
+  height = 70%
+
+  item_font = "DejaVu Sans Regular 32"
+  item_color = "#f5fbff"
+  selected_item_color = "#001321"
+
+  icon_width = 80
+  icon_height = 80
+  item_icon_space = 26
+
+  item_height = 88
+  item_padding = 12
+  item_spacing = 12
+
+  selected_item_pixmap_style = "select_*.png"
+
+  # Menu holds the scrollbar
+  menu_pixmap_style = "menu_*.png"
+  scrollbar = true
+  scrollbar_width = 18
+  scrollbar_thumb = "scrollbar_thumb_*.png"
+}
+
++ image {
+  top = 100%-58
+  left = 50%-240
+  width = 480
+  height = 42
+  file = "info-1920.png"
+}
+
+# Countdown
++ label {
+  top = 88%
+  left = 18%
+  width = 32%
+  align = "center"
+  id = "__timeout__"
+  text = "Booting in %d seconds"
+  color = "#d9f3ff"
+  font = "DejaVu Sans Regular 24"
+}

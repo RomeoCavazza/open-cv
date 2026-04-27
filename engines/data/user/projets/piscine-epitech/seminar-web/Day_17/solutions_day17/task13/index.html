@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Task 13</title>
+  <link rel="stylesheet" href="../style.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="wrapper">
+    <div class="exercice">
+      <header>
+          13
+      </header>
+      <section>
+        <p>
+          This task is a direct follow-up to the previous one.
+        </p>
+        <p>
+          Implement a form that will be used to perform searches amongst the created items. The form should have a dropdown, a "search" button and a "reset" button.
+        </p>
+        <p>
+          You only need to handle search by types, using a dropdown input with three options. Search by words will be implemented later.
+        </p>
+        <p>
+          While searching for "email", only the corresponding elements remain visible. The others (note and todo) are not deleted. They are shown again when the search is reset. The same goes for the other options.
+        </p>
+      </section>
+      <footer>
+        <div>
+          <form id="taskForm">
+            <input type="text" id="taskInput" placeholder="Enter task" required>
+            <select id="taskType">
+              <option value="note">note</option>
+              <option value="email">email</option>
+              <option value="todo">todo</option>
+            </select>
+            <button type="submit">Add</button>
+          </form>
+          
+          <form id="searchForm">
+            <select id="searchType">
+              <option value="note">note</option>
+              <option value="email">email</option>
+              <option value="todo">todo</option>
+            </select>
+            <button type="submit">Search</button>
+            <button type="button" id="resetBtn">Reset</button>
+          </form>
+          
+          <ul id="taskList"></ul>
+        </div>
+      </footer>
+    </div>
+    <nav>
+      <a href="../task12/index.html" class="btn prev">
+        &larr; Previous Task
+      </a>
+    </nav>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>
+
+

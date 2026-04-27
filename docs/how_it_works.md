@@ -5,20 +5,20 @@ Ce document décrit l'organisation des fichiers et les processus de génération
 ## Organisation du Dépôt
 
 ### 1. Données Utilisateur
-- `/data/user/profile.md` : Profil de référence contenant l'identité, l'historique et les compétences.
-- `/data/user/projets/` : Dossiers Markdown détaillant les réalisations techniques.
+- `/engines/data/user/profile.md` : Profil de référence contenant l'identité, l'historique et les compétences.
+- `/engines/data/user/projets/` : Dossiers Markdown détaillant les réalisations techniques.
 - `/docs/` : Documentation technique et guides d'utilisation.
 
 ### 2. Candidatures & Offres
-- `/data/offres/liste.json` : Index des offres cibles.
-- `/data/offres/raw/` : Texte brut des offres d'emploi au format Markdown.
+- `/engines/data/offres/liste.json` : Index des offres cibles.
+- `/engines/data/offres/raw/` : Texte brut des offres d'emploi au format Markdown.
 
 ### 3. Interface de Rendu Web
 - `/engines/web/` : Interface de visualisation dynamique.
-    - Le dashboard (`index.html`) charge les fichiers JSON depuis `/data/instances/` via le paramètre `id`.
-    - `/engines/web/data/` : Point d'accès (liens symboliques) vers le dossier `/data`.
+    - Le dashboard (`index.html`) charge les fichiers JSON depuis `/engines/data/instances/` via le paramètre `id`.
+    - `/engines/web/data/` : Point d'accès (liens symboliques) vers le dossier `/engines/data`.
 - `/engines/output/` : Emplacement des fichiers exportés.
-- `/data/templates/` : Modèles JSON servant de base à la création de nouvelles instances.
+- `/engines/data/templates/` : Modèles JSON servant de base à la création de nouvelles instances.
 
 ---
 

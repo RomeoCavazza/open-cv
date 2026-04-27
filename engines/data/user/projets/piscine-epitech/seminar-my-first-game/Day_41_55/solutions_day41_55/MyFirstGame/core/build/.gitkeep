@@ -1,0 +1,3 @@
+# Ce fichier permet de rendre le dossier build/ visible dans Git
+# Les fichiers de build ne sont pas versionnés, mais le dossier doit être visible
+

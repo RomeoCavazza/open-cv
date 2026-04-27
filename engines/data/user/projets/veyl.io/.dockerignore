@@ -1,0 +1,20 @@
+# Frontend only
+apps/frontend/
+node_modules/
+pnpm-lock.yaml
+
+# Git
+.git/
+.gitignore
+
+# Documentation
+README.md
+*.md
+
+# Other
+.DS_Store
+*.log
+
+# N'IGNORER PAS start.sh (nécessaire pour Railway)
+!start.sh
+!apps/backend/start.sh

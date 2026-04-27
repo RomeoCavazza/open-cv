@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="fr">
+    
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="CodingPedia — Accueil: encyclopédie collaborative des technologies PHP et SQL avec articles, exemples et ressources.">
+    <link rel="stylesheet" href="codingpedia.css">
+    <title>CodingPedia — Accueil</title>
+</head>
+
+<body>
+
+    <header class="box">
+        <h1>Welcome to CodingPedia!</h1>
+    </header>
+
+    <main class="box">
+        <p>CodingPedia is a collective encyclopedia project on the Internet aiming to be universal and multi-lingual
+        which functions as a wiki.</p>
+        <p>CodingPedia has for goal to offer freely reusable objective and verifiable content that anyone can modify
+        and improve.</p>
+        
+        <article>
+            <h3>Formulaire</h3>
+            <form>
+                <label for="lname">Name: </label><br>
+                <input type="text" id="lname" name="lname" required><br><br>
+                
+                <label for="fname">First name: </label><br>
+                <input type="text" id="fname" name="fname" required><br><br>
+                
+                <label for="email">Email: </label><br>
+                <input type="email" id="email" name="email" required><br><br>
+            
+                <label for="age">Age: </label><br>
+                <input type="number" id="age" name="age" min="3" max="99"><br><br>
+                
+                <label for="phone">Phone number: </label><br>
+                <input type="tel" id="phone" name="phone" pattern="[0-9]{10}" minlength="10" maxlength="10"><br><br>
+
+                <fieldset>
+                    <legend>Sex</legend>
+                    <input type="radio" id="sex-male" name="sex" value="male" checked>
+                    <label for="sex-male">Male</label>
+                    <input type="radio" id="sex-female" name="sex" value="female">
+                    <label for="sex-female">Female</label>
+                </fieldset>
+                <br>
+                
+                <label for="favcolor">Select your hair color: </label>
+                <input type="color" id="favcolor" name="favcolor" value="#000000"><br><br>
+                
+                <label for="date">Select the date: </label>
+                <input type="date" id="date" name="date" value="2025-09-23" required><br><br>
+                
+                <label for="techno">Choose a technology: </label>
+                <select name="techno" id="techno">
+                    <option value="PHP">PHP</option>
+                    <option value="SQL">SQL</option>
+                </select><br><br>
+
+                <label for="question">Question:</label><br>
+                <textarea id="question" name="question" required></textarea><br><br>
+                <input type="submit" value="Submit">
+            </form> 
+        </article>
+
+</main>
+
+    <aside class="box">
+        <h4>About Me</h4>
+        <p>Issu d’un parcours en communication et actuellement en formation intensive à EPITECH, je recherche un stage de 6 mois à partir de janvier 2026 
+        dans le cadre du Pré-Master of Science EPITECH (rythme : 2 semaines école / 4 semaines entreprise).</p>
+        <p>Mon objectif est de contribuer à la transformation digitale des organisations, en mettant à profit mes compétences sur l’IA, 
+        les solutions SaaS et l’innovation numérique, au service de projets concrets à fort impact.</p>
+    </aside>
+
+    <footer class="box">
+        <address>CAVAZZA Roméo<br>88TER Avenue Parmentier<br>06 99 25 67 58</address>
+    </footer>
+
+</body>
+</html>

@@ -1,0 +1,10 @@
+# Jenkins runtime
+jenkins_home/
+work/
+logs/
+
+# Fichiers sensibles
+.env
+
+# Divers
+*.log

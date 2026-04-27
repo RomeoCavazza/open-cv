@@ -1,0 +1,30 @@
+.note {
+  border: 2px solid blue;
+  padding: 5px;
+  margin: 5px 0;
+}
+
+.email {
+  border: 2px solid green;
+  padding: 5px;
+  margin: 5px 0;
+}
+
+.todo {
+  border: 2px solid red;
+  padding: 5px;
+  margin: 5px 0;
+}
+
+#searchForm {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #ccc;
+}
+
+#searchText {
+  padding: 5px;
+  margin-right: 5px;
+}
+
+

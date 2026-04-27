@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Task 14</title>
+  <link rel="stylesheet" href="../style.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="wrapper">
+    <div class="exercice">
+      <header>
+          14
+      </header>
+      <section>
+        <p>
+          Upgrade your search feature to allow an user to search for any string contained in the elements (case insensitively). For instance, searching for "rick" should display items like an email from "rick@sanchez.com", a todo "Trick Patrick and Derrick with some bricks", a note "Awesome list of real pricks"...
+        </p>
+        <p>
+          Add the possibility to combine search with words and types, such as: note containing "rick", todo containing "trick", email not containing "rick"...
+        </p>
+      </section>
+      <footer>
+        <div>
+          <form id="taskForm">
+            <input type="text" id="taskInput" placeholder="Enter task" required>
+            <select id="taskType">
+              <option value="note">note</option>
+              <option value="email">email</option>
+              <option value="todo">todo</option>
+            </select>
+            <button type="submit">Add</button>
+          </form>
+          
+          <form id="searchForm">
+            <input type="text" id="searchText" placeholder="Search text (optional)">
+            <select id="searchType">
+              <option value="">All types</option>
+              <option value="note">note</option>
+              <option value="email">email</option>
+              <option value="todo">todo</option>
+            </select>
+            <button type="submit">Search</button>
+            <button type="button" id="resetBtn">Reset</button>
+          </form>
+          
+          <ul id="taskList"></ul>
+        </div>
+      </footer>
+    </div>
+    <nav>
+      <a href="../task13/index.html" class="btn prev">
+        &larr; Previous Task
+      </a>
+    </nav>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>
+
+

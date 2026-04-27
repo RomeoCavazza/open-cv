@@ -1,0 +1,41 @@
+@startuml flake-outputs
+!theme plain
+skinparam backgroundColor #0d1117
+skinparam defaultFontColor #c9d1d9
+skinparam arrowColor #94e2d5
+skinparam borderColor #30363d
+skinparam shadowing false
+
+skinparam rectangle {
+  BackgroundColor #161b22
+  BorderColor #30363d
+  FontColor #c9d1d9
+}
+skinparam package {
+  BackgroundColor #0d1117
+  BorderColor #30363d
+  FontColor #94e2d5
+}
+
+package "Flake Inputs (10)" {
+  rectangle "nixpkgs unstable\nnixpkgs-stable 24.11\nhome-manager" as base
+  rectangle "hyprland v0.54.2\nhyprspace  hyprland-plugins\nhyprtasking" as hypr
+  rectangle "sops-nix  rust-overlay\nnix-snapd" as tools
+}
+
+rectangle "flake.nix" as flake
+
+package "nixosConfigurations.nixos" {
+  rectangle "configuration.nix\n+ 10 system modules\n+ hardware-configuration.nix" as sys
+  rectangle "home-manager inline\nhome/tco/home.nix\n+ 3 app modules" as hm
+  rectangle "sops-nix\nsecrets decryption\nat activation" as sops
+}
+
+base --> flake
+hypr --> flake
+tools --> flake
+flake --> sys
+flake --> hm
+flake --> sops
+
+@enduml

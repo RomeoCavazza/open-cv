@@ -1,0 +1,165 @@
+@startuml objects
+
+interface Collectible {
+    + collect(by: Wormy): void
+}
+
+' Interfaces définies dans entities.puml (déclaration pour référence)
+interface Eatable
+interface Spawnable
+interface Despawnable
+
+abstract class Item {
+    ' Item hérite d'Entity pour avoir id, position, update
+    - collected: boolean
+    + spawn(at: Vector2): void
+    + collect(by: Wormy): void
+}
+
+abstract class Food {
+    - name: String
+    - hungerPoints: int
+    - value: int
+    - sprite: String
+    + restore(target: Wormy): void
+}
+
+class Soda {
+    + apply(target: Wormy): void
+}
+
+class Frites {
+    + apply(target: Wormy): void
+}
+
+class Burger {
+    + apply(target: Wormy): void
+}
+
+class Diamond {
+    - value: int
+    - rarity: String
+    + grantSuper(wormState: WormState): void
+}
+
+class Shovel {
+    - active: boolean
+    - effectDuration: float
+    - value: int
+    + activate(): void
+    + deactivate(): void
+    + dig(tile: Tile): void
+}
+
+class Gun {
+    - damage: int
+    - fireRate: float
+    - lastShotTime: float
+    - owner: Wormy
+    + shoot(direction: Vector2): Projectile
+}
+
+class Projectile {
+    - speed: float
+    - direction: Vector2
+    - damage: int
+    - active: boolean
+    + launch(from: Vector2): void
+    + move(delta: float): void
+    + hit(target: Enemy): void
+    ' Projectile hérite d'Entity donc a déjà id, position, update
+}
+
+class Timer {
+    - startTime: float
+    - duration: float
+    - running: boolean
+    - finished: boolean
+    + start(duration: float): void
+    + stop(): void
+    + restart(): void
+    + tick(delta: float): void
+    + getElapsedTime(): float
+    + isExpired(): boolean
+}
+
+class ComboManager {
+    - timer: Timer
+    - wormState: WormState
+    - sodaConsumed: boolean
+    - fritesConsumed: boolean
+    - burgerConsumed: boolean
+    + register(food: Food): void
+    + isComboActive(): boolean
+    + grantEvolution(state: WormState): void
+    + checkCombo(): void
+    + reset(): void
+}
+
+class Scoreboard {
+    - currentScore: int
+    - highScore: int
+    - maxCombo: int
+    - comboMultiplier: float
+    - lastUpdateTime: float
+    - entries: List<ScoreEntry>
+    + add(entry: ScoreEntry): void
+    + increase(points: int, source: String): void
+    + top(n: int): List<ScoreEntry>
+    + reset(): void
+    + persist(storage: ScoreStorage): void
+}
+
+class ScoreEntry {
+    + playerName: String
+    + points: int
+    + source: String
+    + timestamp: float
+    + timeSurvived: int
+    + maxEvolution: String
+}
+
+interface ScoreStorage {
+    + load(): List<ScoreEntry>
+    + save(entries: List<ScoreEntry>): void
+}
+
+' Item hérite d'Entity pour position, id, update
+Entity <|-- Item
+
+Item <|-- Food
+Item <|-- Diamond
+Item <|-- Shovel
+Item <|-- Gun
+
+Food <|-- Soda
+Food <|-- Frites
+Food <|-- Burger
+
+' Projectile hérite aussi d'Entity pour avoir position, collision, etc.
+Entity <|-- Projectile
+
+Food ..|> Collectible
+Food ..|> Eatable
+Food ..|> Despawnable
+Diamond ..|> Collectible
+Diamond ..|> Spawnable
+Diamond ..|> Despawnable
+Shovel ..|> Collectible
+Gun ..|> Collectible
+
+ComboManager "1" --> "1" Timer
+ComboManager --> Food : checks
+ComboManager --> WormState : evolves
+
+Scoreboard "1" *-- "*" ScoreEntry
+Scoreboard --> ScoreStorage : persists
+Scoreboard "1" --> "1" Player : tracks
+' Scoreboard écoute les événements de dégâts et nourriture
+
+Diamond --> WormState : grants super
+Shovel --> Tile : digs
+Gun --> Projectile : shoots
+Gun "1" --> "1" Wormy : owner
+
+@enduml

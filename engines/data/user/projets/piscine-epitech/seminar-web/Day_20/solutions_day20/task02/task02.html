@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Task 02 – Email validation</title>
+  <link href="../../assets/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+
+  <div class="container mt-5">
+    <h1>Task 02</h1>
+
+    <form id="userForm">
+      <input type="text" name="name" class="form-control mb-2" placeholder="Enter your name">
+      <input type="email" name="email" class="form-control mb-3" placeholder="Enter your email">
+      <button type="submit" class="btn btn-primary">Send</button>
+    </form>
+
+    <div id="alert-container" class="mt-3"></div>
+  </div>
+
+  <script src="../../assets/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script>
+    document.getElementById("userForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const formData = new URLSearchParams(new FormData(e.target));
+      const alertBox = document.getElementById("alert-container");
+
+      try {
+        const res = await fetch("task02.php", { method: "POST", body: formData });
+        const text = await res.text();
+        const data = JSON.parse(text);
+
+        if (!res.ok) throw new Error(data.message);
+        alertBox.innerHTML = `<div class="alert alert-success" role="alert">${data.message}</div>`;
+      } catch (err) {
+        alertBox.innerHTML = `<div class="alert alert-danger" role="alert">${err.message || "Invalid request."}</div>`;
+      }
+    });
+  </script>
+</body>
+</html>

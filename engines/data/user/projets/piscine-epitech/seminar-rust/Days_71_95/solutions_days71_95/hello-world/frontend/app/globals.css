@@ -1,0 +1,120 @@
+
+@import "tailwindcss";
+
+/* ============================================
+   HELLO WORLD RTC - Design System
+   Palette: Noir / Bleu cyan (#4fdfff) / Rouge (#ff3333)
+   ============================================ */
+
+:root {
+  --color-bg-dark: #0a0a0a;
+  --color-bg-panel: rgba(10, 15, 20, 0.85);
+  --color-border: #4fdfff;
+  --color-border-dim: rgba(79, 223, 255, 0.3);
+  --color-accent: #4fdfff;
+  --color-accent-red: #ff3333;
+  --color-text: #ffffff;
+  --color-text-dim: rgba(255, 255, 255, 0.6);
+  --color-text-muted: rgba(255, 255, 255, 0.4);
+}
+
+@layer base {
+  html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background: var(--color-bg-dark);
+    color: var(--color-text);
+    font-family: Arial, Helvetica, sans-serif;
+  }
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.3);
+  }
+  ::-webkit-scrollbar-thumb {
+    background-color: var(--color-accent);
+    border-radius: 3px;
+  }
+}
+
+@layer components {
+  .panel {
+    background: var(--color-bg-panel);
+    border: 2px solid var(--color-border);
+    backdrop-filter: blur(8px);
+  }
+  .btn-action {
+    padding: 10px 16px;
+    background: #a00000;
+    border: 2px solid var(--color-border);
+    color: white;
+    font-weight: bold;
+    font-size: 13px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-action:hover {
+    background: #c00000;
+    box-shadow: 0 0 15px rgba(79, 223, 255, 0.6);
+  }
+  .input-field {
+    width: 100%;
+    padding: 12px;
+    background: rgba(20, 20, 20, 0.9);
+    border: 2px solid var(--color-border);
+    color: white;
+    font-weight: bold;
+    outline: none;
+  }
+  .input-field::placeholder {
+    color: var(--color-text-muted);
+    font-style: italic;
+  }
+  .input-field:focus {
+    box-shadow: 0 0 12px rgba(79, 223, 255, 0.5);
+  }
+  .section-title {
+    font-size: 12px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--color-accent);
+  }
+  .btn-primary {
+    @apply bg-[#a00000] border-2 border-[#4fdfff] text-white font-bold hover:bg-[#c00000] hover:shadow-[0_0_12px_rgba(79,223,255,0.8)] transition-all disabled:opacity-50 disabled:cursor-not-allowed rounded-lg px-4 py-2;
+  }
+  .btn-secondary {
+    @apply bg-[#5865f2] text-white font-medium hover:bg-[#4752c4] transition-colors disabled:opacity-50 rounded-lg px-4 py-2;
+  }
+  .btn-danger {
+    @apply text-[#ff3333] hover:bg-[#ff3333]/20 transition-colors rounded-lg px-2 py-2;
+  }
+  .btn-ghost {
+    @apply bg-[#4e5058] text-white font-medium hover:bg-[#6d6f78] transition-colors rounded-lg px-4 py-2;
+  }
+  .input-unified {
+    @apply w-full p-3 rounded-lg border-2 border-[#4fdfff]/50 bg-[#1f1f1f] text-white placeholder-white/50 outline-none focus:border-[#4fdfff] focus:shadow-[0_0_10px_rgba(79,223,255,0.3)] transition-all;
+  }
+  .panel-cyberpunk {
+    @apply bg-[rgba(20,20,20,0.85)] backdrop-blur-[12px] rounded-xl shadow-[0_20px_60px_rgba(0,0,0,0.5)];
+  }
+  .panel-card {
+    @apply bg-[#232428] rounded-lg overflow-hidden shadow-2xl;
+  }
+  .panel-card-dark {
+    @apply bg-[#111214] rounded-lg;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}

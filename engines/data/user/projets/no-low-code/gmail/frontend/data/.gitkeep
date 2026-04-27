@@ -1,0 +1,3 @@
+# Ce fichier force Git à créer le répertoire data/
+# Le fichier mails-today.json sera généré automatiquement par le workflow n8n
+

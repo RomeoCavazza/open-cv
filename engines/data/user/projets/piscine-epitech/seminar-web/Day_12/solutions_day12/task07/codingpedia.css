@@ -1,0 +1,74 @@
+.box {
+    background: #fff;
+    border: 2px solid #000;
+    margin: 10px;
+    padding: 0 10px;
+}
+
+body {
+    background-color: rgb(203, 203, 203);
+    display: flex;           
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+header {
+    display: grid;
+    grid-template-columns: 5fr 1fr; 
+    align-items: center;
+    flex: 0 0 100%;
+    gap: 10px;
+}
+
+header h1 {
+    margin: 0;
+}
+
+header nav {
+    justify-self: end;
+}
+
+main  { 
+    flex: 0 0 70%; 
+}
+
+aside { 
+    flex: 0 0 20%;
+}
+
+footer { 
+    flex: 0 0 100%; 
+}
+
+.moving_square {
+    width: 100px;
+    height: 100px;
+    background-color: red;
+    position: absolute;
+    top: 50px;
+    left: 50px;
+    animation: square-cycle 5s ease-in-out 5 forwards;
+}
+
+@keyframes square-cycle {
+    0% { 
+        transform: translate(0, 0); 
+        background-color: red; 
+    }
+    25% { 
+        transform: translate(0, 300px); 
+        background-color: green; 
+    }
+    50% { 
+        transform: translate(300px, 300px); 
+        background-color: blue; 
+    }
+    75% { 
+        transform: translate(300px, 0); 
+        background-color: yellow; 
+    }
+    100% { 
+        transform: translate(0, 0); 
+        background-color: red; 
+    }
+}

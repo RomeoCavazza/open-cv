@@ -5,16 +5,16 @@ Ce document définit les protocoles et les règles de gestion des données pour 
 ## Protocole de Prise de Contexte
 L'agent doit consulter les fichiers dans l'ordre suivant :
 1. **`README.md`** : Vue d'ensemble de l'architecture.
-2. **`/data/user/profile.md`** : Données personnelles de référence.
+2. **`/engines/data/user/profile.md`** : Données personnelles de référence.
 3. **`/docs/how_it_works.md`** : Détails techniques sur le fonctionnement des scripts.
-4. **`/data/offres/liste.json`** : Liste des cibles de candidature.
-5. **`/data/instances/`** : Dossiers de travail pour chaque candidature.
+4. **`/engines/data/offres/liste.json`** : Liste des cibles de candidature.
+5. **`/engines/data/instances/`** : Dossiers de travail pour chaque candidature.
 
 ---
 
 ## Mission 1 : Collecte d'Offres
 1. Extraire le contenu textuel des offres (descriptions, prérequis).
-2. Sauvegarder chaque offre au format Markdown dans `/data/offres/raw/`.
+2. Sauvegarder chaque offre au format Markdown dans `/engines/data/offres/raw/`.
 
 ---
 
@@ -41,4 +41,4 @@ L'agent doit consulter les fichiers dans l'ordre suivant :
 ## Critères de Validation
 - **Sobriété** : Vérifier l'absence de jargon "Startup" ou de termes marketing vides.
 - **Densité** : Le document doit être aéré mais techniquement dense.
-- **Sources** : Toujours utiliser `/data/user/profile.md` comme source de vérité unique.
+- **Sources** : Toujours utiliser `/engines/data/user/profile.md` comme source de vérité unique.

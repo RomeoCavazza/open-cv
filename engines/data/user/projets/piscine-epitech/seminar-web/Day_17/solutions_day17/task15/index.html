@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Task 15</title>
+  <link rel="stylesheet" href="../style.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="wrapper">
+    <div class="exercice">
+      <header>
+          15
+      </header>
+      <section>
+        <p>
+          This task is a direct follow-up to the previous one.
+        </p>
+        <p>
+          Finally, make it possible to add tags to an element of the list. The tags must be displayed, and it should be possible to:
+        </p>
+        <ul>
+          <li>add multiple tags to the same element, even after its creation;</li>
+          <li>search for tags;</li>
+          <li>search for types of elements simultaneously, such as: email and todo containing "rick" or "trick" with tag "urgent", note or todo containing "rick" with tag "urgent" and no tag "done"</li>
+        </ul>
+        <p>
+          If you've gotten this far, congratulations! You now have a basic item list with a search engine. All done in HTML, CSS and Javascript.
+        </p>
+      </section>
+      <footer>
+        <div>
+          <form id="taskForm">
+            <input type="text" id="taskInput" placeholder="Enter task" required>
+            <select id="taskType">
+              <option value="note">note</option>
+              <option value="email">email</option>
+              <option value="todo">todo</option>
+            </select>
+            <button type="submit">Add Task</button>
+          </form>
+          
+          <form id="searchForm">
+            <input type="text" id="searchText" placeholder="Search text (optional)">
+            <select id="searchType">
+              <option value="">All types</option>
+              <option value="note">note</option>
+              <option value="email">email</option>
+              <option value="todo">todo</option>
+            </select>
+            <input type="text" id="searchTags" placeholder="Search tags (optional)">
+            <button type="submit">Search</button>
+            <button type="button" id="resetBtn">Reset</button>
+          </form>
+          
+          <ul id="taskList"></ul>
+        </div>
+      </footer>
+    </div>
+    <nav>
+      <a href="../task14/index.html" class="btn prev">
+        &larr; Previous Task
+      </a>
+    </nav>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>
+
+

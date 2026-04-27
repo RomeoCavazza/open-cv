@@ -1,0 +1,446 @@
+@startuml
+skinparam classAttributeIconSize 0
+hide circle
+
+class Pie {
+  -{static} SHEET_COLUMNS: int = 9
+  -{static} SHEET_ROWS: int = 6
+  -{static} FRAME_SIZE: int = 64
+  -{static} PATROL_WIDTH: float = 240f
+  -{static} PATROL_SPEED_X: float = 100f
+  -{static} ORIGIN_FOLLOW_SMOOTH: float = 2.0f
+  -{static} DIVE_SPEED: float = 90f
+  -{static} DIVE_COOLDOWN: float = 2.5f
+  -{static} DIVE_TRIGGER_DISTANCE: float = 220f
+  -{static} DIVE_IMPACT_RADIUS: float = 32f
+  -{static} DIVE_DAMAGE: int = 7
+  -{static} RECOVER_SPEED: float = 150f
+  -{static} MIN_ALTITUDE_BUFFER: float = 48f
+  -{static} SKY_OFFSET: float = 220f
+  -target: Player
+  -origin: Vector2
+  -flyAnimation: Animation
+  -diveAnimation: Animation
+  -sprite: Sprite
+  -surfaceLevel: float
+  -tempVec: Vector2 = new Vector2()
+  -diveTarget: Vector2 = new Vector2()
+  -state: State = State.PATROL
+  -cooldownTimer: float = 0f
+  -timeAtGrassLevel: float = 0f
+  -lastX: float
+  -minAltitude: float
+  -hoverAltitude: float
+  -patrolDirection: int = 1
+  --
+  +Pie(assets: Assets, spawnPosition: Vector2, target: Player, surfaceLevel: float)
+  +update(delta: float): void
+  +draw(batch: SpriteBatch): void
+  -updatePatrol(delta: float): void
+  -updateDive(delta: float): void
+  -updateRecover(delta: float): void
+  -applyDiveImpact(): void
+  -updateSprite(delta: float): void
+  -sliceRow(regions: TextureRegion[][], row: int, startColumn: int, frameCount: int): TextureRegion[]
+  +render(batch: SpriteBatch): void
+}
+
+abstract class Enemy {
+  #health: Health
+  +Enemy()
+  +Enemy(x: float, y: float)
+  +move(): void
+  +takeDamage(amount: int): void
+  +isDead(): boolean
+  +getHealth(): Health
+  +render(batch: SpriteBatch): void
+}
+
+class Spider {
+  -{static} WALK_FPS: float = 12f
+  -{static} MOVE_SPEED: float = 85f
+  -{static} ATTACK_RANGE: float = 36f
+  -{static} ATTACK_COOLDOWN: float = 1.25f
+  -{static} ATTACK_DAMAGE: int = 4
+  -{static} REPATH_INTERVAL: float = 0.35f
+  -{static} TEXTURE_NAME: String = "spider.png"
+  -{static} HITBOX_SCALE: float = 0.6f
+  +Spider(assets: Assets, spawnPosition: Vector2, target: Player, surfaceLevel: float, map: Map, collisionLayer: String)
+  #getMoveSpeed(): float
+  #getAttackRange(): float
+  #getAttackCooldown(): float
+  #getAttackDamage(): int
+  #getRepathInterval(): float
+  #getTextureName(): String
+  #getAnimationFPS(): float
+}
+
+class Ant {
+  -{static} WALK_FPS: float = 10f
+  -{static} MOVE_SPEED: float = 95f
+  -{static} ATTACK_DISTANCE: float = 42f
+  -{static} ATTACK_COOLDOWN: float = 1.3f
+  -{static} ATTACK_DAMAGE: int = 3
+  -{static} REPATH_INTERVAL: float = 0.4f
+  -{static} TEXTURE_NAME: String = "ant.png"
+  -{static} HITBOX_SCALE: float = 0.6f
+  +Ant(assets: Assets, spawnPosition: Vector2, target: Player, surfaceLevel: float, map: Map, collisionLayer: String)
+  #getMoveSpeed(): float
+  #getAttackRange(): float
+  #getAttackCooldown(): float
+  #getAttackDamage(): int
+  #getRepathInterval(): float
+  #getTextureName(): String
+  #getAnimationFPS(): float
+}
+
+abstract class SurfaceEnemy {
+  +{static} SHEET_COLUMNS: int = 3
+  +{static} SHEET_ROWS: int = 4
+  #{static} STUCK_THRESHOLD: float = 0.15f
+  #{static} UNSTUCK_DISTANCE_SMALL: float = 8f
+  #{static} UNSTUCK_DISTANCE_MEDIUM: float = 16f
+  #{static} UNSTUCK_DISTANCE_LARGE: float = 32f
+  #target: Player
+  #map: Map
+  #collisionLayer: String
+  #pathfinding: Pathfinding
+  #surfaceLevel: float
+  #animation: Animation
+  #sprite: Sprite
+  #currentPath: Path = new Path()
+  #repathTimer: float = 0f
+  #attackTimer: float = 0f
+  #lastPosition: Vector2 = new Vector2()
+  #stuckTimer: float = 0f
+  -tempTargetPos: Vector2 = new Vector2()
+  +SurfaceEnemy(spawnPosition: Vector2, target: Player, surfaceLevel: float, map: Map, collisionLayer: String, animation: Animation, sprite: Sprite)
+  #getMoveSpeed(): float
+  #getAttackRange(): float
+  #getAttackCooldown(): float
+  #getAttackDamage(): int
+  #getRepathInterval(): float
+  #getTextureName(): String
+  #getAnimationFPS(): float
+  #performAttack(target: Player): void
+  #{static} createAnimation(assets: Assets, textureName: String, fps: float): Animation
+  #{static} createSprite(assets: Assets, textureName: String): Sprite
+  #{static} setupHitbox(assets: Assets, textureName: String, enemy: SurfaceEnemy, scale: float): void
+  +update(delta: float): void
+  #getGrassBottom(): float
+  #isInPipe(x: float, y: float): boolean
+  #isAtSurface(): boolean
+  #updatePath(): void
+  #moveAlongPath(delta: float): void
+  #isInCorner(x: float, y: float): boolean
+  #findTunnelCenter(x: float, y: float): Vector2
+  #handleAttack(): void
+  #updateSprite(delta: float): void
+  #isColliding(proposedX: float, proposedY: float): boolean
+  #tryUnstuck(delta: float): void
+  #alignSprite(): void
+  -adjustYForSurfacePosition(x: float, y: float, halfHeight: float): float
+  +render(batch: SpriteBatch): void
+}
+
+class Super {
+  -walkAnimation: Animation
+  -upAnimation: Animation
+  -turnAnimation: Animation
+  -sprite: Sprite
+  -speed: float = 150f
+  -faceLeft: boolean
+  -movingUp: boolean
+  -movingDown: boolean
+  -turningUp: boolean
+  -turningDown: boolean
+  -hasGun: boolean = false
+  -ammo: int = 0
+  -gunSprite: Sprite
+  -gunAngle: float = 0f
+  --
+  +Super()
+  +hasGun(): boolean
+  +setHasGun(hasGun: boolean): void
+  +getAmmo(): int
+  +setAmmo(ammo: int): void
+  +canShoot(): boolean
+  +shoot(): boolean
+  +getGunSprite(): Sprite
+  +setGunSprite(gunSprite: Sprite): void
+  +getGunAngle(): float
+  +setGunAngle(angle: float): void
+  +getSprite(): Sprite
+  +setSprite(sprite: Sprite): void
+  +setWalkAnimation(walkAnimation: Animation): void
+  +setUpAnimation(upAnimation: Animation): void
+  +setTurnAnimation(turnAnimation: Animation): void
+  +setFaceLeft(faceLeft: boolean): void
+  +setMovingUp(movingUp: boolean): void
+  +setMovingDown(movingDown: boolean): void
+  +setTurningUp(turning: boolean): void
+  +setTurningDown(turning: boolean): void
+  +isMovingUp(): boolean
+  +isMovingDown(): boolean
+  +getSpeed(): float
+  +setSpeed(speed: float): void
+  +climb(): void
+  +unleashPower(): void
+  +updateAnimation(delta: float): void
+  +applyWobble(wobbleTime: float): void
+  -updateSpritePosition(): void
+  +update(delta: float): void
+}
+
+class Baby {
+  -walkAnimation: Animation
+  -upAnimation: Animation
+  -turnAnimation: Animation
+  -sprite: Sprite
+  -speed: float
+  -faceLeft: boolean
+  -movingUp: boolean
+  -movingDown: boolean
+  -turningUp: boolean
+  -turningDown: boolean
+  -hungerTimer: float
+  -healthTimer: float
+  --
+  +Baby()
+  +crawl(): void
+  +getSprite(): Sprite
+  +setWalkAnimation(animation: Animation): void
+  +setUpAnimation(animation: Animation): void
+  +setTurnAnimation(animation: Animation): void
+  +setSprite(sprite: Sprite): void
+  +setFaceLeft(faceLeft: boolean): void
+  +isFaceLeft(): boolean
+  +setMovingUp(up: boolean): void
+  +isMovingUp(): boolean
+  +setMovingDown(down: boolean): void
+  +isMovingDown(): boolean
+  +setTurningUp(turning: boolean): void
+  +setTurningDown(turning: boolean): void
+  +getSpeed(): float
+  +updateAnimation(delta: float): void
+  +applyWobble(wobbleTime: float): void
+  -updateSpritePosition(): void
+  +update(delta: float): void
+}
+
+class Adult {
+  -walkAnimation: Animation
+  -upAnimation: Animation
+  -turnAnimation: Animation
+  -sprite: Sprite
+  -speed: float = 120f
+  -faceLeft: boolean
+  -movingUp: boolean
+  -movingDown: boolean
+  -turningUp: boolean
+  -turningDown: boolean
+  -hungerTimer: float
+  -healthTimer: float
+  --
+  +Adult()
+  +getSprite(): Sprite
+  +setSprite(sprite: Sprite): void
+  +setWalkAnimation(walkAnimation: Animation): void
+  +setUpAnimation(upAnimation: Animation): void
+  +setTurnAnimation(turnAnimation: Animation): void
+  +setFaceLeft(faceLeft: boolean): void
+  +setMovingUp(movingUp: boolean): void
+  +setMovingDown(movingDown: boolean): void
+  +setTurningUp(turning: boolean): void
+  +setTurningDown(turning: boolean): void
+  +isMovingUp(): boolean
+  +isMovingDown(): boolean
+  +getSpeed(): float
+  +setSpeed(speed: float): void
+  +updateAnimation(delta: float): void
+  +applyWobble(wobbleTime: float): void
+  -updateSpritePosition(): void
+  +update(delta: float): void
+}
+
+abstract class Wormy {
+  -health: Health
+  -hunger: Hunger
+  -statusEffects: List<StatusEffect>
+  -evolutionState: WormState
+  --
+  +Wormy()
+  +getHealth(): Health
+  +getHunger(): Hunger
+  +getStatusEffects(): List<StatusEffect>
+  +burrow(): void
+  +surface(): void
+  +move(): void
+  +takeDamage(amount: int): void
+  +eat(item: com.irina.myfirstgame.interfaces.Eatable): void
+  +getEvolutionState(): WormState
+  +setEvolutionState(state: WormState): void
+  +getSprite(): Sprite
+  +setSprite(sprite: Sprite): void
+}
+
+class WormState {
+  -ateBurger: boolean
+  -ateFrites: boolean
+  -ateSoda: boolean
+  -current: Wormy
+  --
+  +WormState()
+  +evolveTo(state: Wormy): void
+  +getCurrent(): Wormy
+  +hasCurrent(): boolean
+  +registerFood(foodName: String): void
+  -checkEvolution(): boolean
+  +hasEvolvedToAdult(): boolean
+  +hasAteBurger(): boolean
+  +hasAteFrites(): boolean
+  +hasAteSoda(): boolean
+  +resetCombo(): void
+}
+
+class Player {
+  +{static} COLLISION_MARGIN_X: float = 6f
+  +{static} COLLISION_MARGIN_Y: float = 6f
+  -name: String
+  -worm: WormState
+  -inputController: InputController
+  -speed: float
+  -width: float
+  -height: float
+  -{static} ZERO_VELOCITY: Vector2 = new Vector2(0, 0)
+  --
+  +Player()
+  +getName(): String
+  +setName(name: String): void
+  +setInputController(inputController: InputController): void
+  +getWorm(): WormState
+  +handleInput(delta: float): void
+  +update(delta: float): void
+  +eat(item: Eatable): void
+  +getPosition(): Vector2
+  +setPosition(x: float, y: float): void
+  +getWidth(): float
+  +setWidth(width: float): void
+  +getHeight(): float
+  +setHeight(height: float): void
+  +getVelocity(): Vector2
+}
+
+abstract class Entity {
+  -id: UUID
+  -position: Vector2
+  -velocity: Vector2
+  -width: float
+  -height: float
+  --
+  +Entity()
+  +Entity(x: float, y: float)
+  +update(delta: float): void
+  +getPosition(): Vector2
+  +setPosition(x: float, y: float): void
+  +setPosition(pos: Vector2): void
+  +getVelocity(): Vector2
+  +setVelocity(x: float, y: float): void
+  +getWidth(): float
+  +setWidth(width: float): void
+  +getHeight(): float
+  +setHeight(height: float): void
+  +getId(): UUID
+  +onCollision(other: Collidable): void
+  +getState(): String
+}
+
+class Spawner {
+  -{static} BIRD_SKY_OFFSET_MIN: float = 200f
+  -{static} BIRD_SKY_OFFSET_MAX: float = 320f
+  -{static} ANT_HITBOX_SCALE: float = 0.6f
+  -{static} SPIDER_HITBOX_SCALE: float = 0.6f
+  -random: Random = new Random()
+  --
+  +spawnPie(world: World, assets: Assets, target: Player): Enemy
+  +spawnAnt(world: World, assets: Assets, target: Player): Enemy
+  +spawnAntAt(world: World, assets: Assets, target: Player, spawnCell: Vector2): Enemy
+  +spawnSpider(world: World, assets: Assets, target: Player): Enemy
+  +spawnSpiderAt(world: World, assets: Assets, target: Player, spawnCell: Vector2): Enemy
+  -lerp(a: float, b: float, t: float): float
+  +collectDeepDirtCells(world: World, entityWidth: float, entityHeight: float): List<Vector2>
+  +takeRandomDeepCell(cells: List<Vector2>): Vector2
+  -pickFallbackUndergroundPosition(world: World, target: Player, surfaceLevel: float): Vector2
+  -isAreaFree(map: Map, layer: String, centerX: float, centerY: float, halfWidth: float, halfHeight: float): boolean
+  -touchesSolid(map: Map, layer: String, centerX: float, centerY: float, tileWidth: float, tileHeight: float): boolean
+  +computeAntHitboxWidth(assets: Assets): float
+  +computeAntHitboxHeight(assets: Assets): float
+  +computeSpiderHitboxWidth(assets: Assets): float
+  +computeSpiderHitboxHeight(assets: Assets): float
+  -computeHitboxWidth(assets: Assets, textureName: String, scale: float): float
+  -computeHitboxHeight(assets: Assets, textureName: String, scale: float): float
+}
+
+class UUID {
+  -value: String
+  --
+  +UUID()
+  +UUID(value: String)
+  +getValue(): String
+  +toString(): String
+  +equals(obj: Object): boolean
+  +hashCode(): int
+}
+
+class Vector2 {
+  -x: float
+  -y: float
+  --
+  +Vector2()
+  +Vector2(x: float, y: float)
+  +Vector2(other: Vector2)
+  +getX(): float
+  +setX(x: float): void
+  +getY(): float
+  +setY(y: float): void
+  +set(x: float, y: float): void
+  +set(other: Vector2): void
+  +add(x: float, y: float): Vector2
+  +add(other: Vector2): Vector2
+  +scl(scalar: float): Vector2
+  +len(): float
+  +len2(): float
+  +nor(): Vector2
+  +toString(): String
+}
+
+Pie --|> Enemy
+Pie *-- Player
+Pie *-- Vector2
+Enemy --|> Entity
+Spider --|> SurfaceEnemy
+Spider ..> Vector2
+Spider ..> Player
+Ant --|> SurfaceEnemy
+Ant ..> Vector2
+Ant ..> Player
+SurfaceEnemy --|> Enemy
+SurfaceEnemy *-- Player
+SurfaceEnemy --> Vector2
+SurfaceEnemy *-- Vector2
+SurfaceEnemy ..> SurfaceEnemy
+Super --|> Wormy
+Baby --|> Wormy
+Adult --|> Wormy
+Wormy --|> Entity
+Wormy *-- WormState
+WormState *-- Wormy
+Player *-- WormState
+Player *-- Vector2
+Entity *-- UUID
+Entity *-- Vector2
+Spawner ..> Player
+Spawner ..> Enemy
+Spawner ..> Vector2
+Vector2 ..> Vector2
+@enduml

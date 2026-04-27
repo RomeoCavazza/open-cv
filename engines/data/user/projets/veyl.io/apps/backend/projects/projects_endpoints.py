@@ -1,0 +1,946 @@
+# projects/projects_endpoints.py
+import json
+import logging
+import re
+from datetime import datetime, timezone
+
+from fastapi import APIRouter, Depends, HTTPException, Response, status, Query
+from sqlalchemy import text
+from sqlalchemy.orm import Session, joinedload
+from typing import Dict, List, Optional, Set
+from uuid import UUID
+
+from db.base import get_db
+from db.models import (
+    Project,
+    User,
+    ProjectHashtag,
+    ProjectCreator,
+    Hashtag,
+    Platform,
+    Post,
+    PostHashtag,
+    OAuthAccount,
+)
+from auth_unified.auth_endpoints import get_current_user
+from projects.schemas import (
+    ProjectCreate,
+    ProjectUpdate,
+    ProjectResponse,
+    ProjectCreatorCreate,
+    ProjectHashtagCreate,
+    ProjectPostResponse,
+)
+from services.post_utils import search_posts_by_hashtag, ensure_platform, normalize_hashtag, normalize_creator, load_post_payload
+
+logger = logging.getLogger(__name__)
+projects_router = APIRouter(prefix="/api/v1/projects", tags=["projects"])
+
+
+
+
+def _get_project_or_404(db: Session, current_user: User, project_id: str) -> Project:
+    try:
+        project_uuid = UUID(project_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Project ID invalide")
+    project = (
+        db.query(Project)
+        .filter(Project.id == project_uuid, Project.user_id == current_user.id)
+        .first()
+    )
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    return project
+
+
+def _collect_project_posts(
+    db: Session,
+    project: Project,
+    limit: Optional[int] = None,
+    platform_filter: Optional[str] = None,  # 'instagram', 'tiktok', 'facebook', None (all)
+) -> List[Post]:
+    """
+    Collecte les posts d'un projet.
+    Si platform_filter est fourni, filtre par plateforme.
+    """
+    post_map: Dict[str, Post] = {}
+    
+    # Déterminer les platform_ids à filtrer
+    platform_ids = None
+    if platform_filter:
+        platform = db.query(Platform).filter(Platform.name == platform_filter).first()
+        if platform:
+            platform_ids = [platform.id]
+            logger.debug(f"[COLLECT] Filtering by platform: {platform_filter} (platform_id: {platform.id})")
+        elif platform_filter == 'meta':
+            # Meta = Instagram + Facebook
+            meta_platforms = db.query(Platform).filter(Platform.name.in_(['instagram', 'facebook'])).all()
+            platform_ids = [p.id for p in meta_platforms]
+            logger.debug(f"[COLLECT] Filtering by meta platforms: {[p.name for p in meta_platforms]}")
+        else:
+            logger.warning(f"[COLLECT] Platform '{platform_filter}' not found in database")
+
+    creator_links = (
+        db.query(ProjectCreator)
+        .filter(ProjectCreator.project_id == project.id)
+        .all()
+    )
+    usernames = [link.creator_username for link in creator_links]
+    if usernames:
+        query = (
+            db.query(Post)
+            .options(joinedload(Post.platform))
+            .filter(Post.author.in_(usernames))
+        )
+        if platform_ids:
+            query = query.filter(Post.platform_id.in_(platform_ids))
+        query = query.order_by(Post.posted_at.desc().nullslast(), Post.fetched_at.desc().nullslast())
+        if limit:
+            query = query.limit(limit)
+        for post in query.all():
+            post_map[post.id] = post
+
+    hashtag_links = (
+        db.query(ProjectHashtag)
+        .filter(ProjectHashtag.project_id == project.id)
+        .all()
+    )
+    hashtag_ids = [link.hashtag_id for link in hashtag_links]
+    logger.debug(f"[COLLECT] Found {len(hashtag_links)} hashtag links, {len(hashtag_ids)} hashtag_ids")
+    if hashtag_ids:
+        # 1️⃣ Essayer d'abord via PostHashtag (liens explicites)
+        hashtag_query = (
+            db.query(Post)
+            .options(joinedload(Post.platform))
+            .join(PostHashtag, PostHashtag.post_id == Post.id)
+            .filter(PostHashtag.hashtag_id.in_(hashtag_ids))
+        )
+        if platform_ids:
+            hashtag_query = hashtag_query.filter(Post.platform_id.in_(platform_ids))
+            logger.debug(f"[COLLECT] Filtering posts by platform_ids: {platform_ids}")
+        hashtag_query = hashtag_query.order_by(Post.posted_at.desc().nullslast(), Post.fetched_at.desc().nullslast())
+        if limit:
+            hashtag_query = hashtag_query.limit(limit)
+        posts_from_hashtags = hashtag_query.all()
+        logger.info(f"[COLLECT] Found {len(posts_from_hashtags)} posts from hashtags via PostHashtag (platform_filter: {platform_filter})")
+        for post in posts_from_hashtags:
+            post_map[post.id] = post
+            logger.debug(f"  - Post {post.id}: platform={post.platform.name if post.platform else 'None'}, caption={post.caption[:50] if post.caption else 'None'}")
+        
+        # 2️⃣ FALLBACK: Si aucun post trouvé via PostHashtag, chercher directement dans caption/hashtags
+        # (comme dans Search page - fallback DB direct)
+        if len(posts_from_hashtags) == 0:
+            logger.warning(f"[COLLECT] No posts found via PostHashtag, trying direct search in caption/hashtags...")
+            
+            # Récupérer les noms des hashtags
+            hashtags = db.query(Hashtag).filter(Hashtag.id.in_(hashtag_ids)).all()
+            hashtag_names = [h.name for h in hashtags]
+            logger.debug(f"[COLLECT] Searching for posts with hashtags: {hashtag_names}")
+            
+            for hashtag_name in hashtag_names:
+                # Utiliser la fonction partagée pour la recherche (avec filtrage par plateforme)
+                fallback_posts = search_posts_by_hashtag(
+                    db, 
+                    hashtag_name, 
+                    limit=limit or 100,
+                    platform_ids=platform_ids
+                )
+                logger.info(f"[COLLECT] Found {len(fallback_posts)} posts via direct search for #{hashtag_name} (platform_filter: {platform_filter})")
+                
+                for post in fallback_posts:
+                    post_map[post.id] = post
+                    logger.debug(f"  - Post {post.id}: platform={post.platform.name if post.platform else 'None'}, caption={post.caption[:50] if post.caption else 'None'}")
+                    
+                    #  AUTO-LINK: Créer le lien PostHashtag si il n'existe pas
+                    hashtag = next((h for h in hashtags if h.name == hashtag_name), None)
+                    if hashtag:
+                        existing_link = (
+                            db.query(PostHashtag)
+                            .filter(
+                                PostHashtag.post_id == post.id,
+                                PostHashtag.hashtag_id == hashtag.id
+                            )
+                            .first()
+                        )
+                        if not existing_link:
+                            post_hashtag_link = PostHashtag(
+                                post_id=post.id,
+                                hashtag_id=hashtag.id
+                            )
+                            db.add(post_hashtag_link)
+                            logger.debug(f"Auto-linked post {post.id} to hashtag {hashtag.name}")
+            
+            # Commit les auto-links
+            if len(post_map) > len(posts_from_hashtags):
+                try:
+                    db.commit()
+                    logger.info(f"[COLLECT] Auto-linked {len(post_map) - len(posts_from_hashtags)} posts to hashtags")
+                except Exception as e:
+                    logger.exception(f"[COLLECT] Error auto-linking posts: {e}")
+                    db.rollback()
+
+    posts = list(post_map.values())
+
+    def _sort_key(post: Post) -> float:
+        for candidate in (post.posted_at, post.fetched_at):
+            if candidate:
+                if candidate.tzinfo:
+                    return candidate.timestamp()
+                return candidate.replace(tzinfo=timezone.utc).timestamp()
+        return 0.0
+
+    posts.sort(key=_sort_key, reverse=True)
+
+    if limit:
+        return posts[:limit]
+    return posts
+
+
+def _sync_project_metadata(db: Session, project: Project) -> None:
+    creators = (
+        db.query(ProjectCreator)
+        .filter(ProjectCreator.project_id == project.id)
+        .all()
+    )
+
+    hashtag_rows = (
+        db.query(ProjectHashtag, Hashtag)
+        .join(Hashtag, ProjectHashtag.hashtag_id == Hashtag.id)
+        .filter(ProjectHashtag.project_id == project.id)
+        .all()
+    )
+
+    platform_names: Set[str] = set()
+    scope_parts: List[str] = []
+
+    for creator in creators:
+        scope_parts.append(f"@{creator.creator_username}")
+        if creator.platform:
+            platform_names.add(creator.platform.name)
+
+    hashtag_count = 0
+    for _, hashtag in hashtag_rows:
+        hashtag_count += 1
+        scope_parts.append(f"#{hashtag.name}")
+        if hashtag.platform:
+            platform_names.add(hashtag.platform.name)
+
+    posts = _collect_project_posts(db, project)
+
+    project.creators_count = len(creators)
+    if hashtag_count and project.creators_count:
+        project.scope_type = "both"
+    elif hashtag_count:
+        project.scope_type = "hashtags"
+    elif project.creators_count:
+        project.scope_type = "creators"
+    else:
+        project.scope_type = None
+
+    project.scope_query = ", ".join(scope_parts) if scope_parts else None
+    project.platforms = (
+        json.dumps(sorted(platform_names)) if platform_names else json.dumps([])
+    )
+    project.posts_count = len(posts)
+
+
+def _attach_creator(
+    db: Session,
+    project: Project,
+    username: str,
+    platform_name: str,
+) -> ProjectCreator:
+    normalized_username = normalize_creator(username)
+    if not normalized_username:
+        raise HTTPException(status_code=400, detail="Creator username invalide")
+
+    # Normaliser le nom de la plateforme
+    normalized_platform = (platform_name or "").strip().lower()
+    if not normalized_platform:
+        raise HTTPException(status_code=400, detail="Platform invalide")
+    platform = ensure_platform(db, normalized_platform)
+
+    existing = (
+        db.query(ProjectCreator)
+        .filter(
+            ProjectCreator.project_id == project.id,
+            ProjectCreator.platform_id == platform.id,
+            ProjectCreator.creator_username == normalized_username,
+        )
+        .first()
+    )
+    if existing:
+        raise HTTPException(status_code=409, detail="Creator already linked to project")
+
+    creator = ProjectCreator(
+        project_id=project.id,
+        creator_username=normalized_username,
+        platform_id=platform.id,
+    )
+    db.add(creator)
+    return creator
+
+
+def _attach_hashtag(
+    db: Session,
+    project: Project,
+    hashtag_value: str,
+    platform_name: str,
+) -> ProjectHashtag:
+    normalized_name = normalize_hashtag(hashtag_value)
+    if not normalized_name:
+        raise HTTPException(status_code=400, detail="Hashtag invalide")
+
+    # Normaliser le nom de la plateforme
+    normalized_platform = (platform_name or "").strip().lower()
+    if not normalized_platform:
+        raise HTTPException(status_code=400, detail="Platform invalide")
+    platform = ensure_platform(db, normalized_platform)
+
+    hashtag = (
+        db.query(Hashtag)
+        .filter(Hashtag.name == normalized_name, Hashtag.platform_id == platform.id)
+        .first()
+    )
+    if not hashtag:
+        hashtag = Hashtag(name=normalized_name, platform_id=platform.id)
+        db.add(hashtag)
+        db.flush()
+
+    existing = (
+        db.query(ProjectHashtag)
+        .filter(
+            ProjectHashtag.project_id == project.id,
+            ProjectHashtag.hashtag_id == hashtag.id,
+        )
+        .first()
+    )
+    if existing:
+        raise HTTPException(status_code=409, detail="Hashtag already linked to project")
+
+    project_hashtag = ProjectHashtag(project_id=project.id, hashtag_id=hashtag.id)
+    db.add(project_hashtag)
+    
+    #  AUTO-LINK: Chercher les posts qui contiennent ce hashtag sur TOUTES les plateformes
+    posts_with_hashtag = search_posts_by_hashtag(db, normalized_name, limit=100)
+    
+    linked_count = 0
+    platform_counts = {}
+    for post in posts_with_hashtag:
+        # Vérifier si le lien existe déjà
+        existing_link = (
+            db.query(PostHashtag)
+            .filter(
+                PostHashtag.post_id == post.id,
+                PostHashtag.hashtag_id == hashtag.id
+            )
+            .first()
+        )
+        
+        if not existing_link:
+            post_hashtag_link = PostHashtag(
+                post_id=post.id,
+                hashtag_id=hashtag.id
+            )
+            db.add(post_hashtag_link)
+            linked_count += 1
+            
+            # Compter par plateforme
+            platform_name = post.platform.name if post.platform else 'unknown'
+            platform_counts[platform_name] = platform_counts.get(platform_name, 0) + 1
+    
+    if linked_count > 0:
+        platform_summary = ", ".join([f"{count} {platform}" for platform, count in platform_counts.items()])
+        logger.info(f"Auto-linked {linked_count} posts to #{normalized_name} ({platform_summary})")
+        db.flush()  # Commit les liens immédiatement
+    else:
+        logger.warning(f"No posts found with #{normalized_name} in caption")
+    
+    return project_hashtag
+
+
+def serialize_project(project: Project, include_relations: bool = True) -> dict:
+    """Sérialise un projet pour la réponse API"""
+    result = {
+        'id': str(project.id),
+        'user_id': project.user_id,
+        'name': project.name,
+        'description': project.description,
+        'status': project.status,
+        'platforms': json.loads(project.platforms) if project.platforms else [],
+        'scope_type': project.scope_type,
+        'scope_query': project.scope_query,
+        'creators_count': project.creators_count,
+        'posts_count': project.posts_count,
+        'signals_count': project.signals_count,
+        'last_run_at': project.last_run_at.isoformat() if project.last_run_at else None,
+        'last_signal_at': project.last_signal_at.isoformat() if project.last_signal_at else None,
+        'created_at': project.created_at.isoformat() if project.created_at else None,
+        'updated_at': project.updated_at.isoformat() if project.updated_at else None,
+    }
+    
+    if include_relations:
+        # Charger les hashtags liés
+        project_hashtag_links = getattr(project, 'project_hashtag_links', [])
+        result['hashtags'] = [
+            {
+                'link_id': link.id,
+                'id': link.hashtag_id,
+                'name': link.hashtag.name if link.hashtag else None,
+                'platform_id': link.hashtag.platform_id if link.hashtag else None,
+                'platform': link.hashtag.platform.name if link.hashtag and link.hashtag.platform else None,
+                'added_at': link.added_at.isoformat() if link.added_at else None,
+            }
+            for link in project_hashtag_links
+        ] if project_hashtag_links else []
+        
+        # Charger les créateurs liés
+        project_creators = project.creators if hasattr(project, 'creators') else []
+        result['creators'] = [
+            {
+                'id': c.id,
+                'creator_username': c.creator_username,
+                'platform_id': c.platform_id,
+                'platform': c.platform.name if c.platform else None,
+                'added_at': c.added_at.isoformat() if c.added_at else None,
+            }
+            for c in project_creators
+        ] if project_creators else []
+    
+    return result
+
+@projects_router.get("", response_model=List[ProjectResponse])
+def list_projects(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Liste tous les projets de l'utilisateur"""
+    try:
+        projects = (
+            db.query(Project)
+            .filter(Project.user_id == current_user.id)
+            .all()
+        )
+        return [serialize_project(p, include_relations=False) for p in projects]
+    except Exception as exc:
+        logger.exception("Erreur lors de la récupération des projets pour l'utilisateur %s", current_user.id)
+        raise HTTPException(status_code=500, detail=f"Impossible de lister les projets: {exc}") from exc
+
+@projects_router.get("/{project_id}", response_model=ProjectResponse)
+def get_project(
+    project_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Récupérer un projet spécifique"""
+    project = _get_project_or_404(db, current_user, project_id)
+    return serialize_project(project)
+
+@projects_router.get("/{project_id}/posts", response_model=List[ProjectPostResponse])
+def list_project_posts(
+    project_id: str,
+    platform: Optional[str] = Query(None, description="Filter by platform: 'instagram', 'tiktok', 'facebook', 'meta'"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Retourne les posts associés au projet (via ses créateurs)."""
+    try:
+        project = _get_project_or_404(db, current_user, project_id)
+        logger.info(f"Loading posts for project {project_id} (platform filter: {platform})")
+
+        posts = _collect_project_posts(db, project, limit=60, platform_filter=platform)
+        logger.info(f"Found {len(posts)} posts for project {project_id}")
+        if not posts:
+            return []
+
+        results: List[ProjectPostResponse] = []
+        for post in posts:
+            try:
+                # Charger payload une seule fois par post
+                payload_data = load_post_payload(post)
+                metrics = payload_data["metrics"]
+                api_payload = payload_data["api_payload"]
+                
+                permalink = None
+                platform_name = post.platform.name if post.platform else 'instagram'
+                
+                # PRIORITÉ 1: Chercher permalink dans api_payload (le plus fiable, contient le vrai permalink)
+                if api_payload:
+                    permalink_candidate = (
+                        api_payload.get('permalink')
+                        or api_payload.get('share_url')
+                        or api_payload.get('url')
+                        or (api_payload.get('media_details') or {}).get('permalink')
+                    )
+                    if isinstance(permalink_candidate, str) and permalink_candidate.startswith('http'):
+                        permalink = permalink_candidate
+                
+                # PRIORITÉ 2: Construire depuis external_id seulement si pas de permalink
+                if not permalink and post.external_id and isinstance(post.external_id, str):
+                    if post.external_id.startswith('http'):
+                        permalink = post.external_id
+                    elif platform_name == 'tiktok':
+                        # TikTok: external_id est le video_id, construire l'URL
+                        permalink = f"https://www.tiktok.com/@{(post.author or 'user')}/video/{post.external_id}"
+                    elif platform_name == 'instagram':
+                        # Instagram : vérifier si c'est un ID numérique (ne fonctionne pas avec oEmbed)
+                        external_id_clean = post.external_id.strip('/')
+                        if not external_id_clean.isdigit():
+                            # Code court valide - construire l'URL
+                            permalink = f"https://www.instagram.com/p/{external_id_clean}/"
+                        # Si c'est un ID numérique, ne pas créer de permalink (oEmbed ne le supporte pas)
+                        # Le permalink restera None, ce qui empêchera l'appel oEmbed avec une URL invalide
+
+                # Pour TikTok, extraire cover_image_url ou thumbnail_url depuis api_payload si media_url manquant
+                media_url = post.media_url
+                if platform_name == 'tiktok' and not media_url and api_payload:
+                    media_url = (
+                        api_payload.get('cover_image_url')
+                        or api_payload.get('thumbnail_url')
+                        or api_payload.get('media_url')
+                    )
+                
+                # Extraire hashtags et mentions depuis caption ou colonne hashtags
+                hashtags_list = post.hashtags if isinstance(post.hashtags, list) else []
+                if not hashtags_list and post.caption:
+                    # Extraire hashtags depuis caption si colonne hashtags vide
+                    hashtags_list = re.findall(r'#\w+', post.caption)
+                
+                mentions_list = []
+                if post.caption:
+                    mentions_list = re.findall(r'@\w+', post.caption)
+                
+                # Extraire username depuis api_payload si author est vide
+                author = post.author
+                if not author and api_payload:
+                    # Essayer plusieurs champs possibles
+                    author = (
+                        api_payload.get('username')
+                        or api_payload.get('owner_username')
+                        or api_payload.get('from', {}).get('username')
+                        or api_payload.get('creator', {}).get('username')
+                    )
+                    # Si toujours pas trouvé, essayer depuis permalink
+                    if not author and permalink:
+                        permalink_match = re.search(r'instagram\.com/([^/]+)/', permalink)
+                        if permalink_match:
+                            potential_username = permalink_match.group(1)
+                            if potential_username not in ['p', 'reel', 'tv', 'stories']:
+                                author = potential_username
+                
+                # Extraire metrics avec fallback sur plusieurs clés
+                # Utiliser get() avec None comme défaut pour distinguer 0 de None
+                like_count = (
+                    metrics.get('like_count') if 'like_count' in metrics else
+                    metrics.get('likes') if 'likes' in metrics else
+                    api_payload.get('like_count') if api_payload and 'like_count' in api_payload else
+                    api_payload.get('likes') if api_payload and 'likes' in api_payload else
+                    None
+                )
+                comment_count = (
+                    metrics.get('comment_count') if 'comment_count' in metrics else
+                    metrics.get('comments_count') if 'comments_count' in metrics else
+                    metrics.get('comments') if 'comments' in metrics else
+                    api_payload.get('comment_count') if api_payload and 'comment_count' in api_payload else
+                    api_payload.get('comments_count') if api_payload and 'comments_count' in api_payload else
+                    None
+                )
+                
+                # Convertir en int si présent, sinon None (pour distinguer 0 de None)
+                like_count_int = int(like_count) if like_count is not None else None
+                comment_count_int = int(comment_count) if comment_count is not None else None
+                
+                # S'assurer que tous les champs sont valides avant de créer ProjectPostResponse
+                post_data = {
+                    "id": str(post.id) if post.id else "",
+                    "author": author,
+                    "username": author,  # Alias pour compatibilité frontend
+                    "caption": post.caption,
+                    "media_url": media_url,
+                    "permalink": permalink,
+                    "posted_at": post.posted_at,
+                    "fetched_at": post.fetched_at,
+                    "platform": post.platform.name if post.platform else None,
+                    "like_count": like_count_int,
+                    "comment_count": comment_count_int,
+                    "share_count": int(metrics.get('share_count') or api_payload.get('share_count') or 0) if (metrics.get('share_count') or api_payload.get('share_count')) else None,
+                    "view_count": int(metrics.get('view_count') or api_payload.get('view_count') or 0) if (metrics.get('view_count') or api_payload.get('view_count')) else None,
+                    "score_trend": float(post.score_trend) if post.score_trend is not None else None,
+                    "hashtags": hashtags_list or [],
+                    "mentions": mentions_list or [],
+                    "location": None,  # Pas stocké actuellement dans Post
+                    "media_type": api_payload.get('media_type') if api_payload else None,
+                    "thumbnail_url": api_payload.get('thumbnail_url') if api_payload else None,
+                    "external_id": post.external_id,
+                }
+                results.append(ProjectPostResponse(**post_data))
+            except Exception as e:
+                logger.error(f"Error processing post {post.id} in project {project_id}: {e}", exc_info=True)
+                # Continue avec les autres posts au lieu de faire échouer toute la requête
+                continue
+
+        return results
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception(f"Error in list_project_posts for project {project_id}: {e}")
+        raise HTTPException(status_code=500, detail=f"Error loading project posts: {str(e)}")
+
+@projects_router.post("", response_model=ProjectResponse, status_code=status.HTTP_201_CREATED)
+def create_project(
+    project_in: ProjectCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Créer un nouveau projet (peut être vide)."""
+    try:
+        # Note: Les colonnes sont créées via Base.metadata.create_all() dans startup_event
+        # Ce code de migration SQL est conservé pour compatibilité avec les anciennes bases
+
+        if hasattr(project_in, "model_dump"):
+            project_data = project_in.model_dump(exclude={"hashtag_names", "creator_usernames"})
+        else:
+            project_data = project_in.dict(exclude={"hashtag_names", "creator_usernames"})
+
+        name = (project_data.get("name") or "Untitled project").strip()
+        project_data["name"] = name or "Untitled project"
+
+        status_value = (project_data.get("status") or "draft").strip()
+        project_data["status"] = status_value or "draft"
+
+        project_data["platforms"] = json.dumps(project_data.get("platforms") or [])
+        project_data["scope_type"] = None
+        project_data["scope_query"] = None
+        project_data.setdefault("creators_count", 0)
+        project_data.setdefault("posts_count", 0)
+        project_data.setdefault("signals_count", 0)
+
+        project = Project(
+            user_id=current_user.id,
+            **project_data,
+        )
+        db.add(project)
+        db.flush()
+
+        candidate_platforms = project_in.platforms or []
+        if not candidate_platforms and (project_in.hashtag_names or project_in.creator_usernames):
+            candidate_platforms = ["instagram"]
+
+        for hashtag_name in project_in.hashtag_names or []:
+            for platform_name in candidate_platforms or ["instagram"]:
+                try:
+                    _attach_hashtag(db, project, hashtag_name, platform_name)
+                except HTTPException as err:
+                    if err.status_code != 409:
+                        raise
+
+        for creator_username in project_in.creator_usernames or []:
+            platform_name = candidate_platforms[0] if candidate_platforms else "instagram"
+            try:
+                _attach_creator(db, project, creator_username, platform_name)
+            except HTTPException as err:
+                if err.status_code != 409:
+                    raise
+
+        _sync_project_metadata(db, project)
+        db.commit()
+        db.refresh(project)
+        return serialize_project(project)
+    except HTTPException:
+        db.rollback()
+        raise
+    except Exception as exc:
+        db.rollback()
+        logger.exception("Erreur lors de la création du projet pour l'utilisateur %s", current_user.id)
+        raise HTTPException(status_code=500, detail=f"Création du projet impossible: {exc}") from exc
+
+@projects_router.put("/{project_id}", response_model=ProjectResponse)
+def update_project(
+    project_id: str,
+    project_in: ProjectUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Mettre à jour un projet"""
+    project = _get_project_or_404(db, current_user, project_id)
+
+    try:
+        if hasattr(project_in, "model_dump"):
+            update_data = project_in.model_dump(exclude_unset=True, exclude={"hashtag_names", "creator_usernames"})
+        else:
+            update_data = project_in.dict(exclude_unset=True, exclude={"hashtag_names", "creator_usernames"})
+
+        if "name" in update_data:
+            name = (update_data["name"] or "").strip()
+            update_data["name"] = name or "Untitled project"
+
+        if "status" in update_data:
+            status_value = (update_data["status"] or "").strip()
+            update_data["status"] = status_value or project.status or "draft"
+
+        if "platforms" in update_data:
+            update_data["platforms"] = json.dumps(update_data["platforms"] or [])
+
+        for field, value in update_data.items():
+            setattr(project, field, value)
+
+        if project_in.hashtag_names is not None:
+            db.query(ProjectHashtag).filter(ProjectHashtag.project_id == project.id).delete()
+            platforms = project_in.platforms or json.loads(project.platforms) if project.platforms else ["instagram"]
+            for hashtag_name in project_in.hashtag_names or []:
+                for platform_name in platforms:
+                    try:
+                        _attach_hashtag(db, project, hashtag_name, platform_name)
+                    except HTTPException as err:
+                        if err.status_code != 409:
+                            raise
+
+        if project_in.creator_usernames is not None:
+            db.query(ProjectCreator).filter(ProjectCreator.project_id == project.id).delete()
+            platforms = project_in.platforms or json.loads(project.platforms) if project.platforms else ["instagram"]
+            for creator_username in project_in.creator_usernames or []:
+                platform_name = platforms[0] if platforms else "instagram"
+                try:
+                    _attach_creator(db, project, creator_username, platform_name)
+                except HTTPException as err:
+                    if err.status_code != 409:
+                        raise
+
+        _sync_project_metadata(db, project)
+        db.commit()
+        db.refresh(project)
+        return serialize_project(project)
+    except HTTPException:
+        db.rollback()
+        raise
+    except Exception as exc:
+        db.rollback()
+        logger.exception("Erreur lors de la mise à jour du projet %s", project_id)
+        raise HTTPException(status_code=500, detail=f"Mise à jour du projet impossible: {exc}") from exc
+
+@projects_router.delete("/{project_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_project(
+    project_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Supprimer un projet"""
+    project = _get_project_or_404(db, current_user, project_id)
+    db.delete(project)
+    db.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@projects_router.get("/creators/search")
+def search_creators(
+    q: str = Query(..., min_length=1, description="Search query for creator username"),
+    limit: int = Query(10, ge=1, le=50, description="Max results"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """ Autocomplete: Chercher des creators dans la DB pour l'autocomplétion."""
+    # Chercher dans la table posts les auteurs uniques qui matchent la query
+    results = (
+        db.query(Post.author)
+        .filter(Post.author.ilike(f'%{q}%'))
+        .distinct()
+        .limit(limit)
+        .all()
+    )
+    
+    creators = [{"username": r[0]} for r in results if r[0]]
+    return {"creators": creators, "count": len(creators)}
+
+
+@projects_router.post("/{project_id}/creators", response_model=ProjectResponse)
+def add_project_creator(
+    project_id: str,
+    payload: ProjectCreatorCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Ajouter un créateur au projet."""
+    project = _get_project_or_404(db, current_user, project_id)
+
+    try:
+        _attach_creator(db, project, payload.username, payload.platform)
+        _sync_project_metadata(db, project)
+        db.commit()
+        db.refresh(project)
+        return serialize_project(project)
+    except HTTPException:
+        db.rollback()
+        raise
+    except Exception as exc:
+        db.rollback()
+        logger.exception("Erreur lors de l'ajout d'un créateur au projet %s", project_id)
+        raise HTTPException(status_code=500, detail=f"Ajout du créateur impossible: {exc}") from exc
+
+
+@projects_router.delete("/{project_id}/creators/{creator_id}", status_code=status.HTTP_204_NO_CONTENT)
+def remove_project_creator(
+    project_id: str,
+    creator_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Supprimer un créateur du projet."""
+    project = _get_project_or_404(db, current_user, project_id)
+
+    creator = (
+        db.query(ProjectCreator)
+        .filter(ProjectCreator.project_id == project.id, ProjectCreator.id == creator_id)
+        .first()
+    )
+    if not creator:
+        raise HTTPException(status_code=404, detail="Creator not found")
+
+    db.delete(creator)
+    db.flush()
+    _sync_project_metadata(db, project)
+    db.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@projects_router.post("/{project_id}/hashtags", response_model=ProjectResponse)
+def add_project_hashtag(
+    project_id: str,
+    payload: ProjectHashtagCreate,
+    fetch_live: bool = Query(False, description="Fetch live posts from Meta API after adding hashtag"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Ajouter un hashtag au projet.
+    
+    Si fetch_live=true, essaie de fetcher des posts depuis Meta API après avoir lié le hashtag.
+    Sinon, utilise les posts déjà en DB (via post_hashtags).
+    """
+    project = _get_project_or_404(db, current_user, project_id)
+
+    try:
+        _attach_hashtag(db, project, payload.hashtag, payload.platform)
+        _sync_project_metadata(db, project)
+        db.commit()
+        db.refresh(project)
+        
+        #  OPTIONNEL: Fetch live posts from API (Meta ou TikTok selon platform)
+        # Note: Le paramètre fetch_live est conservé pour compatibilité, mais le vrai fetch
+        # se fait via le bouton "Fetch" dans l'UI qui appelle directement les endpoints API
+        if fetch_live:
+            logger.info(f"fetch_live=true for #{payload.hashtag} (platform: {payload.platform})")
+            logger.info(f" Use 'Fetch' button in UI to get live posts from API")
+        
+        return serialize_project(project)
+    except HTTPException:
+        db.rollback()
+        raise
+    except Exception as exc:
+        db.rollback()
+        logger.exception("Erreur lors de l'ajout d'un hashtag au projet %s", project_id)
+        raise HTTPException(status_code=500, detail=f"Ajout du hashtag impossible: {exc}") from exc
+
+
+@projects_router.post("/{project_id}/hashtags/{link_id}/link-posts", response_model=dict)
+def link_posts_to_project_hashtag(
+    project_id: str,
+    link_id: int,
+    limit: int = Query(50, ge=1, le=200, description="Max posts to link"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+     Force le re-linking des posts au hashtag du projet.
+    Utile si l'auto-link n'a pas fonctionné ou pour re-lier après ajout de posts.
+    """
+    project = _get_project_or_404(db, current_user, project_id)
+    
+    # Trouver le ProjectHashtag
+    project_hashtag = (
+        db.query(ProjectHashtag)
+        .filter(
+            ProjectHashtag.project_id == project.id,
+            ProjectHashtag.id == link_id
+        )
+        .first()
+    )
+    if not project_hashtag:
+        raise HTTPException(status_code=404, detail="Hashtag link not found")
+    
+    hashtag = db.query(Hashtag).filter(Hashtag.id == project_hashtag.hashtag_id).first()
+    if not hashtag:
+        raise HTTPException(status_code=404, detail="Hashtag not found")
+    
+    normalized_name = hashtag.name
+    
+    # Rechercher les posts (utilise la fonction partagée)
+    posts_with_hashtag = search_posts_by_hashtag(db, normalized_name, limit=limit)
+    
+    linked_count = 0
+    already_linked = 0
+    platform_counts = {}
+    
+    for post in posts_with_hashtag:
+        platform_name = post.platform.name if post.platform else 'unknown'
+        logger.debug(f"  - Post {post.id}: platform={platform_name}, caption={post.caption[:50] if post.caption else 'None'}")
+        existing_link = (
+            db.query(PostHashtag)
+            .filter(
+                PostHashtag.post_id == post.id,
+                PostHashtag.hashtag_id == hashtag.id
+            )
+            .first()
+        )
+        
+        if not existing_link:
+            post_hashtag_link = PostHashtag(
+                post_id=post.id,
+                hashtag_id=hashtag.id
+            )
+            db.add(post_hashtag_link)
+            linked_count += 1
+            
+            platform_name = post.platform.name if post.platform else 'unknown'
+            platform_counts[platform_name] = platform_counts.get(platform_name, 0) + 1
+        else:
+            already_linked += 1
+    
+    db.commit()
+    
+    platform_summary = ", ".join([f"{count} {platform}" for platform, count in platform_counts.items()]) if platform_counts else "none"
+    
+    return {
+        "status": "success",
+        "hashtag": normalized_name,
+        "total_posts_found": len(posts_with_hashtag),
+        "newly_linked": linked_count,
+        "already_linked": already_linked,
+        "platforms": platform_summary,
+    }
+
+
+@projects_router.delete("/{project_id}/hashtags/{link_id}", status_code=status.HTTP_204_NO_CONTENT)
+def remove_project_hashtag(
+    project_id: str,
+    link_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Supprimer un hashtag du projet."""
+    project = _get_project_or_404(db, current_user, project_id)
+
+    project_hashtag = (
+        db.query(ProjectHashtag)
+        .filter(ProjectHashtag.project_id == project.id, ProjectHashtag.id == link_id)
+        .first()
+    )
+    if not project_hashtag:
+        raise HTTPException(status_code=404, detail="Hashtag not found")
+
+    db.delete(project_hashtag)
+    db.flush()
+    _sync_project_metadata(db, project)
+    db.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+

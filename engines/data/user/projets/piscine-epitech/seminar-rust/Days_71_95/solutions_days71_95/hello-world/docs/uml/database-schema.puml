@@ -1,0 +1,106 @@
+@startuml RTC_Database_Schema
+title Schema de Base de Donnees - Hello World RTC
+
+hide circle
+skinparam linetype ortho
+skinparam backgroundColor #1a1a1a
+skinparam package {
+  BackgroundColor #2d2d2d
+  BorderColor #4FDFFF
+  FontColor #ffffff
+}
+skinparam entity {
+  BackgroundColor #3d3d3d
+  BorderColor #4FDFFF
+  FontColor #ffffff
+}
+skinparam arrow {
+  Color #4FDFFF
+}
+
+' ================== POSTGRESQL ==================
+package "PostgreSQL (Source of Truth)" {
+
+  entity "users" as users {
+    + id : UUID <<PK>>
+    --
+    username : VARCHAR
+    email : VARCHAR <<UNIQUE>>
+    password_hash : VARCHAR
+    status : ENUM
+    avatar_url : VARCHAR?
+    created_at : TIMESTAMP
+  }
+
+  entity "servers" as servers {
+    + id : UUID <<PK>>
+    --
+    name : VARCHAR
+    # owner_id : UUID <<FK>>
+    created_at : TIMESTAMP
+    updated_at : TIMESTAMP
+  }
+
+  entity "server_members" as members {
+    + server_id : UUID <<PK, FK>>
+    + user_id : UUID <<PK, FK>>
+    --
+    role : ENUM(OWNER, ADMIN, MEMBER)
+    joined_at : TIMESTAMP
+  }
+
+  entity "channels" as channels {
+    + id : UUID <<PK>>
+    --
+    # server_id : UUID <<FK>>
+    name : VARCHAR
+    position : INT
+    created_at : TIMESTAMP
+    updated_at : TIMESTAMP
+  }
+
+  entity "invites" as invites {
+    + id : UUID <<PK>>
+    --
+    # server_id : UUID <<FK>>
+    code : VARCHAR <<UNIQUE>>
+    # created_by : UUID <<FK>>
+    expires_at : TIMESTAMP?
+    max_uses : INT?
+    uses_count : INT
+    created_at : TIMESTAMP
+  }
+
+  ' ---- PostgreSQL Relations ----
+  users   ||--o{ servers  : owns
+  servers ||--o{ members  : has
+  users   ||--o{ members  : joins
+  servers ||--o{ channels : contains
+  servers ||--o{ invites  : has
+  users   ||--o{ invites  : creates
+}
+
+' ================== MONGODB ==================
+package "MongoDB (Message History)" #553333 {
+
+  entity "channel_messages" as ch_msg {
+    + _id : ObjectId
+    --
+    message_id : UUID <<UNIQUE>>
+    channel_id : UUID
+    server_id : UUID
+    author_id : UUID
+    content : TEXT
+    created_at : TIMESTAMP
+    edited_at : TIMESTAMP?
+    deleted_at : TIMESTAMP?
+    deleted_by : UUID?
+  }
+}
+
+' ================== CROSS-DB LINKS ==================
+channels ..> ch_msg : channel_id (logical)
+servers  ..> ch_msg : server_id (logical)
+users    ..> ch_msg : author_id (logical)
+
+@enduml

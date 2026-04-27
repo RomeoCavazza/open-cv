@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Task 05</title>
+  <link rel="stylesheet" href="../../assets/bootstrap/css/bootstrap.min.css">
+</head>
+<body class="p-4">
+  <div class="container" style="max-width:860px">
+    <h1 class="mb-4">Task 05</h1>
+
+    <form class="row g-3" onsubmit="return false">
+      <div class="col-md-3">
+        <label for="type" class="form-label">Type</label>
+        <input id="type" class="form-control" placeholder="e.g. shoes" autocomplete="off">
+      </div>
+      <div class="col-md-3">
+        <label for="brand" class="form-label">Brand</label>
+        <input id="brand" class="form-control" placeholder="e.g. geox" autocomplete="off">
+      </div>
+      <div class="col-md-3">
+        <label for="price" class="form-label">Price</label>
+        <input id="price" class="form-control" placeholder=">100 / <42 / =42" autocomplete="off">
+      </div>
+      <div class="col-md-3">
+        <label for="number" class="form-label">Number</label>
+        <input id="number" class="form-control" placeholder="positive qty" autocomplete="off" inputmode="numeric">
+      </div>
+
+      <div class="col-12">
+        <button id="btnSearch" class="btn btn-primary">Search</button>
+      </div>
+    </form>
+
+    <div id="alert" class="alert d-none mt-3" role="alert"></div>
+
+    <div class="table-responsive mt-3">
+      <table class="table table-striped align-middle" id="resultTable">
+        <thead>
+          <tr>
+            <th>Type</th>
+            <th>Brand</th>
+            <th>Price</th>
+            <th>Number</th>
+            <th>Stock</th>
+          </tr>
+        </thead>
+        <tbody>
+            
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script src="../../assets/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="task05.js"></script>
+</body>
+</html>

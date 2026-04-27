@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.irina.myfirstgame.stats.HealthTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2025-11-25T14:34:02.248Z" hostname="TCO" time="0.028">
+  <properties/>
+  <testcase name="Test 2: Dégâts ne descendent pas en dessous de 0" classname="com.irina.myfirstgame.stats.HealthTest" time="0.015"/>
+  <testcase name="Test 4: Soins ne dépassent pas maxHealth" classname="com.irina.myfirstgame.stats.HealthTest" time="0.002"/>
+  <testcase name="Test 1: Dégâts réduisent correctement la santé" classname="com.irina.myfirstgame.stats.HealthTest" time="0.002"/>
+  <testcase name="Test 3: Soins augmentent correctement la santé" classname="com.irina.myfirstgame.stats.HealthTest" time="0.002"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

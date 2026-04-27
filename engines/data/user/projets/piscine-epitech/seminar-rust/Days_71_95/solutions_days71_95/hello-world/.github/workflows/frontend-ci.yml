@@ -1,0 +1,99 @@
+---
+name: Frontend CI
+
+"on":
+  push:
+    branches: [main, master, channels]
+  pull_request:
+    branches: [main, master, channels]
+
+jobs:
+  # ──────────────────────────────────────────────
+  # JOB 1 — Code Quality (lint + type-check)
+  # Runs in parallel with `security`
+  # ──────────────────────────────────────────────
+  quality:
+    name: Quality Checks (Next.js)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Lint (ESLint)
+        working-directory: ./frontend
+        run: npm run lint
+
+      - name: Type check (TypeScript)
+        working-directory: ./frontend
+        run: npx tsc --noEmit
+
+  # ──────────────────────────────────────────────
+  # JOB 2 — Build (depends on quality)
+  # ──────────────────────────────────────────────
+  build:
+    name: Build (Next.js)
+    runs-on: ubuntu-latest
+    needs: quality
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Build application
+        working-directory: ./frontend
+        run: npm run build
+        env:
+          # Dummy URL so Next.js doesn't fail on missing env at build time
+          NEXT_PUBLIC_API_URL: http://localhost:3001
+          API_URL: http://localhost:3001
+
+  # ──────────────────────────────────────────────
+  # JOB 3 — Security Audit (parallel with quality)
+  # continue-on-error: known vulns in Next.js deps
+  # ──────────────────────────────────────────────
+  security:
+    name: Security Audit (npm audit)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Run security audit
+        working-directory: ./frontend
+        run: npm audit --audit-level=high
+        continue-on-error: true

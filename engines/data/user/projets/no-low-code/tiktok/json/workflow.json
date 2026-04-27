@@ -1,0 +1,2857 @@
+{
+  "name": "n8n-workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "url": "={{ $json[\"videoMeta\"][\"subtitleLinks\"]?.find(l => l.language?.includes(\"eng\"))?.downloadLink }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text",
+              "outputPropertyName": "body"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -48,
+        -512
+      ],
+      "id": "2ddc02c1-a334-4965-99b8-d15afa63c8f5",
+      "name": "Download VTT"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const vtt = $json.body;                // text we just downloaded\n\nif (!vtt) {\n  return { transcript: null, note: \"no TikTok captions\" };\n}\n\nconst lines = vtt\n  .split(/\\r?\\n/)\n  .filter(l => l && !l.match(/^(\\d+|WEBVTT|X-TIMESTAMP|[:\\d+.\\-> ]+$)/));\n\nreturn { transcript: lines.join(\" \") };\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        112,
+        -512
+      ],
+      "id": "17a7c06a-e12c-4412-857b-503c330b8e81",
+      "name": "Extract Transcript"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.apify.com/v2/acts/clockworks~tiktok-scraper/run-sync-get-dataset-items?token=YOUR_APIFY_TOKEN",
+        "sendBody": true,
+        "specifyBody": "=json",
+        "bodyParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "jsonBody": "={\n    \"excludePinnedPosts\": false,\n    \"proxyCountryCode\": \"None\",\n    \"resultsPerPage\": {{ $json['Max Results'] }},\n    \"searchQueries\": [\n        \"{{ $json.Keywords }}\"\n    ],\n    \"oldestPostDateUnified\": \"{{ $json['Date Range'] === 'Last 7 Days' ? '7 days' : $json['Date Range'] === 'Last 30 Days' ? '30 days' : '90 days' }}\",\n    \"searchSection\": \"/video\",\n    \"shouldDownloadAvatars\": false,\n    \"shouldDownloadCovers\": false,\n    \"shouldDownloadMusicCovers\": false,\n    \"shouldDownloadSlideshowImages\": false,\n    \"shouldDownloadSubtitles\": true,\n    \"shouldDownloadVideos\": false\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -368,
+        -512
+      ],
+      "id": "621f8fe8-446e-47de-9fc3-947289468051",
+      "name": "Apify > Keywords",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json['Search Type'] }}",
+                    "rightValue": "Keyword Search",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "63335444-a332-40a0-a7e9-f6bc292aba35"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "a43d7d0d-ecaf-430f-8218-546272695436",
+                    "leftValue": "={{ $json['Search Type'] }}",
+                    "rightValue": "Account Search",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -544,
+        -416
+      ],
+      "id": "aa488ec9-cde3-482b-80c3-6e1f63fa5cc2",
+      "name": "Keyword vs. Account"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.apify.com/v2/acts/clockworks~tiktok-scraper/run-sync-get-dataset-items?token=YOUR_APIFY_TOKEN",
+        "sendBody": true,
+        "specifyBody": "=json",
+        "bodyParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "jsonBody": "={\n    \"excludePinnedPosts\": false,\n    \"proxyCountryCode\": \"None\",\n    \"resultsPerPage\": {{ $json['Max Results'] }},\n    \"profiles\": [\n        \"{{ $json['TikTok Accounts'] }}\"\n    ],\n    \"oldestPostDateUnified\": \"{{ $json['Date Range'] === 'Last 7 Days' ? '7 days' : $json['Date Range'] === 'Last 30 Days' ? '30 days' : '90 days' }}\",\n    \"shouldDownloadAvatars\": false,\n    \"shouldDownloadCovers\": false,\n    \"shouldDownloadMusicCovers\": false,\n    \"shouldDownloadSlideshowImages\": false,\n    \"shouldDownloadSubtitles\": true,\n    \"shouldDownloadVideos\": false\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -368,
+        -304
+      ],
+      "id": "c6c62c43-b267-4d93-8ea4-ead26cb3f5e4",
+      "name": "Apify > Profiles",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "url": "={{ $json[\"videoMeta\"][\"subtitleLinks\"]?.find(l => l.language?.includes(\"eng\"))?.downloadLink }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text",
+              "outputPropertyName": "body"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -48,
+        -304
+      ],
+      "id": "c93333e7-3710-4aaf-b20e-bb046d84c62e",
+      "name": "Download VTT1"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const vtt = $json.body;                // text we just downloaded\n\nif (!vtt) {\n  return { transcript: null, note: \"no TikTok captions\" };\n}\n\nconst lines = vtt\n  .split(/\\r?\\n/)\n  .filter(l => l && !l.match(/^(\\d+|WEBVTT|X-TIMESTAMP|[:\\d+.\\-> ]+$)/));\n\nreturn { transcript: lines.join(\" \") };\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        112,
+        -304
+      ],
+      "id": "093a85a7-4ace-4541-b823-2e05490e5aec",
+      "name": "Extract Transcript1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5154285b-8c6a-4048-8a6c-cd1e9854b349",
+              "name": "transcript",
+              "value": "={{ $json.transcript || '' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        288,
+        -304
+      ],
+      "id": "6e44c75e-cb9c-417c-94f7-7e088b4626fa",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "ea08fea2-8b7c-4bf8-8103-07bf05c89768",
+              "leftValue": "={{ $json[\"videoMeta\"][\"subtitleLinks\"]?.find(l => l.language?.includes(\"eng\"))?.downloadLink }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -208,
+        -512
+      ],
+      "id": "80250759-ff0b-4d90-9a69-2b7ac9cae669",
+      "name": "Has Transcript?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "ea08fea2-8b7c-4bf8-8103-07bf05c89768",
+              "leftValue": "={{ $json[\"videoMeta\"][\"subtitleLinks\"]?.find(l => l.language?.includes(\"eng\"))?.downloadLink }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -208,
+        -304
+      ],
+      "id": "b07f2ae3-199d-4133-972f-946244984d8e",
+      "name": "Has Transcript?1"
+    },
+    {
+      "parameters": {
+        "authentication": "airtableOAuth2Api",
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "appUKygDScJYHelFj",
+          "mode": "list",
+          "cachedResultName": "n8n-workflow",
+          "cachedResultUrl": "https://airtable.com/appUKygDScJYHelFj"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblBslptBwdfKEMF1",
+          "mode": "list",
+          "cachedResultName": "Scraped Content",
+          "cachedResultUrl": "https://airtable.com/appcstfBHCaf027F2/tblBslptBwdfKEMF1"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Views": "={{ $('Apify > Profiles').item.json.playCount }}",
+            "Likes": "={{ $('Apify > Profiles').item.json.diggCount }}",
+            "Comments": "={{ $('Apify > Profiles').item.json.commentCount }}",
+            "Shares": "={{ $('Apify > Profiles').item.json.shareCount }}",
+            "Bookmarks": "={{ $('Apify > Profiles').item.json.collectCount }}",
+            "Duration": "={{ $('Apify > Profiles').item.json.videoMeta.duration }}",
+            "ID": "={{ $('Apify > Profiles').item.json.id }}",
+            "Caption": "={{ $('Apify > Profiles').item.json.text }}",
+            "Transcript": "={{ $json.transcript }}",
+            "Publish Date": "={{ $('Apify > Profiles').item.json.createTimeISO }}",
+            "User": "={{ $('Apify > Profiles').item.json.authorMeta.name }}",
+            "Cover Image": "=[{ \"url\": \"{{ $('Apify > Profiles').item.json.videoMeta.coverUrl }}\" }]",
+            "Video URL": "={{ $('Apify > Profiles').item.json.webVideoUrl }}",
+            "Followers": "={{ $('Apify > Profiles').item.json.authorMeta.fans }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "ID",
+              "displayName": "ID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Keyword",
+              "displayName": "Keyword",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "User",
+              "displayName": "User",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Followers",
+              "displayName": "Followers",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Publish Date",
+              "displayName": "Publish Date",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Virality Score",
+              "displayName": "Virality Score",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Views",
+              "displayName": "Views",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Likes",
+              "displayName": "Likes",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Comments",
+              "displayName": "Comments",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Shares",
+              "displayName": "Shares",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Bookmarks",
+              "displayName": "Bookmarks",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Caption",
+              "displayName": "Caption",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Transcript",
+              "displayName": "Transcript",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Video URL",
+              "displayName": "Video URL",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Cover Image",
+              "displayName": "Cover Image",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "array",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Duration",
+              "displayName": "Duration",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "ANALYZE",
+              "displayName": "ANALYZE",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Search Request",
+              "displayName": "Search Request",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "array",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Time Factor Score",
+              "displayName": "Time Factor Score",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Base Engagement Score",
+              "displayName": "Base Engagement Score",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Follower Tier Multiplier",
+              "displayName": "Follower Tier Multiplier",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": false
+            },
+            {
+              "id": "Common Questions",
+              "displayName": "Common Questions",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Key Insights",
+              "displayName": "Key Insights",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "typecast": false
+        }
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        448,
+        -304
+      ],
+      "id": "abc727d7-22e4-4989-8848-d92f48e7f5dc",
+      "name": "Create Record",
+      "credentials": {
+        "airtableOAuth2Api": {
+          "id": "w8ml0izv4hKHxkUy",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "airtableOAuth2Api",
+        "operation": "update",
+        "base": {
+          "__rl": true,
+          "value": "appUKygDScJYHelFj",
+          "mode": "list",
+          "cachedResultName": "n8n-workflow",
+          "cachedResultUrl": "https://airtable.com/appUKygDScJYHelFj"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblmQMJURqN6bDDI4",
+          "mode": "list",
+          "cachedResultName": "Search Requests",
+          "cachedResultUrl": "https://airtable.com/appcstfBHCaf027F2/tblmQMJURqN6bDDI4"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Search Status": "Completed ",
+            "id": "={{ $('Get Search Request').item.json.id }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": false
+            },
+            {
+              "id": "Search Description",
+              "displayName": "Search Description",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Search Type",
+              "displayName": "Search Type",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Keyword Search",
+                  "value": "Keyword Search"
+                },
+                {
+                  "name": "Account Search",
+                  "value": "Account Search"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Keywords",
+              "displayName": "Keywords",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "TikTok Accounts",
+              "displayName": "TikTok Accounts",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Max Results",
+              "displayName": "Max Results",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Date Range",
+              "displayName": "Date Range",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Last 7 Days",
+                  "value": "Last 7 Days"
+                },
+                {
+                  "name": "Last 30 Days",
+                  "value": "Last 30 Days"
+                },
+                {
+                  "name": "Last 90 Days",
+                  "value": "Last 90 Days"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Run Search",
+              "displayName": "Run Search",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Search Status",
+              "displayName": "Search Status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Pending",
+                  "value": "Pending"
+                },
+                {
+                  "name": "Running",
+                  "value": "Running"
+                },
+                {
+                  "name": "Completed ",
+                  "value": "Completed "
+                },
+                {
+                  "name": "Failed",
+                  "value": "Failed"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Results",
+              "displayName": "Results",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Search Started",
+              "displayName": "Search Started",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Search Completed",
+              "displayName": "Search Completed",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Created By",
+              "displayName": "Created By",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Scraped Content",
+              "displayName": "Scraped Content",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "array",
+              "readOnly": false,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        608,
+        -304
+      ],
+      "id": "d99c0688-565b-41ba-86f7-47d3c160e254",
+      "name": "Update Status",
+      "credentials": {
+        "airtableOAuth2Api": {
+          "id": "w8ml0izv4hKHxkUy",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "airtableOAuth2Api",
+        "operation": "update",
+        "base": {
+          "__rl": true,
+          "value": "appUKygDScJYHelFj",
+          "mode": "list",
+          "cachedResultName": "TikTok For Business",
+          "cachedResultUrl": "https://airtable.com/appUKygDScJYHelFj"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblmQMJURqN6bDDI4",
+          "mode": "list",
+          "cachedResultName": "Search Requests",
+          "cachedResultUrl": "https://airtable.com/appcstfBHCaf027F2/tblmQMJURqN6bDDI4"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Search Status": "Completed ",
+            "id": "={{ $('Get Search Request').item.json.id }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": false
+            },
+            {
+              "id": "Search Description",
+              "displayName": "Search Description",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Search Type",
+              "displayName": "Search Type",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Keyword Search",
+                  "value": "Keyword Search"
+                },
+                {
+                  "name": "Account Search",
+                  "value": "Account Search"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Keywords",
+              "displayName": "Keywords",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "TikTok Accounts",
+              "displayName": "TikTok Accounts",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Max Results",
+              "displayName": "Max Results",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Date Range",
+              "displayName": "Date Range",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Last 7 Days",
+                  "value": "Last 7 Days"
+                },
+                {
+                  "name": "Last 30 Days",
+                  "value": "Last 30 Days"
+                },
+                {
+                  "name": "Last 90 Days",
+                  "value": "Last 90 Days"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Run Search",
+              "displayName": "Run Search",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Search Status",
+              "displayName": "Search Status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Pending",
+                  "value": "Pending"
+                },
+                {
+                  "name": "Running",
+                  "value": "Running"
+                },
+                {
+                  "name": "Completed ",
+                  "value": "Completed "
+                },
+                {
+                  "name": "Failed",
+                  "value": "Failed"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Search Started",
+              "displayName": "Search Started",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Search Completed",
+              "displayName": "Search Completed",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Created By",
+              "displayName": "Created By",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Scraped Content",
+              "displayName": "Scraped Content",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "array",
+              "readOnly": false,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        432,
+        -512
+      ],
+      "id": "b08384c9-a467-4efa-911b-d6b2d55493ec",
+      "name": "Update Status1",
+      "credentials": {
+        "airtableOAuth2Api": {
+          "id": "w8ml0izv4hKHxkUy",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "airtableOAuth2Api",
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "appUKygDScJYHelFj",
+          "mode": "list",
+          "cachedResultName": "TikTok For Business",
+          "cachedResultUrl": "https://airtable.com/appUKygDScJYHelFj"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblBslptBwdfKEMF1",
+          "mode": "list",
+          "cachedResultName": "Scraped Content",
+          "cachedResultUrl": "https://airtable.com/appcstfBHCaf027F2/tblBslptBwdfKEMF1"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Views": "={{ $('Apify > Keywords').item.json.playCount }}",
+            "Likes": "={{ $('Apify > Keywords').item.json.diggCount }}",
+            "Comments": "={{ $('Apify > Keywords').item.json.commentCount }}",
+            "Shares": "={{ $('Apify > Keywords').item.json.shareCount }}",
+            "Bookmarks": "={{ $('Apify > Keywords').item.json.collectCount }}",
+            "Duration": "={{ $('Apify > Keywords').item.json.videoMeta.duration }}",
+            "ID": "={{ $('Apify > Keywords').item.json.id }}",
+            "Caption": "={{ $('Apify > Keywords').item.json.text }}",
+            "Transcript": "={{ $json.transcript }}",
+            "Publish Date": "={{ $('Apify > Keywords').item.json.createTimeISO }}",
+            "User": "={{ $('Apify > Keywords').item.json.authorMeta.name }}",
+            "Cover Image": "=[{ \"url\": \"{{ $('Apify > Keywords').item.json.videoMeta.coverUrl }}\" }]",
+            "Video URL": "={{ $('Apify > Keywords').item.json.webVideoUrl }}",
+            "Followers": "={{ $('Apify > Keywords').item.json.authorMeta.fans }}",
+            "Keyword": "={{ $('Get Search Request').item.json.Keywords }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "ID",
+              "displayName": "ID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Keyword",
+              "displayName": "Keyword",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "User",
+              "displayName": "User",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Followers",
+              "displayName": "Followers",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Publish Date",
+              "displayName": "Publish Date",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Virality Score",
+              "displayName": "Virality Score",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Views",
+              "displayName": "Views",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Likes",
+              "displayName": "Likes",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Comments",
+              "displayName": "Comments",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Shares",
+              "displayName": "Shares",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Bookmarks",
+              "displayName": "Bookmarks",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Caption",
+              "displayName": "Caption",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Transcript",
+              "displayName": "Transcript",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Video URL",
+              "displayName": "Video URL",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Cover Image",
+              "displayName": "Cover Image",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "array",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Duration",
+              "displayName": "Duration",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "ANALYZE",
+              "displayName": "ANALYZE",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Search Request",
+              "displayName": "Search Request",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "array",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Time Factor Score",
+              "displayName": "Time Factor Score",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Base Engagement Score",
+              "displayName": "Base Engagement Score",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Follower Tier Multiplier",
+              "displayName": "Follower Tier Multiplier",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": false
+            },
+            {
+              "id": "Common Questions",
+              "displayName": "Common Questions",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Key Insights",
+              "displayName": "Key Insights",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "typecast": false
+        }
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        272,
+        -512
+      ],
+      "id": "a1c299f1-b20f-45d9-9a17-ecfe8943899f",
+      "name": "Create Record1",
+      "credentials": {
+        "airtableOAuth2Api": {
+          "id": "w8ml0izv4hKHxkUy",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=AIzaSyBz9qxHJ0sJX0QJs0secAIUhhzzreI9oTk",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"contents\": [\n    {\n      \"parts\": [\n        {\n          \"fileData\": {\n            \"fileUri\": \"{{ $('Upload Video').item.json.file.uri }}\",\n            \"mimeType\": \"video/mp4\"\n          }\n        },\n        {\n          \"text\": \"You are an expert creative strategist. Analyze the above TikTok video ad and return exactly **three** sections—Visual Hook, Undeniable Proof, and Theme—grounding every insight in performance psychology, audience behavior, and proven marketing principles.\\n\\nReturn your analysis in this plain-text format (no extra commentary):\\n\\nVisual Hook: <single concise sentence describing the first 1–2 seconds—the scroll-stopping visual/ auditory element and *why* it hooks the viewer>\\nUndeniable Proof: <the clearest piece of credibility or evidence shown (e.g., demo result, testimonial, stat) and *why* it cements belief>\\nTheme: <2–4-word phrase that captures the overarching creative concept or storyline>\"\n        }\n      ]\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        96,
+        64
+      ],
+      "id": "9628c2df-e167-47f0-b73a-e44eaa81a728",
+      "name": "Analyze Video",
+      "executeOnce": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://generativelanguage.googleapis.com/upload/v1beta/files?uploadType=media&key=AIzaSyBz9qxHJ0sJX0QJs0secAIUhhzzreI9oTk",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "video/mp4"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "binaryData",
+        "inputDataFieldName": "data",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -224,
+        64
+      ],
+      "id": "441d844d-7307-4b4e-a51e-fa3a2c981269",
+      "name": "Upload Video",
+      "executeOnce": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "amount": 20
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -64,
+        64
+      ],
+      "id": "55911124-65b6-48d7-802c-74b9ec484bb1",
+      "name": "Wait",
+      "webhookId": "5e56fd63-73c8-4e3b-97ac-5538724a09d1"
+    },
+    {
+      "parameters": {
+        "authentication": "airtableOAuth2Api",
+        "base": {
+          "__rl": true,
+          "value": "appUKygDScJYHelFj",
+          "mode": "list",
+          "cachedResultName": "TikTok For Business",
+          "cachedResultUrl": "https://airtable.com/appUKygDScJYHelFj"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblBslptBwdfKEMF1",
+          "mode": "list",
+          "cachedResultName": "Scraped Content",
+          "cachedResultUrl": "https://airtable.com/appUKygDScJYHelFj/tblBslptBwdfKEMF1"
+        },
+        "id": "={{ $json.query.recordId }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        -704,
+        64
+      ],
+      "id": "3d7a3c20-4e86-4535-ae7c-229733ada58e",
+      "name": "Get a record",
+      "credentials": {
+        "airtableOAuth2Api": {
+          "id": "w8ml0izv4hKHxkUy",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "airtableOAuth2Api",
+        "operation": "update",
+        "base": {
+          "__rl": true,
+          "value": "appcstfBHCaf027F2",
+          "mode": "list",
+          "cachedResultName": "TikTok System",
+          "cachedResultUrl": "https://airtable.com/appcstfBHCaf027F2"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblBslptBwdfKEMF1",
+          "mode": "list",
+          "cachedResultName": "Scraped Content",
+          "cachedResultUrl": "https://airtable.com/appcstfBHCaf027F2/tblBslptBwdfKEMF1"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $('Get a record').item.json.id }}",
+            "User": "={{ $('Get a record').item.json.User }}",
+            "Visual Hook": "={{ $json['Visual Hook'] }}",
+            "Undeniable Proof": "={{ $json['Undeniable Proof'] }}",
+            "Theme": "={{ $json.Theme }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": false
+            },
+            {
+              "id": "ID",
+              "displayName": "ID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Keyword",
+              "displayName": "Keyword",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "User",
+              "displayName": "User",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Followers",
+              "displayName": "Followers",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Publish Date",
+              "displayName": "Publish Date",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Virality Score",
+              "displayName": "Virality Score",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Views",
+              "displayName": "Views",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Likes",
+              "displayName": "Likes",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Comments",
+              "displayName": "Comments",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Shares",
+              "displayName": "Shares",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Bookmarks",
+              "displayName": "Bookmarks",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Caption",
+              "displayName": "Caption",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Transcript",
+              "displayName": "Transcript",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Video URL",
+              "displayName": "Video URL",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Cover Image",
+              "displayName": "Cover Image",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "array",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Duration",
+              "displayName": "Duration",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "ANALYZE",
+              "displayName": "ANALYZE",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "ANALYZE VIDEOS",
+              "displayName": "ANALYZE VIDEOS",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Time Factor Score",
+              "displayName": "Time Factor Score",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Base Engagement Score",
+              "displayName": "Base Engagement Score",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Follower Tier Multiplier",
+              "displayName": "Follower Tier Multiplier",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Common Questions",
+              "displayName": "Common Questions",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Key Insights",
+              "displayName": "Key Insights",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Visual Hook",
+              "displayName": "Visual Hook",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Undeniable Proof",
+              "displayName": "Undeniable Proof",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Theme",
+              "displayName": "Theme",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        416,
+        64
+      ],
+      "id": "765be14b-02e2-4759-8774-f1ef30c6b65b",
+      "name": "Update record",
+      "credentials": {
+        "airtableOAuth2Api": {
+          "id": "w8ml0izv4hKHxkUy",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.videoMeta.downloadAddr }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -384,
+        64
+      ],
+      "id": "09bce69b-e2b9-4723-b9a4-cb035ecfa655",
+      "name": "Download Video",
+      "executeOnce": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1️⃣ Grab the text from Gemini\nconst blob = $json.candidates[0].content.parts[0].text;\n\n// 2️⃣ Split the three lines\nconst [hookLine, proofLine, themeLine] = blob.split('\\n');\n\n// 3️⃣ Strip the labels and return new fields\nreturn [\n  {\n    json: {\n      'Visual Hook': hookLine.replace(/^Visual Hook:\\s*/i, ''),\n      'Undeniable Proof': proofLine.replace(/^Undeniable Proof:\\s*/i, ''),\n      'Theme': themeLine.replace(/^Theme:\\s*/i, '')\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        256,
+        64
+      ],
+      "id": "9d98213b-b9fe-472e-9e93-1c07b52fd035",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "path": "d4b4ded4-3d82-461f-ab70-9b13be111c50",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -864,
+        64
+      ],
+      "id": "666a5b8f-c300-43e4-a64e-702e7638bd5b",
+      "name": "Webhook1",
+      "webhookId": "d4b4ded4-3d82-461f-ab70-9b13be111c50"
+    },
+    {
+      "parameters": {
+        "content": "# Scrape TikTok",
+        "height": 496,
+        "width": 1792,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -944,
+        -592
+      ],
+      "id": "cb459b55-e9e5-4fee-8a91-1ecba55301e5",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "path": "56965c04-b16c-470e-86a5-84d6f1726152",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -864,
+        -416
+      ],
+      "id": "e77af541-7b7d-4357-a888-c45b75aceef8",
+      "name": "Webhook",
+      "webhookId": "56965c04-b16c-470e-86a5-84d6f1726152"
+    },
+    {
+      "parameters": {
+        "base": {
+          "__rl": true,
+          "value": "appUKygDScJYHelFj",
+          "mode": "list",
+          "cachedResultName": "TikTok For Business",
+          "cachedResultUrl": "https://airtable.com/appUKygDScJYHelFj"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblmQMJURqN6bDDI4",
+          "mode": "list",
+          "cachedResultName": "Search Requests",
+          "cachedResultUrl": "https://airtable.com/appUKygDScJYHelFj/tblmQMJURqN6bDDI4"
+        },
+        "id": "={{$json.query.recordId}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        -704,
+        -416
+      ],
+      "id": "bf9bb872-e9e4-4d25-bbd4-8276c7e53d75",
+      "name": "Get Search Request",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "w0z0KSo0xV6d342n",
+          "name": "Airtable-PAT-2025-09"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "# Analyze Videos",
+        "height": 416,
+        "width": 1792,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -944,
+        -80
+      ],
+      "id": "40e62424-e1b2-4844-93cb-e8c661dca52b",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "# Scrape Comments",
+        "height": 496,
+        "width": 1792,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -944,
+        352
+      ],
+      "id": "b95c69d8-3216-4d5c-a60d-fc8f2748949e",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "path": "b6fa363f-a619-4ac5-b4b9-b4a4ccfc22a7",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -864,
+        496
+      ],
+      "id": "38ae9a19-2fc1-47f6-91f0-b84accc81e55",
+      "name": "Webhook2",
+      "webhookId": "b6fa363f-a619-4ac5-b4b9-b4a4ccfc22a7"
+    },
+    {
+      "parameters": {
+        "authentication": "airtableOAuth2Api",
+        "base": {
+          "__rl": true,
+          "value": "appUKygDScJYHelFj",
+          "mode": "list",
+          "cachedResultName": "n8n-workflow",
+          "cachedResultUrl": "https://airtable.com/appUKygDScJYHelFj"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblBslptBwdfKEMF1",
+          "mode": "list",
+          "cachedResultName": "Scraped Content",
+          "cachedResultUrl": "https://airtable.com/appUKygDScJYHelFj/tblBslptBwdfKEMF1"
+        },
+        "id": "({ $json.query.recordId })",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        -704,
+        496
+      ],
+      "id": "abfc3e71-eec0-4e33-8f74-b9443a453304",
+      "name": "Get a record1",
+      "credentials": {
+        "airtableOAuth2Api": {
+          "id": "w8ml0izv4hKHxkUy",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://api.apify.com/v2/acts/clockworks~tiktok-comments-scraper/run-sync?token=YOUR_APIFY_TOKEN",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n    \"commentsPerPost\": 15,\n    \"excludePinnedPosts\": false,\n    \"maxRepliesPerComment\": 0,\n    \"postURLs\": [\n        \"{{ $json['Video URL']  }}\"\n    ],\n    \"resultsPerPage\": 15 \n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -544,
+        496
+      ],
+      "id": "787b70f3-3f4f-4d35-8508-7bc7113f04ed",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "text",
+              "renameField": true,
+              "outputFieldName": "comments"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        -384,
+        496
+      ],
+      "id": "496f6b97-523a-4898-8328-5d85829c216d",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Analyze these TikTok comments and provide two specific outputs:\n\nComments to analyze:  \n{{ $json.comments.join('\\n') }}\n\nPlease return your analysis in the following JSON format:\n\n{\n  \"commonQuestions\": \"A concise summary of questions asked in the comments, separated by semicolons. If no questions are found, return 'No questions identified'\",\n  \"keyInsights\": \"A brief summary of the main themes, sentiments, and notable observations from the comments\"\n}\n\nImportant:\n- For commonQuestions: Extract actual questions or implied questions from the comments  \n- For keyInsights: Focus on sentiment, recurring themes, user concerns, or notable feedback  \n- Keep each field under 250 characters for Airtable compatibility  \n- Return ONLY valid JSON without any additional text or markdown formatting",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=You are an expert at analyzing social media comments to extract valuable insights and identify common questions. You always return your analysis in valid JSON format with two specific fields: commonQuestions and keyInsights."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        -176,
+        496
+      ],
+      "id": "10906554-bdf7-4c0c-ac99-4b89596033ea",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "authentication": "airtableOAuth2Api",
+        "operation": "update",
+        "base": {
+          "__rl": true,
+          "value": "appUKygDScJYHelFj",
+          "mode": "list",
+          "cachedResultName": "n8n-workflow",
+          "cachedResultUrl": "https://airtable.com/appUKygDScJYHelFj"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblBslptBwdfKEMF1",
+          "mode": "list",
+          "cachedResultName": "Scraped Content",
+          "cachedResultUrl": "https://airtable.com/appUKygDScJYHelFj/tblBslptBwdfKEMF1"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "{{ $('Airtable1').item.json.id }}",
+            "User": "{{ $('Airtable1').item.json.User }}",
+            "Common Questions": "{{ $json.output.commonQuestions }}",
+            "Key Insights": "{{ $json.output.keyInsights }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": false
+            },
+            {
+              "id": "ID",
+              "displayName": "ID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Keyword",
+              "displayName": "Keyword",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "User",
+              "displayName": "User",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Followers",
+              "displayName": "Followers",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Publish Date",
+              "displayName": "Publish Date",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Virality Score",
+              "displayName": "Virality Score",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Views",
+              "displayName": "Views",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Likes",
+              "displayName": "Likes",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Comments",
+              "displayName": "Comments",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Shares",
+              "displayName": "Shares",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Bookmarks",
+              "displayName": "Bookmarks",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Time Factor Score",
+              "displayName": "Time Factor Score",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Base Engagement Score",
+              "displayName": "Base Engagement Score",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Follower Tier Multiplier",
+              "displayName": "Follower Tier Multiplier",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Caption",
+              "displayName": "Caption",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Transcript",
+              "displayName": "Transcript",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Video URL",
+              "displayName": "Video URL",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Cover Image",
+              "displayName": "Cover Image",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "array",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Duration",
+              "displayName": "Duration",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Common Questions",
+              "displayName": "Common Questions",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Key Insights",
+              "displayName": "Key Insights",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "ANALYZE",
+              "displayName": "ANALYZE",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "ANALYZE VIDEOS",
+              "displayName": "ANALYZE VIDEOS",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Visual Hook",
+              "displayName": "Visual Hook",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Undeniable Proof",
+              "displayName": "Undeniable Proof",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Theme",
+              "displayName": "Theme",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        144,
+        496
+      ],
+      "id": "ff396a2b-7676-4fd9-a52d-f60b890d7b64",
+      "name": "Update record1",
+      "credentials": {
+        "airtableOAuth2Api": {
+          "id": "w8ml0izv4hKHxkUy",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "claude-3-5-sonnet-20240620",
+          "mode": "list",
+          "cachedResultName": "Claude Sonnet 3.5 (Old)"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.3,
+      "position": [
+        -176,
+        656
+      ],
+      "id": "8dff78ca-7ab9-42df-b1a7-8f0ee2da1d11",
+      "name": "Anthropic Chat Model",
+      "credentials": {
+        "anthropicApi": {
+          "id": "lGr2rGiyhiItLksX",
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"commonQuestions\": {\n      \"type\": \"string\",\n      \"description\": \"Questions found in the comments, separated by semicolons\"\n    },\n    \"keyInsights\": {\n      \"type\": \"string\",\n      \"description\": \"Main themes and observations from the comments\"\n    }\n  },\n  \"required\": [\"commonQuestions\", \"keyInsights\"]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -32,
+        656
+      ],
+      "id": "50082ce2-e4c8-42fd-8e30-2b642b4a7b83",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.apify.com/v2/acts/clockworks~tiktok-scraper/run-sync-get-dataset-items?token=YOUR_APIFY_TOKEN",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"excludePinnedPosts\": false,\n    \"oldestPostDateUnified\": \"2 days\",\n    \"postURLs\": [\n        \"{{ $json['Video URL'] }}\"\n    ],\n    \"proxyCountryCode\": \"None\",\n    \"scrapeRelatedVideos\": false,\n    \"searchSection\": \"/video\",\n    \"shouldDownloadAvatars\": false,\n    \"shouldDownloadCovers\": false,\n    \"shouldDownloadMusicCovers\": false,\n    \"shouldDownloadSlideshowImages\": false,\n    \"shouldDownloadSubtitles\": true,\n    \"shouldDownloadVideos\": true\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -544,
+        64
+      ],
+      "id": "88021adf-de17-44d2-bee7-c68c656b0719",
+      "name": "Get Download URL"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Download VTT": {
+      "main": [
+        [
+          {
+            "node": "Extract Transcript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Transcript": {
+      "main": [
+        [
+          {
+            "node": "Create Record1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Apify > Keywords": {
+      "main": [
+        [
+          {
+            "node": "Has Transcript?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Keyword vs. Account": {
+      "main": [
+        [
+          {
+            "node": "Apify > Keywords",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Apify > Profiles",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Apify > Profiles": {
+      "main": [
+        [
+          {
+            "node": "Has Transcript?1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download VTT1": {
+      "main": [
+        [
+          {
+            "node": "Extract Transcript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Transcript1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Create Record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Transcript?": {
+      "main": [
+        [
+          {
+            "node": "Download VTT",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create Record1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Transcript?1": {
+      "main": [
+        [
+          {
+            "node": "Download VTT1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Record": {
+      "main": [
+        [
+          {
+            "node": "Update Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Record1": {
+      "main": [
+        [
+          {
+            "node": "Update Status1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze Video": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload Video": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Analyze Video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a record": {
+      "main": [
+        [
+          {
+            "node": "Get Download URL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Video": {
+      "main": [
+        [
+          {
+            "node": "Upload Video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Update record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook1": {
+      "main": [
+        [
+          {
+            "node": "Get a record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Get Search Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Search Request": {
+      "main": [
+        [
+          {
+            "node": "Keyword vs. Account",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook2": {
+      "main": [
+        [
+          {
+            "node": "Get a record1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a record1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Update record1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anthropic Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Download URL": {
+      "main": [
+        [
+          {
+            "node": "Download Video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "e9fa2647-b4ed-4b85-bd50-ef6246d50a9f",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "5ebd6dc9d3bb23112c64c152227f5c47b59dfc43932ce80ef58235268ae5a112"
+  },
+  "id": "7ETZqckLrTSy7yct",
+  "tags": []
+}

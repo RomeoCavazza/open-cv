@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Task 04</title>
+  <link rel="stylesheet" href="../../assets/bootstrap/css/bootstrap.min.css">
+  <style>
+    .msg { min-height: 1.25rem; }
+  </style>
+</head>
+<body class="p-4">
+  <div class="container" style="max-width:640px">
+    <h1 class="mb-4">Task 04</h1>
+
+    <form class="row g-3" onsubmit="return false">
+      <div class="col-12">
+        <label for="type" class="form-label">Type</label>
+        <input id="type" name="type" class="form-control" placeholder="e.g. smartphone" autocomplete="off">
+        <div id="typeMsg" class="msg small mt-1"></div>
+      </div>
+
+      <div class="col-12">
+        <label for="brand" class="form-label">Brand</label>
+        <input id="brand" name="brand" class="form-control" placeholder="e.g. acme-100&co" autocomplete="off">
+        <div id="brandMsg" class="msg small mt-1"></div>
+      </div>
+    </form>
+
+    <div id="alert" class="alert d-none mt-3" role="alert"></div>
+  </div>
+
+  <script src="../../assets/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="task04.js"></script>
+</body>
+</html>
