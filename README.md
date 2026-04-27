@@ -66,12 +66,11 @@ python3 -m http.server 8000
 
 ```mermaid
 graph LR
-    A[Offre d'emploi] -->|Scrape| B(Markdown)
-    B -->|Personnalise| C{JSON Instance}
+    A[Offre d'emploi] -->|Scrape| B[Markdown]
+    B -->|Personnalise| C[JSON Instance]
     D[Profil Global] -->|Infection| C
     C -->|Moteur Web| E[HTML/CSS]
     E -->|Print| F[Export PDF]
-    style C fill:#e1f5fe,stroke:#01579b,stroke-width:2px
 ```
 
 ---
