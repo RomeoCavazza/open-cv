@@ -5,16 +5,17 @@ Ce document définit les protocoles et les règles de gestion des données pour 
 ## Protocole de Prise de Contexte
 L'agent doit consulter les fichiers dans l'ordre suivant :
 1. **`README.md`** : Vue d'ensemble de l'architecture.
-2. **`/engines/data/user/profile.md`** : Données personnelles de référence.
-3. **`/docs/how_it_works.md`** : Détails techniques sur le fonctionnement des scripts.
-4. **`/engines/data/offres/liste.json`** : Liste des cibles de candidature.
-5. **`/engines/data/offres/json/`** : Dossiers de travail pour chaque candidature.
+2. **`/data/user/profile.md`** : Données personnelles de référence.
+3. **`/data/user/old-cv/`** : Historique des anciens CV utiles pour le ton et les variantes métier.
+4. **`/docs/how_it_works.md`** : Détails techniques sur le fonctionnement des scripts.
+5. **`/data/offres/liste.json`** : Liste des cibles de candidature.
+6. **`/data/instances/`** : Dossiers de travail pour chaque candidature.
 
 ---
 
 ## Mission 1 : Collecte d'Offres
 1. Extraire le contenu textuel des offres (descriptions, prérequis).
-2. Sauvegarder chaque offre au format Markdown dans `/engines/data/offres/markdown/`.
+2. Sauvegarder chaque offre au format Markdown dans `/data/offres/raw/`.
 
 ---
 
@@ -41,4 +42,13 @@ L'agent doit consulter les fichiers dans l'ordre suivant :
 ## Critères de Validation
 - **Sobriété** : Vérifier l'absence de jargon "Startup" ou de termes marketing vides.
 - **Densité** : Le document doit être aéré mais techniquement dense.
-- **Sources** : Toujours utiliser `/engines/data/user/profile.md` comme source de vérité unique.
+- **Sources** : Toujours utiliser `/data/user/profile.md` comme source de vérité unique.
+
+---
+
+## Règles d'Architecture
+
+- Ne pas recréer de copie de `data/` dans `web/`.
+- Ne pas introduire d'API locale tant que le workflow CLI suffit.
+- Garder `data/templates/` minimal : uniquement les templates actifs de génération.
+- Garder les anciens CV dans `data/user/old-cv/`, pas dans `data/templates/`.

@@ -1,6 +1,6 @@
 # Resume Builder
 
-Agent-based orchestration for job posting scraping and resume/cover letter generation.
+Générateur local de candidatures pour transformer des offres brutes en CV et lettres personnalisés.
 
 ![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
 ![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)
@@ -22,12 +22,12 @@ Ce projet est un moteur de rendu de candidatures (CV et Lettres de Motivation) a
 
 ```text
 .
+├── data/               # Source de vérité (JSON/Markdown)
 ├── docs/               # Documentation et guides d'utilisation
-├── engines/
-│   ├── data/           # Données (Offres JSON/MD, Profil, Modèles)
-│   ├── scripts/        # Intelligence (Scraping & Personnalisation)
+├── scripts/            # CLI et tooling Python
+├── web/                # Frontend statique
 │   ├── resume/         # Moteur de rendu CV
-│   └── cover-letter/   # Moteur de rendu Lettre
+│   └── cover-letter/   # Moteur de rendu lettre
 ├── shell.nix           # Environnement de développement
 └── README.md
 ```
@@ -40,7 +40,7 @@ Le workflow est divisé en quatre étapes clés :
 
 1.  **Scrapage** : Récupération automatique des offres d'emploi depuis diverses plateformes.
 2.  **Analyse** : Extraction des mots-clés, des compétences requises et des missions principales.
-3.  **Personnalisation** : Génération de données JSON spécifiques à chaque offre à partir du profil utilisateur et des exigences du poste (stockées dans `engines/data/`).
+3.  **Personnalisation** : Génération de données JSON spécifiques à chaque offre à partir du profil utilisateur et des exigences du poste (stockées dans `data/instances/`).
 4.  **Rendu** : Visualisation dynamique via le moteur web intégré permettant un export PDF parfait.
 
 ### Installation
@@ -57,7 +57,7 @@ python3 -m http.server 8000
 
 ## Stack Technique
 
-- **Backend** : Python 3 (Scraping, Traitement de données).
+- **Scripts** : Python 3 (scraping, traitement de données, génération).
 - **Frontend** : HTML5 moderne, CSS3 (Flexbox/Grid), JavaScript natif (pour l'injection de données).
 - **Formatage** : JSON pour les données, Markdown pour les sources d'offres.
 - **Environnement** : Nix pour la reproductibilité.

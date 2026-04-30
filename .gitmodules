@@ -40,3 +40,9 @@
 [submodule "data/user/projets/veyl.io"]
 	path = data/user/projets/veyl.io
 	url = https://github.com/RomeoCavazza/veyl.io.git
+[submodule "data/user/projets/CS50"]
+	path = data/user/projets/CS50
+	url = https://github.com/RomeoCavazza/CS50.git
+[submodule "data/user/projets/RomeoCavazza"]
+	path = data/user/projets/RomeoCavazza
+	url = https://github.com/RomeoCavazza/RomeoCavazza.git

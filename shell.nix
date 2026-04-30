@@ -19,6 +19,6 @@ pkgs.mkShell {
 
     echo "Environnement scraper prêt."
     echo "Config: $SCRAPER_CONFIG"
-    echo "Lancer: python engines/scripts/scrape_offres.py --config \"$SCRAPER_CONFIG\" --overwrite"
+    echo "Lancer: python scripts/scrape_offres.py --config \"$SCRAPER_CONFIG\" --overwrite"
   '';
 }
