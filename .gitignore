@@ -1,24 +1,24 @@
-# Secrets / local config
+# Rust
+/target/
+Cargo.lock.bak
+
+# sqlx offline cache (commit `.sqlx/` quand tu en auras besoin)
+# /.sqlx/
+
+# Postgres local (créé par `just db-init`)
+/.pg/
+
+# Env
 .env
-.env.*
-*.pem
-*.key
-id_rsa
-id_rsa.pub
-credentials*.json
+.env.local
 
-# OS / editors
+# IDE
+/.idea/
+/.vscode/
+*.swp
 .DS_Store
-.vscode/
-.idea/
 
-# Node
-node_modules/
-
-# Python
-__pycache__/
-.venv/
-
-
-# User data and localized project code
-engines/data/
+# Nix
+/.direnv/
+/result
+/result-*
