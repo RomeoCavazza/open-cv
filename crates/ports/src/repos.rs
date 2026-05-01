@@ -1,0 +1,64 @@
+//! Traits des repositories — l'interface entre le domaine et la persistence.
+
+use async_trait::async_trait;
+use domain::{Chunk, Instance, InstanceId, Offre, OffreId, Profil, ProfilId, Slug};
+use thiserror::Error;
+
+#[async_trait]
+pub trait OffreRepo: Send + Sync {
+    async fn get_by_id(&self, id: OffreId) -> Result<Option<Offre>, RepoError>;
+    async fn get_by_slug(&self, slug: &Slug) -> Result<Option<Offre>, RepoError>;
+    async fn list_recent(&self, limit: u32) -> Result<Vec<Offre>, RepoError>;
+    async fn upsert(&self, offre: &Offre) -> Result<(), RepoError>;
+    async fn count(&self) -> Result<u64, RepoError>;
+
+    /// Lookup par hash du contenu pour la dédup à l'intake.
+    async fn find_by_content_hash(
+        &self,
+        source_host: &str,
+        hash: &[u8],
+    ) -> Result<Option<Offre>, RepoError>;
+}
+
+#[async_trait]
+pub trait ProfilRepo: Send + Sync {
+    async fn get_active(&self) -> Result<Option<Profil>, RepoError>;
+    async fn get_by_id(&self, id: ProfilId) -> Result<Option<Profil>, RepoError>;
+    async fn upsert(&self, profil: &Profil) -> Result<(), RepoError>;
+}
+
+#[async_trait]
+pub trait ChunkRepo: Send + Sync {
+    async fn upsert(&self, chunk: &Chunk) -> Result<(), RepoError>;
+
+    /// Top-K chunks d'un profil par similarité cosinus avec un embedding query.
+    async fn top_k_by_embedding(
+        &self,
+        profil_id: ProfilId,
+        query_embedding: &[f32],
+        k: u32,
+    ) -> Result<Vec<(Chunk, f32)>, RepoError>;
+}
+
+#[async_trait]
+pub trait InstanceRepo: Send + Sync {
+    async fn get_by_id(&self, id: InstanceId) -> Result<Option<Instance>, RepoError>;
+    async fn get_by_slug(&self, slug: &Slug) -> Result<Option<Instance>, RepoError>;
+    async fn list_recent(&self, limit: u32) -> Result<Vec<Instance>, RepoError>;
+    async fn upsert(&self, instance: &Instance) -> Result<(), RepoError>;
+}
+
+#[derive(Debug, Error)]
+pub enum RepoError {
+    #[error("erreur SQL : {0}")]
+    Sql(String),
+
+    #[error("contrainte d'unicité violée : {0}")]
+    UniqueViolation(String),
+
+    #[error("référence introuvable : {0}")]
+    NotFound(String),
+
+    #[error("autre : {0}")]
+    Other(String),
+}

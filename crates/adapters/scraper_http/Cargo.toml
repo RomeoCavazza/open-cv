@@ -1,0 +1,19 @@
+[package]
+name        = "adapter-scraper-http"
+version.workspace      = true
+edition.workspace      = true
+rust-version.workspace = true
+
+[lib]
+name = "adapter_scraper_http"
+path = "src/lib.rs"
+
+[dependencies]
+ports        = { path = "../../ports" }
+async-trait  = { workspace = true }
+reqwest      = { workspace = true }
+scraper      = { workspace = true }
+encoding_rs  = { workspace = true }
+url          = { workspace = true }
+tracing      = { workspace = true }
+tokio        = { workspace = true }

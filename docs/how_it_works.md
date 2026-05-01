@@ -1,83 +1,45 @@
-# Fonctionnement du Dépôt
+# Comment ça marche ? (Architecture sous le capot)
 
-Ce document décrit l'organisation des fichiers et les processus de génération des documents de candidature.
+Le système est conçu comme une application locale combinant Rust, PostgreSQL et un frontend statique pour générer des candidatures assistées par IA.
 
-## Organisation du Dépôt
+L'objectif est simple : transformer des offres d'emploi brutes en une candidature exploitable avec restitution, CV adapté et lettre de motivation.
 
-### 1. Données Utilisateur
-- `/data/user/profile.md` : Profil de référence contenant l'identité, l'historique et les compétences.
-- `/data/user/projets/` : Projets personnels et techniques embarqués en submodules Git.
-- `/data/user/old-cv/` : Historique des anciens CV Markdown servant de matière de référence.
-- `/docs/` : Documentation technique et guides d'utilisation.
+## 1. L'Architecture Hexagonale (Backend Rust)
 
-### 2. Candidatures & Offres
-- `/data/offres/liste.json` : Index des offres cibles (Source de vérité).
-- `/data/offres/liste.md` : Variante éditable humaine de la liste des offres.
-- `/data/instances/` : Dossiers des instances personnalisées (un dossier par offre).
-- `/data/offres/raw/` : Texte brut canonique des offres d'emploi au format Markdown.
-- `/data/templates/` : Modèles JSON servant de base à la création de nouvelles instances.
+Le cœur du système est écrit en Rust, divisé en 5 "crates" (paquets) selon les principes de l'**Architecture Hexagonale (Ports & Adapters)** :
 
-### 3. Interface de Rendu Web
-- `/web/` : Interface de visualisation dynamique.
-  - Le dashboard (`index.html`) charge les fichiers JSON directement depuis `/data/`.
-  - `/web/resume/` : Moteur de rendu des CV.
-  - `/web/cover-letter/` : Moteur de rendu des lettres de motivation.
+1. **`domain`** : Les modèles de données purs (`Offre`, `Instance`, `Resume`, `CoverLetter`). Zéro dépendance externe.
+2. **`ports`** : Les interfaces (traits) que l'application utilise pour interagir avec l'extérieur (ex: `LlmClient`, `InstanceRepository`).
+3. **`application`** : La logique métier (les "Use Cases"). C'est ici qu'on orchestre l'IA : "Prendre cette offre, chercher le profil de l'utilisateur, demander à Claude de rédiger un CV, sauvegarder".
+4. **`adapters`** : Les implémentations concrètes des ports (ex: `llm_claude` pour interroger l'API Anthropic, `postgres` pour parler à la base de données via SQLx).
+5. **`api`** : L'interface HTTP. Un serveur [Axum](https://github.com/tokio-rs/axum) qui expose les routes REST et sert le Frontend statique.
 
----
+## 2. Le Pipeline IA (Génération Structurée)
 
-## Scripts de Traitement
+La vraie force de ce backend, c'est sa gestion de l'IA. Au lieu de demander au LLM de générer du texte libre, on utilise la **génération structurée JSON**.
 
-### Gestion des Dossiers
-- **Initialisation** : `python3 scripts/cv_tool.py init-all`
-  - Crée l'arborescence des fichiers JSON pour chaque offre listée dans `liste.json`.
-- **Synchronisation** : `python3 scripts/personalize_all.py`
-  - Applique les mappings de formation (Master IA/Cloud/etc.) et harmonise le contenu des instances.
+- L'application construit une requête en fournissant le **JSON Schema** exact du composant (CV ou Lettre) attendu.
+- Le LLM (`Claude 3.5 Sonnet` par défaut) est contraint de répondre en respectant strictement cette structure (`serde_json::Value`).
+- Le système désérialise statiquement ce JSON en Rust pour s'assurer de son intégrité avant de le stocker en BDD ou de le fournir au frontend.
 
-### Acquisition des Offres
-- **Script de scraping** : `/scripts/scrape_offres.py`
-- **Configuration** : `/scrape-offres.yaml`
-  - Les offres scrapées sont enregistrées uniquement dans `/data/offres/raw/`.
+Le pipeline passe par plusieurs étapes :
+1. **Analyse de l'offre** et récupération du profil actif.
+2. **Recherche / reranking** des chunks utiles du profil.
+3. **Plan de candidature**.
+4. **Génération des livrables** : restitution, CV et lettre.
+5. **Validation minimale puis persistance** en base.
 
----
+## 3. Le Frontend
 
-## Utilisation de l'Interface Web
+Le frontend vit dans le dossier `/web` et est délibérément **Vanilla (HTML/JS/CSS purs)** pour l'instant.
 
-L'interface permet de prévisualiser les documents avant export.
+- Il est composé d'un dashboard principal et de documents intégrés dans des **iframes**.
+- **Pourquoi des Iframes ?** Pour garantir une isolation CSS parfaite. Le rendu du CV a besoin d'unités absolues (`mm`) pour générer un PDF exact au format A4 (210x297mm). Une Iframe évite que le CSS de l'interface graphique (barre latérale) n'interfère avec l'impression du document.
+- L'utilisateur clique sur une offre, l'interface change le `src` de l'Iframe, et la vue se met à jour en injectant le JSON (généré par le backend Rust) dans les champs HTML.
 
-1. **Serveur local** :
-   ```bash
-   # Lancer depuis la racine du projet
-   python3 -m http.server 8000
-   ```
-2. **Visualisation** :
-   - Ouvrir `http://localhost:8000/web/`
-   - Sélectionner une offre dans la barre latérale pour charger les données correspondantes.
-   - Utiliser la fonction d'impression du navigateur (Ctrl+P) pour générer le PDF.
+## 4. Les Données (PostgreSQL Local)
 
----
+Toutes les offres et les historiques de génération sont stockés dans une base **PostgreSQL 16**.
+Grâce à `flake.nix` et au `Justfile`, la base peut tourner entièrement dans un dossier local (`.pg/`), sans dépendre d'un service global installé sur la machine.
 
-## Commandes Principales
-
-| Objectif | Commande |
-| :--- | :--- |
-| Créer les dossiers d'instances | `python3 scripts/cv_tool.py init-all` |
-| Harmoniser les contenus | `python3 scripts/personalize_all.py` |
-| Récupérer de nouvelles offres | `python3 scripts/scrape_offres.py --config scrape-offres.yaml` |
-
----
-
-## Standard de Données JSON
-Pour garantir un rendu "Limpide" et professionnel, les fichiers `resume.json` doivent respecter les formats suivants :
-- **Compétences** : `"category": "Backend"`, `"items": ["FastAPI", "Rust"]`. 
-  - *Note : Jamais de versions (Next.js 14 -> Next.js) ni de parenthèses.*
-- **Périodes** : Utiliser `"2025 – Présent"` pour les projets en cours de maintenance.
-- **Réalisations** : Un titre descriptif suivi de 2 à 3 points factuels d'une seule ligne.
-
----
-
-## Règles de Structure
-
-- `data/` est la seule source canonique des données métier.
-- `web/` ne contient aucun miroir de données et lit directement dans `/data/`.
-- `scripts/` centralise les chemins et les workflows CLI.
-- Il n'y a pas d'API locale dans l'état actuel du dépôt.
+Des extensions comme `pgvector` préparent la recherche sémantique sur les chunks de profil.
