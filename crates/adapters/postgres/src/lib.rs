@@ -456,6 +456,30 @@ impl ports::ProfilRepo for ProfilRepoPg {
         }))
     }
 
+    async fn list_all(&self) -> Result<Vec<domain::Profil>, ports::RepoError> {
+        let rows = sqlx::query!(
+            r#"
+            SELECT id, label, content, is_active, created_at
+            FROM profils
+            ORDER BY created_at DESC
+            "#
+        )
+        .fetch_all(&self.pool)
+        .await
+        .map_err(map_sqlx)?;
+
+        Ok(rows
+            .into_iter()
+            .map(|r| domain::Profil {
+                id: domain::ProfilId::from_uuid(r.id),
+                label: r.label,
+                content: r.content,
+                is_active: r.is_active,
+                created_at: r.created_at,
+            })
+            .collect())
+    }
+
     async fn upsert(&self, profil: &domain::Profil) -> Result<(), ports::RepoError> {
         sqlx::query!(
             r#"

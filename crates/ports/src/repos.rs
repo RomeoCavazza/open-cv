@@ -24,6 +24,7 @@ pub trait OffreRepo: Send + Sync {
 pub trait ProfilRepo: Send + Sync {
     async fn get_active(&self) -> Result<Option<Profil>, RepoError>;
     async fn get_by_id(&self, id: ProfilId) -> Result<Option<Profil>, RepoError>;
+    async fn list_all(&self) -> Result<Vec<Profil>, RepoError>;
     async fn upsert(&self, profil: &Profil) -> Result<(), RepoError>;
 }
 

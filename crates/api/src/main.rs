@@ -36,7 +36,7 @@ use handlers::ingest::ingest_handler;
 use handlers::profile::{
     get_active_profile_cover_letter_template_handler, get_active_profile_handler,
     get_active_profile_resume_handler, get_active_profile_resume_template_handler,
-    update_active_profile_handler,
+    list_profiles_handler, update_active_profile_handler,
 };
 
 #[tokio::main]
@@ -138,6 +138,10 @@ async fn main() -> anyhow::Result<()> {
         .route("/api/offres", get(list_offres))
         .route("/api/offres/:slug", get(get_offre_by_slug))
         .route("/api/ingest", post(ingest_handler))
+        .route(
+            "/api/profiles",
+            get(list_profiles_handler),
+        )
         .route(
             "/api/profile/active",
             get(get_active_profile_handler).put(update_active_profile_handler),

@@ -146,13 +146,52 @@
             color: var(--heading);
         }
         .profile-inline-add {
-            padding: 4px 12px;
-            font-size: 12px;
+            padding: 4px 8px;
+            font-size: 13px;
             color: var(--primary);
             border: none;
             background: none;
             font-weight: 600;
             cursor: pointer;
+            border-radius: 6px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+        .profile-inline-add:hover {
+            background: var(--soft-blue);
+        }
+        .doc-field-row {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 12px;
+            border: 1px solid var(--hairline);
+            border-radius: 10px;
+            background: var(--surface-soft);
+        }
+        .doc-field-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .doc-field-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .doc-status-tag {
+            font-size: 11px;
+            color: var(--muted-strong);
+            background: var(--canvas);
+            padding: 2px 8px;
+            border-radius: 4px;
+            border: 1px solid var(--hairline);
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
         .skill-category-name {
             font-weight: 700;
@@ -507,51 +546,65 @@
                     </h3>
                 </div>
                 <div style="display:flex; flex-direction:column; gap:20px;">
-                    <div>
-                        <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:8px;">
-                            <label class="profile-field-label" data-i18n="resume_template" style="margin:0;">Modèle CV</label>
-                            <div style="display:flex; gap:8px;">
+                <div id="documents-container" style="display:flex; flex-direction:column; gap:12px;">
+                    <!-- Modèle CV -->
+                    <div class="doc-field-row">
+                        <div class="doc-field-header">
+                            <div class="doc-field-info">
+                                <label class="profile-field-label" data-i18n="resume_template" style="margin:0;">Modèle CV</label>
+                                <span id="prof-resume-template-status" class="doc-status-tag" style="display:none;"></span>
+                            </div>
+                            <div style="display:flex; gap:4px;">
                                 <input type="file" id="prof-resume-template-file" accept=".json,application/json" style="display:none;">
                                 <button type="button" id="btn-load-resume-template" class="profile-inline-add" title="Charger">+</button>
-                                <button type="button" id="btn-clear-resume-template" class="muted-remove-btn" style="font-size:16px;">×</button>
+                                <button type="button" id="btn-clear-resume-template" class="muted-remove-btn" style="padding:4px 8px;">×</button>
                             </div>
                         </div>
-                        <textarea id="prof-resume-template" style="width:100%; min-height:120px; padding:10px; border:1px solid var(--hairline); border-radius:8px; resize:vertical; font-size:12px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;"></textarea>
+                        <textarea id="prof-resume-template" placeholder="Contenu JSON du modèle de CV..." style="width:100%; min-height:100px; padding:10px; border:1px solid var(--hairline); border-radius:8px; resize:vertical; font-size:12px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;"></textarea>
                     </div>
-                    <div>
-                        <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:8px;">
-                            <label class="profile-field-label" data-i18n="cover_letter_template" style="margin:0;">Modèle lettre</label>
-                            <div style="display:flex; gap:8px;">
+
+                    <!-- Modèle Lettre -->
+                    <div class="doc-field-row">
+                        <div class="doc-field-header">
+                            <div class="doc-field-info">
+                                <label class="profile-field-label" data-i18n="cover_letter_template" style="margin:0;">Modèle lettre</label>
+                                <span id="prof-cover-letter-template-status" class="doc-status-tag" style="display:none;"></span>
+                            </div>
+                            <div style="display:flex; gap:4px;">
                                 <input type="file" id="prof-cover-letter-template-file" accept=".json,application/json" style="display:none;">
                                 <button type="button" id="btn-load-cover-letter-template" class="profile-inline-add" title="Charger">+</button>
-                                <button type="button" id="btn-clear-cover-letter-template" class="muted-remove-btn" style="font-size:16px;">×</button>
+                                <button type="button" id="btn-clear-cover-letter-template" class="muted-remove-btn" style="padding:4px 8px;">×</button>
                             </div>
                         </div>
-                        <textarea id="prof-cover-letter-template" style="width:100%; min-height:120px; padding:10px; border:1px solid var(--hairline); border-radius:8px; resize:vertical; font-size:12px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;"></textarea>
+                        <textarea id="prof-cover-letter-template" placeholder="Contenu JSON du modèle de lettre..." style="width:100%; min-height:100px; padding:10px; border:1px solid var(--hairline); border-radius:8px; resize:vertical; font-size:12px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;"></textarea>
                     </div>
-                    <div>
-                        <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:8px;">
-                            <label class="profile-field-label" data-i18n="apprenticeship_calendar" style="margin:0;">Calendrier d'alternance</label>
-                            <div style="display:flex; gap:8px;">
+
+                    <!-- Calendrier -->
+                    <div class="doc-field-row">
+                        <div class="doc-field-header">
+                            <div class="doc-field-info">
+                                <label class="profile-field-label" data-i18n="apprenticeship_calendar" style="margin:0;">Calendrier d'alternance</label>
+                                <span id="prof-apprenticeship-calendar-status" class="doc-status-tag">Aucun fichier</span>
+                            </div>
+                            <div style="display:flex; gap:4px;">
                                 <input type="file" id="prof-apprenticeship-calendar-file" accept=".pdf,application/pdf" style="display:none;">
                                 <button type="button" id="btn-load-apprenticeship-calendar" class="profile-inline-add" title="Charger">+</button>
-                                <button type="button" id="btn-clear-apprenticeship-calendar" class="muted-remove-btn" style="font-size:16px;">×</button>
+                                <button type="button" id="btn-clear-apprenticeship-calendar" class="muted-remove-btn" style="padding:4px 8px;">×</button>
                             </div>
                         </div>
-                        <div id="prof-apprenticeship-calendar-status" style="font-size:12px; color:var(--muted-strong); margin-bottom:12px;">Aucun fichier chargé</div>
-                        <iframe id="prof-apprenticeship-calendar-preview" style="display:none; width:100%; min-height:300px; border:1px solid var(--hairline); border-radius:8px; background:white;"></iframe>
-                        <div id="prof-apprenticeship-calendar-legacy" style="display:none; margin-top:12px;">
-                            <label class="profile-field-label" style="margin-bottom:8px;">Valeur texte héritée</label>
-                            <textarea id="prof-apprenticeship-calendar-legacy-value" readonly style="width:100%; min-height:80px; padding:10px; border:1px solid var(--hairline); border-radius:8px; resize:vertical; font-size:13px;"></textarea>
+                        <iframe id="prof-apprenticeship-calendar-preview" style="display:none; width:100%; min-height:200px; border:1px solid var(--hairline); border-radius:8px; background:white; margin-top:8px;"></iframe>
+                        <div id="prof-apprenticeship-calendar-legacy" style="display:none; margin-top:8px;">
+                            <label class="profile-field-label" style="font-size:10px; margin-bottom:4px;">Valeur texte héritée</label>
+                            <textarea id="prof-apprenticeship-calendar-legacy-value" readonly style="width:100%; min-height:60px; padding:10px; border:1px solid var(--hairline); border-radius:8px; resize:vertical; font-size:12px;"></textarea>
                         </div>
                     </div>
-                    <div style="border-top: 1px solid var(--hairline); padding-top: 20px;">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                            <label class="profile-field-label" style="margin:0;" data-i18n="annexes">Annexes supplémentaires</label>
-                            <button type="button" id="add-annexe" class="profile-inline-add" data-i18n="add">+ Ajouter</button>
-                        </div>
-                        <div id="list-annexes" style="display:flex; flex-direction:column; gap:8px;"></div>
+
+                    <!-- Annexes -->
+                    <div id="list-annexes" style="display:flex; flex-direction:column; gap:8px;"></div>
+                    <div style="display:flex; justify-content:center; margin-top:4px;">
+                        <button type="button" id="add-annexe" class="profile-inline-add" style="color:var(--muted-strong); font-weight:500; font-size:12px;">+ Ajouter un document supplémentaire</button>
                     </div>
+                </div>
                 </div>
             </div>
         </div>
@@ -678,25 +731,24 @@
             const legacy = document.getElementById('prof-apprenticeship-calendar-legacy');
             const legacyValue = document.getElementById('prof-apprenticeship-calendar-legacy-value');
 
-            preview.style.display = 'none';
-            preview.removeAttribute('src');
-            legacy.style.display = 'none';
-            legacyValue.value = '';
-
             if (!documentValue) {
-                status.textContent = 'Aucun fichier chargé';
+                status.textContent = 'Aucun fichier';
+                preview.style.display = 'none';
+                legacy.style.display = 'none';
                 return;
             }
 
             if (typeof documentValue === 'string') {
-                status.textContent = 'Ancienne valeur texte conservée';
+                status.textContent = 'Valeur texte (obsolète)';
+                preview.style.display = 'none';
                 legacy.style.display = 'block';
                 legacyValue.value = documentValue;
                 return;
             }
 
-            const fileName = documentValue.name || 'calendrier-alternance.pdf';
+            const fileName = documentValue.name || 'document.pdf';
             status.textContent = fileName;
+            status.style.display = 'inline-block';
 
             if (documentValue.data_url) {
                 preview.style.display = 'block';
@@ -1018,18 +1070,24 @@
 
         function createAnnexeRow(item = {}) {
             const div = document.createElement('div');
-            div.className = 'form-row-annexe';
-            div.style = "display:grid; grid-template-columns: 1fr 1fr 40px 40px; gap:10px; margin-bottom:10px; align-items:center; padding:10px; border:1px solid var(--hairline); border-radius:8px; background:var(--canvas);";
+            div.className = 'doc-field-row form-row-annexe';
+            div.style = "background: var(--canvas); border-style: dashed;";
             div.dataset.fileData = item.data_url || "";
             div.dataset.fileType = item.type || "";
             div.dataset.fileName = item.name || "";
             
             div.innerHTML = `
-                <input type="text" data-i18n-placeholder="ph_annexe_name" placeholder="Nom du document" class="annexe-name" value="${item.label || ""}" style="padding:8px; border:1px solid var(--hairline); border-radius:8px; font-size:13px;">
-                <div class="annexe-status" style="font-size:12px; color:var(--muted-strong); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${item.name || "Aucun fichier"}</div>
-                <input type="file" class="annexe-file-input" style="display:none;">
-                <button type="button" class="profile-inline-add annexe-load-btn" title="Charger">+</button>
-                <button type="button" class="muted-remove-btn annexe-remove-btn">×</button>
+                <div class="doc-field-header">
+                    <div class="doc-field-info" style="flex:1;">
+                        <input type="text" data-i18n-placeholder="ph_annexe_name" placeholder="Nom du document" class="annexe-name" value="${item.label || ""}" style="background:transparent; border:none; border-bottom:1px solid var(--hairline); font-size:12px; font-weight:600; padding:2px 0; width:150px;">
+                        <span class="annexe-status doc-status-tag">${item.name || "Aucun fichier"}</span>
+                    </div>
+                    <div style="display:flex; gap:4px;">
+                        <input type="file" class="annexe-file-input" style="display:none;">
+                        <button type="button" class="profile-inline-add annexe-load-btn" title="Charger">+</button>
+                        <button type="button" class="muted-remove-btn annexe-remove-btn" style="padding:4px 8px;">×</button>
+                    </div>
+                </div>
             `;
             
             const fileInput = div.querySelector('.annexe-file-input');
@@ -1055,6 +1113,11 @@
             updateUIStrings();
             return div;
         }
+
+        document.getElementById('add-annexe').onclick = () => {
+            const container = document.getElementById('list-annexes');
+            container.appendChild(createAnnexeRow());
+        };
 
         function createSkillRow(item = { category: "", items: [] }) {
             item = normalizeSkillGroup(item);
@@ -1241,6 +1304,25 @@
             } catch (e) {}
         }
 
+        async function loadProfiles() {
+            try {
+                const res = await fetch('/api/profiles');
+                const profils = await res.json();
+                const select = document.getElementById('ingest-context');
+                if (!select) return;
+                select.innerHTML = '';
+                profils.forEach(p => {
+                    const opt = document.createElement('option');
+                    opt.value = p.id;
+                    opt.textContent = p.label;
+                    if (p.is_active) opt.selected = true;
+                    select.appendChild(opt);
+                });
+            } catch (e) {
+                console.error("Profiles load failed", e);
+            }
+        }
+
         function updateIframe() {
             if (!activeJobId) return;
             const iframe = document.getElementById('iframe-doc');
@@ -1259,8 +1341,13 @@
             const btn = document.getElementById('btn-ingest-run');
             btn.disabled = true;
             const config = { resume: document.getElementById('out-resume').checked, cover: document.getElementById('out-cover').checked, analysis: document.getElementById('out-restitution').checked };
+            const profil_id = document.getElementById('ingest-context').value;
             try {
-                const res = await fetch('/api/ingest', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ input, config }) });
+                const res = await fetch('/api/ingest', { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify({ input, config, profil_id }) 
+                });
                 if (res.ok) { activeJobId = null; await loadOffers(); switchView('app'); }
             } catch (e) {}
             finally { 
@@ -1279,6 +1366,7 @@
         });
 
         loadProfile();
+        loadProfiles();
         if (views.app.classList.contains('active')) loadOffers();
     </script>
     <script type="module">

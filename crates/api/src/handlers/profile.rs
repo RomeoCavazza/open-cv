@@ -18,6 +18,19 @@ pub async fn get_active_profile_handler(
     Ok(Json(profil))
 }
 
+pub async fn list_profiles_handler(
+    State(state): State<AppState>,
+) -> Result<Json<Vec<domain::Profil>>, ApiError> {
+    let profils = state
+        .generate_uc
+        .profils
+        .list_all()
+        .await
+        .map_err(|e| ApiError::Internal(e.to_string()))?;
+
+    Ok(Json(profils))
+}
+
 pub async fn get_active_profile_resume_handler(
     State(state): State<AppState>,
 ) -> Result<Json<JsonValue>, ApiError> {

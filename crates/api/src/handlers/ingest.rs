@@ -22,6 +22,7 @@ pub struct IngestConfig {
 pub struct IngestRequest {
     pub input: String,
     pub config: Option<IngestConfig>,
+    pub profil_id: Option<Uuid>,
 }
 
 pub async fn ingest_handler(
@@ -39,6 +40,25 @@ pub async fn ingest_handler(
 
     // On utilise un client HTTP simple pour scrapper si c'est une URL
     let scraper = adapter_scraper_http::HttpScraper::new();
+
+    // Récupération du profil à utiliser
+    let profil = if let Some(pid) = payload.profil_id {
+        state
+            .generate_uc
+            .profils
+            .get_by_id(domain::ProfilId::from_uuid(pid))
+            .await
+            .map_err(|e| ApiError::Internal(e.to_string()))?
+            .ok_or_else(|| ApiError::BadRequest(format!("Profil {} introuvable", pid)))?
+    } else {
+        state
+            .generate_uc
+            .profils
+            .get_active()
+            .await
+            .map_err(|e| ApiError::Internal(e.to_string()))?
+            .ok_or_else(|| ApiError::BadRequest("Aucun profil actif trouvé".to_string()))?
+    };
 
     for item in lines {
         let (intitule, entreprise, content, url) = if item.starts_with("http") {
@@ -143,14 +163,6 @@ pub async fn ingest_handler(
         };
 
         // Création d'une instance brouillon associée
-        let profil = state
-            .generate_uc
-            .profils
-            .get_active()
-            .await
-            .map_err(|e| ApiError::Internal(e.to_string()))?
-            .ok_or_else(|| ApiError::BadRequest("Aucun profil actif trouvé".to_string()))?;
-
         let instance = domain::Instance {
             id: domain::InstanceId::new(),
             slug: instance_slug.clone(),
