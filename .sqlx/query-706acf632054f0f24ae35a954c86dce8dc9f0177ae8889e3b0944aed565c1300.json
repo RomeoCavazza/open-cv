@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO offres (\n                id, slug, source_url, source_host, source_hash,\n                entreprise, intitule, localisation, contrat,\n                raw_text, structured, scraped_at, last_seen_at, closed_at, categorie\n            )\n            VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)\n            ON CONFLICT (id) DO UPDATE SET\n                last_seen_at = EXCLUDED.last_seen_at,\n                closed_at    = EXCLUDED.closed_at,\n                structured   = EXCLUDED.structured,\n                categorie    = EXCLUDED.categorie\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Text",
+        "Text",
+        "Bytea",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Jsonb",
+        "Timestamptz",
+        "Timestamptz",
+        "Timestamptz",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "706acf632054f0f24ae35a954c86dce8dc9f0177ae8889e3b0944aed565c1300"
+}
