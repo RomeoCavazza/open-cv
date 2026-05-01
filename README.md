@@ -1,83 +1,254 @@
-# alternance — backend Rust
+# Resume Builder
 
-Builder de candidatures IA-native. Cf. `docs/architecture_rust_v3.md` pour la
-vision complète.
+Generateur local de candidatures pour transformer des offres brutes en CV, restitutions et lettres personnalises.
 
-## Démarrage rapide
+![Rust](https://img.shields.io/badge/Rust-000000?style=for-the-badge&logo=rust&logoColor=white)
+![Axum](https://img.shields.io/badge/Axum-4B5563?style=for-the-badge&logo=rust&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-336791?style=for-the-badge&logo=postgresql&logoColor=white)
+![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)
+![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white)
+![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
+![Nix](https://img.shields.io/badge/NixOS-5277C3?style=for-the-badge&logo=nixos&logoColor=white)
+
+Ce projet est un moteur local de generation de candidatures automatisees et ultra-personnalisees. Il prend des offres d'emploi, les structure, les relie a un profil candidat stocke en base, puis genere des livrables haute fidelite via un backend **Rust + Axum**, une base **PostgreSQL**, et des appels structures a **Claude**.
+
+## Apercus
+
+| Curriculum Vitae | Lettre de Motivation |
+| :---: | :---: |
+| ![Resume Preview](docs/assets/preview-resume.png) | ![Letter Preview](docs/assets/preview-letter.png) |
+
+---
+
+## Architecture du Projet
+
+```text
+.
+├── crates/             # Workspace Rust (domain, ports, application, adapters, api)
+├── docs/               # Documentation et guides d'utilisation
+├── migrations/         # Schema SQL source de verite
+├── web/                # Frontend statique et renderers des documents
+│   ├── resume/         # Moteur de rendu CV
+│   ├── cover-letter/   # Moteur de rendu lettre
+│   ├── restitution/    # Moteur de rendu analyse d'offre
+│   └── templates/      # Fallbacks JSON pour le rendu
+├── flake.nix           # Environnement de developpement Nix
+├── Justfile            # Commandes courantes
+└── README.md
+```
+
+---
+
+## Fonctionnement
+
+Le workflow est maintenant pilote par le backend Rust et se divise grossierement en cinq etapes :
+
+1. **Ingestion** : une offre est envoyee a l'API, dedupliquee, nettoyee et stockee dans `offres`.
+2. **Analyse** : l'offre est structuree pour extraire les missions, la stack et les signaux utiles.
+3. **Contextualisation** : le profil actif et ses chunks sont recuperes depuis PostgreSQL.
+4. **Generation** : l'application produit une restitution, un CV adapte et une lettre ciblee.
+5. **Rendu** : le frontend statique charge les JSON et les affiche dans les renderers HTML imprimables.
+
+### Installation
 
 ```bash
-# 1. Entrer dans l'environnement Nix
+# Entrer dans l'environnement de developpement
 nix develop
 
-# 2. Initialiser Postgres local (première fois uniquement)
+# Initialiser Postgres local (premiere fois)
 just db-init
 
-# 3. Démarrer Postgres
+# Demarrer Postgres
 just db-up
 
-# 4. Appliquer les migrations
+# Appliquer les migrations
 just migrate
 
-# 5. Lancer le serveur
+# Lancer l'API Axum
 just dev
-# ou : cargo run -p api
 ```
 
-Le serveur écoute sur `http://127.0.0.1:3000` et :
+L'application est ensuite disponible sur `http://localhost:8000`.
 
-- sert ton `web/` actuel sur `/`
-- expose `GET /health` (health check)
-- expose `GET /api/offres?limit=20` (liste depuis la DB)
-- expose `GET /api/instances/:slug` (instance par slug)
+---
 
-## Structure
+## Stack Technique
 
+- **Backend** : Rust, Axum, Tokio, architecture hexagonale.
+- **Base de donnees** : PostgreSQL 16, `sqlx`, `pgvector`, `pgcrypto`, `pg_trgm`.
+- **IA** : client Anthropic Claude pour la generation structuree.
+- **Frontend** : HTML, CSS et JavaScript natifs, avec iframes pour isoler les documents.
+- **Environnement** : Nix, Just, Cargo workspace.
+
+---
+
+## Workflow de Production
+
+```mermaid
+flowchart LR
+    User[Utilisateur]
+    UI[Frontend web statique]
+    API[Backend API Rust Axum]
+    APP[Use cases application]
+    LLM[Claude API]
+    PG[(PostgreSQL)]
+    Render[Renderers HTML CV / Lettre / Restitution]
+
+    User --> UI
+    UI --> API
+    API --> APP
+    APP --> PG
+    APP --> LLM
+    PG --> API
+    API --> UI
+    UI --> Render
 ```
-crates/
-├── domain/                # entités pures, zéro dépendance infra
-├── ports/                 # traits (LlmClient, OffreRepo, Scraper...)
-├── application/           # use cases
-├── adapters/
-│   ├── postgres/          # impl OffreRepo/InstanceRepo via sqlx
-│   ├── llm_claude/        # impl LlmClient via Anthropic API (squelette)
-│   └── scraper_http/      # impl Scraper basique HTTP
-└── api/                   # binaire Axum
+
+---
+
+## Schema Backend / Frontend
+
+```mermaid
+flowchart TD
+    subgraph Phase1["1. Boot local"]
+        A[nix develop] --> B[just db-init / just db-up]
+        B --> C[just migrate]
+        C --> D[just dev]
+    end
+
+    subgraph Phase2["2. Ingestion d'une offre"]
+        E[Utilisateur colle une URL ou une fiche] --> F[POST /api/ingest]
+        F --> G[Axum parse la requete]
+        G --> H[Use case d'ingestion]
+        H --> I[offres en PostgreSQL]
+    end
+
+    subgraph Phase3["3. Generation"]
+        J[POST /api/instances/:slug/generate] --> K[GenerateApplicationUseCase]
+        K --> L[Lecture profil actif + chunks]
+        L --> M[Selection du contexte]
+        M --> N[Claude genere restitution / resume / cover letter]
+        N --> O[instances en PostgreSQL]
+        O --> P[GET /api/instances/:slug]
+    end
+
+    subgraph Phase4["4. Rendu"]
+        Q[Frontend change l'iframe] --> R[/resume/index.html]
+        Q --> S[/cover-letter/index.html]
+        Q --> T[/restitution/index.html]
+        P --> Q
+    end
+
+    PG[(PostgreSQL)]
+    LLM[(Claude API)]
+
+    I --> PG
+    L --> PG
+    O --> PG
+    N --> LLM
 ```
 
-## Sqlx en mode online vs offline
+---
 
-Pour l'instant, `sqlx::query!` valide les requêtes à la **compilation**, ce qui
-nécessite que la DB soit lancée et migrée pour que `cargo build` réussisse.
+## Diagramme des Tables
 
-Pour passer en mode offline (DB pas requise pour build) :
-```bash
-cargo sqlx prepare --workspace
-git add .sqlx/
+```mermaid
+erDiagram
+    profils ||--o{ chunks : contains
+    offres ||--o{ instances : feeds
+    profils ||--o{ instances : owns
+    instances ||--o{ messages : contains
+    instances ||--o{ llm_calls : traces
+
+    offres {
+        uuid id PK
+        text slug UK
+        text source_url
+        text source_host
+        bytea source_hash
+        text entreprise
+        text intitule
+        text localisation
+        text contrat
+        text categorie
+        text raw_html
+        text raw_text
+        jsonb structured
+        vector embedding
+        timestamptz scraped_at
+        timestamptz last_seen_at
+        timestamptz closed_at
+    }
+
+    profils {
+        uuid id PK
+        text label
+        jsonb content
+        boolean is_active
+        timestamptz created_at
+    }
+
+    chunks {
+        uuid id PK
+        uuid profil_id FK
+        chunk_kind kind
+        text titre
+        text content
+        jsonb metadata
+        vector embedding
+        timestamptz created_at
+    }
+
+    instances {
+        uuid id PK
+        text slug UK
+        uuid offre_id FK
+        uuid profil_id FK
+        instance_status status
+        jsonb resume_json
+        jsonb cover_letter_json
+        jsonb notes
+        timestamptz created_at
+        timestamptz updated_at
+        timestamptz sent_at
+    }
+
+    messages {
+        uuid id PK
+        uuid instance_id FK
+        text role
+        text content
+        timestamptz created_at
+    }
+
+    llm_calls {
+        uuid id PK
+        uuid instance_id FK
+        text purpose
+        text provider
+        text model
+        bytea prompt_hash
+        text prompt
+        text response
+        int tokens_in
+        int tokens_out
+        numeric cost_usd
+        int latency_ms
+        text error
+        timestamptz created_at
+    }
 ```
 
-## Workflow Phase 0
+---
 
-1. ✅ Workspace Cargo, crates vides qui compilent
-2. ✅ Postgres + pgvector via Nix
-3. ✅ Migration 0001 appliquée
-4. ✅ Endpoints `GET /health`, `GET /api/offres`, `GET /api/instances/:slug`
-5. ✅ Axum sert `web/` en static
+## Documentation
 
-## Workflow Phase 1 (à venir)
+- [docs/README.md](docs/README.md) : index de la documentation
+- [docs/instructions.md](docs/instructions.md) : demarrage et commandes utiles
+- [docs/how_it_works.md](docs/how_it_works.md) : vue d'ensemble technique
+- [docs/blueprint.md](docs/blueprint.md) : architecture et pipeline de generation
+- [docs/design.md](docs/design.md) : direction visuelle de l'interface
 
-- Import des `data/offres/raw/*.md` existants vers la table `offres`
-- Import des `data/instances/*` existantes vers `instances`
-- Import du profil utilisateur vers `profils` + `chunks` (avec embeddings)
+---
 
-## Workflow Phase 2 (à venir)
-
-- Implémenter `ClaudeClient::complete` et `ClaudeClient::extract`
-- `IntakeOffreUseCase` complet
-- Panel HTML dans `web/index.html` : champ URL, bouton Analyser
-
-## Tests
-
-```bash
-just test          # cargo nextest run
-cargo test -p domain  # tests domaine seul (millisecondes)
-```
+*Ce projet a ete repense autour d'un backend Rust local pour industrialiser la recherche d'alternance sans perdre la finesse de personnalisation des candidatures.*

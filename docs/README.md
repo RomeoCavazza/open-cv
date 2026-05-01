@@ -1,15 +1,13 @@
 # Index de la documentation
 
-Ce répertoire `/docs` centralise l'ensemble de la documentation du projet. Il mélange délibérément la documentation de la version actuellement en production et les brouillons/propositions pour les futures évolutions majeures du système.
+Ce répertoire `/docs` centralise la documentation utile du projet `alternance`.
 
 Voici comment s'y retrouver :
 
-## 1. Documentation de la version actuelle
-- **`how_it_works.md`**, **`instructions.md`**... : Ces fichiers décrivent le fonctionnement de l'outil dans son état actuel (architecture basée sur des scripts Python, fichiers JSON, et rendu frontend statique Vanilla JS/CSS).
+## Utilisation et Compréhension
+- **`instructions.md`** : Guide d'utilisation pas-à-pas. Comment entrer dans le shell Nix, initialiser PostgreSQL local, lancer l'API et utiliser les commandes `just`.
+- **`how_it_works.md`** : Vue d'ensemble de l'architecture actuelle. Comment le backend Rust, PostgreSQL local et le frontend statique coopèrent.
 
-## 2. L'évolution vers la V3 (Backend Rust & Front dynamique)
-- **`blueprint.md`** : C'est le document d'architecture cible. Il propose et détaille l'évolution du projet vers un backend Rust complet (Axum, base PostgreSQL, architecture hexagonale), l'intégration avancée de l'IA (LLMs et Embeddings) et une refonte de l'expérience frontend (Svelte).
-- **`design.md`** : Un document de style sous forme de "pseudo-prompt" qui décrit de manière exhaustive le design system cible (inspiré de Coinbase, avec des tons violet/indigo, et des typographies calmes et institutionnelles).
-
-## 3. Preuves de concept (PoC)
-- **Dossier `tar.gz/`** : Contient deux archives compressées (`alternance-skel.tar.gz` et `alternance-skel-v2.tar.gz`). Ce sont des propositions concrètes d'implémentation (squelettes de code) pour la future architecture backend en Rust.
+## Architecture et Conception Cible
+- **`blueprint.md`** : Document d'architecture technique central. Il décrit l'organisation du workspace Cargo, le schéma de données PostgreSQL et le pipeline de génération.
+- **`design.md`** : Document de direction visuelle pour l'interface web. Il sert de référence de ton et de design system, pas de source de vérité fonctionnelle.

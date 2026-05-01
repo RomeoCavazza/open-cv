@@ -1,54 +1,64 @@
-# Consignes d'Utilisation (Industrialisation Haute-Fidélité)
+# Instructions d'Utilisation
 
-Ce document définit les protocoles et les règles de gestion des données pour l'automatisation des CV avec un standard de qualité "Zéro Bloat".
+Ce guide explique comment démarrer et utiliser le Builder de Candidatures IA-Native en local.
 
-## Protocole de Prise de Contexte
-L'agent doit consulter les fichiers dans l'ordre suivant :
-1. **`README.md`** : Vue d'ensemble de l'architecture.
-2. **`/data/user/profile.md`** : Données personnelles de référence.
-3. **`/data/user/old-cv/`** : Historique des anciens CV utiles pour le ton et les variantes métier.
-4. **`/docs/how_it_works.md`** : Détails techniques sur le fonctionnement des scripts.
-5. **`/data/offres/liste.json`** : Liste des cibles de candidature.
-6. **`/data/instances/`** : Dossiers de travail pour chaque candidature.
+## 1. Prérequis
 
----
+Assure-toi d'avoir **Nix** installé sur ton système. Le projet utilise les Nix Flakes pour garantir un environnement de développement 100% reproductible (Rust, Cargo, Just, PostgreSQL, etc.).
 
-## Mission 1 : Collecte d'Offres
-1. Extraire le contenu textuel des offres (descriptions, prérequis).
-2. Sauvegarder chaque offre au format Markdown dans `/data/offres/raw/`.
+## 2. Entrer dans l'Environnement
 
----
+Dans ton terminal, à la racine du projet, lance :
+```bash
+nix develop
+```
+*Ceci va télécharger et configurer les dépendances nécessaires. Une fois terminé, tu verras le message `alternance dev shell ready`.*
 
-## Mission 2 : Personnalisation (Standard "Limpide")
+## 3. Initialisation de la Base de Données
 
-### 1. Structure du CV (Strict)
-- **Hiérarchie** : 2 Expériences Pro (3 bullets) / 2 Projets Perso (2 bullets). Point barre.
-- **Format** : Mise à jour des fichiers `resume.json` et `cover-letter.json` dans chaque instance.
-- **Pitch** : 1 à 2 lignes. Posture : Proactif ("mettre mes compétences au service de...") et humble.
-- **Brevité** : **Une seule ligne** par bullet point. Supprimer les adjectifs (robuste, excellent).
+Si c'est la toute première fois que tu lances le projet, tu dois initialiser le dossier de la base de données PostgreSQL locale :
+```bash
+just db-init
+```
+*(Cela va créer un dossier caché `.pg/` à la racine pour stocker les données).*
 
-### 2. Adaptation & Wording
-- **Style "Limpide"** : Valeur ajoutée d'abord, stack technique discrète entre parenthèses à la fin.
-- **Terminologie** : Utiliser "Applications" (pas "Apps"), "Messagerie instantanée" (pas "Client de").
-- **Dates** : Pour les projets actifs, utiliser systématiquement **"2025 – Présent"**.
+## 4. Lancement au Quotidien
 
-### 3. Compétences (Anti-Bloat)
-- **Catégories** : Titres de 1 ou 2 mots maximum (Backend, Web, Cloud, Data, IA).
-- **Formatage** : Pas de "&", pas de versions (Next.js, pas Next.js 14), pas de parenthèses (FastAPI, pas FastAPI (Python)).
-- **Focus** : Hard skills uniquement. Exclure Agile, Clean Code, SOLID (doivent transparaître dans les projets).
+Une fois dans le `nix develop`, la routine est simple :
 
----
+1. **Démarrer le serveur PostgreSQL :**
+   ```bash
+   just db-up
+   ```
+2. **Appliquer les migrations** (création des tables, si elles ont changé) :
+   ```bash
+   just migrate
+   ```
+3. **Lancer le serveur API (backend Rust) :**
+   ```bash
+   just dev
+   ```
+   *La commande `just dev` utilise `cargo watch`, donc le serveur se recharge automatiquement si tu modifies le code Rust.*
 
-## Critères de Validation
-- **Sobriété** : Vérifier l'absence de jargon "Startup" ou de termes marketing vides.
-- **Densité** : Le document doit être aéré mais techniquement dense.
-- **Sources** : Toujours utiliser `/data/user/profile.md` comme source de vérité unique.
+Le serveur démarrera sur **http://localhost:8000**.
 
----
+## 5. Accéder à l'Application
 
-## Règles d'Architecture
+Ouvre ton navigateur et rends-toi sur : **[http://localhost:8000](http://localhost:8000)**.
+L'API sert directement le dossier `/web` statique.
 
-- Ne pas recréer de copie de `data/` dans `web/`.
-- Ne pas introduire d'API locale tant que le workflow CLI suffit.
-- Garder `data/templates/` minimal : uniquement les templates actifs de génération.
-- Garder les anciens CV dans `data/user/old-cv/`, pas dans `data/templates/`.
+## 6. Variables d'Environnement
+
+Le projet utilise un fichier `.env` pour stocker les clés nécessaires à la génération.
+1. Copie le fichier d'exemple : `cp .env.example .env`
+2. Édite `.env` pour y ajouter tes clés :
+   ```env
+   ANTHROPIC_API_KEY=sk-ant-api03-...
+   ```
+
+## Commandes Utiles (Récapitulatif)
+
+- `just db-down` : Arrête proprement le serveur PostgreSQL en arrière-plan.
+- `rm -rf target` : Supprime les artefacts de compilation si tu veux récupérer de l'espace disque.
+- `rm -rf .pg` : Supprime la base locale uniquement après avoir arrêté Postgres avec `just db-down`.
+- `cargo check --workspace` : Vérifie que le code Rust compile sans erreur.
