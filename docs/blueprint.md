@@ -1,88 +1,88 @@
-# Blueprint — Architecture Backend & IA
+# Blueprint — Backend and AI Architecture
 
-Ce document décrit l'architecture actuelle du builder de candidatures IA-native (Rust + Postgres + frontend statique). Il sert de référence pour les choix techniques et la structure du projet.
+This document describes the current architecture of the AI-native application builder (Rust + Postgres + static frontend). It is the reference document for the project's structure and technical choices.
 
-## 1. Postulats et Choix Techniques
+## 1. Assumptions and Technical Choices
 
-Le système est conçu autour de trois livrables fondamentaux :
-1. **La restitution de l'offre** : une extraction structurée (synthèse, fit, signaux implicites, points d'attention).
-2. **Le CV adapté** : structuré en JSON pour correspondre parfaitement à l'offre.
-3. **La lettre de motivation** : rédigée sur mesure, avec des paragraphes sémantiques ciblés.
+The system is built around three core deliverables:
+1. **Job analysis**: a structured extraction containing summary, fit, implicit signals, and attention points.
+2. **Tailored resume**: structured JSON designed to match the target job posting.
+3. **Cover letter**: a targeted letter composed of meaningful semantic sections.
 
-### La Stack Technique
+### Technical Stack
 
-- **Langage Backend** : Rust
-- **Framework HTTP** : Axum + Tokio
-- **Base de Données** : PostgreSQL (avec `pgvector`, `pgcrypto`, `pg_trgm`) via `sqlx`
-- **Architecture** : Hexagonale (Domain, Ports, Adapters, Application, API)
-- **Modèle IA Principal** : client Anthropic Claude via `reqwest`
-- **Embeddings** : interface dédiée dans `ports`, actuellement alimentée par un embedder mock côté API
-- **Frontend** : HTML/CSS/JS statique servi par Axum, avec iframes pour les documents
-- **Environnement** : Nix + Just (reproductibilité absolue)
+- **Backend language**: Rust
+- **HTTP framework**: Axum + Tokio
+- **Database**: PostgreSQL with `pgvector`, `pgcrypto`, and `pg_trgm`, accessed through `sqlx`
+- **Architecture**: Hexagonal architecture (Domain, Ports, Adapters, Application, API)
+- **Primary AI model**: Anthropic Claude client via `reqwest`
+- **Embeddings**: dedicated interface in `ports`, currently backed by a mock embedder in the API crate
+- **Frontend**: static HTML/CSS/JS served by Axum, with iframes for document rendering
+- **Environment**: Nix + Just
 
-## 2. Architecture Hexagonale
+## 2. Hexagonal Architecture
 
-L'architecture est segmentée en "Crates" (paquets Rust) au sein d'un workspace Cargo :
+The architecture is split into Rust crates inside a Cargo workspace:
 
 ```
 alternance/
 ├── crates/
-│   ├── domain/           # Cœur métier (types de données), zéro dépendance infra
-│   ├── ports/            # Interfaces (Traits) que le domaine exige (ex: LlmClient)
-│   ├── adapters/         # Implémentations concrètes des ports
-│   │   ├── postgres/     # Persistance via sqlx
-│   │   ├── llm_claude/   # Client API Anthropic
-│   │   ├── scraper_http/ # Scraping basique
-│   ├── application/      # Use cases (IntakeOffre, GenerateApplication)
-│   └── api/              # Point d'entrée HTTP (Axum)
-├── web/                  # Frontend Vanilla JS
-└── migrations/           # Schémas SQL (sqlx)
+│   ├── domain/           # Core business types, no infrastructure dependency
+│   ├── ports/            # Traits required by the domain and application
+│   ├── adapters/         # Concrete implementations of those ports
+│   │   ├── postgres/     # Persistence through sqlx
+│   │   ├── llm_claude/   # Anthropic API client
+│   │   ├── scraper_http/ # Basic HTTP scraping
+│   ├── application/      # Use cases such as intake and generation
+│   └── api/              # Axum HTTP entrypoint
+├── web/                  # Static frontend
+└── migrations/           # SQL schema and migrations
 ```
 
-## 3. Schéma de Données (PostgreSQL)
+## 3. Data Model (PostgreSQL)
 
-La base de données stocke l'intégralité du contexte. Les données locales (fichiers JSON/MD) ne sont plus utilisées comme source de vérité.
+The database stores the full application context. Local JSON and Markdown files are no longer treated as the source of truth.
 
-- **`offres`** : Stocke l'URL, le hash pour déduplication, le texte brut et le résultat `structured` de l'IA (JSONB).
-- **`profils`** : Définit les utilisateurs de la plateforme (mono-utilisateur au lancement).
-- **`chunks`** : Les briques de données (expériences, compétences, projets) utilisées pour le RAG. Intègre les vecteurs `embedding (1024)`.
-- **`instances`** : Représente une candidature (lien entre Profil et Offre). Stocke les livrables `resume_json` et `cover_letter_json`.
-- **`llm_calls`** : Table critique d'observabilité pour tracer chaque requête IA, ses tokens (in/out), son coût et sa latence.
+- **`offres`**: stores the source URL, deduplication hash, raw text, and structured AI output (`JSONB`).
+- **`profils`**: stores candidate profiles, with a single active profile at a time in the current setup.
+- **`chunks`**: stores profile chunks such as experiences, skills, and projects, including `embedding (1024)` vectors for retrieval.
+- **`instances`**: represents an application instance linking a profile and a job offer, with generated `resume_json` and `cover_letter_json`.
+- **`llm_calls`**: observability table for AI calls, including token usage, cost, latency, and possible errors.
 
-## 4. Pipeline de Génération IA
+## 4. AI Generation Pipeline
 
-Le processus pour générer une candidature passe par le use case central `GenerateApplicationUseCase` :
+Application generation runs through the central `GenerateApplicationUseCase`:
 
-1. **Retrieve** : recherche des chunks de profil les plus pertinents pour l'offre.
-2. **Rerank** : le LLM score et filtre les chunks retenus.
-3. **Plan** : le LLM construit un plan de candidature.
-4. **Restitution** : génération de l'analyse structurée de l'offre.
-5. **Resume** : génération du CV structuré.
-6. **Cover Letter** : génération de la lettre structurée.
-7. **Validate / Persist** : validation métier minimale puis sauvegarde de l'instance en base.
+1. **Retrieve**: fetch the most relevant profile chunks for the target job posting.
+2. **Rerank**: let the LLM score and filter those chunks.
+3. **Plan**: build an application strategy for the current offer.
+4. **Analysis**: generate a structured analysis of the offer.
+5. **Resume**: generate the structured resume payload.
+6. **Cover Letter**: generate the structured cover letter payload.
+7. **Validate / Persist**: apply basic business validation and save the instance to the database.
 
-## 5. Le Trait `LlmClient`
+## 5. The `LlmClient` Trait
 
-Toute l'intégration IA est masquée derrière un trait unique dans `crates/ports/src/llm.rs` :
+All AI integration is abstracted behind a single trait in `crates/ports/src/llm.rs`:
 
 ```rust
 #[async_trait]
 pub trait LlmClient: Send + Sync {
-    /// Génération texte libre.
+    /// Free-form text generation.
     async fn complete(&self, req: CompletionRequest) -> Result<CompletionResponse, LlmError>;
 
-    /// Génération structurée. On précise un schéma JSON, on récupère un JSON.
+    /// Structured generation: a JSON schema goes in, JSON comes out.
     async fn extract(&self, req: ExtractionRequest) -> Result<serde_json::Value, LlmError>;
 
     fn name(&self) -> &'static str;
 }
 ```
 
-Ce couplage lâche permet de changer de modèle (Claude, Mistral, OpenAI) de manière transparente. Les appels LLM privilégient le "Structured Output" (Tool Use) pour forcer le modèle à renvoyer des données conformes au JSON attendu par le frontend.
+This loose coupling makes it possible to swap providers or models without changing the application core. LLM calls prioritize structured output so the model returns data that matches the JSON expected by the frontend.
 
 ## 6. Frontend
 
-Le frontend reste volontairement léger.
-- **HTML + JS + CSS statiques** : pas de pipeline de build front dédié dans le repo.
-- **Isolation par iframe** : le rendu du CV, de la lettre et de la restitution reste séparé de l'UI principale.
-- **Service statique Axum** : le backend sert directement le dossier `web/` et expose l'API REST consommée par cette interface.
+The frontend is intentionally lightweight.
+- **Static HTML + JS + CSS**: there is no dedicated frontend build pipeline in the repository.
+- **Iframe isolation**: the resume, cover letter, and analysis renderers stay isolated from the main UI.
+- **Static serving through Axum**: the backend serves the `web/` directory directly and exposes the REST API consumed by the interface.

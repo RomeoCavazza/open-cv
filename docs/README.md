@@ -1,13 +1,13 @@
-# Index de la documentation
+# Documentation Index
 
-Ce répertoire `/docs` centralise la documentation utile du projet `alternance`.
+This `/docs` directory contains the working documentation for the `alternance` project.
 
-Voici comment s'y retrouver :
+Here is how it is organized:
 
-## Utilisation et Compréhension
-- **`instructions.md`** : Guide d'utilisation pas-à-pas. Comment entrer dans le shell Nix, initialiser PostgreSQL local, lancer l'API et utiliser les commandes `just`.
-- **`how_it_works.md`** : Vue d'ensemble de l'architecture actuelle. Comment le backend Rust, PostgreSQL local et le frontend statique coopèrent.
+## Usage and Orientation
+- **`instructions.md`**: step-by-step usage guide. It explains how to enter the Nix shell, initialize local PostgreSQL, start the API, and use the `just` commands.
+- **`how_it_works.md`**: architecture overview. It explains how the Rust backend, local PostgreSQL database, and static frontend work together.
 
-## Architecture et Conception Cible
-- **`blueprint.md`** : Document d'architecture technique central. Il décrit l'organisation du workspace Cargo, le schéma de données PostgreSQL et le pipeline de génération.
-- **`design.md`** : Document de direction visuelle pour l'interface web. Il sert de référence de ton et de design system, pas de source de vérité fonctionnelle.
+## Architecture and Design
+- **`blueprint.md`**: main technical architecture document. It describes the Cargo workspace organization, PostgreSQL data model, and generation pipeline.
+- **`design.md`**: visual direction document for the web interface. It serves as a tone and design-system reference, not as the functional source of truth.

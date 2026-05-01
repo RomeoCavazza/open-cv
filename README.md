@@ -1,6 +1,6 @@
 # Resume Builder
 
-Generateur local de candidatures pour transformer des offres brutes en CV, restitutions et lettres personnalises.
+Local application builder that turns raw job postings into tailored resumes, structured analyses, and cover letters.
 
 ![Rust](https://img.shields.io/badge/Rust-000000?style=for-the-badge&logo=rust&logoColor=white)
 ![Axum](https://img.shields.io/badge/Axum-4B5563?style=for-the-badge&logo=rust&logoColor=white)
@@ -10,89 +10,89 @@ Generateur local de candidatures pour transformer des offres brutes en CV, resti
 ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
 ![Nix](https://img.shields.io/badge/NixOS-5277C3?style=for-the-badge&logo=nixos&logoColor=white)
 
-Ce projet est un moteur local de generation de candidatures automatisees et ultra-personnalisees. Il prend des offres d'emploi, les structure, les relie a un profil candidat stocke en base, puis genere des livrables haute fidelite via un backend **Rust + Axum**, une base **PostgreSQL**, et des appels structures a **Claude**.
+This project is a local application-generation engine. It ingests job postings, structures them, connects them to a candidate profile stored in the database, and produces high-fidelity deliverables through a **Rust + Axum** backend, a **PostgreSQL** database, and structured calls to **Claude**.
 
-## Apercus
+## Previews
 
-| Curriculum Vitae | Lettre de Motivation |
+| Resume | Cover Letter |
 | :---: | :---: |
 | ![Resume Preview](docs/assets/preview-resume.png) | ![Letter Preview](docs/assets/preview-letter.png) |
 
 ---
 
-## Architecture du Projet
+## Project Architecture
 
 ```text
 .
-├── crates/             # Workspace Rust (domain, ports, application, adapters, api)
-├── docs/               # Documentation et guides d'utilisation
-├── migrations/         # Schema SQL source de verite
-├── web/                # Frontend statique et renderers des documents
-│   ├── resume/         # Moteur de rendu CV
-│   ├── cover-letter/   # Moteur de rendu lettre
-│   ├── restitution/    # Moteur de rendu analyse d'offre
-│   └── templates/      # Fallbacks JSON pour le rendu
-├── flake.nix           # Environnement de developpement Nix
-├── Justfile            # Commandes courantes
+├── crates/             # Rust workspace: domain, ports, application, adapters, api
+├── docs/               # Documentation and usage guides
+├── migrations/         # SQL schema source of truth
+├── web/                # Static frontend and document renderers
+│   ├── resume/         # Resume renderer
+│   ├── cover-letter/   # Cover letter renderer
+│   ├── restitution/    # Job analysis renderer
+│   └── templates/      # JSON rendering fallbacks
+├── flake.nix           # Nix development environment
+├── Justfile            # Common commands
 └── README.md
 ```
 
 ---
 
-## Fonctionnement
+## How It Works
 
-Le workflow est maintenant pilote par le backend Rust et se divise grossierement en cinq etapes :
+The workflow is driven by the Rust backend and can be summarized in five main steps:
 
-1. **Ingestion** : une offre est envoyee a l'API, dedupliquee, nettoyee et stockee dans `offres`.
-2. **Analyse** : l'offre est structuree pour extraire les missions, la stack et les signaux utiles.
-3. **Contextualisation** : le profil actif et ses chunks sont recuperes depuis PostgreSQL.
-4. **Generation** : l'application produit une restitution, un CV adapte et une lettre ciblee.
-5. **Rendu** : le frontend statique charge les JSON et les affiche dans les renderers HTML imprimables.
+1. **Ingestion**: a job posting is sent to the API, deduplicated, normalized, and stored in `offres`.
+2. **Analysis**: the posting is structured to extract responsibilities, stack, and key signals.
+3. **Context selection**: the active profile and its chunks are loaded from PostgreSQL.
+4. **Generation**: the application produces a structured analysis, a tailored resume, and a targeted cover letter.
+5. **Rendering**: the static frontend loads the JSON payloads and displays them through printable HTML renderers.
 
 ### Installation
 
 ```bash
-# Entrer dans l'environnement de developpement
+# Enter the development environment
 nix develop
 
-# Initialiser Postgres local (premiere fois)
+# Initialize local Postgres (first time only)
 just db-init
 
-# Demarrer Postgres
+# Start Postgres
 just db-up
 
-# Appliquer les migrations
+# Apply migrations
 just migrate
 
-# Lancer l'API Axum
+# Start the Axum API
 just dev
 ```
 
-L'application est ensuite disponible sur `http://localhost:8000`.
+The application is then available at `http://localhost:8000`.
 
 ---
 
-## Stack Technique
+## Technical Stack
 
-- **Backend** : Rust, Axum, Tokio, architecture hexagonale.
-- **Base de donnees** : PostgreSQL 16, `sqlx`, `pgvector`, `pgcrypto`, `pg_trgm`.
-- **IA** : client Anthropic Claude pour la generation structuree.
-- **Frontend** : HTML, CSS et JavaScript natifs, avec iframes pour isoler les documents.
-- **Environnement** : Nix, Just, Cargo workspace.
+- **Backend**: Rust, Axum, Tokio, hexagonal architecture.
+- **Database**: PostgreSQL 16, `sqlx`, `pgvector`, `pgcrypto`, `pg_trgm`.
+- **AI**: Anthropic Claude client for structured generation.
+- **Frontend**: native HTML, CSS, and JavaScript, with iframes to isolate document rendering.
+- **Environment**: Nix, Just, Cargo workspace.
 
 ---
 
-## Workflow de Production
+## System Workflow
 
 ```mermaid
 flowchart LR
-    User[Utilisateur]
-    UI[Frontend web statique]
+    User[User]
+    UI[Static web frontend]
     API[Backend API Rust Axum]
-    APP[Use cases application]
+    APP[Application use cases]
     LLM[Claude API]
     PG[(PostgreSQL)]
-    Render[Renderers HTML CV / Lettre / Restitution]
+    Render[HTML renderers: Resume, Cover Letter, Analysis]
 
     User --> UI
     UI --> API
@@ -106,36 +106,36 @@ flowchart LR
 
 ---
 
-## Schema Backend / Frontend
+## Backend / Frontend Diagram
 
 ```mermaid
 flowchart TD
-    subgraph Phase1["1. Boot local"]
+    subgraph Phase1["1. Local bootstrap"]
         A[nix develop] --> B[just db-init / just db-up]
         B --> C[just migrate]
         C --> D[just dev]
     end
 
-    subgraph Phase2["2. Ingestion d'une offre"]
-        E[Utilisateur colle une URL ou une fiche] --> F[POST /api/ingest]
-        F --> G[Axum parse la requete]
-        G --> H[Use case d'ingestion]
-        H --> I[offres en PostgreSQL]
+    subgraph Phase2["2. Job intake"]
+        E[User pastes a URL or raw job text] --> F["POST /api/ingest"]
+        F --> G[Axum parses the request]
+        G --> H[Intake use case]
+        H --> I[Store offer in PostgreSQL]
     end
 
     subgraph Phase3["3. Generation"]
-        J[POST /api/instances/:slug/generate] --> K[GenerateApplicationUseCase]
-        K --> L[Lecture profil actif + chunks]
-        L --> M[Selection du contexte]
-        M --> N[Claude genere restitution / resume / cover letter]
-        N --> O[instances en PostgreSQL]
-        O --> P[GET /api/instances/:slug]
+        J["POST /api/instances/:slug/generate"] --> K[GenerateApplicationUseCase]
+        K --> L[Load active profile and chunks]
+        L --> M[Select relevant context]
+        M --> N[Claude generates analysis, resume, and cover letter]
+        N --> O[Persist instance in PostgreSQL]
+        O --> P["GET /api/instances/:slug"]
     end
 
-    subgraph Phase4["4. Rendu"]
-        Q[Frontend change l'iframe] --> R[/resume/index.html]
-        Q --> S[/cover-letter/index.html]
-        Q --> T[/restitution/index.html]
+    subgraph Phase4["4. Rendering"]
+        Q[Frontend updates iframe target] --> R["resume/index.html"]
+        Q --> S["cover-letter/index.html"]
+        Q --> T["restitution/index.html"]
         P --> Q
     end
 
@@ -150,7 +150,7 @@ flowchart TD
 
 ---
 
-## Diagramme des Tables
+## Database Tables
 
 ```mermaid
 erDiagram
@@ -243,12 +243,12 @@ erDiagram
 
 ## Documentation
 
-- [docs/README.md](docs/README.md) : index de la documentation
-- [docs/instructions.md](docs/instructions.md) : demarrage et commandes utiles
-- [docs/how_it_works.md](docs/how_it_works.md) : vue d'ensemble technique
-- [docs/blueprint.md](docs/blueprint.md) : architecture et pipeline de generation
-- [docs/design.md](docs/design.md) : direction visuelle de l'interface
+- [docs/README.md](docs/README.md): documentation index
+- [docs/instructions.md](docs/instructions.md): setup and common commands
+- [docs/how_it_works.md](docs/how_it_works.md): technical overview
+- [docs/blueprint.md](docs/blueprint.md): architecture and generation pipeline
+- [docs/design.md](docs/design.md): visual direction for the interface
 
 ---
 
-*Ce projet a ete repense autour d'un backend Rust local pour industrialiser la recherche d'alternance sans perdre la finesse de personnalisation des candidatures.*
+*This project is built around a local Rust backend to industrialize the application workflow without losing the quality of tailored deliverables.*

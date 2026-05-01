@@ -1,64 +1,64 @@
-# Instructions d'Utilisation
+# Usage Instructions
 
-Ce guide explique comment démarrer et utiliser le Builder de Candidatures IA-Native en local.
+This guide explains how to start and use the application builder locally.
 
-## 1. Prérequis
+## 1. Prerequisites
 
-Assure-toi d'avoir **Nix** installé sur ton système. Le projet utilise les Nix Flakes pour garantir un environnement de développement 100% reproductible (Rust, Cargo, Just, PostgreSQL, etc.).
+Make sure **Nix** is installed on your system. The project uses Nix flakes to provide a reproducible development environment with Rust, Cargo, Just, PostgreSQL, and related tooling.
 
-## 2. Entrer dans l'Environnement
+## 2. Enter the Environment
 
-Dans ton terminal, à la racine du projet, lance :
+From the project root, run:
 ```bash
 nix develop
 ```
-*Ceci va télécharger et configurer les dépendances nécessaires. Une fois terminé, tu verras le message `alternance dev shell ready`.*
+This downloads and configures the required dependencies. When it completes, you should see the `alternance dev shell ready` message.
 
-## 3. Initialisation de la Base de Données
+## 3. Initialize the Database
 
-Si c'est la toute première fois que tu lances le projet, tu dois initialiser le dossier de la base de données PostgreSQL locale :
+If this is your first time running the project, initialize the local PostgreSQL data directory:
 ```bash
 just db-init
 ```
-*(Cela va créer un dossier caché `.pg/` à la racine pour stocker les données).*
+This creates the hidden `.pg/` directory at the project root.
 
-## 4. Lancement au Quotidien
+## 4. Daily Workflow
 
-Une fois dans le `nix develop`, la routine est simple :
+Once inside `nix develop`, the daily workflow is simple:
 
-1. **Démarrer le serveur PostgreSQL :**
+1. **Start PostgreSQL**
    ```bash
    just db-up
    ```
-2. **Appliquer les migrations** (création des tables, si elles ont changé) :
+2. **Apply migrations**
    ```bash
    just migrate
    ```
-3. **Lancer le serveur API (backend Rust) :**
+3. **Start the API server**
    ```bash
    just dev
    ```
-   *La commande `just dev` utilise `cargo watch`, donc le serveur se recharge automatiquement si tu modifies le code Rust.*
+   `just dev` uses `cargo watch`, so the server reloads automatically when Rust files change.
 
-Le serveur démarrera sur **http://localhost:8000**.
+The server starts on **http://localhost:8000**.
 
-## 5. Accéder à l'Application
+## 5. Access the Application
 
-Ouvre ton navigateur et rends-toi sur : **[http://localhost:8000](http://localhost:8000)**.
-L'API sert directement le dossier `/web` statique.
+Open your browser and go to **[http://localhost:8000](http://localhost:8000)**.
+The API serves the static `/web` directory directly.
 
-## 6. Variables d'Environnement
+## 6. Environment Variables
 
-Le projet utilise un fichier `.env` pour stocker les clés nécessaires à la génération.
-1. Copie le fichier d'exemple : `cp .env.example .env`
-2. Édite `.env` pour y ajouter tes clés :
+The project uses a `.env` file to store the keys required for generation.
+1. Copy the example file: `cp .env.example .env`
+2. Edit `.env` and add your keys:
    ```env
    ANTHROPIC_API_KEY=sk-ant-api03-...
    ```
 
-## Commandes Utiles (Récapitulatif)
+## Useful Commands
 
-- `just db-down` : Arrête proprement le serveur PostgreSQL en arrière-plan.
-- `rm -rf target` : Supprime les artefacts de compilation si tu veux récupérer de l'espace disque.
-- `rm -rf .pg` : Supprime la base locale uniquement après avoir arrêté Postgres avec `just db-down`.
-- `cargo check --workspace` : Vérifie que le code Rust compile sans erreur.
+- `just db-down`: stop the PostgreSQL server cleanly.
+- `rm -rf target`: remove build artifacts if you want to reclaim disk space.
+- `rm -rf .pg`: remove the local database only after stopping Postgres with `just db-down`.
+- `cargo check --workspace`: verify that the Rust workspace still compiles.
