@@ -686,8 +686,12 @@
         let activeTab = 'restitution';
 
         function switchView(viewName) {
-            Object.values(views).forEach(v => v.classList.remove('active'));
+            Object.values(views).forEach(v => {
+                v.classList.remove('active');
+                v.scrollTop = 0;
+            });
             views[viewName].classList.add('active');
+            views[viewName].scrollTop = 0;
             document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
             if (viewName === 'ingest') document.getElementById('nav-dashboard').classList.add('active');
             if (viewName === 'app') { document.getElementById('nav-app').classList.add('active'); loadOffers(); }
