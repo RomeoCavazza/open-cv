@@ -150,94 +150,13 @@ flowchart TD
 
 ---
 
-## Database Tables
+## Workspace Board
 
-```mermaid
-erDiagram
-    profils ||--o{ chunks : contains
-    offres ||--o{ instances : feeds
-    profils ||--o{ instances : owns
-    instances ||--o{ messages : contains
-    instances ||--o{ llm_calls : traces
+This board captures the current product direction at a glance: the intake dashboard, the application workspace with live document preview, the profile editor, the visual system, and the technical notes that connect the frontend to the Rust backend and database model.
 
-    offres {
-        uuid id PK
-        text slug UK
-        text source_url
-        text source_host
-        bytea source_hash
-        text entreprise
-        text intitule
-        text localisation
-        text contrat
-        text categorie
-        text raw_html
-        text raw_text
-        jsonb structured
-        vector embedding
-        timestamptz scraped_at
-        timestamptz last_seen_at
-        timestamptz closed_at
-    }
+It is intended as a working overview of the project rather than a polished marketing mockup. It shows how the interface, rendering pipeline, and implementation details fit together in the same workspace.
 
-    profils {
-        uuid id PK
-        text label
-        jsonb content
-        boolean is_active
-        timestamptz created_at
-    }
-
-    chunks {
-        uuid id PK
-        uuid profil_id FK
-        chunk_kind kind
-        text titre
-        text content
-        jsonb metadata
-        vector embedding
-        timestamptz created_at
-    }
-
-    instances {
-        uuid id PK
-        text slug UK
-        uuid offre_id FK
-        uuid profil_id FK
-        instance_status status
-        jsonb resume_json
-        jsonb cover_letter_json
-        jsonb notes
-        timestamptz created_at
-        timestamptz updated_at
-        timestamptz sent_at
-    }
-
-    messages {
-        uuid id PK
-        uuid instance_id FK
-        text role
-        text content
-        timestamptz created_at
-    }
-
-    llm_calls {
-        uuid id PK
-        uuid instance_id FK
-        text purpose
-        text provider
-        text model
-        bytea prompt_hash
-        text prompt
-        text response
-        int tokens_in
-        int tokens_out
-        numeric cost_usd
-        int latency_ms
-        text error
-        timestamptz created_at
-    }
-```
+![Workspace Board](docs/assets/canva.png)
 
 ---
 
