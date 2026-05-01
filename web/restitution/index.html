@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restitution Analyse</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #0052ff; --ink: #1e293b; --surface-soft: #f8fafd; --surface-strong: #eef4fb; --hairline: #d9e3f0; }
+        body { font-family: 'Inter', sans-serif; background: #ffffff; margin: 0; padding: 40px; color: var(--ink); line-height: 1.6; }
+        .container { max-width: 800px; margin: 0 auto; }
+        h1 { font-size: 24px; font-weight: 600; margin-bottom: 32px; letter-spacing: -0.5px; }
+        .section { margin-bottom: 40px; }
+        .section-title { font-size: 14px; font-weight: 600; text-transform: uppercase; color: var(--primary); letter-spacing: 1px; margin-bottom: 16px; border-bottom: 1px solid var(--hairline); padding-bottom: 8px; }
+        .card { background: var(--surface-soft); border-radius: 12px; padding: 24px; }
+        .tag { display: inline-block; background: var(--surface-strong); padding: 4px 12px; border-radius: 100px; font-size: 12px; font-weight: 500; margin-right: 8px; margin-bottom: 8px; }
+        ul { padding-left: 20px; }
+        li { margin-bottom: 8px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 id="job-title">Analyse de l'opportunité</h1>
+        
+        <div class="section">
+            <div class="section-title">Résumé Court</div>
+            <div class="card" id="resume-court">Chargement de l'analyse...</div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Stack Technique</div>
+            <div id="stack-container"></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Missions Clés</div>
+            <ul id="missions-list"></ul>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Points de Vigilance / Exigences</div>
+            <ul id="exigences-list"></ul>
+        </div>
+    </div>
+
+    <script>
+        async function loadRestitution() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const jobId = urlParams.get('id');
+            if (!jobId) return;
+
+            try {
+                const resOffre = await fetch(`/api/offres/${jobId}`);
+                if (!resOffre.ok) throw new Error("Offre non trouvée");
+                const offre = await resOffre.json();
+
+                document.getElementById('job-title').innerText = offre.intitule;
+                document.getElementById('resume-court').innerText = offre.structured.resume_court;
+                
+                const stack = document.getElementById('stack-container');
+                stack.innerHTML = '';
+                offre.structured.stack.forEach(s => {
+                    const span = document.createElement('span');
+                    span.className = 'tag';
+                    span.innerText = s;
+                    stack.appendChild(span);
+                });
+
+                const missions = document.getElementById('missions-list');
+                missions.innerHTML = '';
+                offre.structured.missions.forEach(m => {
+                    const li = document.createElement('li');
+                    li.innerText = m;
+                    missions.appendChild(li);
+                });
+
+                const exigences = document.getElementById('exigences-list');
+                exigences.innerHTML = '';
+                offre.structured.exigences.forEach(e => {
+                    const li = document.createElement('li');
+                    li.innerText = e;
+                    exigences.appendChild(li);
+                });
+            } catch (e) { 
+                console.error(e); 
+                document.getElementById('resume-court').innerText = "Erreur lors du chargement des données.";
+            }
+        }
+        window.onload = loadRestitution;
+    </script>
+</body>
+</html>

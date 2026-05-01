@@ -1,5 +1,8 @@
 :root {
-    --cv-blue: #6d83f2;
+    --cv-blue: #0052ff;
+    --cv-ink: #1e293b;
+    --cv-muted: #64748b;
+    --cv-surface: #eef4fb;
     --font-main: 'Inter', sans-serif;
     --a4-width: 210mm;
     --a4-height: 297mm;
@@ -15,7 +18,7 @@
 
 body {
     font-family: var(--font-main);
-    background-color: #e2e8f0;
+    background-color: var(--cv-surface);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -39,7 +42,7 @@ body.is-framed .no-print.actions {
 }
 
 .btn {
-    background: #1e293b;
+    background: var(--cv-ink);
     color: white;
     border: none;
     padding: 10px 20px;
@@ -53,14 +56,13 @@ body.is-framed .no-print.actions {
 
 .a4-page {
     width: var(--a4-width);
-    height: var(--a4-height);
+    min-height: var(--a4-height);
     background: white;
     position: relative;
-    overflow: hidden;
     display: flex;
     flex-direction: column;
-    color: #000;
-    /* GLOBAL BLACK */
+    color: var(--cv-ink);
+    padding-bottom: 40px; /* Security margin */
 }
 
 /* --- HEADER (Preserve White) --- */
@@ -174,7 +176,7 @@ body.is-framed .no-print.actions {
     align-self: start;
     margin-top: 38px;
     height: fit-content;
-    color: #000;
+    color: var(--cv-ink);
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
 }
@@ -189,7 +191,7 @@ body.is-framed .no-print.actions {
 
 .section h3 {
     font-size: 1rem;
-    color: #666666;
+    color: var(--cv-muted);
     /* Gris plus clair */
     margin-bottom: 12px;
     font-weight: 800;
@@ -200,7 +202,7 @@ body.is-framed .no-print.actions {
 .skill-category,
 .contact-item {
     font-size: 0.75rem;
-    color: #000;
+    color: var(--cv-ink);
 }
 
 .contact-item {
@@ -239,12 +241,12 @@ body.is-framed .no-print.actions {
     font-weight: 800;
     font-size: 0.8rem;
     margin-top: 15px;
-    color: #000;
+    color: var(--cv-ink);
 }
 
 .skill-items {
     font-size: 0.75rem;
-    color: #000;
+    color: var(--cv-ink);
     margin-top: 5px;
     line-height: 1.4;
     word-break: break-word;
@@ -256,7 +258,7 @@ body.is-framed .no-print.actions {
     padding-top: 38px;
     /* Ajusté pour s'aligner sur la bordure de 4px de la sidebar */
     padding-left: 30px;
-    color: #000;
+    color: var(--cv-ink);
     line-height: 1.45; /* +3% d'amplitude de lecture */
 }
 
@@ -267,18 +269,18 @@ body.is-framed .no-print.actions {
     margin-top: 0;
     /* Assure le départ en haut */
     margin-bottom: 20px;
-    color: #666666;
+    color: var(--cv-muted);
 }
 
 .exp-item {
     margin-bottom: 20px;
-    color: #000;
+    color: var(--cv-ink);
 }
 
 .exp-item h4 {
     font-size: 0.8rem;
     font-weight: 800;
-    color: #000;
+    color: var(--cv-ink);
 }
 
 .exp-item .company {
@@ -286,12 +288,12 @@ body.is-framed .no-print.actions {
     font-style: italic;
     font-size: 0.8rem;
     /* de 0.85rem */
-    color: #000;
+    color: var(--cv-ink);
 }
 
 .exp-item .period {
     font-style: italic;
-    color: #000;
+    color: var(--cv-muted);
     font-size: 0.75rem;
     /* de 0.85rem */
 }
@@ -299,14 +301,14 @@ body.is-framed .no-print.actions {
 .project-line {
     font-size: 0.8rem;
     margin-bottom: 4px;
-    color: #000;
+    color: var(--cv-ink);
 }
 
 .company-bold {
     font-weight: 800;
     font-size: 0.8rem;
     font-style: normal;
-    color: #000;
+    color: var(--cv-ink);
 }
 
 .exp-item ul {
@@ -319,7 +321,7 @@ body.is-framed .no-print.actions {
     padding-left: 15px;
     font-size: 0.75rem;
     /* de 0.85rem */
-    color: #000;
+    color: var(--cv-ink);
     margin-bottom: 3px;
 }
 
@@ -327,18 +329,18 @@ body.is-framed .no-print.actions {
     content: "•";
     position: absolute;
     left: 0;
-    color: #000;
+    color: var(--cv-ink);
 }
 
 .edu-item {
     margin-bottom: 12px;
     font-size: 0.75rem;
-    color: #000;
+    color: var(--cv-ink);
 }
 
 .edu-item strong {
     font-weight: 800;
-    color: #000;
+    color: var(--cv-ink);
 }
 
 .edu-item .period {
@@ -350,7 +352,7 @@ body.is-framed .no-print.actions {
     font-size: 0.75rem;
     /* Harmonisation finale */
     font-style: normal;
-    color: #000;
+    color: var(--cv-ink);
 }
 
 

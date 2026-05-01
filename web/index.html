@@ -16,9 +16,11 @@
             --muted: #7c828a;
             --muted-strong: #6b7280;
             --canvas: #ffffff;
-            --surface-soft: #f7f7f7;
-            --surface-strong: #eef0f3;
-            --hairline: #dee1e6;
+            --surface-soft: #f8fafd;
+            --surface-strong: #eef4fb;
+            --hairline: #d9e3f0;
+            --heading: #1e293b;
+            --soft-blue: #eff6ff;
             
             --rounded-pill: 100px;
             --rounded-xl: 24px;
@@ -129,7 +131,7 @@
             font-size: 15px;
             line-height: 1.3;
             margin: 0;
-            color: #334155;
+            color: var(--heading);
             font-weight: 700;
             display: flex;
             align-items: center;
@@ -141,7 +143,7 @@
             line-height: 1.4;
             font-weight: 600;
             margin-bottom: 6px;
-            color: #334155;
+            color: var(--heading);
         }
         .profile-inline-add {
             padding: 4px 12px;
@@ -155,7 +157,7 @@
         .skill-category-name {
             font-weight: 700;
             border: none;
-            color: #0f172a;
+            color: var(--heading);
             width: 70%;
             font-size: 15px;
             line-height: 1.3;
@@ -192,7 +194,8 @@
         .offer-card p { margin: 0; font-size: 0.8125rem; color: var(--body); }
 
         .content-main { flex: 1; background: var(--surface-soft); display: flex; flex-direction: column; }
-        .tabs-bar { height: 56px; background: var(--canvas); border-bottom: 1px solid var(--hairline); display: flex; padding: 0 32px; gap: 32px; }
+        .tabs-bar { height: 64px; background: var(--canvas); border-bottom: 1px solid var(--hairline); display: flex; justify-content: space-between; padding: 0 24px 0 32px; }
+        .tabs-links { display: flex; gap: 32px; height: 100%; }
         .tab { height: 100%; display: flex; align-items: center; font-size: 0.875rem; font-weight: 500; color: var(--body); cursor: pointer; border-bottom: 2px solid transparent; }
         .tab.active { color: var(--primary); border-bottom-color: var(--primary); }
         .sidebar-right {
@@ -200,90 +203,50 @@
             border-left: 1px solid var(--hairline);
             display: flex;
             flex-direction: column;
-            background: var(--canvas);
+            background: linear-gradient(180deg, var(--canvas) 0%, var(--surface-soft) 100%);
         }
         .ai-sidebar-header {
-            padding: 18px 18px 14px;
-            border-bottom: 1px solid var(--hairline);
+            padding: 12px 16px 0;
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            gap: 12px;
+            justify-content: flex-end;
         }
         .ai-sidebar-body {
             flex: 1;
             overflow-y: auto;
-            padding: 18px 16px;
+            padding: 0 20px 20px;
             display: flex;
             flex-direction: column;
-            gap: 12px;
-            background: #f8fafd;
-        }
-        .ai-sidebar-title {
-            font-size: 13px;
-            line-height: 1.3;
-            font-weight: 700;
-            color: #0f172a;
-            margin: 0;
-        }
-        .ai-sidebar-status {
-            width: 8px;
-            height: 8px;
-            border-radius: 9999px;
-            background: #60a5fa;
-            box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.16);
-            flex: 0 0 auto;
-        }
-        .ai-chat-message {
-            max-width: 92%;
-            border-radius: 18px;
-            padding: 12px 14px;
-            font-size: 13px;
-            line-height: 1.55;
-            border: 1px solid var(--hairline);
-        }
-        .ai-chat-message.assistant {
-            align-self: flex-start;
-            background: #ffffff;
-            color: #334155;
-        }
-        .ai-chat-message.user {
-            align-self: flex-end;
-            background: #0f172a;
-            border-color: #0f172a;
-            color: #f8fafc;
-        }
-        .ai-chat-meta {
-            font-size: 10px;
-            line-height: 1.2;
-            color: #94a3b8;
-            font-weight: 700;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-            margin-bottom: 6px;
+            justify-content: center;
+            align-items: center;
+            color: var(--muted);
         }
         .ai-sidebar-composer {
-            border-top: 1px solid var(--hairline);
-            padding: 14px 16px 16px;
-            background: #ffffff;
+            padding: 12px 16px 16px;
+            background: transparent;
         }
         .ai-composer-shell {
-            border: 1px solid #dbe4ee;
-            background: #ffffff;
-            border-radius: 18px;
-            padding: 10px;
+            border: 1px solid var(--hairline);
+            background: var(--canvas);
+            border-radius: 20px;
+            padding: 10px 10px 8px;
+            box-shadow: 0 12px 30px rgba(37, 99, 235, 0.08);
         }
         .ai-composer-input {
             width: 100%;
-            min-height: 88px;
+            min-height: 56px;
+            max-height: 56px;
             border: none;
             border-radius: 12px;
             background: transparent;
-            padding: 2px 2px 10px;
+            padding: 2px 2px 8px;
             font-size: 13px;
             line-height: 1.5;
-            color: #0f172a;
+            color: var(--heading);
             resize: none;
+        }
+        .ai-composer-input::placeholder {
+            color: var(--muted);
         }
         .ai-composer-input:focus {
             outline: none;
@@ -294,22 +257,25 @@
             justify-content: space-between;
             gap: 8px;
         }
-        .ai-composer-tools {
-            display: flex;
-            border: 1px solid #dbe4ee;
-            background: #f8fafc;
+        .ai-composer-plus {
+            width: 28px;
+            height: 28px;
             border-radius: 9999px;
-            padding: 6px 10px;
-            font-size: 11px;
-            font-weight: 600;
-            color: #64748b;
+            border: none;
+            background: transparent;
+            color: var(--muted);
+            font-size: 22px;
+            line-height: 1;
+            cursor: pointer;
         }
         .ai-send-btn {
             border: none;
-            background: #0f172a;
-            color: #ffffff;
+            background: var(--primary);
+            color: var(--canvas);
             border-radius: 9999px;
-            padding: 10px 14px;
+            width: 32px;
+            height: 32px;
+            padding: 0;
             font-size: 12px;
             font-weight: 600;
             cursor: pointer;
@@ -347,18 +313,18 @@
             <option value="en">EN</option>
         </select>
     </nav>
-    <div id="view-ingest" class="view active" style="position: relative; flex-direction: column; align-items: center; justify-content: center; padding: 40px; background: linear-gradient(135deg, #f8fafd 0%, #eff6ff 100%); overflow: hidden;">
+    <div id="view-ingest" class="view active" style="position: relative; flex-direction: column; align-items: center; justify-content: center; padding: 40px; background: linear-gradient(135deg, var(--surface-soft) 0%, var(--soft-blue) 100%); overflow: hidden;">
         <div id="dashboard-shader" aria-hidden="true" style="position: absolute; inset: 0; z-index: 0; pointer-events: none;"></div>
         <div style="position: relative; z-index: 1; max-width: 600px; width: 100%; text-align: center;">
-            <h1 style="font-size: 32px; font-weight: 800; color: #1e293b; margin-bottom: 12px;" data-i18n="new_application">New Application</h1>
+            <h1 style="font-size: 32px; font-weight: 800; color: var(--heading); margin-bottom: 12px;" data-i18n="new_application">New Application</h1>
             
-            <div style="background: white; padding: 32px; border-radius: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.04); border: 1px solid var(--hairline); text-align: left;">
-                <label style="display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #94a3b8; margin-bottom: 10px;" data-i18n="job_description">JOB DESCRIPTION</label>
+            <div style="background: var(--canvas); padding: 32px; border-radius: 20px; box-shadow: 0 20px 50px rgba(15,23,42,0.04); border: 1px solid var(--hairline); text-align: left;">
+                <label style="display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin-bottom: 10px;" data-i18n="job_description">JOB DESCRIPTION</label>
                 <textarea id="job-input" data-i18n-placeholder="placeholder_job_input" placeholder="Paste URLs or raw job description here..." style="width: 100%; height: 160px; padding: 16px; border: 1px solid var(--hairline); border-radius: 12px; resize: none; font-size: 14px; margin-bottom: 24px; transition: border-color 0.2s;"></textarea>
                 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px;">
                     <div>
-                        <label style="display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; color: #94a3b8; margin-bottom: 12px;" data-i18n="deliverables">DELIVERABLES</label>
+                        <label style="display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--muted); margin-bottom: 12px;" data-i18n="deliverables">DELIVERABLES</label>
                         <div style="display: flex; flex-direction: column; gap: 4px;">
                             <div class="option-item">
                                 <span data-i18n="restitution" style="font-size: 13px;">Restitution</span>
@@ -375,13 +341,12 @@
                         </div>
                     </div>
                     <div>
-                        <label style="display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; color: #94a3b8; margin-bottom: 12px;" data-i18n="context">CONTEXT</label>
-                        <select id="ingest-context" style="width: 100%; padding: 10px; border: 1px solid var(--hairline); border-radius: 8px; background: #f8fafd; font-size: 13px;"><option>Loading...</option></select>
+                        <label style="display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--muted); margin-bottom: 12px;" data-i18n="context">CONTEXT</label>
+                        <select id="ingest-context" style="width: 100%; padding: 10px; border: 1px solid var(--hairline); border-radius: 8px; background: var(--surface-soft); font-size: 13px;"><option>Loading...</option></select>
                     </div>
                 </div>
 
-                <button class="btn-primary" id="btn-ingest-run" style="width: 100%; padding: 14px; font-size: 15px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 10px;">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:18px; height:18px;"><path d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                <button class="btn-primary" id="btn-ingest-run" style="width: 100%; padding: 14px; font-size: 15px; font-weight: 600; display: flex; align-items: center; justify-content: center;">
                     <span data-i18n="generate_app">Generate Application</span>
                 </button>
             </div>
@@ -394,57 +359,41 @@
             <div class="offers-list" id="offers-list" style="overflow-y: auto; height: calc(100vh - 120px);"></div>
         </aside>
         <main class="content-main">
-            <div class="tabs-bar" style="display: flex; align-items: center; justify-content: space-between; padding-right: 20px;">
-                <div style="display: flex; gap: 16px;">
+            <div class="tabs-bar">
+                <div class="tabs-links">
                     <div class="tab active" data-target="restitution" data-i18n="restitution">Restitution</div>
                     <div class="tab" data-target="resume" data-i18n="resume">Resume</div>
                     <div class="tab" data-target="cover" data-i18n="cover_letter">Cover Letter</div>
                 </div>
-                <div style="display: flex; gap: 12px; align-items: center;">
+                <div style="display: flex; gap: 12px; align-items: center; height: 100%;">
                     <button class="btn-primary" id="btn-download-pdf" style="padding: 6px 16px; font-size: 12px; height: 34px; background: var(--primary); border-radius: 8px;" data-i18n="download">
                         Télécharger PDF
                     </button>
                 </div>
             </div>
-            <div style="flex-grow: 1; padding: 24px; overflow-y: auto; background: #f8fafd;">
-                <iframe id="iframe-doc" style="width: 100%; height: calc(100vh - 150px); border: none; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);"></iframe>
+            <div style="flex: 1; min-height: 0; padding: 24px; overflow: hidden; background: var(--surface-soft); display: flex;">
+                <iframe id="iframe-doc" style="width: 100%; height: 100%; min-height: 0; border: none; border-radius: 8px; box-shadow: 0 4px 12px rgba(15,23,42,0.05); background: var(--canvas);"></iframe>
             </div>
         </main>
         <aside class="sidebar-right">
-            <div class="ai-sidebar-header">
-                <h3 class="ai-sidebar-title" data-i18n="ai_sidebar">AI Copilot</h3>
-                <span class="ai-sidebar-status" aria-hidden="true"></span>
-            </div>
-            <div class="ai-sidebar-body">
-                <div class="ai-chat-message assistant">
-                    <div class="ai-chat-meta" data-i18n="ai_meta_assistant">Assistant</div>
-                    <span data-i18n="ai_message_intro">Je peux t'aider a retravailler cette candidature a partir de l'offre selectionnee.</span>
-                </div>
-                <div class="ai-chat-message user">
-                    <div class="ai-chat-meta" data-i18n="ai_meta_user">You</div>
-                    <span data-i18n="ai_message_user">Rends le CV plus axe data engineering et mets davantage en avant les projets personnels.</span>
-                </div>
-                <div class="ai-chat-message assistant">
-                    <div class="ai-chat-meta" data-i18n="ai_meta_assistant">Assistant</div>
-                    <span data-i18n="ai_message_followup">Je peux partir sur une version plus technique, extraire les mots-cles de l'offre, puis proposer une nouvelle accroche et une lettre plus directe.</span>
-                </div>
-            </div>
+            <div class="ai-sidebar-header"></div>
+            <div class="ai-sidebar-body"></div>
             <div class="ai-sidebar-composer">
                 <div class="ai-composer-shell">
-                    <textarea class="ai-composer-input" data-i18n-placeholder="ai_prompt_placeholder" placeholder="Demande une relecture, une reorientation du CV ou une nouvelle lettre..."></textarea>
+                    <textarea class="ai-composer-input" data-i18n-placeholder="ai_prompt_placeholder" placeholder="Demander des modifications"></textarea>
                     <div class="ai-composer-actions">
-                        <div class="ai-composer-tools" data-i18n="ai_tools_label">Enter to send</div>
-                        <button class="ai-send-btn" type="button" data-i18n="ai_send">Envoyer</button>
+                        <button class="ai-composer-plus" type="button" aria-label="Ajouter">+</button>
+                        <button class="ai-send-btn" type="button" aria-label="Envoyer">↑</button>
                     </div>
                 </div>
             </div>
         </aside>
     </div>
 
-    <div id="view-profile" class="view view-profile" style="flex-direction: column; padding: 40px; overflow-y: auto; background: #f8fafd;">
+    <div id="view-profile" class="view view-profile" style="flex-direction: column; padding: 40px; overflow-y: auto; background: var(--surface-soft);">
         <div style="max-width: 900px; margin: 0 auto; width: 100%;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px;">
-                <h1 style="font-size: 24px; font-weight: 700; color: #1e293b; margin: 0;" data-i18n="edit_profile">Éditer le Profil</h1>
+                <h1 style="font-size: 24px; font-weight: 700; color: var(--heading); margin: 0;" data-i18n="edit_profile">Éditer le Profil</h1>
                 <div style="display: flex; gap: 12px; align-items: center;">
                     <button class="btn-primary" id="btn-save-profile" style="padding: 10px 24px; font-size: 14px;" data-i18n="save_changes">Enregistrer les modifications</button>
                 </div>
@@ -457,8 +406,8 @@
                 <div style="display: flex; gap: 24px; align-items: center;">
                     <div style="position: relative;">
                         <input type="file" id="prof-image-file" accept="image/*" style="display: none;">
-                        <div id="prof-image-preview" style="width: 100px; height: 100px; border-radius: 50%; background: #f1f5f9; border: 2px dashed var(--hairline); cursor: pointer; background-size: cover; background-position: center; display: flex; align-items: center; justify-content: center; overflow: hidden;">
-                            <span id="preview-placeholder" style="font-size: 10px; color: #64748b; text-align: center; padding: 10px;" data-i18n="click_upload">Cliquez pour upload</span>
+                        <div id="prof-image-preview" style="width: 100px; height: 100px; border-radius: 50%; background: var(--surface-strong); border: 2px dashed var(--hairline); cursor: pointer; background-size: cover; background-position: center; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                            <span id="preview-placeholder" style="font-size: 10px; color: var(--body); text-align: center; padding: 10px;" data-i18n="click_upload">Cliquez pour upload</span>
                         </div>
                         <input type="hidden" id="prof-image-base64">
                     </div>
@@ -575,12 +524,7 @@
                     ph_school: "École", ph_degree: "Diplôme", ph_lang: "Langue", ph_level: "Niveau", ph_skill_input: "Ajouter une compétence... (Entrée)",
                     ph_cat_name: "Nom de catégorie", inbox: "INBOX",
                     nav_dashboard: "Dashboard", nav_applications: "Applications", nav_profile: "Profil",
-                    ai_sidebar: "Integration IA", ai_meta_assistant: "Assistant", ai_meta_user: "Toi",
-                    ai_message_intro: "Je peux t'aider a retravailler cette candidature a partir de l'offre selectionnee.",
-                    ai_message_user: "Rends le CV plus axe data engineering et mets davantage en avant les projets personnels.",
-                    ai_message_followup: "Je peux partir sur une version plus technique, extraire les mots-cles de l'offre, puis proposer une nouvelle accroche et une lettre plus directe.",
-                    ai_prompt_placeholder: "Demande une relecture, une reorientation du CV ou une nouvelle lettre...",
-                    ai_tools_label: "Entree pour envoyer", ai_send: "Envoyer"
+                    ai_prompt_placeholder: "Demander des modifications"
                 },
                 en: {
                     new_application: "New Application",
@@ -599,12 +543,7 @@
                     ph_school: "School", ph_degree: "Degree", ph_lang: "Language", ph_level: "Level", ph_skill_input: "Add skill... (Enter)",
                     ph_cat_name: "Category Name", inbox: "INBOX",
                     nav_dashboard: "Dashboard", nav_applications: "Applications", nav_profile: "Profile",
-                    ai_sidebar: "AI Copilot", ai_meta_assistant: "Assistant", ai_meta_user: "You",
-                    ai_message_intro: "I can help rework this application from the selected job posting.",
-                    ai_message_user: "Make the resume more data-engineering oriented and highlight personal projects more strongly.",
-                    ai_message_followup: "I can start with a more technical version, extract the job keywords, then propose a sharper hook and a more direct cover letter.",
-                    ai_prompt_placeholder: "Ask for a review, a resume rewrite, or a new cover letter...",
-                    ai_tools_label: "Enter to send", ai_send: "Send"
+                    ai_prompt_placeholder: "Request changes"
                 }
             }
         };
@@ -699,7 +638,7 @@
         function createExpRow(item = {}) {
             const div = document.createElement('div');
             div.className = 'form-row-exp';
-            div.style = "display:grid; grid-template-columns: 1fr 1fr 1fr 40px; gap:10px; margin-bottom:10px; padding:10px; border:1px solid #f1f5f9; border-radius:8px;";
+            div.style = "display:grid; grid-template-columns: 1fr 1fr 1fr 40px; gap:10px; margin-bottom:10px; padding:10px; border:1px solid var(--hairline); border-radius:8px; background: var(--canvas);";
             div.innerHTML = `
                 <input type="text" data-i18n-placeholder="ph_role" placeholder="Titre" class="exp-role" value="${item.role || ""}" style="padding:8px; border:1px solid var(--hairline); border-radius:6px; font-size:13px;">
                 <input type="text" data-i18n-placeholder="ph_link" placeholder="Lien" class="exp-company" value="${item.company || ""}" style="padding:8px; border:1px solid var(--hairline); border-radius:6px; font-size:13px;">
@@ -741,7 +680,7 @@
         function createSkillRow(item = { category: "", items: [] }) {
             const div = document.createElement('div');
             div.className = 'skill-cat-row';
-            div.style = "padding:16px; border:1px solid #f1f5f9; border-radius:10px; margin-bottom:12px;";
+            div.style = "padding:16px; border:1px solid var(--hairline); border-radius:10px; margin-bottom:12px; background: var(--canvas);";
             div.innerHTML = `
                 <div style="display:flex; justify-content:space-between; margin-bottom:12px; align-items:center;">
                     <input type="text" class="skill-cat-name skill-category-name" data-i18n-placeholder="ph_cat_name" placeholder="Nom de catégorie" value="${item.category}">
@@ -756,7 +695,7 @@
                 pillsContainer.innerHTML = '';
                 item.items.forEach((skill, idx) => {
                     const pill = document.createElement('div');
-                    pill.style = "background:#eff6ff; color:#1e40af; padding:4px 12px; border-radius:20px; font-size:11px; font-weight:600; display:flex; align-items:center; gap:6px;";
+                    pill.style = "background:var(--soft-blue); color:var(--primary); padding:4px 12px; border-radius:20px; font-size:11px; font-weight:600; display:flex; align-items:center; gap:6px;";
                     pill.innerHTML = `${skill} <span class="skill-pill-remove">×</span>`;
                     pill.querySelector('span').onclick = () => { item.items.splice(idx, 1); renderPills(); };
                     pillsContainer.appendChild(pill);
@@ -865,7 +804,7 @@
                         const isActive = activeJobId === o.job_id;
                         card.className = `offer-card ${isActive ? 'active' : ''}`;
                         card.style = `padding: 12px 16px; cursor: pointer; border-radius: 8px; margin: 4px 8px; transition: all 0.2s; background: ${isActive ? 'white' : 'transparent'};`;
-                        card.innerHTML = `<div style="font-weight:600; font-size:12px; color: #1e293b;">${o.title}</div><div style="font-size:11px; color:#64748b; margin-top: 2px;">${o.entreprise || "Manual Entry"}</div>`;
+                        card.innerHTML = `<div style="font-weight:600; font-size:12px; color: var(--heading);">${o.title}</div><div style="font-size:11px; color:var(--muted-strong); margin-top: 2px;">${o.entreprise || "Manual Entry"}</div>`;
                         card.onclick = () => { activeJobId = o.job_id; loadOffers(); updateIframe(); };
                         list.appendChild(card);
                     });
@@ -898,7 +837,7 @@
             } catch (e) {}
             finally { 
                 btn.disabled = false; 
-                btn.innerHTML = `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:18px; height:18px;"><path d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg> <span data-i18n="generate_app">${i18n.translations[i18n.current].generate_app}</span>`;
+                btn.innerHTML = `<span data-i18n="generate_app">${i18n.translations[i18n.current].generate_app}</span>`;
             }
         };
 

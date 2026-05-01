@@ -1,10 +1,10 @@
 :root {
     --font-main: "Arimo", "Open Sans", sans-serif;
-    --color-body: #1f2933;
-    --color-muted: #a6a6a6;
-    --color-accent: #88b7e1;
-    --color-border: #a6a6a6;
-    --color-background: #e2e8f0;
+    --color-body: #1e293b;
+    --color-muted: #64748b;
+    --color-accent: #0052ff;
+    --color-border: #d9e3f0;
+    --color-background: #eef4fb;
     --page-width: 210mm;
     --page-height: 297mm;
 }
@@ -42,7 +42,7 @@ body.is-framed .no-print.actions {
 }
 
 .btn {
-    background: #1e293b;
+    background: var(--color-body);
     color: white;
     border: none;
     padding: 10px 20px;
@@ -66,13 +66,13 @@ body.is-framed .no-print.actions {
 
 .a4-page {
     width: var(--page-width);
-    height: var(--page-height);
-    background: #fff;
+    min-height: var(--page-height);
+    background: #ffffff;
     border-radius: 0;
-    overflow: hidden;
     display: flex;
     flex-direction: column;
     position: relative;
+    padding-bottom: 40px;
 }
 
 .cl-header {
@@ -124,12 +124,12 @@ body.is-framed .no-print.actions {
 
 .author-links a:hover,
 .author-links a:focus-visible {
-    color: #88b7e1;
+    color: var(--color-accent);
     text-decoration: underline;
 }
 
 .author-links .divider {
-    color: rgba(79, 121, 255, 0.6);
+    color: rgba(0, 82, 255, 0.35);
 }
 
 .letter-meta {
