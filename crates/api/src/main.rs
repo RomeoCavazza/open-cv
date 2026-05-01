@@ -138,10 +138,7 @@ async fn main() -> anyhow::Result<()> {
         .route("/api/offres", get(list_offres))
         .route("/api/offres/:slug", get(get_offre_by_slug))
         .route("/api/ingest", post(ingest_handler))
-        .route(
-            "/api/profiles",
-            get(list_profiles_handler),
-        )
+        .route("/api/profiles", get(list_profiles_handler))
         .route(
             "/api/profile/active",
             get(get_active_profile_handler).put(update_active_profile_handler),
