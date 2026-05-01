@@ -47,6 +47,7 @@
             cargo-edit
             cargo-nextest
             jq
+            just
           ];
 
           shellHook = ''

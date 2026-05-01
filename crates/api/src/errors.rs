@@ -8,14 +8,14 @@ use serde_json::json;
 #[derive(Debug)]
 pub enum ApiError {
     BadRequest(String),
-    NotFound,
+    NotFound(String),
     Internal(String),
 }
 
 impl From<application::AppError> for ApiError {
     fn from(e: application::AppError) -> Self {
         match e {
-            application::AppError::NotFound => Self::NotFound,
+            application::AppError::NotFound => Self::NotFound("ressource introuvable".into()),
             other => Self::Internal(other.to_string()),
         }
     }
@@ -31,7 +31,7 @@ impl IntoResponse for ApiError {
     fn into_response(self) -> Response {
         let (status, message) = match self {
             Self::BadRequest(m) => (StatusCode::BAD_REQUEST, m),
-            Self::NotFound => (StatusCode::NOT_FOUND, "ressource introuvable".into()),
+            Self::NotFound(m) => (StatusCode::NOT_FOUND, m),
             Self::Internal(m) => (StatusCode::INTERNAL_SERVER_ERROR, m),
         };
         (status, Json(json!({ "error": message }))).into_response()

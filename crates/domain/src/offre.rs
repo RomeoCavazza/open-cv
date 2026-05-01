@@ -22,6 +22,7 @@ pub struct Offre {
     pub scraped_at: DateTime<Utc>,
     pub last_seen_at: DateTime<Utc>,
     pub closed_at: Option<DateTime<Utc>>,
+    pub categorie: Option<String>,
 }
 
 /// Sortie structurée de l'extraction LLM. Sert à la fois pour persistence
@@ -87,6 +88,7 @@ mod tests {
             scraped_at: Utc::now(),
             last_seen_at: Utc::now(),
             closed_at: closed,
+            categorie: None,
         }
     }
 

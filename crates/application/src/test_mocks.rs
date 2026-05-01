@@ -14,8 +14,6 @@ use ports::{
     CompletionRequest, CompletionResponse, EmbedError, EmbedMode, Embedder, ExtractionRequest,
     LlmClient, LlmError,
 };
-use schemars::JsonSchema;
-use serde::de::DeserializeOwned;
 
 /// Mock LLM qui renvoie des réponses scriptées.
 ///
@@ -74,17 +72,14 @@ impl LlmClient for MockLlm {
         })
     }
 
-    async fn extract<T>(&self, _req: ExtractionRequest) -> Result<T, LlmError>
-    where
-        T: DeserializeOwned + JsonSchema + Send,
-    {
+    async fn extract(&self, _req: ExtractionRequest) -> Result<serde_json::Value, LlmError> {
         let value = self
             .extract_queue
             .lock()
             .unwrap()
             .pop()
             .ok_or_else(|| LlmError::Other("MockLlm: queue extract vide".into()))?;
-        serde_json::from_value(value).map_err(|e| LlmError::Json(e.to_string()))
+        Ok(value)
     }
 
     fn name(&self) -> &'static str {

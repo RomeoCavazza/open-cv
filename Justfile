@@ -52,5 +52,9 @@ lint:
 fmt:
     cargo fmt --all
 
+# prépare le cache sqlx pour la CI (mode offline)
+sqlx-prepare:
+    cargo sqlx prepare --workspace
+
 # tout (CI-like)
 ci: fmt lint check test

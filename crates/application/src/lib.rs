@@ -64,3 +64,20 @@ impl GetInstanceBySlugUseCase {
             .ok_or(AppError::NotFound)
     }
 }
+
+pub struct GetOffreBySlugUseCase {
+    offres: Arc<dyn OffreRepo>,
+}
+
+impl GetOffreBySlugUseCase {
+    pub fn new(offres: Arc<dyn OffreRepo>) -> Self {
+        Self { offres }
+    }
+
+    pub async fn execute(&self, slug: &Slug) -> Result<Offre, AppError> {
+        self.offres
+            .get_by_slug(slug)
+            .await?
+            .ok_or(AppError::NotFound)
+    }
+}

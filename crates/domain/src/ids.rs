@@ -64,7 +64,7 @@ impl Slug {
         }
         if !s
             .chars()
-            .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '_')
+            .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '_' || c == '-')
         {
             return Err(SlugError::InvalidChars);
         }
@@ -86,7 +86,7 @@ impl std::fmt::Display for Slug {
 pub enum SlugError {
     #[error("slug vide")]
     Empty,
-    #[error("slug contient des caractères invalides (autorisés : a-z, 0-9, _)")]
+    #[error("slug contient des caractères invalides (autorisés : a-z, 0-9, _, -)")]
     InvalidChars,
 }
 
@@ -97,7 +97,7 @@ mod tests {
     #[test]
     fn slug_valide() {
         assert!(Slug::parse("safran_alternance_ia_bordes").is_ok());
-        assert!(Slug::parse("dassault_systemes_apprentissage_547531").is_ok());
+        assert!(Slug::parse("dassault-systemes-apprentissage-547531").is_ok());
     }
 
     #[test]
@@ -106,8 +106,8 @@ mod tests {
     }
 
     #[test]
-    fn slug_rejette_tirets() {
-        assert!(Slug::parse("safran-alternance").is_err());
+    fn slug_autorise_tirets() {
+        assert!(Slug::parse("safran-alternance").is_ok());
     }
 
     #[test]

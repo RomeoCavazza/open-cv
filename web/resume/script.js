@@ -3,12 +3,12 @@ async function loadCV() {
         const urlParams = new URLSearchParams(window.location.search);
         const jobId = urlParams.get('id');
         const t = Date.now();
-        let dataPath = (jobId && jobId !== 'null') ? `/data/instances/${jobId}/resume.json?t=${t}` : `/data/templates/resume.json?t=${t}`;
+        let dataPath = (jobId && jobId !== 'null') ? `/api/instances/${jobId}/resume` : `/api/profile/active/resume?t=${t}`;
         
         let response = await fetch(dataPath);
         if (!response.ok) {
-            console.warn(`Instance ${jobId} not found, falling back to template.`);
-            response = await fetch(`/data/templates/resume.json?t=${t}`);
+            console.warn(`Data not found at ${dataPath}, falling back to template.`);
+            response = await fetch(`/templates/resume.json?t=${t}`);
         }
         
         if (!response.ok) {
@@ -25,6 +25,12 @@ async function loadCV() {
         
         // Sidebar Contact
         document.getElementById('location').textContent = data.profile.location;
+        document.getElementById('contact-title').textContent = data.labels.contact;
+        document.getElementById('skills-title').textContent = data.labels.skills;
+        document.getElementById('languages-title').textContent = data.labels.languages;
+        document.getElementById('experiences-title').textContent = data.labels.experiences;
+        if (document.getElementById('projects-title')) document.getElementById('projects-title').textContent = data.labels.projects || "PROJETS";
+        document.getElementById('education-title').textContent = data.labels.education;
         document.getElementById('email').textContent = data.profile.email;
         document.getElementById('phone').textContent = data.profile.phone;
         
@@ -85,30 +91,37 @@ async function loadCV() {
             langContainer.appendChild(div);
         });
 
-        // Experiences & Projects
+        // Experiences
         const expContainer = document.getElementById('experiences-container');
         expContainer.innerHTML = '';
-        data.experiences.forEach(exp => {
+        (data.experiences || []).forEach(exp => {
             const div = document.createElement('div');
             div.className = 'exp-item';
-            
-            if (exp.role) {
-                div.innerHTML = `
-                    <h4>${exp.role}</h4>
-                    <div class="company">${exp.company}</div>
-                    <div class="period">${exp.period}</div>
-                    <ul>${exp.description.map(line => `<li>${line}</li>`).join('')}</ul>
-                `;
-            } else {
-                div.innerHTML = `
-                    <div class="project-line">
-                        <span class="company-bold">${exp.company}</span> <span class="period">(${exp.period})</span>
-                    </div>
-                    <ul>${exp.description.map(line => `<li>${line}</li>`).join('')}</ul>
-                `;
-            }
+            div.innerHTML = `
+                <h4>${exp.role}</h4>
+                <div class="company">${exp.company}</div>
+                <div class="period">${exp.period}</div>
+                <ul>${exp.description.map(line => `<li>${line}</li>`).join('')}</ul>
+            `;
             expContainer.appendChild(div);
         });
+
+        // Projects
+        const projContainer = document.getElementById('projects-container');
+        if (projContainer) {
+            projContainer.innerHTML = '';
+            (data.projects || []).forEach(proj => {
+                const div = document.createElement('div');
+                div.className = 'exp-item'; // Re-use styling
+                div.innerHTML = `
+                    <h4>${proj.role}</h4>
+                    <div class="company">${proj.company}</div>
+                    <div class="period">${proj.period}</div>
+                    <ul>${proj.description.map(line => `<li>${line}</li>`).join('')}</ul>
+                `;
+                projContainer.appendChild(div);
+            });
+        }
 
         // Education
         const eduContainer = document.getElementById('education-container');

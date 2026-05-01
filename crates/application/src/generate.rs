@@ -20,7 +20,7 @@ use std::sync::Arc;
 
 use chrono::Utc;
 use domain::{
-    Chunk, ChunkKind, CoverLetter, Instance, InstanceId, InstanceStatus, Offre,
+    Chunk, CoverLetter, Instance, InstanceId, InstanceStatus, Offre,
     OffreId, ProfilId, Restitution, Resume, Slug,
 };
 use ports::{
@@ -139,10 +139,29 @@ pub struct GenerateApplicationUseCase {
     pub instances: Arc<dyn InstanceRepo>,
     pub llm: Arc<dyn LlmClient>,
     pub embedder: Arc<dyn Embedder>,
-    pub events: EventBus,
+    pub events: Arc<EventBus>,
 }
 
 impl GenerateApplicationUseCase {
+    pub fn new(
+        offres: Arc<dyn OffreRepo>,
+        profils: Arc<dyn ProfilRepo>,
+        chunks: Arc<dyn ChunkRepo>,
+        instances: Arc<dyn InstanceRepo>,
+        llm: Arc<dyn LlmClient>,
+        embedder: Arc<dyn Embedder>,
+        events: Arc<EventBus>,
+    ) -> Self {
+        Self {
+            offres,
+            profils,
+            chunks,
+            instances,
+            llm,
+            embedder,
+            events,
+        }
+    }
     /// Exécute le pipeline complet. La fonction est `instrument` pour que tous
     /// les logs internes soient enrichis avec `instance_id` automatiquement.
     #[instrument(skip(self), fields(instance_id))]
@@ -353,14 +372,18 @@ impl GenerateApplicationUseCase {
             ),
             schema_name: "RerankResponse".into(),
             schema_description: "Sélection des chunks pertinents avec justification".into(),
+            json_schema: serde_json::to_value(&schemars::schema_for!(RerankResponse)).unwrap(),
             model: None,
             max_tokens: Some(1024),
         };
 
-        let response: RerankResponse = self
+        let response_json = self
             .llm
             .extract(req)
             .await
+            .map_err(|e| AppError::Other(e.to_string()))?;
+
+        let response: RerankResponse = serde_json::from_value(response_json)
             .map_err(|e| AppError::Other(e.to_string()))?;
 
         let retained: Vec<Chunk> = response
@@ -412,13 +435,18 @@ impl GenerateApplicationUseCase {
             ),
             schema_name: "CandidaturePlan".into(),
             schema_description: "Stratégie de la candidature".into(),
+            json_schema: serde_json::to_value(&schemars::schema_for!(CandidaturePlan)).unwrap(),
             model: None,
             max_tokens: Some(1024),
         };
 
-        self.llm
+        let response_json = self
+            .llm
             .extract(req)
             .await
+            .map_err(|e| GenerateError::App(AppError::Other(e.to_string())))?;
+
+        serde_json::from_value(response_json)
             .map_err(|e| GenerateError::App(AppError::Other(e.to_string())))
     }
 
@@ -457,14 +485,22 @@ impl GenerateApplicationUseCase {
             ),
             schema_name: "Restitution".into(),
             schema_description: "Fiche d'analyse structurée d'une offre".into(),
+            json_schema: serde_json::to_value(&schemars::schema_for!(Restitution)).unwrap(),
             model: None,
             max_tokens: Some(2048),
         };
 
-        let restitution: Restitution = self
+        let response_json = self
             .llm
             .extract(req)
             .await
+            .map_err(|e| {
+                self.events
+                    .failed(instance_id, GenerationStep::Restitution, e.to_string());
+                AppError::Other(e.to_string())
+            })?;
+
+        let restitution: Restitution = serde_json::from_value(response_json)
             .map_err(|e| {
                 self.events
                     .failed(instance_id, GenerationStep::Restitution, e.to_string());
@@ -509,11 +545,18 @@ impl GenerateApplicationUseCase {
             input: build_generation_input(offre, profil, retained, plan),
             schema_name: "Resume".into(),
             schema_description: "CV structuré, contenu adapté à l'offre".into(),
+            json_schema: serde_json::to_value(&schemars::schema_for!(Resume)).unwrap(),
             model: None,
             max_tokens: Some(3000),
         };
 
-        let resume: Resume = self.llm.extract(req).await.map_err(|e| {
+        let response_json = self.llm.extract(req).await.map_err(|e| {
+            self.events
+                .failed(instance_id, GenerationStep::Resume, e.to_string());
+            AppError::Other(e.to_string())
+        })?;
+
+        let resume: Resume = serde_json::from_value(response_json).map_err(|e| {
             self.events
                 .failed(instance_id, GenerationStep::Resume, e.to_string());
             AppError::Other(e.to_string())
@@ -555,11 +598,18 @@ impl GenerateApplicationUseCase {
             input: build_generation_input(offre, profil, retained, plan),
             schema_name: "CoverLetter".into(),
             schema_description: "Lettre structurée par paragraphes typés".into(),
+            json_schema: serde_json::to_value(&schemars::schema_for!(CoverLetter)).unwrap(),
             model: None,
             max_tokens: Some(2500),
         };
 
-        let cover_letter: CoverLetter = self.llm.extract(req).await.map_err(|e| {
+        let response_json = self.llm.extract(req).await.map_err(|e| {
+            self.events
+                .failed(instance_id, GenerationStep::CoverLetter, e.to_string());
+            AppError::Other(e.to_string())
+        })?;
+
+        let cover_letter: CoverLetter = serde_json::from_value(response_json).map_err(|e| {
             self.events
                 .failed(instance_id, GenerationStep::CoverLetter, e.to_string());
             AppError::Other(e.to_string())

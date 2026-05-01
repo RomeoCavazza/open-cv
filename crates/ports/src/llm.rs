@@ -6,8 +6,6 @@
 //! - `adapters/embed_voyage` : embeddings via Voyage AI
 
 use async_trait::async_trait;
-use schemars::JsonSchema;
-use serde::de::DeserializeOwned;
 use thiserror::Error;
 
 #[derive(Debug, Clone)]
@@ -47,6 +45,7 @@ pub struct ExtractionRequest {
     pub input: String,
     pub schema_name: String,
     pub schema_description: String,
+    pub json_schema: serde_json::Value,
     pub model: Option<String>,
     pub max_tokens: Option<u32>,
 }
@@ -57,10 +56,8 @@ pub trait LlmClient: Send + Sync {
     async fn complete(&self, req: CompletionRequest)
         -> Result<CompletionResponse, LlmError>;
 
-    /// Génération structurée. On précise un schéma JSON, on récupère du T.
-    async fn extract<T>(&self, req: ExtractionRequest) -> Result<T, LlmError>
-    where
-        T: DeserializeOwned + JsonSchema + Send;
+    /// Génération structurée. On précise un schéma JSON, on récupère un JSON.
+    async fn extract(&self, req: ExtractionRequest) -> Result<serde_json::Value, LlmError>;
 
     /// Identifiant du provider, utilisé dans `llm_calls.provider`.
     fn name(&self) -> &'static str;

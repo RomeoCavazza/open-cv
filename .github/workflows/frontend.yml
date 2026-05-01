@@ -1,0 +1,20 @@
+name: Frontend CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'web/**'
+      - '.github/workflows/frontend.yml'
+
+jobs:
+  check:
+    name: Web Sanity Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify files
+        run: |
+          ls web/index.html
+          ls web/resume/index.html
+          ls web/cover-letter/index.html
