@@ -53,8 +53,7 @@ pub struct ExtractionRequest {
 #[async_trait]
 pub trait LlmClient: Send + Sync {
     /// Génération texte libre.
-    async fn complete(&self, req: CompletionRequest)
-        -> Result<CompletionResponse, LlmError>;
+    async fn complete(&self, req: CompletionRequest) -> Result<CompletionResponse, LlmError>;
 
     /// Génération structurée. On précise un schéma JSON, on récupère un JSON.
     async fn extract(&self, req: ExtractionRequest) -> Result<serde_json::Value, LlmError>;

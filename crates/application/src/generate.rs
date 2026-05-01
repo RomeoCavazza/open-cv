@@ -20,12 +20,12 @@ use std::sync::Arc;
 
 use chrono::Utc;
 use domain::{
-    Chunk, CoverLetter, Instance, InstanceId, InstanceStatus, Offre,
-    OffreId, ProfilId, Restitution, Resume, Slug,
+    Chunk, CoverLetter, Instance, InstanceId, InstanceStatus, Offre, OffreId, ProfilId,
+    Restitution, Resume, Slug,
 };
 use ports::{
-    ChunkRepo, EmbedMode, Embedder, ExtractionRequest, InstanceRepo, LlmClient,
-    OffreRepo, ProfilRepo,
+    ChunkRepo, EmbedMode, Embedder, ExtractionRequest, InstanceRepo, LlmClient, OffreRepo,
+    ProfilRepo,
 };
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -43,6 +43,7 @@ use crate::AppError;
 pub struct GenerateInput {
     pub offre_id: OffreId,
     pub profil_id: ProfilId,
+    pub existing_instance: Option<Instance>,
     pub livrables: Livrables,
 }
 
@@ -165,10 +166,7 @@ impl GenerateApplicationUseCase {
     /// Exécute le pipeline complet. La fonction est `instrument` pour que tous
     /// les logs internes soient enrichis avec `instance_id` automatiquement.
     #[instrument(skip(self), fields(instance_id))]
-    pub async fn execute(
-        &self,
-        input: GenerateInput,
-    ) -> Result<GenerateOutput, GenerateError> {
+    pub async fn execute(&self, input: GenerateInput) -> Result<GenerateOutput, GenerateError> {
         if input.livrables.aucun() {
             return Err(GenerateError::AucunLivrable);
         }
@@ -189,14 +187,45 @@ impl GenerateApplicationUseCase {
             .map_err(|e| AppError::Repo(e))?
             .ok_or(GenerateError::ProfilIntrouvable(input.profil_id))?;
 
-        let instance_id = InstanceId::new();
-        let slug = build_slug(&offre, instance_id);
+        let existing_instance = input.existing_instance.clone();
+        let now = Utc::now();
+        let (instance_id, slug, created_at, existing_notes) = match existing_instance {
+            Some(instance) => (
+                instance.id,
+                instance.slug,
+                instance.created_at,
+                Some(instance.notes),
+            ),
+            None => {
+                let instance_id = InstanceId::new();
+                (instance_id, build_slug(&offre, instance_id), now, None)
+            }
+        };
 
         // Tracing field : ajoute instance_id au span courant pour tous les logs.
-        tracing::Span::current()
-            .record("instance_id", &tracing::field::display(&instance_id));
+        tracing::Span::current().record("instance_id", &tracing::field::display(&instance_id));
 
-        info!("démarrage génération pour offre={} profil={}", offre.entreprise, profil.label);
+        info!(
+            "démarrage génération pour offre={} profil={}",
+            offre.entreprise, profil.label
+        );
+
+        self.instances
+            .upsert(&Instance {
+                id: instance_id,
+                slug: slug.clone(),
+                offre_id: offre.id,
+                profil_id: profil.id,
+                status: InstanceStatus::Generating,
+                resume_json: None,
+                cover_letter_json: None,
+                notes: existing_notes.unwrap_or_else(|| serde_json::json!({})),
+                created_at,
+                updated_at: now,
+                sent_at: None,
+            })
+            .await
+            .map_err(AppError::Repo)?;
 
         // Étape 1 : RETRIEVE
         self.events.started(instance_id, GenerationStep::Retrieve);
@@ -223,11 +252,8 @@ impl GenerateApplicationUseCase {
         // Étape 3 : PLAN
         self.events.started(instance_id, GenerationStep::Plan);
         let plan = self.plan(&offre, &retained).await?;
-        self.events.done(
-            instance_id,
-            GenerationStep::Plan,
-            Some(plan.angle.clone()),
-        );
+        self.events
+            .done(instance_id, GenerationStep::Plan, Some(plan.angle.clone()));
 
         // Étape 4 : 3 générations en parallèle.
         // tokio::join! attend les 3, peu importe l'ordre de terminaison.
@@ -257,8 +283,14 @@ impl GenerateApplicationUseCase {
 
         // Étape 5 : VALIDATE
         self.events.started(instance_id, GenerationStep::Validate);
-        validate_outputs(&offre, restitution.as_ref(), resume.as_ref(), cover_letter.as_ref())?;
-        self.events.done(instance_id, GenerationStep::Validate, None);
+        validate_outputs(
+            &offre,
+            restitution.as_ref(),
+            resume.as_ref(),
+            cover_letter.as_ref(),
+        )?;
+        self.events
+            .done(instance_id, GenerationStep::Validate, None);
 
         // Étape 6 : PERSIST
         self.events.started(instance_id, GenerationStep::Persist);
@@ -279,11 +311,14 @@ impl GenerateApplicationUseCase {
                 "restitution": restitution.as_ref(),
                 "plan": plan,
             }),
-            created_at: now,
+            created_at,
             updated_at: now,
             sent_at: None,
         };
-        self.instances.upsert(&instance).await.map_err(AppError::Repo)?;
+        self.instances
+            .upsert(&instance)
+            .await
+            .map_err(AppError::Repo)?;
         self.events.done(instance_id, GenerationStep::Persist, None);
 
         self.events.done(instance_id, GenerationStep::Done, None);
@@ -383,8 +418,8 @@ impl GenerateApplicationUseCase {
             .await
             .map_err(|e| AppError::Other(e.to_string()))?;
 
-        let response: RerankResponse = serde_json::from_value(response_json)
-            .map_err(|e| AppError::Other(e.to_string()))?;
+        let response: RerankResponse =
+            serde_json::from_value(response_json).map_err(|e| AppError::Other(e.to_string()))?;
 
         let retained: Vec<Chunk> = response
             .indices_retenus
@@ -411,7 +446,14 @@ impl GenerateApplicationUseCase {
     ) -> Result<CandidaturePlan, GenerateError> {
         let chunks_listing = retained
             .iter()
-            .map(|c| format!("- ({}) {} — {}", c.kind.as_str(), c.titre, truncate(&c.content, 200)))
+            .map(|c| {
+                format!(
+                    "- ({}) {} — {}",
+                    c.kind.as_str(),
+                    c.titre,
+                    truncate(&c.content, 200)
+                )
+            })
             .collect::<Vec<_>>()
             .join("\n");
 
@@ -422,16 +464,12 @@ impl GenerateApplicationUseCase {
                  souligner, et les éventuelles faiblesses à adresser."
                     .into(),
             ),
-            instruction:
-                "Produis un plan de candidature pour cette offre, à partir des \
+            instruction: "Produis un plan de candidature pour cette offre, à partir des \
                  chunks de profil retenus."
-                    .into(),
+                .into(),
             input: format!(
                 "## OFFRE\n{}\n## ENTREPRISE: {}\n## INTITULÉ: {}\n\n## CHUNKS RETENUS\n{}",
-                offre.structured.resume_court,
-                offre.entreprise,
-                offre.intitule,
-                chunks_listing,
+                offre.structured.resume_court, offre.entreprise, offre.intitule, chunks_listing,
             ),
             schema_name: "CandidaturePlan".into(),
             schema_description: "Stratégie de la candidature".into(),
@@ -462,7 +500,8 @@ impl GenerateApplicationUseCase {
         if !livrables.restitution {
             return Ok(None);
         }
-        self.events.started(instance_id, GenerationStep::Restitution);
+        self.events
+            .started(instance_id, GenerationStep::Restitution);
 
         let req = ExtractionRequest {
             system: Some(
@@ -470,11 +509,10 @@ impl GenerateApplicationUseCase {
                  un candidat junior à décider et à se préparer."
                     .into(),
             ),
-            instruction:
-                "Analyse cette offre. Produis une restitution structurée : \
+            instruction: "Analyse cette offre. Produis une restitution structurée : \
                  synthèse, fit (avec score 0-100, justifié), contenu explicite, \
                  signaux implicites, points d'attention, questions d'entretien."
-                    .into(),
+                .into(),
             input: format!(
                 "Entreprise: {}\nIntitulé: {}\nLocalisation: {}\nContrat: {}\n\nTexte brut:\n{}",
                 offre.entreprise,
@@ -490,22 +528,17 @@ impl GenerateApplicationUseCase {
             max_tokens: Some(2048),
         };
 
-        let response_json = self
-            .llm
-            .extract(req)
-            .await
-            .map_err(|e| {
-                self.events
-                    .failed(instance_id, GenerationStep::Restitution, e.to_string());
-                AppError::Other(e.to_string())
-            })?;
+        let response_json = self.llm.extract(req).await.map_err(|e| {
+            self.events
+                .failed(instance_id, GenerationStep::Restitution, e.to_string());
+            AppError::Other(e.to_string())
+        })?;
 
-        let restitution: Restitution = serde_json::from_value(response_json)
-            .map_err(|e| {
-                self.events
-                    .failed(instance_id, GenerationStep::Restitution, e.to_string());
-                AppError::Other(e.to_string())
-            })?;
+        let restitution: Restitution = serde_json::from_value(response_json).map_err(|e| {
+            self.events
+                .failed(instance_id, GenerationStep::Restitution, e.to_string());
+            AppError::Other(e.to_string())
+        })?;
 
         self.events
             .done(instance_id, GenerationStep::Restitution, None);
@@ -538,10 +571,9 @@ impl GenerateApplicationUseCase {
                  le plus pertinent possible vis-à-vis de l'offre."
                     .into(),
             ),
-            instruction:
-                "Génère un CV adapté à cette offre, en respectant le schéma fourni. \
+            instruction: "Génère un CV adapté à cette offre, en respectant le schéma fourni. \
                  Mets en avant les expériences/projets/compétences les plus pertinents."
-                    .into(),
+                .into(),
             input: build_generation_input(offre, profil, retained, plan),
             schema_name: "Resume".into(),
             schema_description: "CV structuré, contenu adapté à l'offre".into(),
@@ -581,7 +613,8 @@ impl GenerateApplicationUseCase {
         if !livrables.cover_letter {
             return Ok(None);
         }
-        self.events.started(instance_id, GenerationStep::CoverLetter);
+        self.events
+            .started(instance_id, GenerationStep::CoverLetter);
 
         let req = ExtractionRequest {
             system: Some(
@@ -591,10 +624,9 @@ impl GenerateApplicationUseCase {
                  sans formules grandiloquentes ni emphase artificielle."
                     .into(),
             ),
-            instruction:
-                "Rédige une lettre de motivation pour cette offre, en respectant \
+            instruction: "Rédige une lettre de motivation pour cette offre, en respectant \
                  le schéma fourni. Chaque paragraphe est typé."
-                    .into(),
+                .into(),
             input: build_generation_input(offre, profil, retained, plan),
             schema_name: "CoverLetter".into(),
             schema_description: "Lettre structurée par paragraphes typés".into(),

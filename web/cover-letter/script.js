@@ -3,12 +3,12 @@ async function loadCoverLetter() {
     const urlParams = new URLSearchParams(window.location.search);
     const jobId = urlParams.get('id');
     const t = Date.now();
-    let dataPath = (jobId && jobId !== 'null') ? `/api/instances/${jobId}/cover-letter` : `/templates/cover-letter.json?t=${t}`;
+    let dataPath = (jobId && jobId !== 'null') ? `/api/instances/${jobId}/cover-letter` : `/api/profile/active/cover-letter-template?t=${t}`;
 
     let response = await fetch(dataPath);
     if (!response.ok) {
-      console.warn(`Instance ${jobId} not found, falling back to template.`);
-      response = await fetch(`/templates/cover-letter.json?t=${t}`);
+      console.warn(`Instance ${jobId} not found, falling back to active profile cover letter template.`);
+      response = await fetch(`/api/profile/active/cover-letter-template?t=${t}`);
     }
     
     if (!response.ok) {
@@ -155,6 +155,35 @@ function setLink(id, value) {
   el.href = href;
 }
 
+function applyPreviewScale() {
+  if (window.self === window.top) return;
+
+  const page = document.querySelector(".a4-page");
+  const stage = document.querySelector(".page-stage");
+  if (!page || !stage) return;
+
+  page.style.transform = "none";
+  page.style.left = "0px";
+  page.style.top = "0px";
+
+  requestAnimationFrame(() => {
+    const availableWidth = window.innerWidth - 32;
+    const availableHeight = window.innerHeight - 32;
+    const pageWidth = page.offsetWidth;
+    const pageHeight = page.offsetHeight;
+    const scale = Math.min(1, availableWidth / pageWidth, availableHeight / pageHeight);
+    const scaledWidth = pageWidth * scale;
+    const scaledHeight = pageHeight * scale;
+    const offsetX = Math.max(0, (availableWidth - scaledWidth) / 2);
+    const offsetY = 16;
+
+    page.style.transform = `scale(${scale})`;
+    page.style.left = `${offsetX}px`;
+    page.style.top = `${offsetY}px`;
+    stage.style.height = `${window.innerHeight}px`;
+  });
+}
+
 const downloadButton = document.getElementById("download-pdf");
 if (downloadButton) {
   downloadButton.addEventListener("click", () => window.print());
@@ -165,4 +194,6 @@ window.addEventListener('DOMContentLoaded', () => {
     document.body.classList.add("is-framed");
   }
   loadCoverLetter();
+  applyPreviewScale();
 });
+window.addEventListener("resize", applyPreviewScale);

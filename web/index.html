@@ -371,8 +371,8 @@
                     </button>
                 </div>
             </div>
-            <div style="flex: 1; min-height: 0; padding: 24px; overflow: hidden; background: var(--surface-soft); display: flex;">
-                <iframe id="iframe-doc" style="width: 100%; height: 100%; min-height: 0; border: none; border-radius: 8px; box-shadow: 0 4px 12px rgba(15,23,42,0.05); background: var(--canvas);"></iframe>
+            <div style="flex: 1; min-height: 0; padding: 18px; overflow: hidden; background: var(--surface-soft); display: flex;">
+                <iframe id="iframe-doc" style="width: 100%; height: 100%; min-height: 0; border: 1px solid var(--hairline); border-radius: 14px; box-shadow: 0 10px 30px rgba(15,23,42,0.06); background: #f3f4f6;"></iframe>
             </div>
         </main>
         <aside class="sidebar-right">
@@ -499,6 +499,61 @@
                 </div>
                 <div id="list-languages" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;"></div>
             </div>
+
+            <div class="form-section profile-section-card" style="margin-bottom: 40px;">
+                <div class="profile-section-header">
+                    <h3 class="profile-section-title">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:18px; height:18px;"><path d="M7 3h10a2 2 0 012 2v14a2 2 0 01-2 2H7a2 2 0 01-2-2V5a2 2 0 012-2zm2 4h6m-6 4h6m-6 4h4"></path></svg> <span data-i18n="documents_annexes">Documents</span>
+                    </h3>
+                </div>
+                <div style="display:flex; flex-direction:column; gap:20px;">
+                    <div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:8px;">
+                            <label class="profile-field-label" data-i18n="resume_template" style="margin:0;">Modèle CV</label>
+                            <div style="display:flex; gap:8px;">
+                                <input type="file" id="prof-resume-template-file" accept=".json,application/json" style="display:none;">
+                                <button type="button" id="btn-load-resume-template" class="profile-inline-add" title="Charger">+</button>
+                                <button type="button" id="btn-clear-resume-template" class="muted-remove-btn" style="font-size:16px;">×</button>
+                            </div>
+                        </div>
+                        <textarea id="prof-resume-template" style="width:100%; min-height:120px; padding:10px; border:1px solid var(--hairline); border-radius:8px; resize:vertical; font-size:12px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;"></textarea>
+                    </div>
+                    <div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:8px;">
+                            <label class="profile-field-label" data-i18n="cover_letter_template" style="margin:0;">Modèle lettre</label>
+                            <div style="display:flex; gap:8px;">
+                                <input type="file" id="prof-cover-letter-template-file" accept=".json,application/json" style="display:none;">
+                                <button type="button" id="btn-load-cover-letter-template" class="profile-inline-add" title="Charger">+</button>
+                                <button type="button" id="btn-clear-cover-letter-template" class="muted-remove-btn" style="font-size:16px;">×</button>
+                            </div>
+                        </div>
+                        <textarea id="prof-cover-letter-template" style="width:100%; min-height:120px; padding:10px; border:1px solid var(--hairline); border-radius:8px; resize:vertical; font-size:12px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;"></textarea>
+                    </div>
+                    <div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:8px;">
+                            <label class="profile-field-label" data-i18n="apprenticeship_calendar" style="margin:0;">Calendrier d'alternance</label>
+                            <div style="display:flex; gap:8px;">
+                                <input type="file" id="prof-apprenticeship-calendar-file" accept=".pdf,application/pdf" style="display:none;">
+                                <button type="button" id="btn-load-apprenticeship-calendar" class="profile-inline-add" title="Charger">+</button>
+                                <button type="button" id="btn-clear-apprenticeship-calendar" class="muted-remove-btn" style="font-size:16px;">×</button>
+                            </div>
+                        </div>
+                        <div id="prof-apprenticeship-calendar-status" style="font-size:12px; color:var(--muted-strong); margin-bottom:12px;">Aucun fichier chargé</div>
+                        <iframe id="prof-apprenticeship-calendar-preview" style="display:none; width:100%; min-height:300px; border:1px solid var(--hairline); border-radius:8px; background:white;"></iframe>
+                        <div id="prof-apprenticeship-calendar-legacy" style="display:none; margin-top:12px;">
+                            <label class="profile-field-label" style="margin-bottom:8px;">Valeur texte héritée</label>
+                            <textarea id="prof-apprenticeship-calendar-legacy-value" readonly style="width:100%; min-height:80px; padding:10px; border:1px solid var(--hairline); border-radius:8px; resize:vertical; font-size:13px;"></textarea>
+                        </div>
+                    </div>
+                    <div style="border-top: 1px solid var(--hairline); padding-top: 20px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                            <label class="profile-field-label" style="margin:0;" data-i18n="annexes">Annexes supplémentaires</label>
+                            <button type="button" id="add-annexe" class="profile-inline-add" data-i18n="add">+ Ajouter</button>
+                        </div>
+                        <div id="list-annexes" style="display:flex; flex-direction:column; gap:8px;"></div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -519,9 +574,11 @@
                     city: "Ville", phone: "Téléphone", email: "Email", website: "Site Personnel",
                     experiences: "Expériences Professionnelles", projects: "Projets Perso", education: "Formations",
                     skills: "Compétences", languages: "Langues", add: "+ Ajouter",
+                    documents_annexes: "Documents", resume_template: "Modèle CV", cover_letter_template: "Modèle lettre", apprenticeship_calendar: "Calendrier d'alternance",
+                    annexes: "Annexes supplémentaires", ph_annexe_name: "Nom du document",
                     restitution: "Restitution", resume: "CV", cover_letter: "Lettre de motivation", download: "Télécharger PDF",
                     ph_role: "Titre", ph_link: "Lien", ph_period: "Période", ph_desc: "Description (bullet points)",
-                    ph_school: "École", ph_degree: "Diplôme", ph_lang: "Langue", ph_level: "Niveau", ph_skill_input: "Ajouter une compétence... (Entrée)",
+                    ph_school: "École", ph_degree: "Diplôme", ph_lang: "Langue", ph_level: "Niveau", ph_skill_input: "Ajouter une compétence...",
                     ph_cat_name: "Nom de catégorie", inbox: "INBOX",
                     nav_dashboard: "Dashboard", nav_applications: "Applications", nav_profile: "Profil",
                     ai_prompt_placeholder: "Demander des modifications"
@@ -538,6 +595,8 @@
                     city: "City", phone: "Phone", email: "Email", website: "Personal Website",
                     experiences: "Work Experience", projects: "Personal Projects", education: "Education",
                     skills: "Skills", languages: "Languages", add: "+ Add",
+                    documents_annexes: "Documents", resume_template: "Resume template", cover_letter_template: "Cover letter template", apprenticeship_calendar: "Apprenticeship calendar",
+                    annexes: "Supplementary Annexes", ph_annexe_name: "Document Name",
                     restitution: "Restitution", resume: "Resume", cover_letter: "Cover Letter", download: "Download PDF",
                     ph_role: "Title", ph_link: "Link", ph_period: "Period", ph_desc: "Description (bullet points)",
                     ph_school: "School", ph_degree: "Degree", ph_lang: "Language", ph_level: "Level", ph_skill_input: "Add skill... (Enter)",
@@ -582,12 +641,87 @@
             if (viewName === 'profile') document.getElementById('nav-profile').classList.add('active');
         }
 
+        let loadedProfileExtras = {};
+        let loadedProfileImage = "";
+        let loadedApprenticeshipCalendarDocument = null;
+
+        function stringifyDocument(value) {
+            if (value == null) return "";
+            try {
+                return JSON.stringify(value, null, 2);
+            } catch (_) {
+                return "";
+            }
+        }
+
+        function readFileAsText(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(String(reader.result || ""));
+                reader.onerror = () => reject(new Error('file-read-failed'));
+                reader.readAsText(file);
+            });
+        }
+
+        function readFileAsDataUrl(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(String(reader.result || ""));
+                reader.onerror = () => reject(new Error('file-read-failed'));
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function updateCalendarDocumentUI(documentValue) {
+            const status = document.getElementById('prof-apprenticeship-calendar-status');
+            const preview = document.getElementById('prof-apprenticeship-calendar-preview');
+            const legacy = document.getElementById('prof-apprenticeship-calendar-legacy');
+            const legacyValue = document.getElementById('prof-apprenticeship-calendar-legacy-value');
+
+            preview.style.display = 'none';
+            preview.removeAttribute('src');
+            legacy.style.display = 'none';
+            legacyValue.value = '';
+
+            if (!documentValue) {
+                status.textContent = 'Aucun fichier chargé';
+                return;
+            }
+
+            if (typeof documentValue === 'string') {
+                status.textContent = 'Ancienne valeur texte conservée';
+                legacy.style.display = 'block';
+                legacyValue.value = documentValue;
+                return;
+            }
+
+            const fileName = documentValue.name || 'calendrier-alternance.pdf';
+            status.textContent = fileName;
+
+            if (documentValue.data_url) {
+                preview.style.display = 'block';
+                preview.src = documentValue.data_url;
+            }
+        }
+
         async function loadProfile() {
             try {
-                const res = await fetch('/api/profile/active');
+                const res = await fetch(`/api/profile/active?t=${Date.now()}`, { cache: 'no-store' });
                 if (!res.ok) throw new Error();
                 const profil = await res.json();
                 const content = profil.content;
+                loadedProfileExtras = Object.fromEntries(
+                    Object.entries(content).filter(([key]) => ![
+                        'profile',
+                        'apprenticeship',
+                        'experiences',
+                        'projects',
+                        'education',
+                        'languages',
+                        'skills',
+                        'labels'
+                    ].includes(key))
+                );
                 document.getElementById('prof-firstname').value = content.profile?.firstname || "";
                 document.getElementById('prof-lastname').value = content.profile?.lastname || "";
                 document.getElementById('prof-title').value = content.profile?.title || "";
@@ -601,51 +735,242 @@
                 document.getElementById('prof-linkedin').value = content.profile?.linkedin || "";
                 document.getElementById('prof-website').value = content.profile?.website || "";
                 document.getElementById('prof-github').value = content.profile?.github || "";
+                document.getElementById('prof-resume-template').value = stringifyDocument(content.documents?.resume_template || content.resume_template);
+                document.getElementById('prof-cover-letter-template').value = stringifyDocument(content.documents?.cover_letter_template || content.cover_letter_template);
+                loadedApprenticeshipCalendarDocument = content.documents?.apprenticeship_calendar || null;
+                updateCalendarDocumentUI(loadedApprenticeshipCalendarDocument);
+                loadedProfileImage = content.profile?.image || "";
+                document.getElementById('prof-image-base64').value = loadedProfileImage;
                 if (content.profile?.image) {
-                    document.getElementById('prof-image-base64').value = content.profile.image;
                     document.getElementById('prof-image-preview').style.backgroundImage = `url(${content.profile.image})`;
                     document.getElementById('preview-placeholder').style.display = 'none';
+                } else {
+                    document.getElementById('prof-image-preview').style.backgroundImage = '';
+                    document.getElementById('preview-placeholder').style.display = 'block';
                 }
                 renderList('list-experiences', content.experiences || [], createExpRow);
                 renderList('list-projects', content.projects || [], createExpRow);
                 renderList('list-education', content.education || [], createEduRow);
                 renderList('list-languages', content.languages || [], createLangRow);
                 renderList('list-skills', content.skills || [], createSkillRow);
+                renderList('list-annexes', content.documents?.annexes || [], createAnnexeRow);
                 updateUIStrings();
             } catch (e) { console.warn("Profile load failed", e); }
         }
 
+        document.getElementById('btn-clear-resume-template').onclick = () => document.getElementById('prof-resume-template').value = '';
+        document.getElementById('btn-clear-cover-letter-template').onclick = () => document.getElementById('prof-cover-letter-template').value = '';
+        document.getElementById('btn-clear-apprenticeship-calendar').onclick = () => {
+            loadedApprenticeshipCalendarDocument = null;
+            updateCalendarDocumentUI(null);
+        };
+
         document.getElementById('prof-image-preview').onclick = () => document.getElementById('prof-image-file').click();
+        async function fileToOptimizedDataUrl(file) {
+            const dataUrl = await new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = () => reject(new Error('image-read-failed'));
+                reader.readAsDataURL(file);
+            });
+
+            const img = await new Promise((resolve, reject) => {
+                const image = new Image();
+                image.onload = () => resolve(image);
+                image.onerror = () => reject(new Error('image-decode-failed'));
+                image.src = dataUrl;
+            });
+
+            const maxSize = 512;
+            const ratio = Math.min(1, maxSize / Math.max(img.width, img.height));
+            const width = Math.max(1, Math.round(img.width * ratio));
+            const height = Math.max(1, Math.round(img.height * ratio));
+
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            if (!ctx) throw new Error('image-canvas-failed');
+            ctx.drawImage(img, 0, 0, width, height);
+
+            return canvas.toDataURL('image/jpeg', 0.82);
+        }
+
         document.getElementById('prof-image-file').onchange = (e) => {
             const file = e.target.files[0];
             if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                const b64 = event.target.result;
+            fileToOptimizedDataUrl(file)
+            .then((b64) => {
+                loadedProfileImage = b64;
                 document.getElementById('prof-image-base64').value = b64;
                 document.getElementById('prof-image-preview').style.backgroundImage = `url(${b64})`;
                 document.getElementById('preview-placeholder').style.display = 'none';
-            };
-            reader.readAsDataURL(file);
+            })
+            .catch((error) => {
+                console.error("Profile image processing failed", error);
+                alert("Image trop lourde ou illisible.");
+            });
+        };
+
+        document.getElementById('btn-load-resume-template').onclick = () => document.getElementById('prof-resume-template-file').click();
+        document.getElementById('btn-load-cover-letter-template').onclick = () => document.getElementById('prof-cover-letter-template-file').click();
+        document.getElementById('btn-load-apprenticeship-calendar').onclick = () => document.getElementById('prof-apprenticeship-calendar-file').click();
+
+        document.getElementById('prof-resume-template-file').onchange = async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            try {
+                const text = await readFileAsText(file);
+                const json = JSON.parse(text);
+                document.getElementById('prof-resume-template').value = JSON.stringify(json, null, 2);
+            } catch (error) {
+                console.error("Resume template load failed", error);
+                alert("Le fichier du modèle CV doit être un JSON valide.");
+            }
+        };
+
+        document.getElementById('prof-cover-letter-template-file').onchange = async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            try {
+                const text = await readFileAsText(file);
+                const json = JSON.parse(text);
+                document.getElementById('prof-cover-letter-template').value = JSON.stringify(json, null, 2);
+            } catch (error) {
+                console.error("Cover letter template load failed", error);
+                alert("Le fichier du modèle lettre doit être un JSON valide.");
+            }
+        };
+
+        document.getElementById('prof-apprenticeship-calendar-file').onchange = async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            try {
+                const dataUrl = await readFileAsDataUrl(file);
+                loadedApprenticeshipCalendarDocument = {
+                    type: "application/pdf",
+                    name: file.name,
+                    data_url: dataUrl
+                };
+                updateCalendarDocumentUI(loadedApprenticeshipCalendarDocument);
+            } catch (error) {
+                console.error("Apprenticeship calendar load failed", error);
+                alert("Le fichier calendrier doit être un PDF lisible.");
+            }
         };
 
         function renderList(containerId, items, rowCreator) {
             const container = document.getElementById(containerId);
             container.innerHTML = '';
             items.forEach(item => container.appendChild(rowCreator(item)));
+            if (containerId === 'list-experiences' || containerId === 'list-projects') {
+                initSortableContainer(container);
+            }
+        }
+
+        function dragHandleMarkup() {
+            return `
+                <button
+                    type="button"
+                    class="drag-handle"
+                    title="Glisser pour réordonner"
+                    aria-label="Glisser pour réordonner"
+                    style="display:flex; align-items:center; justify-content:center; width:34px; height:34px; border:none; background:transparent; cursor:grab; color:var(--muted-strong); border-radius:8px; padding:0;"
+                >
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                        <circle cx="5" cy="3" r="1.4"></circle>
+                        <circle cx="11" cy="3" r="1.4"></circle>
+                        <circle cx="5" cy="8" r="1.4"></circle>
+                        <circle cx="11" cy="8" r="1.4"></circle>
+                        <circle cx="5" cy="13" r="1.4"></circle>
+                        <circle cx="11" cy="13" r="1.4"></circle>
+                    </svg>
+                </button>
+            `;
+        }
+
+        function setupSortableRow(row) {
+            if (row.dataset.sortableReady === 'true') return;
+            row.dataset.sortableReady = 'true';
+            row.draggable = true;
+            row.addEventListener('dragstart', (event) => {
+                if (row.dataset.dragReady !== 'true') {
+                    event.preventDefault();
+                    return;
+                }
+                row.classList.add('dragging-profile-row');
+                row.style.opacity = '0.55';
+                if (event.dataTransfer) {
+                    event.dataTransfer.effectAllowed = 'move';
+                    event.dataTransfer.setData('text/plain', row.dataset.rowId || '');
+                }
+            });
+            row.addEventListener('dragend', () => {
+                row.dataset.dragReady = 'false';
+                row.classList.remove('dragging-profile-row');
+                row.style.opacity = '1';
+            });
+
+            const handle = row.querySelector('.drag-handle');
+            if (handle) {
+                handle.addEventListener('mousedown', () => {
+                    row.dataset.dragReady = 'true';
+                });
+                handle.addEventListener('mouseup', () => {
+                    row.dataset.dragReady = 'false';
+                });
+                handle.addEventListener('mouseleave', () => {
+                    row.dataset.dragReady = 'false';
+                });
+            }
+        }
+
+        function getDragAfterElement(container, y) {
+            const rows = [...container.querySelectorAll('.form-row-exp:not(.dragging-profile-row)')];
+            return rows.reduce((closest, child) => {
+                const box = child.getBoundingClientRect();
+                const offset = y - box.top - box.height / 2;
+                if (offset < 0 && offset > closest.offset) {
+                    return { offset, element: child };
+                }
+                return closest;
+            }, { offset: Number.NEGATIVE_INFINITY, element: null }).element;
+        }
+
+        function initSortableContainer(container) {
+            if (!container || container.dataset.sortableContainerReady === 'true') return;
+            container.dataset.sortableContainerReady = 'true';
+            container.addEventListener('dragover', (event) => {
+                event.preventDefault();
+                const dragging = document.querySelector('.dragging-profile-row');
+                if (!dragging || dragging.parentElement !== container) return;
+                const afterElement = getDragAfterElement(container, event.clientY);
+                if (!afterElement) {
+                    container.appendChild(dragging);
+                } else {
+                    container.insertBefore(dragging, afterElement);
+                }
+            });
+            container.addEventListener('drop', (event) => {
+                event.preventDefault();
+            });
         }
 
         function createExpRow(item = {}) {
             const div = document.createElement('div');
             div.className = 'form-row-exp';
-            div.style = "display:grid; grid-template-columns: 1fr 1fr 1fr 40px; gap:10px; margin-bottom:10px; padding:10px; border:1px solid var(--hairline); border-radius:8px; background: var(--canvas);";
+            div.dataset.rowId = `row-${Math.random().toString(36).slice(2, 10)}`;
+            div.dataset.dragReady = 'false';
+            div.style = "display:grid; grid-template-columns: 34px 1fr 1fr 1fr 40px; gap:10px; margin-bottom:10px; padding:10px; border:1px solid var(--hairline); border-radius:8px; background: var(--canvas); align-items:start;";
             div.innerHTML = `
+                ${dragHandleMarkup()}
                 <input type="text" data-i18n-placeholder="ph_role" placeholder="Titre" class="exp-role" value="${item.role || ""}" style="padding:8px; border:1px solid var(--hairline); border-radius:6px; font-size:13px;">
                 <input type="text" data-i18n-placeholder="ph_link" placeholder="Lien" class="exp-company" value="${item.company || ""}" style="padding:8px; border:1px solid var(--hairline); border-radius:6px; font-size:13px;">
                 <input type="text" data-i18n-placeholder="ph_period" placeholder="Période" class="exp-period" value="${item.period || ""}" style="padding:8px; border:1px solid var(--hairline); border-radius:6px; font-size:13px;">
                 <button onclick="this.parentElement.remove()" class="muted-remove-btn">×</button>
-                <textarea data-i18n-placeholder="ph_desc" placeholder="Description" class="exp-desc" style="grid-column: span 4; height:60px; padding:8px; border:1px solid var(--hairline); border-radius:6px; resize:none; font-size:13px;">${(item.description || []).join('\n')}</textarea>
+                <textarea data-i18n-placeholder="ph_desc" placeholder="Description" class="exp-desc" style="grid-column: 1 / -1; height:60px; padding:8px; border:1px solid var(--hairline); border-radius:6px; resize:none; font-size:13px;">${(item.description || []).join('\n')}</textarea>
             `;
+            setupSortableRow(div);
             updateUIStrings();
             return div;
         }
@@ -677,7 +1002,62 @@
             return div;
         }
 
+        function normalizeSkillGroup(item = {}) {
+            const category = item.category || item.role || "";
+            let items = item.items;
+            if (!Array.isArray(items)) {
+                items = (item.company || "")
+                    .split(',')
+                    .map((value) => value.trim())
+                    .filter(Boolean);
+            }
+            // Cleanup: remove any trailing '×' or spaces that might have been saved accidentally
+            items = items.map(s => typeof s === 'string' ? s.replace(/[ \s×]+$/, '').trim() : s);
+            return { category, items };
+        }
+
+        function createAnnexeRow(item = {}) {
+            const div = document.createElement('div');
+            div.className = 'form-row-annexe';
+            div.style = "display:grid; grid-template-columns: 1fr 1fr 40px 40px; gap:10px; margin-bottom:10px; align-items:center; padding:10px; border:1px solid var(--hairline); border-radius:8px; background:var(--canvas);";
+            div.dataset.fileData = item.data_url || "";
+            div.dataset.fileType = item.type || "";
+            div.dataset.fileName = item.name || "";
+            
+            div.innerHTML = `
+                <input type="text" data-i18n-placeholder="ph_annexe_name" placeholder="Nom du document" class="annexe-name" value="${item.label || ""}" style="padding:8px; border:1px solid var(--hairline); border-radius:8px; font-size:13px;">
+                <div class="annexe-status" style="font-size:12px; color:var(--muted-strong); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${item.name || "Aucun fichier"}</div>
+                <input type="file" class="annexe-file-input" style="display:none;">
+                <button type="button" class="profile-inline-add annexe-load-btn" title="Charger">+</button>
+                <button type="button" class="muted-remove-btn annexe-remove-btn">×</button>
+            `;
+            
+            const fileInput = div.querySelector('.annexe-file-input');
+            const statusDiv = div.querySelector('.annexe-status');
+            
+            div.querySelector('.annexe-load-btn').onclick = () => fileInput.click();
+            div.querySelector('.annexe-remove-btn').onclick = () => div.remove();
+            
+            fileInput.onchange = async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                try {
+                    const dataUrl = await readFileAsDataUrl(file);
+                    div.dataset.fileData = dataUrl;
+                    div.dataset.fileType = file.type;
+                    div.dataset.fileName = file.name;
+                    statusDiv.textContent = file.name;
+                } catch (err) {
+                    console.error("Annexe load failed", err);
+                }
+            };
+            
+            updateUIStrings();
+            return div;
+        }
+
         function createSkillRow(item = { category: "", items: [] }) {
+            item = normalizeSkillGroup(item);
             const div = document.createElement('div');
             div.className = 'skill-cat-row';
             div.style = "padding:16px; border:1px solid var(--hairline); border-radius:10px; margin-bottom:12px; background: var(--canvas);";
@@ -695,9 +1075,10 @@
                 pillsContainer.innerHTML = '';
                 item.items.forEach((skill, idx) => {
                     const pill = document.createElement('div');
+                    pill.className = 'skill-pill';
                     pill.style = "background:var(--soft-blue); color:var(--primary); padding:4px 12px; border-radius:20px; font-size:11px; font-weight:600; display:flex; align-items:center; gap:6px;";
-                    pill.innerHTML = `${skill} <span class="skill-pill-remove">×</span>`;
-                    pill.querySelector('span').onclick = () => { item.items.splice(idx, 1); renderPills(); };
+                    pill.innerHTML = `<span class="skill-text">${skill}</span> <span class="skill-pill-remove">×</span>`;
+                    pill.querySelector('.skill-pill-remove').onclick = () => { item.items.splice(idx, 1); renderPills(); };
                     pillsContainer.appendChild(pill);
                 });
             };
@@ -712,8 +1093,16 @@
             return div;
         }
 
-        document.getElementById('add-exp').onclick = () => document.getElementById('list-experiences').appendChild(createExpRow());
-        document.getElementById('add-project').onclick = () => document.getElementById('list-projects').appendChild(createExpRow());
+        document.getElementById('add-exp').onclick = () => {
+            const container = document.getElementById('list-experiences');
+            container.appendChild(createExpRow());
+            initSortableContainer(container);
+        };
+        document.getElementById('add-project').onclick = () => {
+            const container = document.getElementById('list-projects');
+            container.appendChild(createExpRow());
+            initSortableContainer(container);
+        };
         document.getElementById('add-edu').onclick = () => document.getElementById('list-education').appendChild(createEduRow());
         document.getElementById('add-lang').onclick = () => document.getElementById('list-languages').appendChild(createLangRow());
         document.getElementById('add-skill-cat').onclick = () => document.getElementById('list-skills').appendChild(createSkillRow());
@@ -721,12 +1110,24 @@
         document.getElementById('btn-save-profile').onclick = async () => {
             const btn = document.getElementById('btn-save-profile');
             btn.disabled = true;
+            let resumeTemplate;
+            let coverLetterTemplate;
+            try {
+                resumeTemplate = JSON.parse(document.getElementById('prof-resume-template').value || '{}');
+                coverLetterTemplate = JSON.parse(document.getElementById('prof-cover-letter-template').value || '{}');
+            } catch (error) {
+                console.error("Profile document JSON invalid", error);
+                alert("Le JSON du modèle CV ou du modèle lettre est invalide.");
+                btn.disabled = false;
+                return;
+            }
             const content = {
+                ...loadedProfileExtras,
                 profile: {
                     firstname: document.getElementById('prof-firstname').value,
                     lastname: document.getElementById('prof-lastname').value,
                     name: document.getElementById('prof-firstname').value + " " + document.getElementById('prof-lastname').value,
-                    image: document.getElementById('prof-image-base64').value,
+                    image: document.getElementById('prof-image-base64').value || loadedProfileImage || "",
                     title: document.getElementById('prof-title').value,
                     pitch: document.getElementById('prof-pitch').value,
                     location: document.getElementById('prof-location').value,
@@ -765,14 +1166,41 @@
                 })),
                 skills: Array.from(document.querySelectorAll('.skill-cat-row')).map(row => ({
                     category: row.querySelector('.skill-cat-name').value,
-                    items: Array.from(row.querySelectorAll('.skills-pills-container div')).map(p => p.innerText.replace(' ×', '').trim())
-                })),
+                    items: Array.from(row.querySelectorAll('.skills-pills-container .skill-pill')).map(p => {
+                        const textEl = p.querySelector('.skill-text');
+                        return textEl ? textEl.innerText.trim() : p.innerText.replace(' ×', '').trim();
+                    })
+                })).filter(group => group.category.trim() || group.items.length > 0),
+                documents: {
+                    resume_template: resumeTemplate,
+                    cover_letter_template: coverLetterTemplate,
+                    apprenticeship_calendar: loadedApprenticeshipCalendarDocument,
+                    annexes: Array.from(document.querySelectorAll('.form-row-annexe')).map(row => ({
+                        label: row.querySelector('.annexe-name').value,
+                        name: row.dataset.fileName,
+                        type: row.dataset.fileType,
+                        data_url: row.dataset.fileData
+                    })).filter(a => a.label.trim() || a.name)
+                },
                 labels: { contact: "CONTACT", skills: "COMPÉTENCES", languages: "LANGUES", experiences: "EXPÉRIENCES", projects: "PROJETS", education: "FORMATIONS", download: "Download PDF (A4)" }
             };
             try {
-                const res = await fetch('/api/profile/active', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(content) });
-                if (res.ok) { alert("Profil sauvegardé !"); loadProfile(); }
-            } catch (e) { alert("Erreur."); }
+                const res = await fetch('/api/profile/active', {
+                    method: 'PUT',
+                    cache: 'no-store',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(content)
+                });
+                if (!res.ok) {
+                    const errorText = await res.text();
+                    throw new Error(errorText || `HTTP ${res.status}`);
+                }
+                alert("Profil sauvegardé !");
+                await loadProfile();
+            } catch (e) {
+                console.error("Profile save failed", e);
+                alert("Erreur de sauvegarde du profil.");
+            }
             finally { btn.disabled = false; }
         };
 
@@ -817,7 +1245,7 @@
             if (!activeJobId) return;
             const iframe = document.getElementById('iframe-doc');
             const path = activeTab === 'restitution' ? '/restitution/index.html' : (activeTab === 'resume' ? '/resume/index.html' : '/cover-letter/index.html');
-            iframe.src = `${path}?id=${activeJobId}`;
+            iframe.src = `${path}?id=${activeJobId}&v=${Date.now()}`;
         }
 
         document.getElementById('btn-download-pdf').onclick = () => {

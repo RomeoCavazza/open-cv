@@ -53,10 +53,7 @@ impl Default for MockLlm {
 
 #[async_trait]
 impl LlmClient for MockLlm {
-    async fn complete(
-        &self,
-        _req: CompletionRequest,
-    ) -> Result<CompletionResponse, LlmError> {
+    async fn complete(&self, _req: CompletionRequest) -> Result<CompletionResponse, LlmError> {
         let text = self
             .complete_queue
             .lock()
@@ -101,11 +98,7 @@ impl MockEmbedder {
 
 #[async_trait]
 impl Embedder for MockEmbedder {
-    async fn embed(
-        &self,
-        texts: &[&str],
-        _mode: EmbedMode,
-    ) -> Result<Vec<Vec<f32>>, EmbedError> {
+    async fn embed(&self, texts: &[&str], _mode: EmbedMode) -> Result<Vec<Vec<f32>>, EmbedError> {
         Ok(texts
             .iter()
             .map(|t| pseudo_embedding(t, self.dimension))

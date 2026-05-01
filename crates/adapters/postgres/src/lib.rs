@@ -4,9 +4,7 @@
 //! viendront en Phase 1-2.
 
 use async_trait::async_trait;
-use domain::{
-    Instance, InstanceId, InstanceStatus, Offre, OffreId, OffreStructured, Slug,
-};
+use domain::{Instance, InstanceId, InstanceStatus, Offre, OffreId, OffreStructured, Slug};
 use ports::{InstanceRepo, OffreRepo, RepoError};
 use sqlx::PgPool;
 
@@ -118,8 +116,7 @@ impl OffreRepo for OffreRepoPg {
             .map(|r| {
                 Ok(Offre {
                     id: OffreId::from_uuid(r.id),
-                    slug: Slug::parse(r.slug)
-                        .map_err(|e| RepoError::Other(e.to_string()))?,
+                    slug: Slug::parse(r.slug).map_err(|e| RepoError::Other(e.to_string()))?,
                     source_url: r.source_url,
                     source_host: r.source_host,
                     source_hash: r.source_hash,
@@ -335,8 +332,7 @@ impl InstanceRepo for InstanceRepoPg {
             .map(|r| {
                 Ok(Instance {
                     id: InstanceId::from_uuid(r.id),
-                    slug: Slug::parse(r.slug)
-                        .map_err(|e| RepoError::Other(e.to_string()))?,
+                    slug: Slug::parse(r.slug).map_err(|e| RepoError::Other(e.to_string()))?,
                     offre_id: domain::OffreId::from_uuid(r.offre_id),
                     profil_id: domain::ProfilId::from_uuid(r.profil_id),
                     status: parse_status(&r.status)?,
@@ -435,7 +431,10 @@ impl ports::ProfilRepo for ProfilRepoPg {
         }))
     }
 
-    async fn get_by_id(&self, id: domain::ProfilId) -> Result<Option<domain::Profil>, ports::RepoError> {
+    async fn get_by_id(
+        &self,
+        id: domain::ProfilId,
+    ) -> Result<Option<domain::Profil>, ports::RepoError> {
         let row = sqlx::query!(
             r#"
             SELECT id, label, content, is_active, created_at
@@ -502,8 +501,15 @@ impl ports::ChunkRepo for ChunkRepoPg {
         embedding: &[f32],
         limit: u32,
     ) -> Result<Vec<(domain::Chunk, f32)>, ports::RepoError> {
-        let embedding_str = format!("[{}]", embedding.iter().map(|f| f.to_string()).collect::<Vec<_>>().join(","));
-        
+        let embedding_str = format!(
+            "[{}]",
+            embedding
+                .iter()
+                .map(|f| f.to_string())
+                .collect::<Vec<_>>()
+                .join(",")
+        );
+
         let rows = sqlx::query(
             r#"
             SELECT id, profil_id, kind::text as kind, titre, content, metadata, embedding::text as embedding, created_at,
@@ -564,7 +570,15 @@ impl ports::ChunkRepo for ChunkRepoPg {
     }
 
     async fn upsert(&self, chunk: &domain::Chunk) -> Result<(), ports::RepoError> {
-        let embedding_str = format!("[{}]", chunk.embedding.iter().map(|f| f.to_string()).collect::<Vec<_>>().join(","));
+        let embedding_str = format!(
+            "[{}]",
+            chunk
+                .embedding
+                .iter()
+                .map(|f| f.to_string())
+                .collect::<Vec<_>>()
+                .join(",")
+        );
         sqlx::query(
             r#"
             INSERT INTO chunks (id, profil_id, kind, titre, content, metadata, embedding, created_at)

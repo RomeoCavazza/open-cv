@@ -36,8 +36,8 @@ impl Default for HttpScraper {
 #[async_trait]
 impl Scraper for HttpScraper {
     async fn scrape(&self, url: &str) -> Result<ScrapeResult, ScrapeError> {
-        let parsed = url::Url::parse(url)
-            .map_err(|e| ScrapeError::InvalidUrl(format!("{url}: {e}")))?;
+        let parsed =
+            url::Url::parse(url).map_err(|e| ScrapeError::InvalidUrl(format!("{url}: {e}")))?;
 
         let resp = self
             .http

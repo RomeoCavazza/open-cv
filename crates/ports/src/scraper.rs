@@ -26,7 +26,9 @@ pub enum ScrapeError {
     #[error("status non-OK : {0}")]
     BadStatus(u16),
 
-    #[error("anti-bot détecté (Cloudflare/Datadome/...) — escalade vers chrome ou raw_text manuel")]
+    #[error(
+        "anti-bot détecté (Cloudflare/Datadome/...) — escalade vers chrome ou raw_text manuel"
+    )]
     AntiBotDetected,
 
     #[error("contenu vide ou inutile (< 500c)")]

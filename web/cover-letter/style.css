@@ -2,9 +2,10 @@
     --font-main: "Arimo", "Open Sans", sans-serif;
     --color-body: #1e293b;
     --color-muted: #64748b;
-    --color-accent: #0052ff;
+    --color-accent: #88b7e1;
     --color-border: #d9e3f0;
     --color-background: #eef4fb;
+    --color-preview-surface: #f3f4f6;
     --page-width: 210mm;
     --page-height: 297mm;
 }
@@ -32,9 +33,25 @@ body {
 body.is-framed {
     padding: 0 !important;
     background: transparent !important;
+    overflow: hidden !important;
 }
 body.is-framed .no-print.actions {
     display: none !important;
+}
+
+.page-stage {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+body.is-framed .page-stage {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
+    background: var(--color-preview-surface);
 }
 
 .no-print {
@@ -66,13 +83,22 @@ body.is-framed .no-print.actions {
 
 .a4-page {
     width: var(--page-width);
-    min-height: var(--page-height);
+    height: var(--page-height);
     background: #ffffff;
     border-radius: 0;
     display: flex;
     flex-direction: column;
     position: relative;
-    padding-bottom: 40px;
+    overflow: hidden;
+    flex: 0 0 auto;
+}
+
+body.is-framed .a4-page {
+    position: absolute;
+    top: 0;
+    left: 0;
+    transform: none;
+    transform-origin: top left;
 }
 
 .cl-header {
@@ -240,6 +266,8 @@ body.is-framed .no-print.actions {
     .a4-page {
         box-shadow: none;
         border-radius: 0;
+        height: 297mm;
+        overflow: hidden;
     }
 
     .cl-header {
@@ -249,4 +277,5 @@ body.is-framed .no-print.actions {
     .cl-body {
         padding-bottom: 40px;
     }
+
 }

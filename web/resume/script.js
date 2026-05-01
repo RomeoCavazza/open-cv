@@ -3,12 +3,12 @@ async function loadCV() {
         const urlParams = new URLSearchParams(window.location.search);
         const jobId = urlParams.get('id');
         const t = Date.now();
-        let dataPath = (jobId && jobId !== 'null') ? `/api/instances/${jobId}/resume` : `/api/profile/active/resume?t=${t}`;
+        let dataPath = (jobId && jobId !== 'null') ? `/api/instances/${jobId}/resume` : `/api/profile/active/resume-template?t=${t}`;
         
         let response = await fetch(dataPath);
         if (!response.ok) {
-            console.warn(`Data not found at ${dataPath}, falling back to template.`);
-            response = await fetch(`/templates/resume.json?t=${t}`);
+            console.warn(`Data not found at ${dataPath}, falling back to active profile resume template.`);
+            response = await fetch(`/api/profile/active/resume-template?t=${t}`);
         }
         
         if (!response.ok) {
@@ -145,10 +145,41 @@ function safeSetHref(id, url) {
     if (el) el.href = url;
 }
 
+function applyPreviewScale() {
+    if (window.self === window.top) return;
+
+    const page = document.querySelector('.a4-page');
+    const stage = document.querySelector('.page-stage');
+    if (!page || !stage) return;
+
+    page.style.transform = 'none';
+    page.style.left = '0px';
+    page.style.top = '0px';
+
+    requestAnimationFrame(() => {
+        const availableWidth = window.innerWidth - 32;
+        const availableHeight = window.innerHeight - 32;
+        const pageWidth = page.offsetWidth;
+        const pageHeight = page.offsetHeight;
+        const scale = Math.min(1, availableWidth / pageWidth, availableHeight / pageHeight);
+        const scaledWidth = pageWidth * scale;
+        const scaledHeight = pageHeight * scale;
+        const offsetX = Math.max(0, (availableWidth - scaledWidth) / 2);
+        const offsetY = 16;
+
+        page.style.transform = `scale(${scale})`;
+        page.style.left = `${offsetX}px`;
+        page.style.top = `${offsetY}px`;
+        stage.style.height = `${window.innerHeight}px`;
+    });
+}
+
 document.getElementById('download-pdf').addEventListener('click', () => window.print());
 window.addEventListener('DOMContentLoaded', () => {
     if (window.self !== window.top) {
         document.body.classList.add('is-framed');
     }
     loadCV();
+    applyPreviewScale();
 });
+window.addEventListener('resize', applyPreviewScale);

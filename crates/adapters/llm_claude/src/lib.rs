@@ -5,9 +5,7 @@
 //! - `extract` : génération structurée via Tool Use (structured output)
 
 use async_trait::async_trait;
-use ports::{
-    CompletionRequest, CompletionResponse, ExtractionRequest, LlmClient, LlmError, Role,
-};
+use ports::{CompletionRequest, CompletionResponse, ExtractionRequest, LlmClient, LlmError, Role};
 use serde::{Deserialize, Serialize};
 use tracing::instrument;
 
@@ -129,10 +127,7 @@ struct AnthropicErrorDetail {
 #[async_trait]
 impl LlmClient for ClaudeClient {
     #[instrument(skip(self, req), fields(model = %self.model))]
-    async fn complete(
-        &self,
-        req: CompletionRequest,
-    ) -> Result<CompletionResponse, LlmError> {
+    async fn complete(&self, req: CompletionRequest) -> Result<CompletionResponse, LlmError> {
         let messages: Vec<AnthropicMessage> = req
             .messages
             .iter()
@@ -180,7 +175,10 @@ impl LlmClient for ClaudeClient {
             });
         }
 
-        let raw = resp.text().await.map_err(|e| LlmError::Http(e.to_string()))?;
+        let raw = resp
+            .text()
+            .await
+            .map_err(|e| LlmError::Http(e.to_string()))?;
 
         if status != 200 {
             if let Ok(err) = serde_json::from_str::<AnthropicError>(&raw) {
@@ -189,10 +187,7 @@ impl LlmClient for ClaudeClient {
                     body: format!("{}: {}", err.error.error_type, err.error.message),
                 });
             }
-            return Err(LlmError::ProviderStatus {
-                status,
-                body: raw,
-            });
+            return Err(LlmError::ProviderStatus { status, body: raw });
         }
 
         let latency_ms = start.elapsed().as_millis() as u64;
@@ -274,7 +269,10 @@ impl LlmClient for ClaudeClient {
             });
         }
 
-        let raw = resp.text().await.map_err(|e| LlmError::Http(e.to_string()))?;
+        let raw = resp
+            .text()
+            .await
+            .map_err(|e| LlmError::Http(e.to_string()))?;
         let _latency_ms = start.elapsed().as_millis() as u64;
 
         if status != 200 {
@@ -284,10 +282,7 @@ impl LlmClient for ClaudeClient {
                     body: format!("{}: {}", err.error.error_type, err.error.message),
                 });
             }
-            return Err(LlmError::ProviderStatus {
-                status,
-                body: raw,
-            });
+            return Err(LlmError::ProviderStatus { status, body: raw });
         }
 
         let parsed: AnthropicResponse =

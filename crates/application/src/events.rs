@@ -94,12 +94,7 @@ impl EventBus {
     }
 
     /// Helper : émet `step Failed`.
-    pub fn failed(
-        &self,
-        instance_id: InstanceId,
-        step: GenerationStep,
-        error: impl Into<String>,
-    ) {
+    pub fn failed(&self, instance_id: InstanceId, step: GenerationStep, error: impl Into<String>) {
         self.emit(GenerationEvent {
             instance_id,
             timestamp: Utc::now(),

@@ -1,6 +1,6 @@
-use std::sync::Arc;
 use application::generate::GenerateApplicationUseCase;
 use ports::{InstanceRepo, OffreRepo};
+use std::sync::Arc;
 
 #[derive(Clone)]
 pub struct AppState {

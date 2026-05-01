@@ -35,11 +35,7 @@ pub enum EmbedMode {
 pub trait Embedder: Send + Sync {
     /// Embed une liste de textes. La sortie est un vecteur par texte,
     /// dans l'ordre.
-    async fn embed(
-        &self,
-        texts: &[&str],
-        mode: EmbedMode,
-    ) -> Result<Vec<Vec<f32>>, EmbedError>;
+    async fn embed(&self, texts: &[&str], mode: EmbedMode) -> Result<Vec<Vec<f32>>, EmbedError>;
 
     /// Dimension des vecteurs produits. Doit matcher `vector(N)` dans le SQL.
     fn dimension(&self) -> usize;
