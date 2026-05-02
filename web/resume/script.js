@@ -15,34 +15,47 @@ async function loadCV() {
         }
         
         if (isTemplate && jobId && jobId !== 'null') {
-            document.body.innerHTML = `
-                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; font-family: 'Inter', sans-serif; background: #fff;">
-                    <button id="btn-generate-cv" style="
-                        background: #0052ff;
-                        color: white;
-                        border: none;
-                        padding: 14px 28px;
-                        border-radius: 12px;
-                        font-weight: 600;
-                        cursor: pointer;
-                        font-size: 15px;
-                    ">Générer le CV</button>
-                </div>
-            `;
-            document.getElementById('btn-generate-cv').onclick = async () => {
-                const btn = document.getElementById('btn-generate-cv');
-                btn.disabled = true;
-                btn.innerText = "Génération...";
-                try {
-                    const res = await fetch(`/api/instances/${jobId}/generate`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ deliverables: { resume: true, restitution: false, cover: false } })
-                    });
-                    if (res.ok) window.location.reload();
-                    else btn.disabled = false;
-                } catch (e) { btn.disabled = false; }
-            };
+            const cv = document.getElementById('cv');
+            if (cv) {
+                cv.innerHTML = `
+                    <div style="display: flex; flex-direction: column; align-items: center; justify-content: flex-start; height: 100%; width: 100%; padding-top: 18vh; padding-left: 40px; padding-right: 40px; text-align: center; color: #64748b; background: #fff;">
+                        <div style="width: 64px; height: 64px; background: #eff6ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 24px; color: #0052ff;">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 32px; height: 32px;">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+                            </svg>
+                        </div>
+                        <h2 style="font-size: 20px; font-weight: 700; color: #1e293b; margin-bottom: 12px;">CV non disponible</h2>
+                        <button id="btn-generate-cv" style="
+                            background: #0052ff;
+                            color: white;
+                            border: none;
+                            padding: 14px 32px;
+                            border-radius: 12px;
+                            font-weight: 600;
+                            cursor: pointer;
+                            font-size: 15px;
+                            box-shadow: 0 4px 12px rgba(0,82,255,0.2);
+                            transition: all 0.2s;
+                        ">Générer le CV</button>
+                    </div>
+                `;
+                if (window.lucide) lucide.createIcons();
+                if (typeof applyPreviewScale === 'function') applyPreviewScale();
+                document.getElementById('btn-generate-cv').onclick = async () => {
+                    const btn = document.getElementById('btn-generate-cv');
+                    btn.disabled = true;
+                    btn.innerText = "Génération...";
+                    try {
+                        const res = await fetch(`/api/instances/${jobId}/generate`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ deliverables: { resume: true, restitution: false, cover: false } })
+                        });
+                        if (res.ok) window.location.reload();
+                        else btn.disabled = false;
+                    } catch (e) { btn.disabled = false; }
+                };
+            }
             return;
         }
 

@@ -14,6 +14,7 @@ pub struct ChatRequest {
 #[derive(Debug, Serialize)]
 pub struct ChatResponse {
     pub updated_instance: Instance,
+    pub message: String,
 }
 
 pub struct ChatWithApplicationUseCase {
@@ -83,10 +84,12 @@ impl ChatWithApplicationUseCase {
 
         // 4. Construire le prompt de mutation
         let system_prompt = "Tu es un expert en recrutement. L'utilisateur veut modifier son CV ou sa lettre de motivation. \
-            Tu as accès à son profil complet via le contexte RAG fourni ci-dessous. \
-            Tu DOIS renvoyer le JSON complet mis à jour. \
-            CONSIGNE : Si l'utilisateur demande une info présente dans le contexte, utilise-la. \
-            RÈGLE : NE RÉPONDS QUE PAR LE JSON, SANS TEXTE AVANT OU APRÈS.";
+            Tu as accès à son profil complet via le contexte RAG fourni. \
+            TU DOIS RÉPONDRE EXCLUSIVEMENT PAR UN OBJET JSON avec ces 3 clés : \
+            1. 'resume' : le JSON complet du CV mis à jour. \
+            2. 'cover' : le JSON complet de la lettre mis à jour. \
+            3. 'message' : ton explication courte des changements faits. \
+            INTERDICTION DE METTRE DU TEXTE AVANT OU APRÈS LE JSON.";
 
         let user_prompt = format!(
             "CONTEXTE DU PROFIL (RAG):\n{}\n\n\
@@ -125,6 +128,8 @@ impl ChatWithApplicationUseCase {
             &response_text
         };
 
+        let mut ai_message = "Désolé, je n'ai pas pu traiter votre demande correctement.".to_string();
+
         if let Ok(new_data) = serde_json::from_str::<serde_json::Value>(json_str) {
             if let Some(resume) = new_data.get("resume") {
                 instance.resume_json = Some(resume.clone());
@@ -132,11 +137,15 @@ impl ChatWithApplicationUseCase {
             if let Some(cover) = new_data.get("cover") {
                 instance.cover_letter_json = Some(cover.clone());
             }
+            ai_message = new_data.get("message")
+                .and_then(|m| m.as_str())
+                .unwrap_or("Modifications appliquées (sans commentaire de l'IA).")
+                .to_string();
         } else {
-            warn!(
-                "Chat LLM n'a pas renvoyé un JSON valide : {}",
+            return Err(anyhow::anyhow!(
+                "Le LLM n'a pas renvoyé un JSON valide. Réponse brute: {}",
                 response_text
-            );
+            ));
         }
 
         // 7. Sauvegarder
@@ -145,6 +154,7 @@ impl ChatWithApplicationUseCase {
 
         Ok(ChatResponse {
             updated_instance: instance,
+            message: ai_message,
         })
     }
 }

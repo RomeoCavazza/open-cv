@@ -98,7 +98,7 @@ async fn main() -> anyhow::Result<()> {
     // Ollama
     let ollama_base =
         std::env::var("OLLAMA_BASE_URL").unwrap_or_else(|_| "http://localhost:11434".into());
-    let ollama_model = std::env::var("OLLAMA_MODEL").unwrap_or_else(|_| "llama3.1".into());
+    let ollama_model = std::env::var("OLLAMA_MODEL").unwrap_or_else(|_| "qwen2.5:7b".into());
     info!("LLM: Ollama activé ({} @ {})", ollama_model, ollama_base);
     llm_map.insert(
         "ollama".to_string(),

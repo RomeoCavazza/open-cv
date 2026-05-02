@@ -84,6 +84,8 @@ body.is-framed .page-stage {
 .a4-page {
     width: var(--page-width);
     height: var(--page-height);
+    min-width: var(--page-width);
+    min-height: var(--page-height);
     background: #ffffff;
     border-radius: 0;
     display: flex;
@@ -91,6 +93,7 @@ body.is-framed .page-stage {
     position: relative;
     overflow: hidden;
     flex: 0 0 auto;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
 }
 
 body.is-framed .a4-page {

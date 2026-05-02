@@ -26,6 +26,12 @@ function switchView(viewName) {
 
 // Expose for legacy scripts (chat.js)
 window.updateIframe = updateIframe;
+window.state = {
+    get selectedLlmProvider() { return state.selectedLlmProvider; },
+    get activeJobId() { return state.activeJobId; },
+    get activeTab() { return state.activeTab; },
+    setSelectedLlmProvider: state.setSelectedLlmProvider
+};
 
 function updatePath() {
     let path = '/';
@@ -325,11 +331,31 @@ function renderDashboardApplications(offers) {
         const item = document.createElement('div');
         item.className = 'old-offer-item';
         item.style.cursor = 'pointer';
-        item.innerHTML = `<div class="old-offer-row"><div class="old-offer-text"><div class="old-offer-title">${offer.title}</div><div class="old-offer-company">${offer.entreprise || ''}</div></div><div class="old-offer-actions"><span class="offer-action-visibility"><button type="button" class="offer-action-btn" data-action="edit" aria-label="Éditer l'offre"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" /></svg></button></span><span class="offer-action-visibility ${isArchived ? 'is-active' : ''}"><button type="button" class="offer-action-btn ${isArchived ? 'is-active' : ''}" data-action="archive" aria-label="Archiver l'offre"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z" /></svg></button></span></div></div>`;
+        item.innerHTML = `<div class="old-offer-row">
+            <div class="old-offer-text">
+                <div class="old-offer-title">${offer.title}</div>
+                <div class="old-offer-company">${offer.entreprise || ''}</div>
+            </div>
+            <div class="old-offer-actions">
+                <span class="offer-action-visibility">
+                    <button type="button" class="offer-action-btn" data-action="regenerate" title="Regénérer">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
+                        </svg>
+                    </button>
+                </span>
+                <span class="offer-action-visibility ${isArchived ? 'is-active' : ''}">
+                    <button type="button" class="offer-action-btn ${isArchived ? 'is-active' : ''}" data-action="archive" aria-label="Archiver l'offre">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z" /></svg>
+                    </button>
+                </span>
+            </div>
+        </div>`;
         
-        item.querySelector('[data-action="edit"]').onclick = (event) => {
+        item.querySelector('[data-action="regenerate"]').onclick = (event) => {
             event.stopPropagation();
             state.setActiveJobId(offer.job_id);
+            state.setActiveTab('restitution');
             switchView('app');
             loadOffers();
             updateIframe();
@@ -693,6 +719,10 @@ document.querySelectorAll('.tab').forEach(tab => {
     };
 });
 
+document.getElementById('btn-reload-tab').onclick = () => {
+    updateIframe();
+};
+
 document.getElementById('btn-download-pdf').onclick = () => {
     const iframe = document.getElementById('iframe-doc');
     if (iframe.src) window.open(iframe.src, '_blank').print();
@@ -702,6 +732,23 @@ document.querySelectorAll('.llm-pill[data-provider]').forEach(pill => {
     pill.onclick = () => syncLlmSelectors(pill.dataset.provider);
 });
 
+function syncDelivSelectors(config) {
+    document.querySelectorAll('#deliv-selector-ingest .llm-pill').forEach(pill => {
+        const key = pill.dataset.deliv;
+        if (config[key]) pill.classList.add('active');
+        else pill.classList.remove('active');
+    });
+    updateIngestButtonState();
+}
+
+function updateIngestButtonState() {
+    const activeCount = document.querySelectorAll('#deliv-selector-ingest .llm-pill.active').length;
+    const btn = document.getElementById('btn-ingest-run');
+    if (btn) {
+        btn.disabled = (activeCount === 0);
+    }
+}
+
 document.querySelectorAll('#deliv-selector-ingest .llm-pill').forEach(pill => {
     pill.onclick = () => {
         pill.classList.toggle('active');
@@ -709,7 +756,8 @@ document.querySelectorAll('#deliv-selector-ingest .llm-pill').forEach(pill => {
         document.querySelectorAll('#deliv-selector-ingest .llm-pill').forEach(p => {
             current[p.dataset.deliv] = p.classList.contains('active');
         });
-        localStorage.setItem('recruitai_delivs', JSON.stringify(current));
+        state.saveDelivConfig(current);
+        updateIngestButtonState();
     };
 });
 
@@ -744,6 +792,7 @@ document.getElementById('prof-annexe-bulk-file').onchange = async (e) => {
 
 // Initial Load
 syncLlmSelectors(state.selectedLlmProvider);
+syncDelivSelectors(state.delivConfig);
 loadProfile();
 loadOffers();
 handleRouting();

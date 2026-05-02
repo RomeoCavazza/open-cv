@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Restitution Analyse</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         :root { 
             --primary: #0052ff; 
@@ -23,16 +24,21 @@
         * { box-sizing: border-box; }
         
         body { 
-            font-family: 'Inter', sans-serif; 
             background: #ffffff; 
-            margin: 0; 
-            padding: 40px; 
             color: var(--ink); 
+            font-family: 'Inter', sans-serif; 
             line-height: 1.6; 
-            -webkit-font-smoothing: antialiased;
+            margin: 0; 
+            padding: 0;
+            min-height: 100vh;
         }
         
-        .container { max-width: 850px; margin: 0 auto; }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: transparent;
+            padding: 40px;
+        }
 
         /* Header */
         .offer-header { margin-bottom: 48px; }
@@ -415,22 +421,33 @@
             const restitution = instance.restitution || instance.notes?.restitution;
             
             if (!restitution) {
-                // Reset complet pour éviter le "bloated"
-                document.body.innerHTML = `
-                    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; font-family: 'Inter', sans-serif;">
-                        <button id="btn-generate-now" style="
-                            background: var(--primary);
-                            color: white;
-                            border: none;
-                            padding: 14px 28px;
-                            border-radius: 12px;
-                            font-weight: 600;
-                            cursor: pointer;
-                            font-size: 15px;
-                            transition: opacity 0.2s;
-                        ">Générer l'analyse</button>
-                    </div>
-                `;
+                // Reset complet pour éviter le "bloated" mais garder le container
+                const container = document.querySelector('.container');
+                if (container) {
+                    container.innerHTML = `
+                        <div style="display: flex; flex-direction: column; align-items: center; justify-content: flex-start; height: 100vh; padding-top: 18vh; padding-left: 40px; padding-right: 40px; text-align: center; color: #64748b; background: #fff;">
+                            <div style="width: 64px; height: 64px; background: #eff6ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 24px; color: #0052ff;">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 32px; height: 32px;">
+                                  <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25M9 16.5v.75m3-3v3M15 12v5.25m-4.5-15H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+                                </svg>
+                            </div>
+                            <h2 style="font-size: 20px; font-weight: 700; color: #1e293b; margin-bottom: 12px;">Analyse non disponible</h2>
+                            <button id="btn-generate-now" style="
+                                background: var(--primary);
+                                color: white;
+                                border: none;
+                                padding: 14px 32px;
+                                border-radius: 12px;
+                                font-weight: 600;
+                                cursor: pointer;
+                                font-size: 15px;
+                                box-shadow: 0 4px 12px rgba(0,82,255,0.2);
+                                transition: all 0.2s;
+                            ">Générer l'analyse</button>
+                        </div>
+                    `;
+                    if (window.lucide) lucide.createIcons();
+                }
 
                 document.getElementById('btn-generate-now').onclick = async () => {
                     const btn = document.getElementById('btn-generate-now');

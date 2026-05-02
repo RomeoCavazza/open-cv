@@ -73,7 +73,11 @@ impl LlmClient for OllamaClient {
             model: req.model.unwrap_or_else(|| self.model.clone()),
             messages,
             stream: false,
-            format: None,
+            format: if req.system.as_ref().map(|s| s.contains("JSON")).unwrap_or(false) {
+                Some(serde_json::json!("json"))
+            } else {
+                None
+            },
             options: req
                 .temperature
                 .map(|t| serde_json::json!({ "temperature": t })),

@@ -1,21 +1,33 @@
 // chat.js - Manages the AI chat interaction
+async function appendMessage(role, text) {
+    const sidebarBody = document.querySelector('.ai-sidebar-body');
+    if (!sidebarBody) return;
+    const msgDiv = document.createElement('div');
+    msgDiv.className = `chat-message ${role}-message`;
+    msgDiv.style.cssText = `margin-bottom:16px;padding:12px 16px;border-radius:12px;font-size:14px;line-height:1.5;max-width:85%;${role === 'user' ? 'background:#0052ff;color:white;margin-left:auto;' : 'background:#f1f5f9;color:#1e293b;border:1px solid #e2e8f0;'}`;
+    msgDiv.textContent = text;
+    sidebarBody.appendChild(msgDiv);
+    sidebarBody.scrollTop = sidebarBody.scrollHeight;
+}
+
 async function sendChatMessage() {
     const input = document.getElementById('chat-input');
     const message = input.value.trim();
     if (!message || !window.activeJobId) return;
 
-    // 1. Récupérer l'ID de l'instance via l'API (on a besoin de l'UUID, pas du slug)
+    appendMessage('user', message);
+    input.value = '';
+
     const resOffre = await fetch(`/api/offres/${window.activeJobId}/instance`);
     if (!resOffre.ok) {
-        console.error("Instance non trouvée");
+        appendMessage('ai', "Erreur : Instance non trouvée.");
         return;
     }
     const instanceData = await resOffre.json();
     const instance_id = instanceData.id;
 
-    // 2. UI - Loading state
     input.disabled = true;
-    input.placeholder = "Modification en cours...";
+    input.placeholder = "L'IA réfléchit...";
     const sendBtn = document.querySelector('.ai-send-btn');
     if (sendBtn) sendBtn.disabled = true;
 
@@ -26,17 +38,19 @@ async function sendChatMessage() {
             body: JSON.stringify({
                 message,
                 instance_id,
-                llm_provider: localStorage.getItem('recruitai_llm') || 'ollama'
+                llm_provider: (window.state && window.state.selectedLlmProvider) || localStorage.getItem('recruitai_llm') || 'ollama'
             })
         });
 
         if (resChat.ok) {
-            input.value = '';
-            // Rafraîchir l'iframe pour voir les modifs
+            const result = await resChat.json();
+            appendMessage('ai', result.message || "Modifications appliquées !");
             if (typeof window.updateIframe === 'function') window.updateIframe();
+        } else {
+            appendMessage('ai', "L'IA a rencontré une erreur.");
         }
     } catch (e) {
-        console.error("Chat failed", e);
+        appendMessage('ai', "Erreur de connexion.");
     } finally {
         input.disabled = false;
         input.placeholder = "Demander des modifications...";
@@ -50,10 +64,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const sendBtn = document.querySelector('.ai-send-btn');
 
     if (input) {
-        input.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                sendChatMessage();
+        input.addEventListener('keydown', (e) => {
+            // User request: Enter = send, Ctrl+Enter = newline
+            if (e.key === 'Enter') {
+                if (e.ctrlKey) {
+                    // Let the default behavior (newline) happen
+                    return;
+                } else {
+                    e.preventDefault();
+                    sendChatMessage();
+                }
             }
         });
     }

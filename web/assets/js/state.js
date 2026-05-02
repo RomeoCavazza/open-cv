@@ -100,6 +100,18 @@ export let offerFlags = (() => {
     }
 })();
 
+export let delivConfig = (() => {
+    try {
+        return JSON.parse(localStorage.getItem('recruitai_delivs') || '{"restitution":true,"resume":true,"cover":true}');
+    } catch (_) {
+        return { restitution: true, resume: true, cover: true };
+    }
+})();
+
+export function saveDelivConfig(config) {
+    localStorage.setItem('recruitai_delivs', JSON.stringify(config));
+}
+
 // Setters
 export function setActiveJobId(id) { activeJobId = id; }
 export function setActiveTab(tab) { activeTab = tab; }
@@ -107,7 +119,10 @@ export function setActiveProfilId(id) { activeProfilId = id; }
 export function setLoadedProfileImage(img) { loadedProfileImage = img; }
 export function setLoadedApprenticeshipCalendarDocument(doc) { loadedApprenticeshipCalendarDocument = doc; }
 export function setLoadedProfileExtras(extras) { loadedProfileExtras = extras; }
-export function setSelectedLlmProvider(provider) { selectedLlmProvider = provider; }
+export function setSelectedLlmProvider(provider) { 
+    selectedLlmProvider = provider; 
+    localStorage.setItem('recruitai_llm', provider);
+}
 
 export function saveOfferFlags() {
     localStorage.setItem('recruitai_offer_flags', JSON.stringify(offerFlags));
