@@ -1,12 +1,8 @@
 use crate::errors::ApiError;
 use crate::state::AppState;
-use anyhow::Result;
+use application::intake::IntakeInput;
 use axum::{extract::State, Json};
-use chrono::Utc;
-use domain::{Offre, OffreId, OffreStructured, Slug};
-use ports::Scraper;
 use serde::Deserialize;
-use sha2::Digest;
 use uuid::Uuid;
 
 #[derive(Deserialize)]
@@ -23,28 +19,23 @@ pub struct IngestRequest {
     pub input: String,
     pub config: Option<IngestConfig>,
     pub profil_id: Option<Uuid>,
+    pub llm_provider: Option<String>,
 }
 
 pub async fn ingest_handler(
     State(state): State<AppState>,
     Json(payload): Json<IngestRequest>,
 ) -> Result<Json<serde_json::Value>, ApiError> {
-    let lines: Vec<&str> = payload
-        .input
-        .lines()
-        .map(|l| l.trim())
-        .filter(|l| !l.is_empty())
-        .collect();
+    let raw_input = payload.input.trim().to_string();
 
-    let mut results = Vec::new();
+    if raw_input.is_empty() {
+        return Err(ApiError::BadRequest("input vide".to_string()));
+    }
 
-    // On utilise un client HTTP simple pour scrapper si c'est une URL
-    let scraper = adapter_scraper_http::HttpScraper::new();
-
-    // Récupération du profil à utiliser
+    // Résolution du profil
     let profil = if let Some(pid) = payload.profil_id {
         state
-            .generate_uc
+            .intake_uc
             .profils
             .get_by_id(domain::ProfilId::from_uuid(pid))
             .await
@@ -52,7 +43,7 @@ pub async fn ingest_handler(
             .ok_or_else(|| ApiError::BadRequest(format!("Profil {} introuvable", pid)))?
     } else {
         state
-            .generate_uc
+            .intake_uc
             .profils
             .get_active()
             .await
@@ -60,133 +51,104 @@ pub async fn ingest_handler(
             .ok_or_else(|| ApiError::BadRequest("Aucun profil actif trouvé".to_string()))?
     };
 
-    for item in lines {
-        let (intitule, entreprise, content, url) = if item.starts_with("http") {
-            // C'est une URL
-            match scraper.scrape(item).await {
-                Ok(res) => (
-                    format!("Job from {}", item),
-                    "Scrapped Corp".to_string(),
-                    res.raw_text,
-                    item.to_string(),
-                ),
-                Err(e) => {
-                    return Err(ApiError::BadRequest(format!(
-                        "Erreur de scraping pour {}: {}",
-                        item, e
-                    )));
-                }
-            }
-        } else {
-            // Texte brut
-            (
-                "Manual Job Entry".to_string(),
-                "Unknown".to_string(),
-                item.to_string(),
-                "manual".to_string(),
-            )
-        };
+    // Détection : est-ce une ou plusieurs URLs, ou du texte brut ?
+    let items = parse_input_items(&raw_input);
 
-        // Création de l'offre
-        let id = OffreId::new();
-        let slug_str = format!("job_{}", Uuid::new_v4().to_string()[..8].to_string());
-        let slug = Slug::parse(&slug_str)
-            .unwrap_or_else(|_| Slug::parse("job_default").expect("job_default is a valid slug"));
+    let llm_provider = payload
+        .llm_provider
+        .as_ref()
+        .and_then(|p| state.llm_registry.get(p))
+        .cloned();
 
-        let host = if url.starts_with("http") {
-            url::Url::parse(&url)
-                .ok()
-                .and_then(|u| u.host_str().map(|h| h.to_string()))
-                .unwrap_or_else(|| "external".to_string())
-        } else {
-            "manual".to_string()
-        };
+    let mut results = Vec::new();
 
-        let mut hasher = sha2::Sha256::new();
-        hasher.update(content.as_bytes());
-        let source_hash = hasher.finalize().to_vec();
-
-        let existing_offre = state
-            .offre_repo
-            .find_by_content_hash(&host, &source_hash)
-            .await
-            .map_err(|e| ApiError::Internal(e.to_string()))?;
-
-        let (offre_id, instance_slug) = if let Some(existing) = existing_offre {
-            if state
-                .instance_repo
-                .get_by_slug(&existing.slug)
-                .await
-                .map_err(|e| ApiError::Internal(e.to_string()))?
-                .is_some()
-            {
-                results.push(existing.slug.to_string());
-                continue;
-            }
-
-            (existing.id, existing.slug)
-        } else {
-            let offre = Offre {
-                id,
-                slug: slug.clone(),
-                source_url: url.clone(),
-                source_host: host,
-                source_hash,
-                entreprise,
-                intitule,
-                localisation: None,
-                contrat: None,
-                raw_text: content,
-                structured: OffreStructured {
-                    resume_court: "Ingested via dashboard".into(),
-                    stack: vec![],
-                    missions: vec![],
-                    exigences: vec![],
-                    soft_skills: vec![],
-                    niveau_etudes: None,
-                    type_contrat: None,
-                    mots_cles: vec![],
-                },
-                scraped_at: Utc::now(),
-                last_seen_at: Utc::now(),
-                closed_at: None,
-                categorie: Some("Inbox".to_string()),
-            };
-
-            state
-                .offre_repo
-                .upsert(&offre)
-                .await
-                .map_err(|e| ApiError::Internal(e.to_string()))?;
-
-            (offre.id, offre.slug)
-        };
-
-        // Création d'une instance brouillon associée
-        let instance = domain::Instance {
-            id: domain::InstanceId::new(),
-            slug: instance_slug.clone(),
-            offre_id,
+    for item in items {
+        let input = IntakeInput {
+            raw_input: item,
             profil_id: profil.id,
-            status: domain::InstanceStatus::Draft,
-            resume_json: None,
-            cover_letter_json: None,
-            notes: serde_json::Value::Null,
-            created_at: Utc::now(),
-            updated_at: Utc::now(),
-            sent_at: None,
         };
 
-        state
-            .instance_repo
-            .upsert(&instance)
-            .await
-            .map_err(|e| ApiError::Internal(e.to_string()))?;
-
-        results.push(instance_slug.to_string());
+        match state.intake_uc.execute(input, llm_provider.clone()).await {
+            Ok(output) => {
+                results.push(serde_json::json!({
+                    "slug": output.instance_slug,
+                    "duplicate": output.was_duplicate,
+                }));
+            }
+            Err(e) => {
+                return Err(ApiError::Internal(format!("Erreur d'ingestion : {}", e)));
+            }
+        }
     }
 
-    Ok(Json(
-        serde_json::json!({ "status": "ok", "ingested": results }),
-    ))
+    Ok(Json(serde_json::json!({
+        "status": "ok",
+        "ingested": results.iter().map(|r| r["slug"].as_str().unwrap_or("")).collect::<Vec<_>>(),
+    })))
+}
+
+/// Parse l'input pour distinguer :
+/// - Plusieurs URLs (une par ligne) → chaque URL est un item séparé
+/// - Texte brut (pas d'URL) → tout le bloc est UN SEUL item
+/// - Mix → les URLs sont traitées individuellement, le reste est ignoré
+fn parse_input_items(input: &str) -> Vec<String> {
+    let lines: Vec<&str> = input
+        .lines()
+        .map(|l| l.trim())
+        .filter(|l| !l.is_empty())
+        .collect();
+
+    // Compter les URLs
+    let url_count = lines
+        .iter()
+        .filter(|l| l.starts_with("http://") || l.starts_with("https://"))
+        .count();
+
+    if url_count > 0 {
+        // Mode URL : chaque URL est un item distinct
+        // Les lignes non-URL sont ignorées (probablement des séparateurs)
+        lines
+            .into_iter()
+            .filter(|l| l.starts_with("http://") || l.starts_with("https://"))
+            .map(|l| l.to_string())
+            .collect()
+    } else {
+        // Mode texte brut : TOUT le bloc = une seule offre
+        vec![input.to_string()]
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn single_url() {
+        let items = parse_input_items("https://example.com/job");
+        assert_eq!(items.len(), 1);
+        assert_eq!(items[0], "https://example.com/job");
+    }
+
+    #[test]
+    fn multiple_urls() {
+        let input = "https://example.com/job1\nhttps://example.com/job2\nhttps://example.com/job3";
+        let items = parse_input_items(input);
+        assert_eq!(items.len(), 3);
+    }
+
+    #[test]
+    fn raw_text_is_single_item() {
+        let input = "Alternance Data Analyst\nChez Safran\nMissions:\n- Analyser des données\n- Créer des dashboards";
+        let items = parse_input_items(input);
+        assert_eq!(items.len(), 1);
+        assert!(items[0].contains("Safran"));
+        assert!(items[0].contains("dashboards"));
+    }
+
+    #[test]
+    fn mixed_urls_and_text() {
+        let input = "https://example.com/job1\nsome random text\nhttps://example.com/job2";
+        let items = parse_input_items(input);
+        assert_eq!(items.len(), 2); // Only URLs
+    }
 }

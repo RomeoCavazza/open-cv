@@ -247,144 +247,146 @@ impl InstanceRepoPg {
 #[async_trait]
 impl InstanceRepo for InstanceRepoPg {
     async fn get_by_id(&self, id: InstanceId) -> Result<Option<Instance>, RepoError> {
-        let row = sqlx::query!(
+        let row = sqlx::query(
             r#"
-            SELECT id, slug, offre_id, profil_id, status::text AS "status!",
-                   resume_json, cover_letter_json, notes,
+            SELECT id, slug, offre_id, profil_id, status::text,
+                   restitution, resume_json, cover_letter_json, notes,
                    created_at, updated_at, sent_at
             FROM instances
             WHERE id = $1
             "#,
-            id.as_uuid()
         )
+        .bind(id.as_uuid())
         .fetch_optional(&self.pool)
         .await
         .map_err(map_sqlx)?;
 
         row.map(|r| {
+            use sqlx::Row;
             Ok(Instance {
-                id: InstanceId::from_uuid(r.id),
-                slug: Slug::parse(r.slug).map_err(|e| RepoError::Other(e.to_string()))?,
-                offre_id: domain::OffreId::from_uuid(r.offre_id),
-                profil_id: domain::ProfilId::from_uuid(r.profil_id),
-                status: parse_status(&r.status)?,
-                resume_json: r.resume_json,
-                cover_letter_json: r.cover_letter_json,
-                notes: r.notes,
-                created_at: r.created_at,
-                updated_at: r.updated_at,
-                sent_at: r.sent_at,
+                id: InstanceId::from_uuid(r.get("id")),
+                slug: Slug::parse(r.get::<String, _>("slug"))
+                    .map_err(|e| RepoError::Other(e.to_string()))?,
+                offre_id: domain::OffreId::from_uuid(r.get("offre_id")),
+                profil_id: domain::ProfilId::from_uuid(r.get("profil_id")),
+                status: parse_status(r.get("status"))?,
+                restitution: r.get("restitution"),
+                resume_json: r.get("resume_json"),
+                cover_letter_json: r.get("cover_letter_json"),
+                notes: r.get("notes"),
+                created_at: r.get("created_at"),
+                updated_at: r.get("updated_at"),
+                sent_at: r.get("sent_at"),
             })
         })
         .transpose()
     }
 
     async fn get_by_slug(&self, slug: &Slug) -> Result<Option<Instance>, RepoError> {
-        let row = sqlx::query!(
+        let row = sqlx::query(
             r#"
-            SELECT id, slug, offre_id, profil_id, status::text AS "status!",
-                   resume_json, cover_letter_json, notes,
+            SELECT id, slug, offre_id, profil_id, status::text,
+                   restitution, resume_json, cover_letter_json, notes,
                    created_at, updated_at, sent_at
             FROM instances
             WHERE slug = $1
             "#,
-            slug.as_str()
         )
+        .bind(slug.as_str())
         .fetch_optional(&self.pool)
         .await
         .map_err(map_sqlx)?;
 
         row.map(|r| {
+            use sqlx::Row;
             Ok(Instance {
-                id: InstanceId::from_uuid(r.id),
-                slug: Slug::parse(r.slug).map_err(|e| RepoError::Other(e.to_string()))?,
-                offre_id: domain::OffreId::from_uuid(r.offre_id),
-                profil_id: domain::ProfilId::from_uuid(r.profil_id),
-                status: parse_status(&r.status)?,
-                resume_json: r.resume_json,
-                cover_letter_json: r.cover_letter_json,
-                notes: r.notes,
-                created_at: r.created_at,
-                updated_at: r.updated_at,
-                sent_at: r.sent_at,
+                id: InstanceId::from_uuid(r.get("id")),
+                slug: Slug::parse(r.get::<String, _>("slug"))
+                    .map_err(|e| RepoError::Other(e.to_string()))?,
+                offre_id: domain::OffreId::from_uuid(r.get("offre_id")),
+                profil_id: domain::ProfilId::from_uuid(r.get("profil_id")),
+                status: parse_status(r.get("status"))?,
+                restitution: r.get("restitution"),
+                resume_json: r.get("resume_json"),
+                cover_letter_json: r.get("cover_letter_json"),
+                notes: r.get("notes"),
+                created_at: r.get("created_at"),
+                updated_at: r.get("updated_at"),
+                sent_at: r.get("sent_at"),
             })
         })
         .transpose()
     }
 
     async fn list_recent(&self, limit: u32) -> Result<Vec<Instance>, RepoError> {
-        let rows = sqlx::query!(
+        let rows = sqlx::query(
             r#"
-            SELECT id, slug, offre_id, profil_id, status::text AS "status!",
-                   resume_json, cover_letter_json, notes,
+            SELECT id, slug, offre_id, profil_id, status::text,
+                   restitution, resume_json, cover_letter_json, notes,
                    created_at, updated_at, sent_at
             FROM instances
             ORDER BY created_at DESC
             LIMIT $1
             "#,
-            limit as i64
         )
+        .bind(limit as i64)
         .fetch_all(&self.pool)
         .await
         .map_err(map_sqlx)?;
 
         rows.into_iter()
             .map(|r| {
+                use sqlx::Row;
                 Ok(Instance {
-                    id: InstanceId::from_uuid(r.id),
-                    slug: Slug::parse(r.slug).map_err(|e| RepoError::Other(e.to_string()))?,
-                    offre_id: domain::OffreId::from_uuid(r.offre_id),
-                    profil_id: domain::ProfilId::from_uuid(r.profil_id),
-                    status: parse_status(&r.status)?,
-                    resume_json: r.resume_json,
-                    cover_letter_json: r.cover_letter_json,
-                    notes: r.notes,
-                    created_at: r.created_at,
-                    updated_at: r.updated_at,
-                    sent_at: r.sent_at,
+                    id: InstanceId::from_uuid(r.get("id")),
+                    slug: Slug::parse(r.get::<String, _>("slug"))
+                        .map_err(|e| RepoError::Other(e.to_string()))?,
+                    offre_id: domain::OffreId::from_uuid(r.get("offre_id")),
+                    profil_id: domain::ProfilId::from_uuid(r.get("profil_id")),
+                    status: parse_status(r.get("status"))?,
+                    restitution: r.get("restitution"),
+                    resume_json: r.get("resume_json"),
+                    cover_letter_json: r.get("cover_letter_json"),
+                    notes: r.get("notes"),
+                    created_at: r.get("created_at"),
+                    updated_at: r.get("updated_at"),
+                    sent_at: r.get("sent_at"),
                 })
             })
             .collect()
     }
 
     async fn upsert(&self, instance: &Instance) -> Result<(), RepoError> {
-        let status = match instance.status {
-            InstanceStatus::Draft => "draft",
-            InstanceStatus::Generating => "generating",
-            InstanceStatus::Ready => "ready",
-            InstanceStatus::Sent => "sent",
-            InstanceStatus::Archived => "archived",
-            InstanceStatus::Failed => "failed",
-        };
-
-        sqlx::query!(
+        sqlx::query(
             r#"
             INSERT INTO instances (
                 id, slug, offre_id, profil_id, status,
-                resume_json, cover_letter_json, notes,
+                restitution, resume_json, cover_letter_json, notes,
                 created_at, updated_at, sent_at
             )
-            VALUES ($1, $2, $3, $4, $5::instance_status, $6, $7, $8, $9, $10, $11)
+            VALUES ($1, $2, $3, $4, $5::instance_status, $6, $7, $8, $9, $10, $11, $12)
             ON CONFLICT (id) DO UPDATE SET
                 status            = EXCLUDED.status,
+                restitution       = EXCLUDED.restitution,
                 resume_json       = EXCLUDED.resume_json,
                 cover_letter_json = EXCLUDED.cover_letter_json,
                 notes             = EXCLUDED.notes,
                 updated_at        = EXCLUDED.updated_at,
                 sent_at           = EXCLUDED.sent_at
             "#,
-            instance.id.as_uuid(),
-            instance.slug.as_str(),
-            instance.offre_id.as_uuid(),
-            instance.profil_id.as_uuid(),
-            status as _,
-            instance.resume_json,
-            instance.cover_letter_json,
-            instance.notes,
-            instance.created_at,
-            instance.updated_at,
-            instance.sent_at,
         )
+        .bind(instance.id.as_uuid())
+        .bind(instance.slug.as_str())
+        .bind(instance.offre_id.as_uuid())
+        .bind(instance.profil_id.as_uuid())
+        .bind(instance.status.as_str())
+        .bind(instance.restitution.clone())
+        .bind(instance.resume_json.clone())
+        .bind(instance.cover_letter_json.clone())
+        .bind(instance.notes.clone())
+        .bind(instance.created_at)
+        .bind(instance.updated_at)
+        .bind(instance.sent_at)
         .execute(&self.pool)
         .await
         .map_err(map_sqlx)?;

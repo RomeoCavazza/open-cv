@@ -12,6 +12,15 @@ pub struct Restitution {
     /// Synthèse en 2-3 phrases : qui, quoi, où, pourquoi intéressant.
     pub synthese: String,
 
+    /// Résumé structuré de l'entreprise (secteur, taille, enjeux).
+    pub entreprise_resume: String,
+
+    /// Résumé structuré du poste (contexte, équipe, objectifs).
+    pub poste_resume: String,
+
+    /// Résumé du profil recherché (diplôme, mindset, expériences clés).
+    pub profil_recherche: String,
+
     /// Fit auto-évalué entre l'offre et le profil.
     pub fit: FitAnalysis,
 

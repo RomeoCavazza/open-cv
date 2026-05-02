@@ -4,88 +4,532 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Restitution Analyse</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #0052ff; --ink: #1e293b; --surface-soft: #f8fafd; --surface-strong: #eef4fb; --hairline: #d9e3f0; }
-        body { font-family: 'Inter', sans-serif; background: #ffffff; margin: 0; padding: 40px; color: var(--ink); line-height: 1.6; }
-        .container { max-width: 800px; margin: 0 auto; }
-        h1 { font-size: 24px; font-weight: 600; margin-bottom: 32px; letter-spacing: -0.5px; }
+        :root { 
+            --primary: #0052ff; 
+            --primary-soft: #eef4fb;
+            --ink: #1e293b; 
+            --body: #475569; 
+            --muted: #94a3b8; 
+            --surface-soft: #f8fafc; 
+            --surface-strong: #f1f5f9; 
+            --hairline: #e2e8f0; 
+            --success: #16a34a;
+            --warning: #d97706;
+            --danger: #dc2626;
+        }
+        
+        * { box-sizing: border-box; }
+        
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: #ffffff; 
+            margin: 0; 
+            padding: 40px; 
+            color: var(--ink); 
+            line-height: 1.6; 
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        .container { max-width: 850px; margin: 0 auto; }
+
+        /* Header */
+        .offer-header { margin-bottom: 48px; }
+        .offer-header h1 { 
+            font-size: 32px; 
+            font-weight: 700; 
+            margin: 0 0 16px; 
+            letter-spacing: -0.025em; 
+            line-height: 1.2;
+        }
+        .offer-meta { 
+            display: flex; 
+            flex-wrap: wrap; 
+            gap: 16px; 
+            align-items: center; 
+            font-size: 14px; 
+            color: var(--body); 
+        }
+        .offer-meta a { 
+            color: var(--primary); 
+            text-decoration: none; 
+            font-weight: 600; 
+        }
+        .offer-meta a:hover { text-decoration: underline; }
+        .meta-dot { color: var(--muted); }
+
+        /* Sections */
         .section { margin-bottom: 40px; }
-        .section-title { font-size: 14px; font-weight: 600; text-transform: uppercase; color: var(--primary); letter-spacing: 1px; margin-bottom: 16px; border-bottom: 1px solid var(--hairline); padding-bottom: 8px; }
-        .card { background: var(--surface-soft); border-radius: 12px; padding: 24px; }
-        .tag { display: inline-block; background: var(--surface-strong); padding: 4px 12px; border-radius: 100px; font-size: 12px; font-weight: 500; margin-right: 8px; margin-bottom: 8px; }
-        ul { padding-left: 20px; }
-        li { margin-bottom: 8px; }
+        .section-title { 
+            font-size: 12px; 
+            font-weight: 700; 
+            text-transform: uppercase; 
+            color: var(--primary); 
+            letter-spacing: 0.1em; 
+            margin-bottom: 16px; 
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .section-title::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: var(--hairline);
+        }
+        
+        .card { 
+            background: var(--surface-soft); 
+            border: 1px solid var(--hairline);
+            border-radius: 16px; 
+            padding: 24px; 
+            font-size: 15px; 
+            color: var(--body);
+        }
+        
+        .tag { 
+            display: inline-block; 
+            background: var(--primary-soft); 
+            color: var(--primary);
+            padding: 6px 14px; 
+            border-radius: 100px; 
+            font-size: 13px; 
+            font-weight: 600; 
+            margin-right: 8px; 
+            margin-bottom: 8px; 
+        }
+        
+        ul { padding-left: 20px; margin: 0; }
+        li { margin-bottom: 8px; font-size: 15px; }
+
+        /* Divider */
+        .divider { 
+            border: none; 
+            border-top: 1px solid var(--hairline); 
+            margin: 56px 0; 
+        }
+
+        /* AI Analysis Header */
+        .ai-header { 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between;
+            margin-bottom: 32px; 
+        }
+        .ai-header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .ai-header h2 { font-size: 24px; font-weight: 700; margin: 0; letter-spacing: -0.01em; }
+        .ai-badge { 
+            background: linear-gradient(135deg, var(--primary), #6366f1);
+            color: white; 
+            font-size: 11px; 
+            font-weight: 800; 
+            padding: 4px 10px; 
+            border-radius: 6px; 
+            text-transform: uppercase; 
+            letter-spacing: 0.05em; 
+            box-shadow: 0 2px 4px rgba(0, 82, 255, 0.2);
+        }
+
+        /* Fit score & Analysis */
+        .analysis-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr;
+            gap: 32px;
+            margin-bottom: 40px;
+        }
+        
+        @media (max-width: 768px) {
+            .analysis-grid { grid-template-columns: 1fr; }
+        }
+
+        .fit-card {
+            background: white;
+            border: 1px solid var(--hairline);
+            border-radius: 20px;
+            padding: 32px;
+            text-align: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+        
+        .fit-score { 
+            font-size: 64px; 
+            font-weight: 800; 
+            line-height: 1;
+            margin-bottom: 8px;
+            letter-spacing: -0.04em;
+        }
+        .fit-score.high { color: var(--success); }
+        .fit-score.medium { color: var(--warning); }
+        .fit-score.low { color: var(--danger); }
+        
+        .fit-label {
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--muted);
+            letter-spacing: 0.1em;
+            margin-bottom: 24px;
+        }
+        
+        .fit-justification { 
+            font-size: 14px; 
+            color: var(--body); 
+            line-height: 1.5;
+            text-align: left;
+        }
+
+        /* Force/faiblesse chips */
+        .chip-list { display: flex; flex-wrap: wrap; gap: 8px; }
+        .chip { 
+            padding: 6px 12px; 
+            border-radius: 10px; 
+            font-size: 13px; 
+            font-weight: 600; 
+        }
+        .chip.force { background: #dcfce7; color: #166534; }
+        .chip.faiblesse { background: #fef2f2; color: #991b1b; }
+
+        /* Points attention */
+        .point-item { 
+            display: flex; 
+            gap: 12px; 
+            margin-bottom: 12px; 
+            align-items: flex-start; 
+            font-size: 14px; 
+            padding: 12px;
+            background: var(--surface-soft);
+            border-radius: 10px;
+        }
+        .point-cat { 
+            font-size: 10px; 
+            font-weight: 800; 
+            text-transform: uppercase; 
+            padding: 3px 8px; 
+            border-radius: 6px; 
+            white-space: nowrap; 
+            margin-top: 2px;
+        }
+        .point-cat.forcer { background: #dbeafe; color: #1e40af; }
+        .point-cat.adresser { background: #fef3c7; color: #92400e; }
+        .point-cat.questionner { background: #f3e8ff; color: #6b21a8; }
+        .point-cat.vigilance { background: #fecaca; color: #991b1b; }
+
+        /* Markdown rendering styles */
+        .card p { margin-top: 0; margin-bottom: 16px; }
+        .card p:last-child { margin-bottom: 0; }
+        .card h1, .card h2, .card h3 { 
+            font-size: 16px; 
+            font-weight: 700; 
+            margin: 20px 0 10px; 
+            color: var(--ink);
+        }
+        .card strong { color: var(--ink); }
+
+        /* Hidden */
+        .hidden { display: none; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1 id="job-title">Analyse de l'opportunité</h1>
-        
-        <div class="section">
-            <div class="section-title">Résumé Court</div>
-            <div class="card" id="resume-court">Chargement de l'analyse...</div>
+        <!-- SECTION HAUTE : Ce que dit l'offre -->
+        <div class="offer-header">
+            <h1 id="job-title">Analyse en cours...</h1>
+            <div class="offer-meta" id="offer-meta"></div>
         </div>
 
-        <div class="section">
+        <div class="section" id="section-resume">
+            <div class="card" id="resume-court"></div>
+        </div>
+
+        <div class="section" id="section-stack">
             <div class="section-title">Stack Technique</div>
             <div id="stack-container"></div>
         </div>
 
-        <div class="section">
+        <div class="section" id="section-missions">
             <div class="section-title">Missions Clés</div>
             <ul id="missions-list"></ul>
         </div>
 
-        <div class="section">
-            <div class="section-title">Points de Vigilance / Exigences</div>
+        <div class="section" id="section-exigences">
+            <div class="section-title">Exigences</div>
             <ul id="exigences-list"></ul>
+        </div>
+
+        <div class="section" id="section-softskills" class="hidden">
+            <div class="section-title">Soft Skills</div>
+            <div id="softskills-container"></div>
+        </div>
+
+        <!-- SECTION BASSE : Analyse IA personnalisée -->
+        <div id="ai-analysis-section" class="hidden">
+            <hr class="divider">
+
+            <div class="ai-header">
+                <div class="ai-header-left">
+                    <h2>Analyse Stratégique</h2>
+                    <span class="ai-badge">AI Insights</span>
+                </div>
+            </div>
+
+            <!-- NOUVELLES SECTIONS RICHES -->
+            <div class="section" id="section-ai-entreprise">
+                <div class="section-title">L'Entreprise</div>
+                <div class="card" id="ai-entreprise"></div>
+            </div>
+
+            <div class="section" id="section-ai-poste">
+                <div class="section-title">Le Poste</div>
+                <div class="card" id="ai-poste"></div>
+            </div>
+
+            <div class="section" id="section-ai-profil">
+                <div class="section-title">Profil Recherché</div>
+                <div class="card" id="ai-profil"></div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">Synthèse globale</div>
+                <div class="card" id="ai-synthese"></div>
+            </div>
+
+            <div class="analysis-grid">
+                <div class="fit-card">
+                    <div class="fit-label">Match Score</div>
+                    <div class="fit-score" id="ai-fit-score">—</div>
+                    <div class="fit-justification" id="ai-fit-justification"></div>
+                </div>
+                
+                <div class="strengths-weaknesses">
+                    <div style="margin-bottom: 24px;">
+                        <div style="font-size: 13px; font-weight: 700; color: var(--ink); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.05em;">Points Forts</div>
+                        <div class="chip-list" id="ai-forces"></div>
+                    </div>
+                    <div>
+                        <div style="font-size: 13px; font-weight: 700; color: var(--ink); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.05em;">Points à travailler</div>
+                        <div class="chip-list" id="ai-faiblesses"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section" id="section-implicite">
+                <div class="section-title">Lecture entre les lignes</div>
+                <div class="card" id="ai-implicite"></div>
+            </div>
+
+            <div class="section" id="section-points">
+                <div class="section-title">Recommandations stratégiques</div>
+                <div id="ai-points"></div>
+            </div>
+
+            <div class="section" id="section-questions">
+                <div class="section-title">Questions pour l'entretien</div>
+                <ul id="ai-questions"></ul>
+            </div>
         </div>
     </div>
 
     <script>
+        // Simple Markdown-to-HTML parser (Problem C)
+        function mdToHtml(md) {
+            if (!md) return "";
+            return md
+                .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+                .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+                .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+                .replace(/^\* (.*$)/gim, '<li>$1</li>')
+                .replace(/^- (.*$)/gim, '<li>$1</li>')
+                .replace(/\*\*(.*)\*\*/gim, '<strong>$1</strong>')
+                .replace(/<strong>alternance<\/strong>/gim, '')
+                .replace(/\*(.*)\*/gim, '<em>$1</em>')
+                .replace(/\n/gim, '<br>');
+        }
+
         async function loadRestitution() {
             const urlParams = new URLSearchParams(window.location.search);
             const jobId = urlParams.get('id');
-            if (!jobId) return;
+            if (!jobId) {
+                return;
+            }
 
             try {
+                // 1. Charger l'offre
                 const resOffre = await fetch(`/api/offres/${jobId}`);
                 if (!resOffre.ok) throw new Error("Offre non trouvée");
                 const offre = await resOffre.json();
 
-                document.getElementById('job-title').innerText = offre.intitule;
-                document.getElementById('resume-court').innerText = offre.structured.resume_court;
-                
-                const stack = document.getElementById('stack-container');
-                stack.innerHTML = '';
-                offre.structured.stack.forEach(s => {
-                    const span = document.createElement('span');
-                    span.className = 'tag';
-                    span.innerText = s;
-                    stack.appendChild(span);
-                });
+                renderOffre(offre);
 
-                const missions = document.getElementById('missions-list');
-                missions.innerHTML = '';
-                offre.structured.missions.forEach(m => {
-                    const li = document.createElement('li');
-                    li.innerText = m;
-                    missions.appendChild(li);
-                });
-
-                const exigences = document.getElementById('exigences-list');
-                exigences.innerHTML = '';
-                offre.structured.exigences.forEach(e => {
-                    const li = document.createElement('li');
-                    li.innerText = e;
-                    exigences.appendChild(li);
-                });
-            } catch (e) { 
-                console.error(e); 
-                document.getElementById('resume-court').innerText = "Erreur lors du chargement des données.";
+                // 2. Charger l'instance
+                const resInstance = await fetch(`/api/instances/${jobId}`);
+                if (resInstance.ok) {
+                    const instance = await resInstance.json();
+                    renderInstance(instance);
+                }
+            } catch (e) {
+                console.error('Erreur:', e);
             }
         }
+
+        function renderOffre(offre) {
+            document.getElementById('job-title').innerText = offre.intitule || 'Offre sans titre';
+
+            const meta = document.getElementById('offer-meta');
+            const parts = [];
+            if (offre.entreprise && offre.entreprise !== 'Non identifié') {
+                parts.push(`<strong>${escapeHtml(offre.entreprise)}</strong>`);
+            }
+            if (offre.localisation) parts.push(escapeHtml(offre.localisation));
+            if (offre.contrat && offre.contrat.toLowerCase() !== 'alternance') parts.push(escapeHtml(offre.contrat));
+            if (offre.source_url && offre.source_url !== 'manual') {
+                parts.push(`<a href="${escapeHtml(offre.source_url)}" target="_blank" rel="noopener">Voir l'offre</a>`);
+            }
+            meta.innerHTML = parts.join('<span class="meta-dot"> · </span>');
+
+            const s = offre.structured || {};
+            
+            // Résumé avec rendu Markdown
+            const resumeEl = document.getElementById('resume-court');
+            if (s.resume_court && !s.resume_court.includes('Ingested via dashboard') && !s.resume_court.includes('échouée')) {
+                resumeEl.innerHTML = mdToHtml(s.resume_court);
+            } else {
+                resumeEl.innerText = 'Résumé non disponible.';
+            }
+
+            renderTags('stack-container', s.stack || [], 'section-stack');
+            renderList('missions-list', s.missions || [], 'section-missions');
+            renderList('exigences-list', s.exigences || [], 'section-exigences');
+            renderTags('softskills-container', s.soft_skills || [], 'section-softskills');
+        }
+
+        function renderInstance(instance) {
+            const restitution = instance.restitution || instance.notes?.restitution;
+            if (!restitution) return;
+
+            document.getElementById('ai-analysis-section').classList.remove('hidden');
+
+            // Nouveaux champs riches
+            renderMarkdownCard('ai-entreprise', restitution.entreprise_resume, 'section-ai-entreprise');
+            renderMarkdownCard('ai-poste', restitution.poste_resume, 'section-ai-poste');
+            renderMarkdownCard('ai-profil', restitution.profil_recherche, 'section-ai-profil');
+            
+            // Synthèse
+            renderMarkdownCard('ai-synthese', restitution.synthese);
+
+            // Fit Analysis
+            if (restitution.fit) {
+                const score = restitution.fit.score;
+                const scoreEl = document.getElementById('ai-fit-score');
+                scoreEl.innerText = score;
+                scoreEl.className = 'fit-score ' + (score >= 75 ? 'high' : score >= 50 ? 'medium' : 'low');
+                document.getElementById('ai-fit-justification').innerText = restitution.fit.justification || '';
+                renderChips('ai-forces', restitution.fit.forces || [], 'force');
+                renderChips('ai-faiblesses', restitution.fit.faiblesses || [], 'faiblesse');
+            }
+
+            // Signaux implicites
+            if (restitution.implicite) {
+                const imp = restitution.implicite;
+                let html = "";
+                if (imp.niveau_autonomie) html += `<strong>Niveau d'autonomie :</strong> ${escapeHtml(imp.niveau_autonomie)}<br>`;
+                if (imp.maturite_equipe) html += `<strong>Maturité équipe :</strong> ${escapeHtml(imp.maturite_equipe)}<br>`;
+                if (imp.culture) html += `<strong>Culture :</strong> ${escapeHtml(imp.culture)}<br>`;
+                if (imp.stack_implicite?.length) html += `<strong>Stack probable :</strong> ${escapeHtml(imp.stack_implicite.join(', '))}<br>`;
+                
+                if (html) {
+                    document.getElementById('ai-implicite').innerHTML = html;
+                    document.getElementById('section-implicite').classList.remove('hidden');
+                } else {
+                    document.getElementById('section-implicite').classList.add('hidden');
+                }
+            }
+
+            // Points d'attention
+            if (restitution.points_a_traiter?.length) {
+                const container = document.getElementById('ai-points');
+                container.innerHTML = '';
+                restitution.points_a_traiter.forEach(p => {
+                    const div = document.createElement('div');
+                    div.className = 'point-item';
+                    const cat = (p.categorie || 'vigilance').toLowerCase();
+                    div.innerHTML = `<span class="point-cat ${cat}">${escapeHtml(p.categorie || '!')}</span><span>${escapeHtml(p.message)}</span>`;
+                    container.appendChild(div);
+                });
+                document.getElementById('section-points').classList.remove('hidden');
+            } else {
+                document.getElementById('section-points').classList.add('hidden');
+            }
+
+            // Questions
+            renderList('ai-questions', restitution.questions_entretien || [], 'section-questions');
+        }
+
+        // Helpers
+        function renderMarkdownCard(id, text, sectionId) {
+            const el = document.getElementById(id);
+            if (text) {
+                el.innerHTML = mdToHtml(text);
+                if (sectionId) document.getElementById(sectionId).classList.remove('hidden');
+            } else if (sectionId) {
+                document.getElementById(sectionId).classList.add('hidden');
+            }
+        }
+
+        function renderTags(containerId, items, sectionId) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            if (!items?.length) {
+                document.getElementById(sectionId)?.classList.add('hidden');
+                return;
+            }
+            document.getElementById(sectionId)?.classList.remove('hidden');
+            items.forEach(s => {
+                const span = document.createElement('span');
+                span.className = 'tag';
+                span.innerText = s;
+                container.appendChild(span);
+            });
+        }
+
+        function renderList(listId, items, sectionId) {
+            const list = document.getElementById(listId);
+            list.innerHTML = '';
+            if (!items?.length) {
+                document.getElementById(sectionId)?.classList.add('hidden');
+                return;
+            }
+            document.getElementById(sectionId)?.classList.remove('hidden');
+            items.forEach(m => {
+                const li = document.createElement('li');
+                li.innerText = m;
+                list.appendChild(li);
+            });
+        }
+
+        function renderChips(containerId, items, chipClass) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            if (!items?.length) return;
+            items.forEach(item => {
+                const span = document.createElement('span');
+                span.className = `chip ${chipClass}`;
+                span.innerText = item;
+                container.appendChild(span);
+            });
+        }
+
+        function escapeHtml(str) {
+            if (!str) return "";
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
         window.onload = loadRestitution;
     </script>
 </body>

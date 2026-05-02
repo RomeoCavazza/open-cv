@@ -97,10 +97,14 @@ async function loadCV() {
         (data.experiences || []).forEach(exp => {
             const div = document.createElement('div');
             div.className = 'exp-item';
+            const title = exp.role || exp.company;
+            const sub = exp.role ? exp.company : "";
             div.innerHTML = `
-                <h4>${exp.role}</h4>
-                <div class="company">${exp.company}</div>
-                <div class="period">${exp.period}</div>
+                <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2px;">
+                    <h4>${title}</h4>
+                    <div class="period">${exp.period}</div>
+                </div>
+                ${sub ? `<div class="company">${sub}</div>` : ''}
                 <ul>${exp.description.map(line => `<li>${line}</li>`).join('')}</ul>
             `;
             expContainer.appendChild(div);
@@ -112,11 +116,15 @@ async function loadCV() {
             projContainer.innerHTML = '';
             (data.projects || []).forEach(proj => {
                 const div = document.createElement('div');
-                div.className = 'exp-item'; // Re-use styling
+                div.className = 'exp-item'; 
+                const title = proj.role || proj.company;
+                const sub = proj.role ? proj.company : "";
                 div.innerHTML = `
-                    <h4>${proj.role}</h4>
-                    <div class="company">${proj.company}</div>
-                    <div class="period">${proj.period}</div>
+                    <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2px;">
+                        <h4>${title}</h4>
+                        <div class="period">${proj.period}</div>
+                    </div>
+                    ${sub ? `<div class="company">${sub}</div>` : ''}
                     <ul>${proj.description.map(line => `<li>${line}</li>`).join('')}</ul>
                 `;
                 projContainer.appendChild(div);

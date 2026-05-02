@@ -68,10 +68,54 @@ async fn main() -> anyhow::Result<()> {
     let chunk_repo: Arc<dyn ports::ChunkRepo> =
         Arc::new(adapter_postgres::ChunkRepoPg::new(pool.clone()));
 
-    // LLM Client (Anthropic)
-    let anthropic_key =
-        std::env::var("ANTHROPIC_API_KEY").context("ANTHROPIC_API_KEY non défini")?;
-    let claude_client = Arc::new(adapter_llm_claude::ClaudeClient::new(anthropic_key));
+    // LLM Registry (Multiple providers)
+    let mut llm_map: std::collections::HashMap<String, Arc<dyn ports::LlmClient>> =
+        std::collections::HashMap::new();
+
+    // Anthropic
+    if let Ok(key) = std::env::var("ANTHROPIC_API_KEY") {
+        if !key.is_empty() {
+            info!("LLM: Anthropic (Claude) activé");
+            llm_map.insert(
+                "claude".to_string(),
+                Arc::new(adapter_llm_claude::ClaudeClient::new(key)),
+            );
+        }
+    }
+
+    // OpenAI
+    if let Ok(key) = std::env::var("OPENAI_API_KEY") {
+        if !key.is_empty() {
+            info!("LLM: OpenAI activé");
+            llm_map.insert(
+                "openai".to_string(),
+                Arc::new(adapter_llm_openai::OpenAiClient::new(key)),
+            );
+        }
+    }
+
+    // Ollama
+    let ollama_base =
+        std::env::var("OLLAMA_BASE_URL").unwrap_or_else(|_| "http://localhost:11434".into());
+    let ollama_model = std::env::var("OLLAMA_MODEL").unwrap_or_else(|_| "llama3.1".into());
+    info!("LLM: Ollama activé ({} @ {})", ollama_model, ollama_base);
+    llm_map.insert(
+        "ollama".to_string(),
+        Arc::new(adapter_llm_ollama::OllamaClient::new(
+            ollama_base,
+            ollama_model,
+        )),
+    );
+
+    let llm_registry = Arc::new(llm_map);
+
+    // Default LLM for UseCases (if none specified)
+    let default_llm = llm_registry
+        .get("claude")
+        .or_else(|| llm_registry.get("openai"))
+        .or_else(|| llm_registry.get("ollama"))
+        .cloned()
+        .context("Aucun provider LLM disponible")?;
 
     // Embedder (Mock pour débloquer la compilation sans clé OpenAI/Mistral)
     struct MockEmbedder;
@@ -120,15 +164,27 @@ async fn main() -> anyhow::Result<()> {
         profil_repo.clone(),
         chunk_repo.clone(),
         instance_repo.clone(),
-        claude_client.clone(),
+        default_llm.clone(),
         embedder.clone(),
         event_bus.clone(),
+    ));
+
+    // Intake Use Case
+    let scraper: Arc<dyn ports::Scraper> = Arc::new(adapter_scraper_http::HttpScraper::new());
+    let intake_uc = Arc::new(application::intake::IntakeOffreUseCase::new(
+        offre_repo.clone(),
+        instance_repo.clone(),
+        profil_repo.clone(),
+        default_llm.clone(),
+        scraper,
     ));
 
     let state = AppState {
         offre_repo,
         instance_repo,
         generate_uc,
+        intake_uc,
+        llm_registry,
     };
 
     let web_dir = std::env::var("WEB_DIR").unwrap_or_else(|_| "web".to_string());
@@ -165,8 +221,14 @@ async fn main() -> anyhow::Result<()> {
             "/api/instances/:slug/generate",
             axum::routing::post(generate_instance),
         )
+        .route("/", get(get_index))
+        .route("/applications", get(get_index))
+        .route("/applications/:slug", get(get_index))
+        .route("/applications/:slug/:tab", get(get_index))
+        .route("/profil", get(get_index))
         .fallback_service(ServeDir::new(web_dir))
         .layer(TraceLayer::new_for_http())
+        .layer(axum::extract::DefaultBodyLimit::max(20 * 1024 * 1024))
         .with_state(state);
 
     let bind = std::env::var("BIND").unwrap_or_else(|_| "127.0.0.1:8000".to_string());
@@ -180,8 +242,15 @@ async fn main() -> anyhow::Result<()> {
 async fn generate_instance(
     State(state): State<AppState>,
     Path(slug): Path<String>,
+    Query(q): Query<serde_json::Value>, // Temporary way to get query params
 ) -> Result<StatusCode, ApiError> {
     let slug = domain::Slug::parse(slug).map_err(|e| ApiError::BadRequest(e.to_string()))?;
+
+    let llm_provider = q
+        .get("llm_provider")
+        .and_then(|v| v.as_str())
+        .and_then(|p| state.llm_registry.get(p))
+        .cloned();
 
     // 1. Récupérer l'instance pour avoir l'offre_id et profil_id
     let instance = state
@@ -201,7 +270,7 @@ async fn generate_instance(
 
     state
         .generate_uc
-        .execute(input)
+        .execute(input, llm_provider)
         .await
         .map_err(|e| match e {
             application::generate::GenerateError::AucunChunkPertinent => ApiError::BadRequest(
@@ -245,6 +314,73 @@ fn default_limit() -> u32 {
     50
 }
 
+fn infer_business_category(slug: &str, title: &str) -> &'static str {
+    let haystack = format!("{} {}", slug.to_lowercase(), title.to_lowercase());
+
+    if [
+        "data",
+        " ai",
+        "ia",
+        "intelligence artificielle",
+        "llm",
+        "langchain",
+        "gallica",
+        "automation",
+        "scientist",
+        "machine learning",
+    ]
+    .iter()
+    .any(|needle| haystack.contains(needle))
+    {
+        return "Data Engineering & Data Science";
+    }
+
+    if [
+        "developpeur",
+        "développeur",
+        "software",
+        "java",
+        "api",
+        "logiciel",
+        "full stack",
+        "full-stack",
+        "embarqu",
+        "engineering",
+    ]
+    .iter()
+    .any(|needle| haystack.contains(needle))
+    {
+        return "Ingénierie Logicielle Spécialisée (Embarqué, C++, Simulations, Systèmes)";
+    }
+
+    if [
+        "pilotage",
+        "projet",
+        "transformation",
+        "strategie",
+        "stratégie",
+    ]
+    .iter()
+    .any(|needle| haystack.contains(needle))
+    {
+        return "Pilotage de Projet, Stratégie IT & Transformation Numérique";
+    }
+
+    "Autres"
+}
+
+fn public_offer_category(slug: &str, title: &str, raw: Option<&str>) -> String {
+    let category = raw.unwrap_or("").trim();
+    if category.is_empty()
+        || category.eq_ignore_ascii_case("inbox")
+        || category.eq_ignore_ascii_case("legacy restored")
+    {
+        infer_business_category(slug, title).to_string()
+    } else {
+        category.to_string()
+    }
+}
+
 async fn list_offres(
     State(state): State<AppState>,
     Query(q): Query<ListOffresQuery>,
@@ -260,7 +396,7 @@ async fn list_offres(
                 "title": o.intitule,
                 "url": o.source_url,
                 "job_id": o.slug.as_str(),
-                "category": o.categorie.as_deref().unwrap_or("Autres"),
+                "category": public_offer_category(o.slug.as_str(), &o.intitule, o.categorie.as_deref()),
                 "status": "draft",
             })
         })
@@ -322,5 +458,12 @@ async fn get_instance_cover_letter(
     match instance.cover_letter_json {
         Some(json) => Ok(Json(json)),
         None => Err(ApiError::NotFound(format!("Pas de lettre pour {}", slug))),
+    }
+}
+async fn get_index() -> impl IntoResponse {
+    let web_dir = std::env::var("WEB_DIR").unwrap_or_else(|_| "web".to_string());
+    match tokio::fs::read_to_string(format!("{}/index.html", web_dir)).await {
+        Ok(html) => (StatusCode::OK, axum::response::Html(html)).into_response(),
+        Err(_) => (StatusCode::NOT_FOUND, "index.html non trouvé").into_response(),
     }
 }

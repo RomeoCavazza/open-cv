@@ -4,12 +4,12 @@
 //!
 //!   1. RETRIEVE  — embedding de l'offre, top-K chunks via pgvector
 //!   2. RERANK    — LLM filtre les top-K à top-N pertinents
-//!   3. PLAN      — LLM produit un plan (sections à mettre en avant, angle
-//!                  de la lettre, mots-clés à intégrer)
-//!   4. PARALLEL  — 3 générations LLM en parallèle :
-//!                    • Restitution (analyse de l'offre)
-//!                    • Resume       (CV adapté)
-//!                    • CoverLetter  (lettre adaptée)
+//!   3. PLAN     — stratégie de la candidature (angle, forces, faiblesses,
+//!      de la lettre, mots-clés à intégrer)
+//!   4. PARALLEL — 3 générations LLM en parallèle :
+//!      • Restitution (analyse de l'offre)
+//!      • Resume      (CV adapté)
+//!      • CoverLetter (lettre adaptée)
 //!   5. VALIDATE  — schéma JSON, longueurs raisonnables, anti-hallucination
 //!   6. PERSIST   — UPDATE instances + miroir fichier `data/instances/<slug>/`
 //!   7. DONE      — événement final
@@ -20,8 +20,7 @@ use std::sync::Arc;
 
 use chrono::Utc;
 use domain::{
-    Chunk, CoverLetter, Instance, InstanceId, InstanceStatus, Offre, OffreId, ProfilId,
-    Restitution, Resume, Slug,
+    Chunk, CoverLetter, Instance, InstanceId, Offre, OffreId, ProfilId, Restitution, Resume, Slug,
 };
 use ports::{
     ChunkRepo, EmbedMode, Embedder, ExtractionRequest, InstanceRepo, LlmClient, OffreRepo,
@@ -30,7 +29,7 @@ use ports::{
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
-use tracing::{info, instrument, warn};
+use tracing::{info, warn};
 
 use crate::events::{EventBus, GenerationStep};
 use crate::AppError;
@@ -165,8 +164,14 @@ impl GenerateApplicationUseCase {
     }
     /// Exécute le pipeline complet. La fonction est `instrument` pour que tous
     /// les logs internes soient enrichis avec `instance_id` automatiquement.
-    #[instrument(skip(self), fields(instance_id))]
-    pub async fn execute(&self, input: GenerateInput) -> Result<GenerateOutput, GenerateError> {
+    /// Génère l'application complète (RAG + Planning + CV + Lettre).
+    pub async fn execute(
+        &self,
+        input: GenerateInput,
+        llm_override: Option<Arc<dyn LlmClient>>,
+    ) -> Result<domain::Instance, GenerateError> {
+        let llm = llm_override.unwrap_or_else(|| self.llm.clone());
+        info!(offre_id = %input.offre_id, "génération de l'application...");
         if input.livrables.aucun() {
             return Err(GenerateError::AucunLivrable);
         }
@@ -177,14 +182,14 @@ impl GenerateApplicationUseCase {
             .offres
             .get_by_id(input.offre_id)
             .await
-            .map_err(|e| AppError::Repo(e))?
+            .map_err(AppError::Repo)?
             .ok_or(GenerateError::OffreIntrouvable(input.offre_id))?;
 
         let profil = self
             .profils
             .get_by_id(input.profil_id)
             .await
-            .map_err(|e| AppError::Repo(e))?
+            .map_err(AppError::Repo)?
             .ok_or(GenerateError::ProfilIntrouvable(input.profil_id))?;
 
         let existing_instance = input.existing_instance.clone();
@@ -203,7 +208,7 @@ impl GenerateApplicationUseCase {
         };
 
         // Tracing field : ajoute instance_id au span courant pour tous les logs.
-        tracing::Span::current().record("instance_id", &tracing::field::display(&instance_id));
+        tracing::Span::current().record("instance_id", tracing::field::display(&instance_id));
 
         info!(
             "démarrage génération pour offre={} profil={}",
@@ -216,12 +221,13 @@ impl GenerateApplicationUseCase {
                 slug: slug.clone(),
                 offre_id: offre.id,
                 profil_id: profil.id,
-                status: InstanceStatus::Generating,
+                status: domain::InstanceStatus::Generating,
+                restitution: None,
                 resume_json: None,
                 cover_letter_json: None,
                 notes: existing_notes.unwrap_or_else(|| serde_json::json!({})),
                 created_at,
-                updated_at: now,
+                updated_at: Utc::now(),
                 sent_at: None,
             })
             .await
@@ -242,7 +248,7 @@ impl GenerateApplicationUseCase {
 
         // Étape 2 : RERANK
         self.events.started(instance_id, GenerationStep::Rerank);
-        let retained = self.rerank(&offre, &candidates).await?;
+        let retained = self.rerank(&offre, &candidates, llm.clone()).await?;
         self.events.done(
             instance_id,
             GenerationStep::Rerank,
@@ -251,14 +257,14 @@ impl GenerateApplicationUseCase {
 
         // Étape 3 : PLAN
         self.events.started(instance_id, GenerationStep::Plan);
-        let plan = self.plan(&offre, &retained).await?;
+        let plan = self.plan(&offre, &retained, llm.clone()).await?;
         self.events
             .done(instance_id, GenerationStep::Plan, Some(plan.angle.clone()));
 
         // Étape 4 : 3 générations en parallèle.
         // tokio::join! attend les 3, peu importe l'ordre de terminaison.
         let (restitution_res, resume_res, cover_letter_res) = tokio::join!(
-            self.maybe_generate_restitution(input.livrables, &offre, instance_id),
+            self.maybe_generate_restitution(input.livrables, &offre, instance_id, llm.clone()),
             self.maybe_generate_resume(
                 input.livrables,
                 &offre,
@@ -266,6 +272,7 @@ impl GenerateApplicationUseCase {
                 &retained,
                 &plan,
                 instance_id,
+                llm.clone(),
             ),
             self.maybe_generate_cover_letter(
                 input.livrables,
@@ -274,6 +281,7 @@ impl GenerateApplicationUseCase {
                 &retained,
                 &plan,
                 instance_id,
+                llm.clone(),
             ),
         );
 
@@ -282,54 +290,28 @@ impl GenerateApplicationUseCase {
         let cover_letter = cover_letter_res?;
 
         // Étape 5 : VALIDATE
-        self.events.started(instance_id, GenerationStep::Validate);
         validate_outputs(
             &offre,
             restitution.as_ref(),
             resume.as_ref(),
             cover_letter.as_ref(),
         )?;
-        self.events
-            .done(instance_id, GenerationStep::Validate, None);
 
-        // Étape 6 : PERSIST
-        self.events.started(instance_id, GenerationStep::Persist);
-        let now = Utc::now();
-        let instance = Instance {
-            id: instance_id,
-            slug: slug.clone(),
-            offre_id: offre.id,
-            profil_id: profil.id,
-            status: InstanceStatus::Ready,
-            resume_json: resume
-                .as_ref()
-                .map(|r| serde_json::to_value(r).unwrap_or(serde_json::Value::Null)),
-            cover_letter_json: cover_letter
-                .as_ref()
-                .map(|cl| serde_json::to_value(cl).unwrap_or(serde_json::Value::Null)),
-            notes: serde_json::json!({
-                "restitution": restitution.as_ref(),
-                "plan": plan,
-            }),
-            created_at,
-            updated_at: now,
-            sent_at: None,
-        };
+        self.events.done(instance_id, GenerationStep::Done, None);
+
+        let mut instance = input.existing_instance.unwrap();
+        instance.restitution = restitution.map(|r| serde_json::to_value(r).unwrap());
+        instance.resume_json = resume.map(|r| serde_json::to_value(r).unwrap());
+        instance.cover_letter_json = cover_letter.map(|cl| serde_json::to_value(cl).unwrap());
+        instance.status = domain::InstanceStatus::Ready;
+        instance.updated_at = Utc::now();
+
         self.instances
             .upsert(&instance)
             .await
             .map_err(AppError::Repo)?;
-        self.events.done(instance_id, GenerationStep::Persist, None);
 
-        self.events.done(instance_id, GenerationStep::Done, None);
-
-        Ok(GenerateOutput {
-            instance_id,
-            slug,
-            restitution,
-            resume,
-            cover_letter,
-        })
+        Ok(instance)
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -368,6 +350,7 @@ impl GenerateApplicationUseCase {
         &self,
         offre: &Offre,
         candidates: &[(Chunk, f32)],
+        llm: Arc<dyn LlmClient>,
     ) -> Result<Vec<Chunk>, GenerateError> {
         let listing = candidates
             .iter()
@@ -384,7 +367,7 @@ impl GenerateApplicationUseCase {
             .collect::<Vec<_>>()
             .join("\n\n");
 
-        let req = ExtractionRequest {
+        let req = ports::ExtractionRequest {
             system: Some(
                 "Tu es un assistant qui sélectionne les expériences/projets/compétences \
                  d'un candidat les plus pertinents pour une offre donnée."
@@ -407,13 +390,12 @@ impl GenerateApplicationUseCase {
             ),
             schema_name: "RerankResponse".into(),
             schema_description: "Sélection des chunks pertinents avec justification".into(),
-            json_schema: serde_json::to_value(&schemars::schema_for!(RerankResponse)).unwrap(),
+            json_schema: serde_json::to_value(schemars::schema_for!(RerankResponse)).unwrap(),
             model: None,
             max_tokens: Some(1024),
         };
 
-        let response_json = self
-            .llm
+        let response_json = llm
             .extract(req)
             .await
             .map_err(|e| AppError::Other(e.to_string()))?;
@@ -443,6 +425,7 @@ impl GenerateApplicationUseCase {
         &self,
         offre: &Offre,
         retained: &[Chunk],
+        llm: Arc<dyn LlmClient>,
     ) -> Result<CandidaturePlan, GenerateError> {
         let chunks_listing = retained
             .iter()
@@ -457,7 +440,7 @@ impl GenerateApplicationUseCase {
             .collect::<Vec<_>>()
             .join("\n");
 
-        let req = ExtractionRequest {
+        let req = ports::ExtractionRequest {
             system: Some(
                 "Tu es un coach RH qui prépare la stratégie d'une candidature. \
                  Tu dois identifier l'angle le plus efficace, les forces à \
@@ -473,13 +456,12 @@ impl GenerateApplicationUseCase {
             ),
             schema_name: "CandidaturePlan".into(),
             schema_description: "Stratégie de la candidature".into(),
-            json_schema: serde_json::to_value(&schemars::schema_for!(CandidaturePlan)).unwrap(),
+            json_schema: serde_json::to_value(schemars::schema_for!(CandidaturePlan)).unwrap(),
             model: None,
             max_tokens: Some(1024),
         };
 
-        let response_json = self
-            .llm
+        let response_json = llm
             .extract(req)
             .await
             .map_err(|e| GenerateError::App(AppError::Other(e.to_string())))?;
@@ -496,6 +478,7 @@ impl GenerateApplicationUseCase {
         livrables: Livrables,
         offre: &Offre,
         instance_id: InstanceId,
+        llm: Arc<dyn LlmClient>,
     ) -> Result<Option<Restitution>, GenerateError> {
         if !livrables.restitution {
             return Ok(None);
@@ -503,15 +486,22 @@ impl GenerateApplicationUseCase {
         self.events
             .started(instance_id, GenerationStep::Restitution);
 
-        let req = ExtractionRequest {
+        let req = ports::ExtractionRequest {
             system: Some(
                 "Tu produis des fiches d'analyse d'offres d'emploi pour aider \
                  un candidat junior à décider et à se préparer."
                     .into(),
             ),
-            instruction: "Analyse cette offre. Produis une restitution structurée : \
-                 synthèse, fit (avec score 0-100, justifié), contenu explicite, \
-                 signaux implicites, points d'attention, questions d'entretien."
+            instruction: "Analyse cette offre très précisément. Produis une restitution structurée : \
+                 synthèse globale, résumé de l'entreprise (secteur, enjeux), résumé du poste (contexte, objectifs), \
+                 résumé du profil recherché (diplôme, mindset), fit (avec score 0-100, justifié), \
+                 contenu explicite (missions, stack), signaux implicites, points d'attention, questions d'entretien. \
+                 \n\nRÈGLES STRICTES :\
+                 - La synthèse et les résumés doivent être des paragraphes complets et analytiques.\
+                 - Tu ne dois JAMAIS recopier de Markdown brut, de liens [Texte](url), ou de menus de navigation.\
+                 - Si l'input contient principalement du bruit (menus, cookies, liens 'Our Teams', etc.) et peu de contenu réel, \
+                   tu dois le détecter et indiquer dans 'synthese' : 'Le contenu fourni semble être principalement de la navigation. Veuillez fournir le texte de l'offre directement.' \
+                   et remplir le reste avec des valeurs minimales valides."
                 .into(),
             input: format!(
                 "Entreprise: {}\nIntitulé: {}\nLocalisation: {}\nContrat: {}\n\nTexte brut:\n{}",
@@ -519,16 +509,16 @@ impl GenerateApplicationUseCase {
                 offre.intitule,
                 offre.localisation.as_deref().unwrap_or("?"),
                 offre.contrat.as_deref().unwrap_or("?"),
-                truncate(&offre.raw_text, 4000),
+                truncate(&offre.raw_text, 12000),
             ),
             schema_name: "Restitution".into(),
             schema_description: "Fiche d'analyse structurée d'une offre".into(),
-            json_schema: serde_json::to_value(&schemars::schema_for!(Restitution)).unwrap(),
+            json_schema: serde_json::to_value(schemars::schema_for!(Restitution)).unwrap(),
             model: None,
-            max_tokens: Some(2048),
+            max_tokens: Some(4000),
         };
 
-        let response_json = self.llm.extract(req).await.map_err(|e| {
+        let response_json = llm.extract(req).await.map_err(|e| {
             self.events
                 .failed(instance_id, GenerationStep::Restitution, e.to_string());
             AppError::Other(e.to_string())
@@ -548,6 +538,7 @@ impl GenerateApplicationUseCase {
     // ─────────────────────────────────────────────────────────────
     // Étape 4b — RESUME (parallèle)
     // ─────────────────────────────────────────────────────────────
+    #[allow(clippy::too_many_arguments)]
     async fn maybe_generate_resume(
         &self,
         livrables: Livrables,
@@ -556,6 +547,7 @@ impl GenerateApplicationUseCase {
         retained: &[Chunk],
         plan: &CandidaturePlan,
         instance_id: InstanceId,
+        llm: Arc<dyn LlmClient>,
     ) -> Result<Option<Resume>, GenerateError> {
         if !livrables.resume {
             return Ok(None);
@@ -577,12 +569,12 @@ impl GenerateApplicationUseCase {
             input: build_generation_input(offre, profil, retained, plan),
             schema_name: "Resume".into(),
             schema_description: "CV structuré, contenu adapté à l'offre".into(),
-            json_schema: serde_json::to_value(&schemars::schema_for!(Resume)).unwrap(),
+            json_schema: serde_json::to_value(schemars::schema_for!(Resume)).unwrap(),
             model: None,
             max_tokens: Some(3000),
         };
 
-        let response_json = self.llm.extract(req).await.map_err(|e| {
+        let response_json = llm.extract(req).await.map_err(|e| {
             self.events
                 .failed(instance_id, GenerationStep::Resume, e.to_string());
             AppError::Other(e.to_string())
@@ -601,6 +593,7 @@ impl GenerateApplicationUseCase {
     // ─────────────────────────────────────────────────────────────
     // Étape 4c — COVER LETTER (parallèle)
     // ─────────────────────────────────────────────────────────────
+    #[allow(clippy::too_many_arguments)]
     async fn maybe_generate_cover_letter(
         &self,
         livrables: Livrables,
@@ -609,6 +602,7 @@ impl GenerateApplicationUseCase {
         retained: &[Chunk],
         plan: &CandidaturePlan,
         instance_id: InstanceId,
+        llm: Arc<dyn LlmClient>,
     ) -> Result<Option<CoverLetter>, GenerateError> {
         if !livrables.cover_letter {
             return Ok(None);
@@ -630,12 +624,12 @@ impl GenerateApplicationUseCase {
             input: build_generation_input(offre, profil, retained, plan),
             schema_name: "CoverLetter".into(),
             schema_description: "Lettre structurée par paragraphes typés".into(),
-            json_schema: serde_json::to_value(&schemars::schema_for!(CoverLetter)).unwrap(),
+            json_schema: serde_json::to_value(schemars::schema_for!(CoverLetter)).unwrap(),
             model: None,
             max_tokens: Some(2500),
         };
 
-        let response_json = self.llm.extract(req).await.map_err(|e| {
+        let response_json = llm.extract(req).await.map_err(|e| {
             self.events
                 .failed(instance_id, GenerationStep::CoverLetter, e.to_string());
             AppError::Other(e.to_string())

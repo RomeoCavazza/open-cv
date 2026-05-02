@@ -15,9 +15,9 @@ The system is built around three core deliverables:
 - **HTTP framework**: Axum + Tokio
 - **Database**: PostgreSQL with `pgvector`, `pgcrypto`, and `pg_trgm`, accessed through `sqlx`
 - **Architecture**: Hexagonal architecture (Domain, Ports, Adapters, Application, API)
-- **Primary AI model**: Anthropic Claude client via `reqwest`
-- **Embeddings**: dedicated interface in `ports`, currently backed by a mock embedder in the API crate
-- **Frontend**: static HTML/CSS/JS served by Axum, with iframes for document rendering
+- **Primary AI models**: Anthropic Claude, OpenAI GPT-4o, and local models via Ollama.
+- **Embeddings**: dedicated interface in `ports`, currently using `nomic-embed-text` (local) or OpenAI embeddings.
+- **Frontend**: static HTML/CSS/JS served by Axum, with iframes for document isolation and rendering.
 - **Environment**: Nix + Just
 
 ## 2. Hexagonal Architecture
@@ -30,8 +30,10 @@ alternance/
 │   ├── domain/           # Core business types, no infrastructure dependency
 │   ├── ports/            # Traits required by the domain and application
 │   ├── adapters/         # Concrete implementations of those ports
-│   │   ├── postgres/     # Persistence through sqlx
+│   │   ├── postgres/     # Persistence through sqlx (JSONB + pgvector)
 │   │   ├── llm_claude/   # Anthropic API client
+│   │   ├── llm_openai/   # OpenAI / OpenRouter compatible client
+│   │   ├── llm_ollama/   # Local LLM support
 │   │   ├── scraper_http/ # Basic HTTP scraping
 │   ├── application/      # Use cases such as intake and generation
 │   └── api/              # Axum HTTP entrypoint
@@ -45,9 +47,9 @@ The database stores the full application context. Local JSON and Markdown files 
 
 - **`offres`**: stores the source URL, deduplication hash, raw text, and structured AI output (`JSONB`).
 - **`profils`**: stores candidate profiles, with a single active profile at a time in the current setup.
-- **`chunks`**: stores profile chunks such as experiences, skills, and projects, including `embedding (1024)` vectors for retrieval.
-- **`instances`**: represents an application instance linking a profile and a job offer, with generated `resume_json` and `cover_letter_json`.
-- **`llm_calls`**: observability table for AI calls, including token usage, cost, latency, and possible errors.
+- **`chunks`**: stores profile pieces (experiences, skills) with `embedding (1024)` vectors for RAG.
+- **`instances`**: links a profile to an offer; stores generated analysis, resume, and cover letter.
+- **`llm_calls`**: [Planned] observability table for AI costs, latency, and token usage.
 
 ## 4. AI Generation Pipeline
 

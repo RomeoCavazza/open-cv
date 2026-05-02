@@ -53,6 +53,7 @@ pub struct Instance {
     pub offre_id: OffreId,
     pub profil_id: ProfilId,
     pub status: InstanceStatus,
+    pub restitution: Option<Json>,
     pub resume_json: Option<Json>,
     pub cover_letter_json: Option<Json>,
     pub notes: Json,

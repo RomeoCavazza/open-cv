@@ -6,6 +6,8 @@ members = [
     "crates/application",
     "crates/adapters/postgres",
     "crates/adapters/llm_claude",
+    "crates/adapters/llm_openai",
+    "crates/adapters/llm_ollama",
     "crates/adapters/scraper_http",
     "crates/api",
 ]

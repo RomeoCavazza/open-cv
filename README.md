@@ -13,7 +13,7 @@ Local application builder that turns raw job postings into tailored resumes, str
 [![Backend CI](https://github.com/RomeoCavazza/open-cv/actions/workflows/backend.yml/badge.svg)](https://github.com/RomeoCavazza/open-cv/actions/workflows/backend.yml)
 [![Frontend CI](https://github.com/RomeoCavazza/open-cv/actions/workflows/frontend.yml/badge.svg)](https://github.com/RomeoCavazza/open-cv/actions/workflows/frontend.yml)
 
-This project is a local application-generation engine. It ingests job postings, structures them, connects them to a candidate profile stored in the database, and produces high-fidelity deliverables through a **Rust + Axum** backend, a **PostgreSQL** database, and structured calls to **Claude**.
+This project is a local application-generation engine. It ingests job postings, structures them, connects them to a candidate profile stored in the database, and produces high-fidelity deliverables through a **Rust + Axum** backend, a **PostgreSQL** database, and structured calls to **AI models** (Claude, GPT, or local models).
 
 ## Previews
 
@@ -79,7 +79,7 @@ The application is then available at `http://localhost:8000`.
 
 - **Backend**: Rust, Axum, Tokio, hexagonal architecture.
 - **Database**: PostgreSQL 16, `sqlx`, `pgvector`, `pgcrypto`, `pg_trgm`.
-- **AI**: Anthropic Claude client for structured generation.
+- **AI**: Multi-provider LLM support (Anthropic Claude, OpenAI, Ollama).
 - **Frontend**: native HTML, CSS, and JavaScript, with iframes to isolate document rendering.
 - **Environment**: Nix, Just, Cargo workspace.
 
@@ -93,18 +93,18 @@ flowchart LR
     UI[Static web frontend]
     API[Backend API Rust Axum]
     APP[Application use cases]
-    LLM[Claude API]
+    LLM[LLM API / Local AI]
     PG[(PostgreSQL)]
     Render[HTML renderers: Resume, Cover Letter, Analysis]
 
     User --> UI
     UI --> API
+    UI --> Render
     API --> APP
     APP --> PG
     APP --> LLM
     PG --> API
     API --> UI
-    UI --> Render
 ```
 
 ---
@@ -130,7 +130,7 @@ flowchart TD
         J["POST /api/instances/:slug/generate"] --> K[GenerateApplicationUseCase]
         K --> L[Load active profile and chunks]
         L --> M[Select relevant context]
-        M --> N[Claude generates analysis, resume, and cover letter]
+        M --> N[AI generates analysis, resume, and cover letter]
         N --> O[Persist instance in PostgreSQL]
         O --> P["GET /api/instances/:slug"]
     end
@@ -143,7 +143,7 @@ flowchart TD
     end
 
     PG[(PostgreSQL)]
-    LLM[(Claude API)]
+    LLM[(AI Models / API)]
 
     I --> PG
     L --> PG

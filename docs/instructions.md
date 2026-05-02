@@ -54,6 +54,10 @@ The project uses a `.env` file to store the keys required for generation.
 2. Edit `.env` and add your keys:
    ```env
    ANTHROPIC_API_KEY=sk-ant-api03-...
+   OPENAI_API_KEY=sk-proj-...
+   # Optional: Local LLM or OpenRouter
+   # OLLAMA_URL=http://localhost:11434
+   # OPENROUTER_API_KEY=...
    ```
 
 ## Useful Commands

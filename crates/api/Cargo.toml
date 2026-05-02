@@ -14,6 +14,8 @@ ports                 = { path = "../ports" }
 application           = { path = "../application" }
 adapter-postgres      = { path = "../adapters/postgres" }
 adapter-llm-claude    = { path = "../adapters/llm_claude" }
+adapter-llm-openai    = { path = "../adapters/llm_openai" }
+adapter-llm-ollama    = { path = "../adapters/llm_ollama" }
 adapter-scraper-http  = { path = "../adapters/scraper_http" }
 
 axum               = { workspace = true }
@@ -33,3 +35,4 @@ uuid               = { workspace = true }
 async-trait        = { workspace = true }
 url                = { workspace = true }
 sha2.workspace = true
+schemars           = { workspace = true }

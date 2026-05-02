@@ -46,6 +46,35 @@ CREATE INDEX IF NOT EXISTS offres_embedding_hnsw  ON offres
     USING hnsw (embedding vector_cosine_ops)
     WITH (m = 16, ef_construction = 64);
 
+-- Fonction pour inférer la catégorie d'une offre
+CREATE OR REPLACE FUNCTION fn_infer_offre_category()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.categorie IS NULL OR NEW.categorie = '' OR NEW.categorie = 'Inbox' OR NEW.categorie = 'Legacy Restored' THEN
+        NEW.categorie := CASE
+            WHEN lower(coalesce(NEW.slug, '') || ' ' || coalesce(NEW.intitule, '') || ' ' || coalesce(NEW.source_url, '')) ~
+                 '(data|(^|[^a-z])ai([^a-z]|$)|(^|[^a-z])ia([^a-z]|$)|intelligence artificielle|llm|langchain|gallica|automation|scientist|machine learning)'
+                THEN 'Data Engineering & Data Science'
+            WHEN lower(coalesce(NEW.slug, '') || ' ' || coalesce(NEW.intitule, '') || ' ' || coalesce(NEW.source_url, '')) ~
+                 '(developpeur|développeur|software|java|api|logiciel|full stack|full-stack|embarqu|engineering)'
+                THEN 'Ingénierie Logicielle Spécialisée (Embarqué, C++, Simulations, Systèmes)'
+            WHEN lower(coalesce(NEW.slug, '') || ' ' || coalesce(NEW.intitule, '') || ' ' || coalesce(NEW.source_url, '')) ~
+                 '(pilotage|projet|transformation|strategie|stratégie)'
+                THEN 'Pilotage de Projet, Stratégie IT & Transformation Numérique'
+            ELSE 'Autres'
+        END;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS tg_infer_offre_category ON offres;
+CREATE TRIGGER tg_infer_offre_category
+    BEFORE INSERT OR UPDATE ON offres
+    FOR EACH ROW
+    EXECUTE FUNCTION fn_infer_offre_category();
+
+
 -- ─────────────────────────────────────────────────────────────────────────
 -- PROFILS
 -- ─────────────────────────────────────────────────────────────────────────
@@ -97,6 +126,7 @@ CREATE TABLE IF NOT EXISTS instances (
     offre_id          UUID        NOT NULL REFERENCES offres(id) ON DELETE RESTRICT,
     profil_id         UUID        NOT NULL REFERENCES profils(id) ON DELETE RESTRICT,
     status            instance_status NOT NULL DEFAULT 'draft',
+    restitution       JSONB,
     resume_json       JSONB,
     cover_letter_json JSONB,
     notes             JSONB       NOT NULL DEFAULT '{}'::jsonb,
@@ -158,3 +188,7 @@ SELECT
 FROM llm_calls
 GROUP BY 1, 2, 3, 4
 ORDER BY 1 DESC;
+
+
+
+

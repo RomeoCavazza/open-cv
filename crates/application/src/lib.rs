@@ -8,6 +8,7 @@ use thiserror::Error;
 
 pub mod events;
 pub mod generate;
+pub mod intake;
 
 #[cfg(any(test, feature = "test-mocks"))]
 pub mod test_mocks;
@@ -16,6 +17,7 @@ pub use events::{EventBus, GenerationEvent, GenerationStep, StepStatus};
 pub use generate::{
     GenerateApplicationUseCase, GenerateError, GenerateInput, GenerateOutput, Livrables,
 };
+pub use intake::{IntakeInput, IntakeOffreUseCase, IntakeOutput};
 
 #[derive(Debug, Error)]
 pub enum AppError {

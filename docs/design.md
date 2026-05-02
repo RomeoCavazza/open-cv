@@ -16,7 +16,7 @@ colors:
   outline: '#737688'
   outline-variant: '#c3c5d9'
   surface-tint: '#004ced'
-  primary: '#003ec7'
+  primary: '#0052ff'
   on-primary: '#ffffff'
   primary-container: '#0052ff'
   on-primary-container: '#dfe3ff'
@@ -135,7 +135,7 @@ Note: this file is a visual direction reference. It is intentionally aspirationa
 The color palette is intentionally restrained to maximize the impact of primary actions. 
 
 - **Canvas**: The primary background is a pure white (#ffffff), providing a clean, high-contrast foundation.
-- **Primary Action**: "Coinbase Blue" (#0052ff) is reserved strictly for interactive elements, progress indicators, and primary calls to action. 
+- **Primary Action**: "Coinbase Blue" (#0052ff) is used for all primary buttons, progress indicators, and active states. 
 - **Typography & Ink**: Headlines and heavy-weight text utilize Ink Black (#0a0b0d) to ensure maximum legibility and an authoritative presence.
 - **Surface Elevation**: A soft gray (#f7f7f7) is used for structural bands, separating content sections without the need for heavy borders.
 

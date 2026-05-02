@@ -10,8 +10,8 @@ The core of the system is written in Rust and split into five crates following *
 
 1. **`domain`**: pure data models such as `Offre`, `Instance`, `Resume`, and `CoverLetter`, with no infrastructure dependency.
 2. **`ports`**: traits used by the application to interact with external systems, such as `LlmClient` and repository interfaces.
-3. **`application`**: business logic and use cases. This is where the orchestration happens: load an offer, load the profile, ask Claude to generate content, and persist the result.
-4. **`adapters`**: concrete implementations of ports, such as `llm_claude` for Anthropic and `postgres` for SQLx persistence.
+3. **`application`**: business logic and orchestration. This is where the RAG pipeline runs: load offer and profile, retrieve relevant chunks, and call the LLM for structured generation.
+4. **`adapters`**: concrete implementations of ports, such as `llm_claude` (Anthropic), `llm_openai` (GPT), or `llm_ollama` (Local), and `postgres` for persistence.
 5. **`api`**: the HTTP interface. An [Axum](https://github.com/tokio-rs/axum) server exposes REST routes and serves the static frontend.
 
 ## 2. AI Pipeline
