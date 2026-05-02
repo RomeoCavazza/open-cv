@@ -497,10 +497,7 @@ fn build_offre_slug(entreprise: &str, intitule: &str) -> Slug {
     };
 
     Slug::parse(&slug_str).unwrap_or_else(|_| {
-        let fallback = format!(
-            "offre_{}",
-            &uuid::Uuid::new_v4().to_string()[..8]
-        );
+        let fallback = format!("offre_{}", &uuid::Uuid::new_v4().to_string()[..8]);
         Slug::parse(fallback).expect("fallback slug is always valid")
     })
 }

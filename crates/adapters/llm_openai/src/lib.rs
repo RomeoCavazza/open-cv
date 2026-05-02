@@ -179,7 +179,8 @@ impl LlmClient for OpenAiClient {
             serde_json::from_str(&raw).map_err(|e| LlmError::Json(e.to_string()))?;
 
         let text = parsed
-            .choices.first()
+            .choices
+            .first()
             .and_then(|c| c.message.content.clone())
             .unwrap_or_default();
 
@@ -261,7 +262,8 @@ impl LlmClient for OpenAiClient {
             serde_json::from_str(&raw).map_err(|e| LlmError::Json(e.to_string()))?;
 
         let content = parsed
-            .choices.first()
+            .choices
+            .first()
             .and_then(|c| c.message.content.clone())
             .ok_or_else(|| LlmError::BadStructuredOutput("Réponse vide d'OpenAI".into()))?;
 
