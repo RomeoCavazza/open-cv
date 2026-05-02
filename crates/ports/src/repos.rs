@@ -47,6 +47,7 @@ pub trait InstanceRepo: Send + Sync {
     async fn get_by_slug(&self, slug: &Slug) -> Result<Option<Instance>, RepoError>;
     async fn list_recent(&self, limit: u32) -> Result<Vec<Instance>, RepoError>;
     async fn upsert(&self, instance: &Instance) -> Result<(), RepoError>;
+    async fn get_by_offre_id(&self, offre_id: domain::OffreId) -> Result<Option<Instance>, RepoError>;
 }
 
 #[derive(Debug, Error)]

@@ -6,8 +6,10 @@ use domain::{Instance, Offre, Slug};
 use ports::{InstanceRepo, OffreRepo, RepoError};
 use thiserror::Error;
 
+pub mod chat;
 pub mod events;
 pub mod generate;
+pub mod index_profil;
 pub mod intake;
 
 #[cfg(any(test, feature = "test-mocks"))]

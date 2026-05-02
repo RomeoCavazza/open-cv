@@ -27,23 +27,31 @@ pub struct Offre {
 
 /// Sortie structurée de l'extraction LLM. Sert à la fois pour persistence
 /// (colonne `structured` JSONB) et comme schéma pour `LlmClient::extract`.
-#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]
 pub struct OffreStructured {
     /// Résumé en 1 phrase de l'offre.
+    #[serde(default)]
     pub resume_court: String,
     /// Stack technique mentionnée (langages, frameworks, outils).
+    #[serde(default)]
     pub stack: Vec<String>,
     /// Missions principales décrites dans l'offre.
+    #[serde(default)]
     pub missions: Vec<String>,
     /// Compétences exigées (hard skills).
+    #[serde(default)]
     pub exigences: Vec<String>,
     /// Soft skills mentionnés.
+    #[serde(default)]
     pub soft_skills: Vec<String>,
     /// Niveau d'études requis (Bac+5, Bac+3, etc.).
+    #[serde(default)]
     pub niveau_etudes: Option<String>,
     /// Type de contrat tel qu'extrait (alternance, stage, CDI...).
+    #[serde(default)]
     pub type_contrat: Option<String>,
     /// Mots-clés à intégrer dans le CV/lettre.
+    #[serde(default)]
     pub mots_cles: Vec<String>,
 }
 

@@ -4,13 +4,48 @@ async function loadCoverLetter() {
     const jobId = urlParams.get('id');
     const t = Date.now();
     let dataPath = (jobId && jobId !== 'null') ? `/api/instances/${jobId}/cover-letter` : `/api/profile/active/cover-letter-template?t=${t}`;
-
+    
     let response = await fetch(dataPath);
+    let isTemplate = false;
+
     if (!response.ok) {
       console.warn(`Instance ${jobId} not found, falling back to active profile cover letter template.`);
       response = await fetch(`/api/profile/active/cover-letter-template?t=${t}`);
+      isTemplate = true;
     }
     
+    if (isTemplate && jobId && jobId !== 'null') {
+      document.body.innerHTML = `
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; font-family: 'Inter', sans-serif; background: #fff;">
+            <button id="btn-generate-cover" style="
+                background: #0052ff;
+                color: white;
+                border: none;
+                padding: 14px 28px;
+                border-radius: 12px;
+                font-weight: 600;
+                cursor: pointer;
+                font-size: 15px;
+            ">Générer la lettre</button>
+        </div>
+      `;
+      document.getElementById('btn-generate-cover').onclick = async () => {
+        const btn = document.getElementById('btn-generate-cover');
+        btn.disabled = true;
+        btn.innerText = "Génération...";
+        try {
+          const res = await fetch(`/api/instances/${jobId}/generate`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ deliverables: { cover: true, resume: false, restitution: false } })
+          });
+          if (res.ok) window.location.reload();
+          else btn.disabled = false;
+        } catch (e) { btn.disabled = false; }
+      };
+      return;
+    }
+
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}`);
     }

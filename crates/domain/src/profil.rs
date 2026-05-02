@@ -15,5 +15,8 @@ pub struct Profil {
     /// `data/user/profile.md`).
     pub content: Json,
     pub is_active: bool,
+    pub resume_template: Option<Json>,
+    pub cover_letter_template: Option<Json>,
+    pub calendar_pdf: Option<Vec<u8>>,
     pub created_at: DateTime<Utc>,
 }

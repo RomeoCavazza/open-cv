@@ -49,6 +49,7 @@ async fn main() -> anyhow::Result<()> {
         std::env::var("DATABASE_URL").context("DATABASE_URL non défini (vois .env.example)")?;
 
     info!("connexion à Postgres...");
+    info!("connexion à Postgres...");
     let pool = adapter_postgres::connect(&database_url)
         .await
         .context("connexion Postgres impossible")?;
@@ -111,9 +112,9 @@ async fn main() -> anyhow::Result<()> {
 
     // Default LLM for UseCases (if none specified)
     let default_llm = llm_registry
-        .get("claude")
+        .get("ollama")
+        .or_else(|| llm_registry.get("claude"))
         .or_else(|| llm_registry.get("openai"))
-        .or_else(|| llm_registry.get("ollama"))
         .cloned()
         .context("Aucun provider LLM disponible")?;
 
@@ -180,6 +181,7 @@ async fn main() -> anyhow::Result<()> {
     ));
 
     let state = AppState {
+        pool: pool.clone(),
         offre_repo,
         instance_repo,
         generate_uc,
@@ -192,7 +194,8 @@ async fn main() -> anyhow::Result<()> {
     let app = Router::new()
         .route("/health", get(health))
         .route("/api/offres", get(list_offres))
-        .route("/api/offres/:slug", get(get_offre_by_slug))
+        .route("/api/offres/:slug/instance", get(get_instance_by_offre_slug))
+        .route("/api/chat", post(chat_handler))
         .route("/api/ingest", post(ingest_handler))
         .route("/api/profiles", get(list_profiles_handler))
         .route(
@@ -202,6 +205,10 @@ async fn main() -> anyhow::Result<()> {
         .route(
             "/api/profile/active/resume",
             get(get_active_profile_resume_handler),
+        )
+        .route(
+            "/api/profile/active/calendar",
+            get(get_active_profile_calendar_handler),
         )
         .route(
             "/api/profile/active/resume-template",
@@ -385,19 +392,30 @@ async fn list_offres(
     State(state): State<AppState>,
     Query(q): Query<ListOffresQuery>,
 ) -> Result<Json<serde_json::Value>, ApiError> {
-    let usecase = application::ListOffresUseCase::new(state.offre_repo.clone());
-    let offres = usecase.execute(q.limit).await?;
+    let rows = sqlx::query!(
+        r#"
+        SELECT o.id, o.slug, o.intitule, o.source_url, o.entreprise, o.categorie,
+               EXISTS(SELECT 1 FROM instances i WHERE i.offre_id = o.id) as "has_instance!"
+        FROM offres o
+        ORDER BY o.scraped_at DESC
+        LIMIT $1
+        "#,
+        q.limit as i64
+    )
+    .fetch_all(&state.pool)
+    .await
+    .map_err(|e| ApiError::Internal(e.to_string()))?;
 
-    // Format compatible avec l'ancien liste.json pour le frontend
-    let entries: Vec<serde_json::Value> = offres
+    let entries: Vec<serde_json::Value> = rows
         .iter()
-        .map(|o| {
+        .map(|r| {
             serde_json::json!({
-                "title": o.intitule,
-                "url": o.source_url,
-                "job_id": o.slug.as_str(),
-                "category": public_offer_category(o.slug.as_str(), &o.intitule, o.categorie.as_deref()),
-                "status": "draft",
+                "title": r.intitule,
+                "url": r.source_url,
+                "job_id": r.slug,
+                "entreprise": r.entreprise,
+                "category": public_offer_category(&r.slug, &r.intitule, r.categorie.as_deref()),
+                "status": if r.has_instance { "ready" } else { "draft" },
             })
         })
         .collect();
@@ -427,6 +445,25 @@ async fn get_instance_by_slug(
 
     let usecase = application::GetInstanceBySlugUseCase::new(state.instance_repo.clone());
     let instance = usecase.execute(&slug).await?;
+
+    Ok(Json(serde_json::to_value(&instance)?))
+}
+
+async fn get_instance_by_offre_slug(
+    State(state): State<AppState>,
+    Path(slug): Path<String>,
+) -> Result<Json<serde_json::Value>, ApiError> {
+    let slug = domain::Slug::parse(slug).map_err(|e| ApiError::BadRequest(e.to_string()))?;
+
+    // 1. Trouver l'offre
+    let offre = state.offre_repo.get_by_slug(&slug).await
+        .map_err(|e| ApiError::Internal(e.to_string()))?
+        .ok_or_else(|| ApiError::NotFound(format!("Offre {} inconnue", slug)))?;
+
+    // 2. Trouver l'instance via le repo
+    let instance = state.instance_repo.get_by_offre_id(offre.id).await
+        .map_err(|e| ApiError::Internal(e.to_string()))?
+        .ok_or_else(|| ApiError::NotFound(format!("Pas d'instance pour l'offre {}", slug)))?;
 
     Ok(Json(serde_json::to_value(&instance)?))
 }
@@ -465,5 +502,41 @@ async fn get_index() -> impl IntoResponse {
     match tokio::fs::read_to_string(format!("{}/index.html", web_dir)).await {
         Ok(html) => (StatusCode::OK, axum::response::Html(html)).into_response(),
         Err(_) => (StatusCode::NOT_FOUND, "index.html non trouvé").into_response(),
+    }
+}
+async fn chat_handler(
+    State(state): State<AppState>,
+    Json(req): Json<application::chat::ChatRequest>,
+) -> Result<Json<application::chat::ChatResponse>, ApiError> {
+    let usecase = application::chat::ChatWithApplicationUseCase::new(
+        state.instance_repo.clone(),
+        state.llm_registry.as_ref().clone(),
+    );
+
+    let res = usecase.execute(req).await
+        .map_err(|e| ApiError::Internal(e.to_string()))?;
+
+    Ok(Json(res))
+}
+async fn get_active_profile_calendar_handler(
+    State(state): State<AppState>,
+) -> impl axum::response::IntoResponse {
+    let row = sqlx::query!("SELECT calendar_pdf FROM profils WHERE is_active = true LIMIT 1")
+        .fetch_optional(&state.pool)
+        .await;
+
+    match row {
+        Ok(Some(r)) => {
+            if let Some(bytes) = r.calendar_pdf {
+                (
+                    [(axum::http::header::CONTENT_TYPE, "application/pdf")],
+                    bytes,
+                )
+                    .into_response()
+            } else {
+                (axum::http::StatusCode::NOT_FOUND, "Aucun calendrier configuré").into_response()
+            }
+        }
+        _ => (axum::http::StatusCode::NOT_FOUND, "Profil introuvable").into_response(),
     }
 }

@@ -6,11 +6,46 @@ async function loadCV() {
         let dataPath = (jobId && jobId !== 'null') ? `/api/instances/${jobId}/resume` : `/api/profile/active/resume-template?t=${t}`;
         
         let response = await fetch(dataPath);
+        let isTemplate = false;
+
         if (!response.ok) {
             console.warn(`Data not found at ${dataPath}, falling back to active profile resume template.`);
             response = await fetch(`/api/profile/active/resume-template?t=${t}`);
+            isTemplate = true;
         }
         
+        if (isTemplate && jobId && jobId !== 'null') {
+            document.body.innerHTML = `
+                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; font-family: 'Inter', sans-serif; background: #fff;">
+                    <button id="btn-generate-cv" style="
+                        background: #0052ff;
+                        color: white;
+                        border: none;
+                        padding: 14px 28px;
+                        border-radius: 12px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        font-size: 15px;
+                    ">Générer le CV</button>
+                </div>
+            `;
+            document.getElementById('btn-generate-cv').onclick = async () => {
+                const btn = document.getElementById('btn-generate-cv');
+                btn.disabled = true;
+                btn.innerText = "Génération...";
+                try {
+                    const res = await fetch(`/api/instances/${jobId}/generate`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ deliverables: { resume: true, restitution: false, cover: false } })
+                    });
+                    if (res.ok) window.location.reload();
+                    else btn.disabled = false;
+                } catch (e) { btn.disabled = false; }
+            };
+            return;
+        }
+
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}`);
         }

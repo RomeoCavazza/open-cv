@@ -885,7 +885,7 @@
                                 <button type="button" id="btn-clear-apprenticeship-calendar" class="muted-remove-btn" style="padding:4px 8px;">×</button>
                             </div>
                         </div>
-                        <iframe id="prof-apprenticeship-calendar-preview" style="display:none; width:100%; min-height:200px; border:1px solid var(--hairline); border-radius:8px; background:white; margin-top:8px;"></iframe>
+                        <iframe id="prof-apprenticeship-calendar-preview" tabindex="-1" style="display:none; width:100%; min-height:600px; border:1px solid var(--hairline); border-radius:8px; background:white; margin-top:8px;"></iframe>
                         <div id="prof-apprenticeship-calendar-legacy" style="display:none; margin-top:8px;">
                             <label class="profile-field-label" style="font-size:10px; margin-bottom:4px;">Valeur texte héritée</label>
                             <textarea id="prof-apprenticeship-calendar-legacy-value" readonly style="width:100%; min-height:60px; padding:10px; border:1px solid var(--hairline); border-radius:8px; resize:vertical; font-size:12px;"></textarea>
@@ -1078,6 +1078,7 @@
         let loadedProfileExtras = {};
         let loadedProfileImage = "";
         let loadedApprenticeshipCalendarDocument = null;
+        const activeProfileCalendarUrl = '/api/profile/active/calendar';
 
         function stringifyDocument(value) {
             if (value == null) return "";
@@ -1110,10 +1111,15 @@
             const preview = document.getElementById('prof-apprenticeship-calendar-preview');
             const legacy = document.getElementById('prof-apprenticeship-calendar-legacy');
             const legacyValue = document.getElementById('prof-apprenticeship-calendar-legacy-value');
+            preview.onload = () => {
+                if (document.activeElement === preview) preview.blur();
+            };
 
             if (!documentValue) {
-                preview.style.display = 'none';
                 legacy.style.display = 'none';
+                preview.src = activeProfileCalendarUrl;
+                preview.style.display = 'block';
+                if (document.activeElement === preview) preview.blur();
                 return;
             }
 
@@ -1127,6 +1133,7 @@
             if (documentValue.data_url) {
                 preview.style.display = 'block';
                 preview.src = documentValue.data_url;
+                if (document.activeElement === preview) preview.blur();
             }
         }
 
@@ -1135,6 +1142,7 @@
                 const res = await fetch(`/api/profile/active?t=${Date.now()}`, { cache: 'no-store' });
                 if (!res.ok) throw new Error();
                 const profil = await res.json();
+                activeProfilId = profil.id || null;
                 const content = profil.content;
                 loadedProfileExtras = Object.fromEntries(
                     Object.entries(content).filter(([key]) => ![
@@ -1163,6 +1171,8 @@
                 document.getElementById('prof-github').value = content.profile?.github || "";
                 document.getElementById('prof-resume-template').value = stringifyDocument(content.documents?.resume_template || content.resume_template);
                 document.getElementById('prof-cover-letter-template').value = stringifyDocument(content.documents?.cover_letter_template || content.cover_letter_template);
+                
+                // Calendrier Preview
                 loadedApprenticeshipCalendarDocument = content.documents?.apprenticeship_calendar || null;
                 updateCalendarDocumentUI(loadedApprenticeshipCalendarDocument);
                 loadedProfileImage = content.profile?.image || "";
@@ -1645,9 +1655,9 @@
                     })
                 })).filter(group => group.category.trim() || group.items.length > 0),
                 documents: {
-                    resume_template: resumeTemplate,
-                    cover_letter_template: coverLetterTemplate,
-                    apprenticeship_calendar: loadedApprenticeshipCalendarDocument,
+                    resume_template: resumeTemplate && Object.keys(resumeTemplate).length > 0 ? resumeTemplate : undefined,
+                    cover_letter_template: coverLetterTemplate && Object.keys(coverLetterTemplate).length > 0 ? coverLetterTemplate : undefined,
+                    apprenticeship_calendar: loadedApprenticeshipCalendarDocument || undefined,
                     annexes: Array.from(document.querySelectorAll('.form-row-annexe')).map(row => ({
                         label: row.querySelector('.annexe-name').value,
                         name: row.dataset.fileName,
@@ -1982,16 +1992,6 @@
         }
 
         let activeProfilId = null;
-        async function loadProfiles() {
-            try {
-                const res = await fetch('/api/profiles');
-                const profils = await res.json();
-                const active = profils.find(p => p.is_active) || profils[0];
-                if (active) activeProfilId = active.id;
-            } catch (e) {
-                console.error("Profiles load failed", e);
-            }
-        }
 
         function updateIframe() {
             if (!activeJobId) return;
@@ -2093,7 +2093,6 @@
         });
 
         loadProfile();
-        loadProfiles();
         loadOffers();
         handleRouting();
     </script>
@@ -2158,5 +2157,6 @@
             );
         }
     </script>
+    <script src="/assets/js/chat.js"></script>
 </body>
 </html>

@@ -28,7 +28,7 @@ struct OllamaChatRequest {
     messages: Vec<OllamaMessage>,
     stream: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
-    format: Option<String>,
+    format: Option<serde_json::Value>,
     #[serde(skip_serializing_if = "Option::is_none")]
     options: Option<serde_json::Value>,
 }
@@ -137,7 +137,7 @@ impl LlmClient for OllamaClient {
             model: req.model.unwrap_or_else(|| self.model.clone()),
             messages,
             stream: false,
-            format: Some("json".into()),
+            format: Some(req.json_schema.clone()),
             options: None,
         };
 
@@ -166,6 +166,53 @@ impl LlmClient for OllamaClient {
             .map_err(|e| LlmError::Json(e.to_string()))?;
 
         Ok(json)
+    }
+
+    fn name(&self) -> &'static str {
+        "ollama"
+    }
+}
+
+#[async_trait]
+impl ports::Embedder for OllamaClient {
+    #[instrument(skip(self, texts), fields(model = %self.model))]
+    async fn embed(&self, texts: &[&str], _mode: ports::EmbedMode) -> Result<Vec<Vec<f32>>, ports::EmbedError> {
+        let mut results = Vec::new();
+        for text in texts {
+            let body = serde_json::json!({
+                "model": self.model,
+                "prompt": text,
+                "stream": false
+            });
+
+            let url = format!("{}/api/embeddings", self.base_url);
+            let resp = self.http.post(&url)
+                .json(&body)
+                .send()
+                .await
+                .map_err(|e| ports::EmbedError::Http(e.to_string()))?;
+
+            let status = resp.status().as_u16();
+            if status != 200 {
+                let err_body = resp.text().await.unwrap_or_default();
+                return Err(ports::EmbedError::ProviderStatus { status, body: err_body });
+            }
+
+            #[derive(Deserialize)]
+            struct OllamaEmbedResponse {
+                embedding: Vec<f32>,
+            }
+
+            let parsed: OllamaEmbedResponse = resp.json().await
+                .map_err(|e| ports::EmbedError::Other(e.to_string()))?;
+            
+            results.push(parsed.embedding);
+        }
+        Ok(results)
+    }
+
+    fn dimension(&self) -> usize {
+        4096 // Qwen 2.5:7b a typiquement 4096 dimensions
     }
 
     fn name(&self) -> &'static str {

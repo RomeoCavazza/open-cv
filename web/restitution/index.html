@@ -79,13 +79,12 @@
             background: var(--hairline);
         }
         
-        .card { 
-            background: var(--surface-soft); 
-            border: 1px solid var(--hairline);
-            border-radius: 16px; 
-            padding: 24px; 
-            font-size: 15px; 
-            color: var(--body);
+        .card {
+            background: transparent;
+            padding: 0;
+            border-radius: 0;
+            border: none;
+            margin-bottom: 32px;
         }
         
         .tag { 
@@ -148,12 +147,11 @@
         }
 
         .fit-card {
-            background: white;
-            border: 1px solid var(--hairline);
-            border-radius: 20px;
-            padding: 32px;
-            text-align: center;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            background: transparent;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
         }
         
         .fit-score { 
@@ -185,14 +183,17 @@
 
         /* Force/faiblesse chips */
         .chip-list { display: flex; flex-wrap: wrap; gap: 8px; }
-        .chip { 
-            padding: 6px 12px; 
-            border-radius: 10px; 
-            font-size: 13px; 
-            font-weight: 600; 
+        .chip {
+            display: inline-block;
+            padding: 6px 0;
+            font-size: 14px;
+            font-weight: 500;
+            margin-right: 12px;
         }
-        .chip.force { background: #dcfce7; color: #166534; }
-        .chip.faiblesse { background: #fef2f2; color: #991b1b; }
+        .chip.force { color: var(--success); }
+        .chip.faiblesse { color: var(--danger); }
+        .chip.force::before { content: "✓ "; }
+        .chip.faiblesse::before { content: "× "; }
 
         /* Points attention */
         .point-item { 
@@ -268,14 +269,6 @@
 
         <!-- SECTION BASSE : Analyse IA personnalisée -->
         <div id="ai-analysis-section" class="hidden">
-            <hr class="divider">
-
-            <div class="ai-header">
-                <div class="ai-header-left">
-                    <h2>Analyse Stratégique</h2>
-                    <span class="ai-badge">AI Insights</span>
-                </div>
-            </div>
 
             <!-- NOUVELLES SECTIONS RICHES -->
             <div class="section" id="section-ai-entreprise">
@@ -327,10 +320,6 @@
                 <div id="ai-points"></div>
             </div>
 
-            <div class="section" id="section-questions">
-                <div class="section-title">Questions pour l'entretien</div>
-                <ul id="ai-questions"></ul>
-            </div>
         </div>
     </div>
 
@@ -352,7 +341,7 @@
 
         async function loadRestitution() {
             const urlParams = new URLSearchParams(window.location.search);
-            const jobId = urlParams.get('id');
+            const jobId = urlParams.get('slug') || urlParams.get('id');
             if (!jobId) {
                 return;
             }
@@ -360,19 +349,34 @@
             try {
                 // 1. Charger l'offre
                 const resOffre = await fetch(`/api/offres/${jobId}`);
-                if (!resOffre.ok) throw new Error("Offre non trouvée");
-                const offre = await resOffre.json();
-
-                renderOffre(offre);
+                let offreOk = false;
+                if (resOffre.ok) {
+                    const offre = await resOffre.json();
+                    renderOffre(offre);
+                    offreOk = true;
+                } else {
+                    console.warn("Offre brute non trouvée:", jobId);
+                    document.getElementById('job-title').innerText = jobId.replace(/_/g, ' ').toUpperCase(); 
+                }
 
                 // 2. Charger l'instance
-                const resInstance = await fetch(`/api/instances/${jobId}`);
+                const resInstance = await fetch(`/api/offres/${jobId}/instance`);
                 if (resInstance.ok) {
                     const instance = await resInstance.json();
                     renderInstance(instance);
+                    
+                    // Si on a une restitution mais pas d'offre, on nettoie les sections vides du haut
+                    if (!offreOk) {
+                        document.querySelectorAll('.section:not(#ai-analysis-section .section)').forEach(s => {
+                            if (!s.id.startsWith('section-ai')) s.classList.add('hidden');
+                        });
+                        document.querySelector('.offer-header').style.marginBottom = '0';
+                    }
+                } else {
+                    renderInstance({}); 
                 }
             } catch (e) {
-                console.error('Erreur:', e);
+                console.error('Erreur Critique:', e);
             }
         }
 
@@ -409,7 +413,53 @@
 
         function renderInstance(instance) {
             const restitution = instance.restitution || instance.notes?.restitution;
-            if (!restitution) return;
+            
+            if (!restitution) {
+                // Reset complet pour éviter le "bloated"
+                document.body.innerHTML = `
+                    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; font-family: 'Inter', sans-serif;">
+                        <button id="btn-generate-now" style="
+                            background: var(--primary);
+                            color: white;
+                            border: none;
+                            padding: 14px 28px;
+                            border-radius: 12px;
+                            font-weight: 600;
+                            cursor: pointer;
+                            font-size: 15px;
+                            transition: opacity 0.2s;
+                        ">Générer l'analyse</button>
+                    </div>
+                `;
+
+                document.getElementById('btn-generate-now').onclick = async () => {
+                    const btn = document.getElementById('btn-generate-now');
+                    btn.disabled = true;
+                    btn.innerText = "Génération en cours...";
+                    
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const jobId = urlParams.get('slug') || urlParams.get('id');
+
+                    try {
+                        const res = await fetch(`/api/instances/${jobId}/generate`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ deliverables: { restitution: true, resume: false, cover: false } })
+                        });
+                        if (res.ok) {
+                            window.location.reload();
+                        } else {
+                            alert("Erreur lors de la génération");
+                            btn.disabled = false;
+                            btn.innerText = "Réessayer";
+                        }
+                    } catch (e) {
+                        console.error(e);
+                        btn.disabled = false;
+                    }
+                };
+                return;
+            }
 
             document.getElementById('ai-analysis-section').classList.remove('hidden');
 
@@ -483,11 +533,11 @@
         function renderTags(containerId, items, sectionId) {
             const container = document.getElementById(containerId);
             container.innerHTML = '';
-            if (!items?.length) {
-                document.getElementById(sectionId)?.classList.add('hidden');
+            if (!items || items.length === 0) {
+                if (sectionId) document.getElementById(sectionId).classList.add('hidden');
                 return;
             }
-            document.getElementById(sectionId)?.classList.remove('hidden');
+            if (sectionId) document.getElementById(sectionId).classList.remove('hidden');
             items.forEach(s => {
                 const span = document.createElement('span');
                 span.className = 'tag';
@@ -499,11 +549,11 @@
         function renderList(listId, items, sectionId) {
             const list = document.getElementById(listId);
             list.innerHTML = '';
-            if (!items?.length) {
-                document.getElementById(sectionId)?.classList.add('hidden');
+            if (!items || items.length === 0) {
+                if (sectionId) document.getElementById(sectionId).classList.add('hidden');
                 return;
             }
-            document.getElementById(sectionId)?.classList.remove('hidden');
+            if (sectionId) document.getElementById(sectionId).classList.remove('hidden');
             items.forEach(m => {
                 const li = document.createElement('li');
                 li.innerText = m;

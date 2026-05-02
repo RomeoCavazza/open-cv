@@ -299,7 +299,13 @@ impl GenerateApplicationUseCase {
 
         self.events.done(instance_id, GenerationStep::Done, None);
 
-        let mut instance = input.existing_instance.unwrap();
+        // Récupérer l'instance (soit l'existante, soit celle qu'on vient de créer au début de l'exécution)
+        let mut instance = self.instances
+            .get_by_id(instance_id)
+            .await
+            .map_err(AppError::Repo)?
+            .ok_or_else(|| AppError::Other("Instance introuvable après génération".into()))?;
+
         instance.restitution = restitution.map(|r| serde_json::to_value(r).unwrap());
         instance.resume_json = resume.map(|r| serde_json::to_value(r).unwrap());
         instance.cover_letter_json = cover_letter.map(|cl| serde_json::to_value(cl).unwrap());
@@ -307,9 +313,9 @@ impl GenerateApplicationUseCase {
         instance.updated_at = Utc::now();
 
         self.instances
-            .upsert(&instance)
-            .await
-            .map_err(AppError::Repo)?;
+        .upsert(&instance)
+        .await
+        .map_err(AppError::Repo)?;
 
         Ok(instance)
     }
