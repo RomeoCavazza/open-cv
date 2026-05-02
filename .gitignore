@@ -23,3 +23,4 @@ Cargo.lock.bak
 /result
 /result-*
 /data/
+.cargo/
