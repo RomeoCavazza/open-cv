@@ -162,8 +162,21 @@ impl LlmClient for OllamaClient {
 
         let parsed: OllamaChatResponse =
             serde_json::from_str(&raw).map_err(|e| LlmError::Json(e.to_string()))?;
-        let json = serde_json::from_str(&parsed.message.content)
-            .map_err(|e| LlmError::Json(e.to_string()))?;
+        let content = parsed.message.content.trim();
+        let cleaned = if content.starts_with("```") {
+            content
+                .trim_start_matches('`')
+                .trim_start_matches("json")
+                .trim_end_matches('`')
+                .trim()
+        } else {
+            content
+        };
+
+        let json = serde_json::from_str(cleaned).map_err(|e| {
+            tracing::error!("Failed to parse JSON from Ollama: {}. Content: {}", e, cleaned);
+            LlmError::Json(e.to_string())
+        })?;
 
         Ok(json)
     }

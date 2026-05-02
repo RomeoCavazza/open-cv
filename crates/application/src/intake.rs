@@ -434,26 +434,42 @@ fn fallback_extraction(
     Option<String>,
     OffreStructured,
 ) {
-    // Tente d'extraire un intitulé de la première ligne non vide
-    let first_line = raw_text
+    let lines: Vec<&str> = raw_text
         .lines()
-        .find(|l| !l.trim().is_empty())
-        .unwrap_or("Offre importée manuellement")
-        .trim();
+        .map(|l| l.trim())
+        .filter(|l| !l.is_empty())
+        .take(10)
+        .collect();
 
-    let intitule = if first_line.len() > 120 {
-        format!("{}…", &first_line[..117])
-    } else {
-        first_line.to_string()
-    };
+    let mut intitule = "Offre importée".to_string();
+    let mut entreprise = "Non identifié".to_string();
+
+    if !lines.is_empty() {
+        intitule = lines[0].to_string();
+        if lines.len() > 1 {
+            // Souvent le nom de l'entreprise est sur la 2ème ligne ou contient "chez", "at"
+            for line in lines.iter().skip(1).take(3) {
+                if line.to_lowercase().contains("chez") || line.to_lowercase().contains("at ") {
+                    entreprise = line.replace("chez", "").replace("Chez", "").replace("at", "").replace("At", "").trim().to_string();
+                    break;
+                }
+            }
+            if entreprise == "Non identifié" {
+                entreprise = lines[1].to_string();
+            }
+        }
+    }
+
+    if intitule.len() > 120 { intitule = format!("{}…", &intitule[..117]); }
+    if entreprise.len() > 100 { entreprise = format!("{}…", &entreprise[..97]); }
 
     (
         intitule,
-        "Non identifié".to_string(),
+        entreprise,
         None,
         None,
         OffreStructured {
-            resume_court: "Extraction automatique échouée — données brutes disponibles.".into(),
+            resume_court: "Extraction LLM échouée. Données brutes conservées.".into(),
             stack: vec![],
             missions: vec![],
             exigences: vec![],

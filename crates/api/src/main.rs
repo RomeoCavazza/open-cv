@@ -186,6 +186,8 @@ async fn main() -> anyhow::Result<()> {
         instance_repo,
         generate_uc,
         intake_uc,
+        chunk_repo: chunk_repo.clone(),
+        embedder: embedder.clone(),
         llm_registry,
     };
 
@@ -510,6 +512,8 @@ async fn chat_handler(
 ) -> Result<Json<application::chat::ChatResponse>, ApiError> {
     let usecase = application::chat::ChatWithApplicationUseCase::new(
         state.instance_repo.clone(),
+        state.chunk_repo.clone(),
+        state.embedder.clone(),
         state.llm_registry.as_ref().clone(),
     );
 

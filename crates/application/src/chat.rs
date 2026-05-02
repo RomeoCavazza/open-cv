@@ -1,7 +1,8 @@
-use domain::{Instance, InstanceId, InstanceStatus, Slug};
-use ports::{InstanceRepo, LlmClient, OffreRepo};
+use domain::Instance;
+use ports::{InstanceRepo, LlmClient, ChunkRepo, Embedder, EmbedMode};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
+use tracing::{info, warn};
 
 #[derive(Debug, Deserialize)]
 pub struct ChatRequest {
@@ -17,16 +18,22 @@ pub struct ChatResponse {
 
 pub struct ChatWithApplicationUseCase {
     pub instance_repo: Arc<dyn InstanceRepo>,
+    pub chunk_repo: Arc<dyn ChunkRepo>,
+    pub embedder: Arc<dyn Embedder>,
     pub llm_registry: std::collections::HashMap<String, Arc<dyn LlmClient>>,
 }
 
 impl ChatWithApplicationUseCase {
     pub fn new(
         instance_repo: Arc<dyn InstanceRepo>,
+        chunk_repo: Arc<dyn ChunkRepo>,
+        embedder: Arc<dyn Embedder>,
         llm_registry: std::collections::HashMap<String, Arc<dyn LlmClient>>,
     ) -> Self {
         Self {
             instance_repo,
+            chunk_repo,
+            embedder,
             llm_registry,
         }
     }
@@ -43,18 +50,41 @@ impl ChatWithApplicationUseCase {
             .or_else(|| self.llm_registry.get("ollama"))
             .ok_or_else(|| anyhow::anyhow!("LLM non configuré"))?;
 
-        // 3. Construire le prompt de mutation
-        let system_prompt = "Tu es un expert en recrutement. L'utilisateur veut modifier son CV ou sa lettre de motivation. Tu DOIS renvoyer le JSON complet mis à jour. NE RÉPONDS QUE PAR LE JSON, SANS TEXTE AVANT OU APRÈS.";
+        // 3. RAG : Récupérer des chunks pertinents basés sur le message de l'utilisateur
+        let query_text = format!("{} context for job application", req.message);
+        let embeddings = self.embedder.embed(&[&query_text], EmbedMode::Query).await
+            .map_err(|e| anyhow::anyhow!("Embedding failed: {}", e))?;
+        
+        let query_vec = embeddings.first().ok_or_else(|| anyhow::anyhow!("No embeddings returned"))?;
+        
+        let chunks = self.chunk_repo.top_k_by_embedding(instance.profil_id, query_vec, 5).await?;
+        let context = chunks.iter()
+            .map(|(c, _)| format!("### {} - {}\n{}", c.kind.as_str(), c.titre, c.content))
+            .collect::<Vec<_>>()
+            .join("\n\n");
+
+        info!("RAG: {} chunks de contexte trouvés pour le chat", chunks.len());
+
+        // 4. Construire le prompt de mutation
+        let system_prompt = "Tu es un expert en recrutement. L'utilisateur veut modifier son CV ou sa lettre de motivation. \
+            Tu as accès à son profil complet via le contexte RAG fourni ci-dessous. \
+            Tu DOIS renvoyer le JSON complet mis à jour. \
+            CONSIGNE : Si l'utilisateur demande une info présente dans le contexte, utilise-la. \
+            RÈGLE : NE RÉPONDS QUE PAR LE JSON, SANS TEXTE AVANT OU APRÈS.";
 
         let user_prompt = format!(
-            "Message de l'utilisateur: {}\n\nJSON Actuel du CV: {}\n\nJSON Actuel de la Lettre: {}",
+            "CONTEXTE DU PROFIL (RAG):\n{}\n\n\
+            DEMANDE DE L'UTILISATEUR: {}\n\n\
+            JSON ACTUEL DU CV: {}\n\n\
+            JSON ACTUEL DE LA LETTRE: {}",
+            context,
             req.message,
             serde_json::to_string_pretty(&instance.resume_json)?,
             serde_json::to_string_pretty(&instance.cover_letter_json)?
         );
 
-        // 4. Appeler le LLM via la méthode complete
-        let req = ports::CompletionRequest {
+        // 5. Appeler le LLM
+        let completion_req = ports::CompletionRequest {
             system: Some(system_prompt.to_string()),
             messages: vec![ports::Message {
                 role: ports::Role::User,
@@ -65,11 +95,10 @@ impl ChatWithApplicationUseCase {
             temperature: Some(0.0),
         };
 
-        let response = llm.complete(req).await?;
+        let response = llm.complete(completion_req).await?;
         let response_text = response.text;
         
-        // 5. Parser la réponse (extraction du JSON si besoin)
-        // On essaie de trouver un bloc JSON dans la réponse si elle contient du texte autour
+        // 6. Parser la réponse
         let json_str = if let Some(start) = response_text.find('{') {
             if let Some(end) = response_text.rfind('}') {
                 &response_text[start..=end]
@@ -83,9 +112,12 @@ impl ChatWithApplicationUseCase {
              if let Some(cover) = new_data.get("cover") {
                  instance.cover_letter_json = Some(cover.clone());
              }
+        } else {
+            warn!("Chat LLM n'a pas renvoyé un JSON valide : {}", response_text);
         }
 
-        // 6. Sauvegarder
+        // 7. Sauvegarder
+        instance.updated_at = chrono::Utc::now();
         self.instance_repo.upsert(&instance).await?;
 
         Ok(ChatResponse {
