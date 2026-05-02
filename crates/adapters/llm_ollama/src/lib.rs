@@ -174,7 +174,11 @@ impl LlmClient for OllamaClient {
         };
 
         let json = serde_json::from_str(cleaned).map_err(|e| {
-            tracing::error!("Failed to parse JSON from Ollama: {}. Content: {}", e, cleaned);
+            tracing::error!(
+                "Failed to parse JSON from Ollama: {}. Content: {}",
+                e,
+                cleaned
+            );
             LlmError::Json(e.to_string())
         })?;
 
@@ -189,7 +193,11 @@ impl LlmClient for OllamaClient {
 #[async_trait]
 impl ports::Embedder for OllamaClient {
     #[instrument(skip(self, texts), fields(model = %self.model))]
-    async fn embed(&self, texts: &[&str], _mode: ports::EmbedMode) -> Result<Vec<Vec<f32>>, ports::EmbedError> {
+    async fn embed(
+        &self,
+        texts: &[&str],
+        _mode: ports::EmbedMode,
+    ) -> Result<Vec<Vec<f32>>, ports::EmbedError> {
         let mut results = Vec::new();
         for text in texts {
             let body = serde_json::json!({
@@ -199,7 +207,9 @@ impl ports::Embedder for OllamaClient {
             });
 
             let url = format!("{}/api/embeddings", self.base_url);
-            let resp = self.http.post(&url)
+            let resp = self
+                .http
+                .post(&url)
                 .json(&body)
                 .send()
                 .await
@@ -208,7 +218,10 @@ impl ports::Embedder for OllamaClient {
             let status = resp.status().as_u16();
             if status != 200 {
                 let err_body = resp.text().await.unwrap_or_default();
-                return Err(ports::EmbedError::ProviderStatus { status, body: err_body });
+                return Err(ports::EmbedError::ProviderStatus {
+                    status,
+                    body: err_body,
+                });
             }
 
             #[derive(Deserialize)]
@@ -216,9 +229,11 @@ impl ports::Embedder for OllamaClient {
                 embedding: Vec<f32>,
             }
 
-            let parsed: OllamaEmbedResponse = resp.json().await
+            let parsed: OllamaEmbedResponse = resp
+                .json()
+                .await
                 .map_err(|e| ports::EmbedError::Other(e.to_string()))?;
-            
+
             results.push(parsed.embedding);
         }
         Ok(results)

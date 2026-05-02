@@ -101,11 +101,16 @@ pub async fn update_active_profile_handler(
         .ok_or_else(|| ApiError::NotFound("Aucun profil actif trouvé".to_string()))?;
 
     // FUSION INTELLIGENTE : On garde l'ancien contenu et on écrase seulement ce qui arrive
-    if let (Some(old_obj), Some(new_obj)) = (profil.content.as_object_mut(), new_content.as_object()) {
+    if let (Some(old_obj), Some(new_obj)) =
+        (profil.content.as_object_mut(), new_content.as_object())
+    {
         for (k, v) in new_obj {
             // On n'écrase pas avec du null/vide si c'est sensible (documents)
             if k == "documents" {
-                if let (Some(old_docs), Some(new_docs)) = (old_obj.get_mut("documents").and_then(|d| d.as_object_mut()), v.as_object()) {
+                if let (Some(old_docs), Some(new_docs)) = (
+                    old_obj.get_mut("documents").and_then(|d| d.as_object_mut()),
+                    v.as_object(),
+                ) {
                     for (dk, dv) in new_docs {
                         if !dv.is_null() {
                             old_docs.insert(dk.clone(), dv.clone());

@@ -450,7 +450,13 @@ fn fallback_extraction(
             // Souvent le nom de l'entreprise est sur la 2ème ligne ou contient "chez", "at"
             for line in lines.iter().skip(1).take(3) {
                 if line.to_lowercase().contains("chez") || line.to_lowercase().contains("at ") {
-                    entreprise = line.replace("chez", "").replace("Chez", "").replace("at", "").replace("At", "").trim().to_string();
+                    entreprise = line
+                        .replace("chez", "")
+                        .replace("Chez", "")
+                        .replace("at", "")
+                        .replace("At", "")
+                        .trim()
+                        .to_string();
                     break;
                 }
             }
@@ -460,8 +466,12 @@ fn fallback_extraction(
         }
     }
 
-    if intitule.len() > 120 { intitule = format!("{}…", &intitule[..117]); }
-    if entreprise.len() > 100 { entreprise = format!("{}…", &entreprise[..97]); }
+    if intitule.len() > 120 {
+        intitule = format!("{}…", &intitule[..117]);
+    }
+    if entreprise.len() > 100 {
+        entreprise = format!("{}…", &entreprise[..97]);
+    }
 
     (
         intitule,

@@ -197,7 +197,10 @@ async fn main() -> anyhow::Result<()> {
         .route("/health", get(health))
         .route("/api/offres", get(list_offres))
         .route("/api/offres/:slug", get(get_offre_by_slug))
-        .route("/api/offres/:slug/instance", get(get_instance_by_offre_slug))
+        .route(
+            "/api/offres/:slug/instance",
+            get(get_instance_by_offre_slug),
+        )
         .route("/api/chat", post(chat_handler))
         .route("/api/ingest", post(ingest_handler))
         .route("/api/profiles", get(list_profiles_handler))
@@ -459,12 +462,18 @@ async fn get_instance_by_offre_slug(
     let slug = domain::Slug::parse(slug).map_err(|e| ApiError::BadRequest(e.to_string()))?;
 
     // 1. Trouver l'offre
-    let offre = state.offre_repo.get_by_slug(&slug).await
+    let offre = state
+        .offre_repo
+        .get_by_slug(&slug)
+        .await
         .map_err(|e| ApiError::Internal(e.to_string()))?
         .ok_or_else(|| ApiError::NotFound(format!("Offre {} inconnue", slug)))?;
 
     // 2. Trouver l'instance via le repo
-    let instance = state.instance_repo.get_by_offre_id(offre.id).await
+    let instance = state
+        .instance_repo
+        .get_by_offre_id(offre.id)
+        .await
         .map_err(|e| ApiError::Internal(e.to_string()))?
         .ok_or_else(|| ApiError::NotFound(format!("Pas d'instance pour l'offre {}", slug)))?;
 
@@ -518,7 +527,9 @@ async fn chat_handler(
         state.llm_registry.as_ref().clone(),
     );
 
-    let res = usecase.execute(req).await
+    let res = usecase
+        .execute(req)
+        .await
         .map_err(|e| ApiError::Internal(e.to_string()))?;
 
     Ok(Json(res))
@@ -539,7 +550,11 @@ async fn get_active_profile_calendar_handler(
                 )
                     .into_response()
             } else {
-                (axum::http::StatusCode::NOT_FOUND, "Aucun calendrier configuré").into_response()
+                (
+                    axum::http::StatusCode::NOT_FOUND,
+                    "Aucun calendrier configuré",
+                )
+                    .into_response()
             }
         }
         _ => (axum::http::StatusCode::NOT_FOUND, "Profil introuvable").into_response(),

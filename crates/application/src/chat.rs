@@ -1,5 +1,5 @@
 use domain::Instance;
-use ports::{InstanceRepo, LlmClient, ChunkRepo, Embedder, EmbedMode};
+use ports::{ChunkRepo, EmbedMode, Embedder, InstanceRepo, LlmClient};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tracing::{info, warn};
@@ -41,29 +41,45 @@ impl ChatWithApplicationUseCase {
     pub async fn execute(&self, req: ChatRequest) -> anyhow::Result<ChatResponse> {
         // 1. Récupérer l'instance actuelle
         let instance_uuid = uuid::Uuid::parse_str(&req.instance_id)?;
-        let mut instance = self.instance_repo.get_by_id(domain::InstanceId::from_uuid(instance_uuid))
+        let mut instance = self
+            .instance_repo
+            .get_by_id(domain::InstanceId::from_uuid(instance_uuid))
             .await?
             .ok_or_else(|| anyhow::anyhow!("Instance non trouvée"))?;
 
         // 2. Choisir le LLM
-        let llm = self.llm_registry.get(&req.llm_provider)
+        let llm = self
+            .llm_registry
+            .get(&req.llm_provider)
             .or_else(|| self.llm_registry.get("ollama"))
             .ok_or_else(|| anyhow::anyhow!("LLM non configuré"))?;
 
         // 3. RAG : Récupérer des chunks pertinents basés sur le message de l'utilisateur
         let query_text = format!("{} context for job application", req.message);
-        let embeddings = self.embedder.embed(&[&query_text], EmbedMode::Query).await
+        let embeddings = self
+            .embedder
+            .embed(&[&query_text], EmbedMode::Query)
+            .await
             .map_err(|e| anyhow::anyhow!("Embedding failed: {}", e))?;
-        
-        let query_vec = embeddings.first().ok_or_else(|| anyhow::anyhow!("No embeddings returned"))?;
-        
-        let chunks = self.chunk_repo.top_k_by_embedding(instance.profil_id, query_vec, 5).await?;
-        let context = chunks.iter()
+
+        let query_vec = embeddings
+            .first()
+            .ok_or_else(|| anyhow::anyhow!("No embeddings returned"))?;
+
+        let chunks = self
+            .chunk_repo
+            .top_k_by_embedding(instance.profil_id, query_vec, 5)
+            .await?;
+        let context = chunks
+            .iter()
             .map(|(c, _)| format!("### {} - {}\n{}", c.kind.as_str(), c.titre, c.content))
             .collect::<Vec<_>>()
             .join("\n\n");
 
-        info!("RAG: {} chunks de contexte trouvés pour le chat", chunks.len());
+        info!(
+            "RAG: {} chunks de contexte trouvés pour le chat",
+            chunks.len()
+        );
 
         // 4. Construire le prompt de mutation
         let system_prompt = "Tu es un expert en recrutement. L'utilisateur veut modifier son CV ou sa lettre de motivation. \
@@ -97,23 +113,30 @@ impl ChatWithApplicationUseCase {
 
         let response = llm.complete(completion_req).await?;
         let response_text = response.text;
-        
+
         // 6. Parser la réponse
         let json_str = if let Some(start) = response_text.find('{') {
             if let Some(end) = response_text.rfind('}') {
                 &response_text[start..=end]
-            } else { &response_text }
-        } else { &response_text };
+            } else {
+                &response_text
+            }
+        } else {
+            &response_text
+        };
 
         if let Ok(new_data) = serde_json::from_str::<serde_json::Value>(json_str) {
-             if let Some(resume) = new_data.get("resume") {
-                 instance.resume_json = Some(resume.clone());
-             }
-             if let Some(cover) = new_data.get("cover") {
-                 instance.cover_letter_json = Some(cover.clone());
-             }
+            if let Some(resume) = new_data.get("resume") {
+                instance.resume_json = Some(resume.clone());
+            }
+            if let Some(cover) = new_data.get("cover") {
+                instance.cover_letter_json = Some(cover.clone());
+            }
         } else {
-            warn!("Chat LLM n'a pas renvoyé un JSON valide : {}", response_text);
+            warn!(
+                "Chat LLM n'a pas renvoyé un JSON valide : {}",
+                response_text
+            );
         }
 
         // 7. Sauvegarder

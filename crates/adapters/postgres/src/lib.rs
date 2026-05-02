@@ -394,7 +394,10 @@ impl InstanceRepo for InstanceRepoPg {
         Ok(())
     }
 
-    async fn get_by_offre_id(&self, offre_id: domain::OffreId) -> Result<Option<Instance>, RepoError> {
+    async fn get_by_offre_id(
+        &self,
+        offre_id: domain::OffreId,
+    ) -> Result<Option<Instance>, RepoError> {
         let row = sqlx::query(
             r#"
             SELECT id, slug, offre_id, profil_id, status::text,
