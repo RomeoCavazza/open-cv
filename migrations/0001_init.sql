@@ -79,11 +79,14 @@ CREATE TRIGGER tg_infer_offre_category
 -- PROFILS
 -- ─────────────────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS profils (
-    id              UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-    label           TEXT        NOT NULL,
-    content         JSONB       NOT NULL,
-    is_active       BOOLEAN     NOT NULL DEFAULT false,
-    created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+    id                      UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+    label                   TEXT        NOT NULL,
+    content                 JSONB       NOT NULL,
+    is_active               BOOLEAN     NOT NULL DEFAULT false,
+    calendar_pdf            BYTEA,
+    resume_template         JSONB,
+    cover_letter_template   JSONB,
+    created_at              TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE UNIQUE INDEX IF NOT EXISTS profils_one_active ON profils (is_active) WHERE is_active = true;
 
