@@ -2,8 +2,8 @@
 /target/
 Cargo.lock.bak
 
-# sqlx offline cache (commit `.sqlx/` quand tu en auras besoin)
-# /.sqlx/
+# sqlx offline cache (on l'ignore maintenant car la CI utilise un service PG)
+/.sqlx/
 
 # Postgres local (créé par `just db-init`)
 /.pg/
