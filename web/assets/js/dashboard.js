@@ -180,13 +180,13 @@ async function loadOffers() {
         
         const groups = {};
         visibleInboxOffers.forEach(o => {
-            const cat = o.category || "AUTRES";
+            const cat = o.category || state.i18n.translations[state.i18n.current].others;
             if (!groups[cat]) groups[cat] = [];
             groups[cat].push(o);
         });
 
         Object.keys(groups).sort().forEach(cat => {
-            const isDefault = cat === "AUTRES" || cat.toUpperCase().includes("INBOX");
+            const isDefault = cat === state.i18n.translations[state.i18n.current].others || cat.toUpperCase().includes("INBOX");
             const isCollapsed = state.collapsedOfferCategories.includes(cat);
             let groupContainer = list;
             
@@ -523,7 +523,7 @@ document.getElementById('btn-save-profile').onclick = async () => {
         coverLetterTemplate = JSON.parse(document.getElementById('prof-cover-letter-template').value || '{}');
     } catch (error) {
         console.error("Profile document JSON invalid", error);
-        alert("Le JSON du modèle CV ou du modèle lettre est invalide.");
+        alert(state.i18n.translations[state.i18n.current].json_invalid);
         btn.disabled = false;
         return;
     }
@@ -594,11 +594,11 @@ document.getElementById('btn-save-profile').onclick = async () => {
 
     try {
         await api.saveProfile(content);
-        alert("Profil sauvegardé !");
+        alert(state.i18n.translations[state.i18n.current].profile_saved);
         await loadProfile();
     } catch (e) {
         console.error("Profile save failed", e);
-        alert("Erreur de sauvegarde du profil.");
+        alert(state.i18n.translations[state.i18n.current].profile_save_error);
     } finally { 
         btn.disabled = false; 
     }

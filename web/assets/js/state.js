@@ -26,7 +26,16 @@ export let i18n = {
             ph_school: "École", ph_degree: "Diplôme", ph_lang: "Langue", ph_level: "Niveau", ph_skill_input: "Ajouter une compétence...",
             ph_cat_name: "Nom de catégorie", inbox: "INBOX", archive: "ARCHIVE", old_offer: "ANCIENNE OFFRE", old_applications: "Anciennes candidatures", applications_in_progress: "Candidatures en cours", applications_treated: "Candidatures traitées", applications_list: "Candidatures",
             nav_dashboard: "Dashboard", nav_applications: "Applications", nav_profile: "Profil",
-            ai_prompt_placeholder: "Demander des modifications"
+            ai_prompt_placeholder: "Demander des modifications",
+            ph_annexe_name_default: "Nouveau document",
+            ph_click_select_file: "Cliquez pour sélectionner un fichier",
+            ph_drag_reorder: "Glisser pour réordonner",
+            ph_role: "Titre", ph_link: "Lien", ph_period: "Période", ph_desc: "Description",
+            ph_school: "École", ph_degree: "Diplôme", ph_lang: "Langue", ph_level: "Niveau",
+            inbox_count: "INBOX (0)", send: "Envoyer",
+            internship: "Stage", apprenticeship_short: "Alternance", apprenticeship_full: "Apprentissage", cdd: "CDD", cdi: "CDI",
+            ph_resume_json: "Contenu JSON du modèle de CV...", ph_cover_json: "Contenu JSON du modèle de lettre...",
+            others: "AUTRES", profile_saved: "Profil sauvegardé !", profile_save_error: "Erreur de sauvegarde du profil.", json_invalid: "Le JSON du modèle CV ou du modèle lettre est invalide."
         },
         en: {
             new_application: "New Application",
@@ -48,11 +57,20 @@ export let i18n = {
             documents_annexes: "Documents", resume_template: "Resume template", cover_letter_template: "Cover letter template", apprenticeship_calendar: "Apprenticeship calendar",
             annexes: "Supplementary Annexes", ph_annexe_name: "Document Name",
             restitution: "Restitution", resume: "Resume", cover_letter: "Cover Letter", download: "Download PDF",
-            ph_role: "Title", ph_link: "Link", ph_period: "Period", ph_desc: "Description (bullet points)",
+            ph_role: "Title", ph_link: "Link", ph_period: "Period", ph_desc: "Description",
             ph_school: "School", ph_degree: "Degree", ph_lang: "Language", ph_level: "Level", ph_skill_input: "Add skill... (Enter)",
             ph_cat_name: "Category Name", inbox: "INBOX", archive: "ARCHIVE", old_offer: "OLD OFFERS", old_applications: "Old applications", applications_in_progress: "Applications in progress", applications_treated: "Processed applications", applications_list: "Applications",
             nav_dashboard: "Dashboard", nav_applications: "Applications", nav_profile: "Profile",
-            ai_prompt_placeholder: "Request changes"
+            ai_prompt_placeholder: "Request changes",
+            ph_annexe_name_default: "New document",
+            ph_click_select_file: "Click to select a file",
+            ph_drag_reorder: "Drag to reorder",
+            ph_role: "Title", ph_link: "Link", ph_period: "Period", ph_desc: "Description",
+            ph_school: "School", ph_degree: "Degree", ph_lang: "Language", ph_level: "Level",
+            inbox_count: "INBOX (0)", send: "Send",
+            internship: "Internship", apprenticeship_short: "Apprenticeship", apprenticeship_full: "Full Apprenticeship", cdd: "Fixed-term", cdi: "Permanent",
+            ph_resume_json: "Resume JSON template content...", ph_cover_json: "Cover letter JSON template content...",
+            others: "OTHERS", profile_saved: "Profile saved!", profile_save_error: "Profile save failed.", json_invalid: "Resume or cover letter JSON template is invalid."
         }
     }
 };

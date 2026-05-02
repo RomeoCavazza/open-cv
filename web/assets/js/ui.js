@@ -10,6 +10,18 @@ export function updateUIStrings() {
         const key = el.getAttribute('data-i18n-placeholder');
         if (t[key]) el.placeholder = t[key];
     });
+    document.querySelectorAll('[data-i18n-title]').forEach(el => {
+        const key = el.getAttribute('data-i18n-title');
+        if (t[key]) el.title = t[key];
+    });
+    document.querySelectorAll('[data-i18n-aria-label]').forEach(el => {
+        const key = el.getAttribute('data-i18n-aria-label');
+        if (t[key]) el.setAttribute('aria-label', t[key]);
+    });
+    document.querySelectorAll('[data-i18n-value]').forEach(el => {
+        const key = el.getAttribute('data-i18n-value');
+        if (t[key] && !el.value) el.value = t[key];
+    });
 }
 
 export function dragHandleMarkup() {
@@ -17,8 +29,8 @@ export function dragHandleMarkup() {
         <button
             type="button"
             class="drag-handle"
-            title="Glisser pour réordonner"
-            aria-label="Glisser pour réordonner"
+            data-i18n-title="ph_drag_reorder"
+            data-i18n-aria-label="ph_drag_reorder"
             style="display:flex; align-items:center; justify-content:center; width:34px; height:34px; border:none; background:transparent; cursor:grab; color:var(--muted-strong); border-radius:8px; padding:0;"
         >
             <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
@@ -235,7 +247,7 @@ export function createAnnexeRow(item = {}) {
     div.innerHTML = `
         <div class="doc-field-header" style="margin-bottom:8px;">
             <div class="doc-field-info">
-                <input type="text" class="annexe-name profile-field-label" value="${item.label || item.name || 'Nouveau document'}" style="background:transparent; border:none; color:var(--heading); padding:0; margin:0; outline:none; width:auto; min-width:200px; cursor:text;" title="Cliquez pour renommer">
+                <input type="text" class="annexe-name profile-field-label" data-i18n-value="ph_annexe_name_default" value="${item.label || item.name || ''}" style="background:transparent; border:none; color:var(--heading); padding:0; margin:0; outline:none; width:auto; min-width:200px; cursor:text;">
             </div>
             <div style="display:flex; gap:12px; align-items:center;">
                 <div style="display:flex; gap:4px;">
@@ -245,7 +257,7 @@ export function createAnnexeRow(item = {}) {
         </div>
         <div class="annexe-preview-container" style="position:relative; width:100%; height:200px; border:1px solid var(--hairline); border-radius:8px; background:white; overflow:hidden; cursor:pointer;">
             <iframe class="annexe-preview" style="width:100%; height:100%; border:none; pointer-events:none; ${item.data_url ? '' : 'display:none;'}"></iframe>
-            <div class="annexe-preview-placeholder" style="position:absolute; inset:0; display:${item.data_url ? 'none' : 'flex'}; align-items:center; justify-content:center; color:var(--muted); font-size:12px;">
+            <div class="annexe-preview-placeholder" data-i18n="ph_click_select_file" style="position:absolute; inset:0; display:${item.data_url ? 'none' : 'flex'}; align-items:center; justify-content:center; color:var(--muted); font-size:12px;">
                 Cliquez pour sélectionner un fichier
             </div>
         </div>
