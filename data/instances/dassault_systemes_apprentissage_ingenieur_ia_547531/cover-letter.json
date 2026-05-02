@@ -1,0 +1,39 @@
+{
+  "profile": {
+    "name": "Roméo CAVAZZA",
+    "address": "88ter Avenue Parmentier, 75011 Paris",
+    "phone": "06 99 25 67 58",
+    "email": "romeo.cavazza@gmail.com",
+    "links": {
+      "linkedin": "linkedin.com/in/romeo-cavazza",
+      "github": "github.com/RomeoCavazza",
+      "website": "www.romeocavazza.com"
+    }
+  },
+  "letter": {
+    "company": "Dassault Systèmes",
+    "date": "25 avril 2026",
+    "subject": "ALTERNANCE - Ingénieur IA (CATIA Cyber System)",
+    "pitch": "Passionné par la modélisation de systèmes complexes et l'IA générative, je souhaite rejoindre Dassault Systèmes pour infuser des capacités d'intelligence artificielle au cœur des outils d'ingénierie CATIA.",
+    "metadata": [
+      "Durée : 24 mois — à partir de septembre 2026",
+      "Rythme : 6 semaines en entreprise / 2 semaines en cours"
+    ],
+    "greeting": "Madame, Monsieur,",
+    "paragraphs": [
+      "Actuellement étudiant en Master Intelligence Artificielle à EPITECH Paris, c'est avec un vif intérêt que je postule pour l'alternance d'INGÉNIEUR IA au sein du département CATIA Cyber System de Dassault Systèmes à Vélizy.",
+      "Votre mission d'infuser des capacités d'IA dans les outils de conception pour assister les ingénieurs dans la modélisation de systèmes complexes résonne particulièrement avec mon parcours. Avec mon projet Shellgeist, j'ai développé un agent autonome capable d'automatiser des tâches d'édition de code complexes, démontrant ainsi ma capacité à concevoir des briques d'IA agissant comme de véritables assistants d'ingénierie.",
+      "Ma maîtrise du C++ et du calcul scientifique (CUDA, Numba), illustrée par ma 2ème place au Hackathon IA & 5G, me permet d'appréhender les enjeux de performance inhérents aux logiciels de simulation de pointe. Passionné par l'IA générative (LangChain, LangGraph), je suis convaincu que l'hybridation entre modélisation système et raisonnement agentique est la clé pour créer les outils de conception de demain.",
+      "Rejoindre Dassault Systèmes, fleuron mondial de l'innovation logicielle, représenterait pour moi une opportunité unique de contribuer au développement de CATIA, la référence mondiale pour l'ingénierie de pointe."
+    ],
+    "closing": "Je reste à votre entière disposition pour vous présenter mon parcours lors d'un entretien.",
+    "signature": "Cordialement,\nRoméo Cavazza",
+    "boldKeyword": "ALTERNANCE",
+    "labels": {
+      "linkedin": "LinkedIn",
+      "github": "GitHub",
+      "website": "Site web",
+      "download": "Télécharger en PDF (A4)"
+    }
+  }
+}

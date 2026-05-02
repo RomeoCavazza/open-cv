@@ -49,7 +49,7 @@ The database stores the full application context. Local JSON and Markdown files 
 - **`profils`**: stores candidate profiles, with a single active profile at a time in the current setup.
 - **`chunks`**: stores profile pieces (experiences, skills) with `embedding (1024)` vectors for RAG.
 - **`instances`**: links a profile to an offer; stores generated analysis, resume, and cover letter.
-- **`llm_calls`**: [Planned] observability table for AI costs, latency, and token usage.
+- **`llm_calls`**: observability table for AI costs, latency, and token usage.
 
 ## 4. AI Generation Pipeline
 
@@ -88,3 +88,4 @@ The frontend is intentionally lightweight.
 - **Static HTML + JS + CSS**: there is no dedicated frontend build pipeline in the repository.
 - **Iframe isolation**: the resume, cover letter, and analysis renderers stay isolated from the main UI.
 - **Static serving through Axum**: the backend serves the `web/` directory directly and exposes the REST API consumed by the interface.
+- **Full I18n Support**: 100% localization support for French and English across all UI components and dynamic generators.
