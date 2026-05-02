@@ -1,5 +1,0 @@
-[advisories]
-ignore = [
-    # Marvin Attack in RSA. Comes from sqlx-mysql which is not activated in this project.
-    "RUSTSEC-2023-0071"
-]
