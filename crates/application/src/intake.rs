@@ -34,6 +34,7 @@ pub struct IntakeInput {
 #[derive(Debug, Clone, Serialize)]
 pub struct IntakeOutput {
     pub offre_slug: String,
+    pub instance_id: domain::InstanceId,
     pub instance_slug: String,
     /// `true` si l'offre existait déjà (dédup).
     pub was_duplicate: bool,
@@ -225,6 +226,7 @@ impl IntakeOffreUseCase {
                 info!(slug = %existing_offre.slug, instance_slug = %instance.slug, "offre déjà ingérée avec instance");
                 return Ok(IntakeOutput {
                     offre_slug: existing_offre.slug.to_string(),
+                    instance_id: instance.id,
                     instance_slug: instance.slug.to_string(),
                     was_duplicate: true,
                 });
@@ -241,6 +243,7 @@ impl IntakeOffreUseCase {
 
             return Ok(IntakeOutput {
                 offre_slug: existing_offre.slug.to_string(),
+                instance_id: instance.id,
                 instance_slug: instance.slug.to_string(),
                 was_duplicate: true,
             });
@@ -283,6 +286,7 @@ impl IntakeOffreUseCase {
 
         Ok(IntakeOutput {
             offre_slug: slug.to_string(),
+            instance_id: instance.id,
             instance_slug: instance.slug.to_string(),
             was_duplicate: false,
         })

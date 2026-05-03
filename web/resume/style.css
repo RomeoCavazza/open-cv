@@ -4,7 +4,7 @@
     --cv-muted: #64748b;
     --cv-surface: #ffffff;
     --cv-preview-surface: #ffffff;
-    --font-main: 'Inter', sans-serif;
+    --font-main: 'Inter', -apple-system, sans-serif;
     --a4-width: 210mm;
     --a4-height: 297mm;
     --cv-header-height: 290px;

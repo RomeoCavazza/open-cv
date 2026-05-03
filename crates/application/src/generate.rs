@@ -225,97 +225,112 @@ impl GenerateApplicationUseCase {
             .await
             .map_err(AppError::Repo)?;
 
-        // Étape 1 : RETRIEVE
-        self.events.started(instance_id, GenerationStep::Retrieve);
-        let candidates = self.retrieve_chunks(&offre, profil.id).await?;
-        self.events.done(
-            instance_id,
-            GenerationStep::Retrieve,
-            Some(format!("{} chunks candidats", candidates.len())),
-        );
+        let pipeline_result: Result<Instance, GenerateError> = async {
+            // Étape 1 : RETRIEVE
+            self.events.started(instance_id, GenerationStep::Retrieve);
+            let candidates = self.retrieve_chunks(&offre, profil.id).await?;
+            self.events.done(
+                instance_id,
+                GenerationStep::Retrieve,
+                Some(format!("{} chunks candidats", candidates.len())),
+            );
 
-        if candidates.is_empty() {
-            return Err(GenerateError::AucunChunkPertinent);
+            if candidates.is_empty() {
+                return Err(GenerateError::AucunChunkPertinent);
+            }
+
+            // Étape 2 : RERANK
+            self.events.started(instance_id, GenerationStep::Rerank);
+            let retained = self.rerank(&offre, &candidates, llm.clone()).await?;
+            self.events.done(
+                instance_id,
+                GenerationStep::Rerank,
+                Some(format!("{} chunks retenus", retained.len())),
+            );
+
+            // Étape 3 : PLAN
+            self.events.started(instance_id, GenerationStep::Plan);
+            let plan = self.plan(&offre, &retained, llm.clone()).await?;
+            self.events
+                .done(instance_id, GenerationStep::Plan, Some(plan.angle.clone()));
+
+            // Étape 4 : 3 générations en parallèle.
+            // tokio::join! attend les 3, peu importe l'ordre de terminaison.
+            let (restitution_res, resume_res, cover_letter_res) = tokio::join!(
+                self.maybe_generate_restitution(input.livrables, &offre, instance_id, llm.clone()),
+                self.maybe_generate_resume(
+                    input.livrables,
+                    &offre,
+                    &profil,
+                    &retained,
+                    &plan,
+                    instance_id,
+                    llm.clone(),
+                ),
+                self.maybe_generate_cover_letter(
+                    input.livrables,
+                    &offre,
+                    &profil,
+                    &retained,
+                    &plan,
+                    instance_id,
+                    llm.clone(),
+                ),
+            );
+
+            let restitution = restitution_res?;
+            let resume = resume_res?;
+            let cover_letter = cover_letter_res?;
+
+            // Étape 5 : VALIDATE
+            self.events.started(instance_id, GenerationStep::Validate);
+            validate_outputs(
+                &offre,
+                restitution.as_ref(),
+                resume.as_ref(),
+                cover_letter.as_ref(),
+            )?;
+            self.events.done(instance_id, GenerationStep::Validate, None);
+
+            // Récupérer l'instance (soit l'existante, soit celle qu'on vient de créer au début de l'exécution)
+            let mut instance = self
+                .instances
+                .get_by_id(instance_id)
+                .await
+                .map_err(AppError::Repo)?
+                .ok_or_else(|| AppError::Other("Instance introuvable après génération".into()))?;
+
+            instance.restitution = restitution.map(|r| serde_json::to_value(r).unwrap());
+            instance.resume_json = resume.map(|r| serde_json::to_value(r).unwrap());
+            instance.cover_letter_json = cover_letter.map(|cl| serde_json::to_value(cl).unwrap());
+            instance.status = domain::InstanceStatus::Ready;
+            instance.updated_at = Utc::now();
+
+            self.events.started(instance_id, GenerationStep::Persist);
+            self.instances
+                .upsert(&instance)
+                .await
+                .map_err(AppError::Repo)?;
+            self.events.done(instance_id, GenerationStep::Persist, None);
+
+            // Étape 7 : DONE
+            self.events.done(instance_id, GenerationStep::Done, None);
+
+            Ok(instance)
         }
+        .await;
 
-        // Étape 2 : RERANK
-        self.events.started(instance_id, GenerationStep::Rerank);
-        let retained = self.rerank(&offre, &candidates, llm.clone()).await?;
-        self.events.done(
-            instance_id,
-            GenerationStep::Rerank,
-            Some(format!("{} chunks retenus", retained.len())),
-        );
-
-        // Étape 3 : PLAN
-        self.events.started(instance_id, GenerationStep::Plan);
-        let plan = self.plan(&offre, &retained, llm.clone()).await?;
-        self.events
-            .done(instance_id, GenerationStep::Plan, Some(plan.angle.clone()));
-
-        // Étape 4 : 3 générations en parallèle.
-        // tokio::join! attend les 3, peu importe l'ordre de terminaison.
-        let (restitution_res, resume_res, cover_letter_res) = tokio::join!(
-            self.maybe_generate_restitution(input.livrables, &offre, instance_id, llm.clone()),
-            self.maybe_generate_resume(
-                input.livrables,
-                &offre,
-                &profil,
-                &retained,
-                &plan,
-                instance_id,
-                llm.clone(),
-            ),
-            self.maybe_generate_cover_letter(
-                input.livrables,
-                &offre,
-                &profil,
-                &retained,
-                &plan,
-                instance_id,
-                llm.clone(),
-            ),
-        );
-
-        let restitution = restitution_res?;
-        let resume = resume_res?;
-        let cover_letter = cover_letter_res?;
-
-        // Étape 5 : VALIDATE
-        self.events.started(instance_id, GenerationStep::Validate);
-        validate_outputs(
-            &offre,
-            restitution.as_ref(),
-            resume.as_ref(),
-            cover_letter.as_ref(),
-        )?;
-        self.events.done(instance_id, GenerationStep::Validate, None);
-
-        // Récupérer l'instance (soit l'existante, soit celle qu'on vient de créer au début de l'exécution)
-        let mut instance = self
-            .instances
-            .get_by_id(instance_id)
-            .await
-            .map_err(AppError::Repo)?
-            .ok_or_else(|| AppError::Other("Instance introuvable après génération".into()))?;
-
-        instance.restitution = restitution.map(|r| serde_json::to_value(r).unwrap());
-        instance.resume_json = resume.map(|r| serde_json::to_value(r).unwrap());
-        instance.cover_letter_json = cover_letter.map(|cl| serde_json::to_value(cl).unwrap());
-        instance.status = domain::InstanceStatus::Ready;
-        instance.updated_at = Utc::now();
-
-        self.events.started(instance_id, GenerationStep::Persist);
-        self.instances
-            .upsert(&instance)
-            .await
-            .map_err(AppError::Repo)?;
-        self.events.done(instance_id, GenerationStep::Persist, None);
-
-        // Étape 7 : DONE
-        self.events.done(instance_id, GenerationStep::Done, None);
-
-        Ok(instance)
+        match pipeline_result {
+            Ok(instance) => Ok(instance),
+            Err(error) => {
+                if let Ok(Some(mut instance)) = self.instances.get_by_id(instance_id).await.map_err(AppError::Repo) {
+                    instance.status = domain::InstanceStatus::Failed;
+                    instance.updated_at = Utc::now();
+                    let _ = self.instances.upsert(&instance).await;
+                }
+                Err(error)
+            }
+        }
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -492,23 +507,28 @@ impl GenerateApplicationUseCase {
 
         let req = ports::ExtractionRequest {
             system: Some(
-                "Tu produis des fiches d'analyse d'offres d'emploi pour aider \
-                 un candidat junior à décider et à se préparer."
+                "Tu es un Analyste Recrutement de haut niveau. Ta mission est de produire une fiche de restitution \
+                 d'offre d'emploi extrêmement précise, analytique et structurée pour un candidat ingénieur. \
+                 Ton ton doit être factuel, incisif et dépourvu de fioritures marketing. \
+                 Tu dois lire entre les lignes pour identifier les enjeux réels derrière les mots-clés."
                     .into(),
             ),
-            instruction: "Analyse cette offre très précisément. Produis une restitution structurée : \
-                 synthèse globale, résumé de l'entreprise (secteur, enjeux), résumé du poste (contexte, objectifs), \
-                 résumé du profil recherché (diplôme, mindset), fit (avec score 0-100, justifié), \
-                 contenu explicite (missions, stack), signaux implicites, points d'attention, questions d'entretien. \
-                 \n\nRÈGLES STRICTES :\
-                 - La synthèse et les résumés doivent être des paragraphes complets et analytiques.\
-                 - Tu ne dois JAMAIS recopier de Markdown brut, de liens [Texte](url), ou de menus de navigation.\
-                 - Si l'input contient principalement du bruit (menus, cookies, liens 'Our Teams', etc.) et peu de contenu réel, \
-                   tu dois le détecter et indiquer dans 'synthese' : 'Le contenu fourni semble être principalement de la navigation. Veuillez fournir le texte de l'offre directement.' \
-                   et remplir le reste avec des valeurs minimales valides."
+            instruction: "Analyse cette offre très précisément. Produis une restitution structurée selon le schéma JSON. \
+                 \n\nRÈGLES DE RÉDACTION :\
+                 - 'synthese' : Une analyse globale de 2-3 phrases sur l'opportunité.\
+                 - 'entreprise_resume' : Focus sur le secteur, la taille et surtout les enjeux techniques/business actuels.\
+                 - 'poste_resume' : Contexte de l'équipe, objectifs concrets du poste et pourquoi il est ouvert.\
+                 - 'profil_recherche' : Au-delà du diplôme, décris le mindset et les expériences clés attendues.\
+                 - 'fit' : Sois sévère sur le score (0-100). Justifie par des preuves textuelles.\
+                 - 'explicite.stack_technique' : Liste la stack, les outils, les langages et les frameworks explicitement mentionnés.\
+                 - 'implicite' : Déduis la maturité de l'équipe et la culture à partir du vocabulaire utilisé.\
+                 - 'points_a_traiter' : Identifie les zones de risque ou les points où le candidat doit se préparer.\
+                 \n\nCONTRAINTES STRICTES :\
+                 - PAS de Markdown brut, de liens ou de menus de navigation.\
+                 - Si l'input est du bruit, indique-le dans 'synthese'."
                 .into(),
             input: format!(
-                "Entreprise: {}\nIntitulé: {}\nLocalisation: {}\nContrat: {}\n\nTexte brut:\n{}",
+                "Entreprise: {}\nIntitulé: {}\nLocalisation: {}\nContrat: {}\n\nTexte brut de l'offre:\n{}",
                 offre.entreprise,
                 offre.intitule,
                 offre.localisation.as_deref().unwrap_or("?"),
@@ -516,7 +536,7 @@ impl GenerateApplicationUseCase {
                 truncate(&offre.raw_text, 12000),
             ),
             schema_name: "Restitution".into(),
-            schema_description: "Fiche d'analyse structurée d'une offre".into(),
+            schema_description: "Fiche d'analyse haute-fidélité d'une offre".into(),
             json_schema: serde_json::to_value(schemars::schema_for!(Restitution)).unwrap(),
             model: None,
             max_tokens: Some(4000),

@@ -488,7 +488,7 @@ impl ports::ProfilRepo for ProfilRepoPg {
             calendar_pdf: r.calendar_pdf,
             resume_template: r.resume_template,
             cover_letter_template: r.cover_letter_template,
-            notes: r.notes.unwrap_or_else(|| serde_json::json!({})),
+            notes: r.notes,
             created_at: r.created_at,
         }))
     }
@@ -517,7 +517,7 @@ impl ports::ProfilRepo for ProfilRepoPg {
             calendar_pdf: r.calendar_pdf,
             resume_template: r.resume_template,
             cover_letter_template: r.cover_letter_template,
-            notes: r.notes.unwrap_or_else(|| serde_json::json!({})),
+            notes: r.notes,
             created_at: r.created_at,
         }))
     }
@@ -544,7 +544,7 @@ impl ports::ProfilRepo for ProfilRepoPg {
                 calendar_pdf: r.calendar_pdf,
                 resume_template: r.resume_template,
                 cover_letter_template: r.cover_letter_template,
-                notes: r.notes.unwrap_or_else(|| serde_json::json!({})),
+                notes: r.notes,
                 created_at: r.created_at,
             })
             .collect())

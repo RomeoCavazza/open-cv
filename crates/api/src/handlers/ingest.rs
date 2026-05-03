@@ -70,6 +70,28 @@ pub async fn ingest_handler(
 
         match state.intake_uc.execute(input, llm_provider.clone()).await {
             Ok(output) => {
+                // Si on a demandé des livrables (analyse, cv, lettre), on lance la génération
+                if let Some(config) = &payload.config {
+                    if config.analysis || config.resume || config.cover {
+                        // On récupère l'instance qu'on vient de créer (ou l'existante)
+                        if let Some(instance) = state.instance_repo.get_by_id(output.instance_id).await.map_err(|e| ApiError::Internal(e.to_string()))? {
+                            let gen_input = application::generate::GenerateInput {
+                                offre_id: instance.offre_id,
+                                profil_id: profil.id,
+                                existing_instance: Some(instance), // Crucial pour ne pas créer de doublon
+                                livrables: application::generate::Livrables {
+                                    restitution: config.analysis,
+                                    resume: config.resume,
+                                    cover_letter: config.cover,
+                                },
+                            };
+                            
+                            // On lance la génération de manière synchrone
+                            let _ = state.generate_uc.execute(gen_input, llm_provider.clone()).await;
+                        }
+                    }
+                }
+
                 results.push(serde_json::json!({
                     "slug": output.instance_slug,
                     "duplicate": output.was_duplicate,

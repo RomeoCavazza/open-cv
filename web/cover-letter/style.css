@@ -1,5 +1,5 @@
 :root {
-    --font-main: "Arimo", "Open Sans", sans-serif;
+    --font-main: 'Inter', -apple-system, sans-serif;
     --color-body: #1e293b;
     --color-muted: #64748b;
     --color-accent: #88b7e1;
@@ -121,8 +121,8 @@ body.is-framed .a4-page {
 
 .author-block h1 {
     font-size: 24px;
-    font-weight: 700;
-    letter-spacing: 0.02em;
+    font-weight: 800;
+    letter-spacing: 0.05em;
     margin-bottom: 4px;
     color: var(--color-body);
     text-transform: uppercase;
@@ -189,14 +189,14 @@ body.is-framed .a4-page {
     gap: 32px;
     align-content: start;
     font-size: 16px;
-    line-height: 1.75;
+    line-height: 1.6;
     color: var(--color-body);
 }
 
 #letter-subject {
     text-transform: uppercase;
     font-size: 15px;
-    letter-spacing: 0.02em;
+    letter-spacing: 0.05em;
     color: var(--color-accent);
     font-weight: 400;
 }
@@ -246,7 +246,7 @@ body.is-framed .a4-page {
 
 .signature {
     font-weight: 700;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.05em;
 }
 
 

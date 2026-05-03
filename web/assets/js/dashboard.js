@@ -819,7 +819,7 @@ document.querySelectorAll('.tab').forEach(tab => {
 });
 
 document.getElementById('btn-reload-tab').onclick = () => {
-    updateIframe();
+    refreshCurrentTab();
 };
 
 document.getElementById('btn-download-pdf').onclick = () => {
@@ -859,6 +859,35 @@ document.querySelectorAll('#deliv-selector-ingest .llm-pill').forEach(pill => {
         updateIngestButtonState();
     };
 });
+
+async function refreshCurrentTab() {
+    if (!state.activeJobId) {
+        resetIframeToEmptyState();
+        return;
+    }
+
+    const shouldRegenerateRestitution =
+        state.activeTab === 'restitution' &&
+        (!window.activeInstanceData || !window.activeInstanceData.restitution) &&
+        window.activeInstanceSlug;
+
+    if (shouldRegenerateRestitution) {
+        try {
+            const response = await fetch(
+                `/api/instances/${encodeURIComponent(window.activeInstanceSlug)}/generate?llm_provider=${encodeURIComponent(state.selectedLlmProvider)}`,
+                { method: 'POST' }
+            );
+
+            if (!response.ok) {
+                console.warn('Impossible de relancer la restitution, rechargement simple du document.');
+            }
+        } catch (error) {
+            console.warn('Impossible de relancer la restitution, rechargement simple du document.', error);
+        }
+    }
+
+    await updateIframe();
+}
 
 document.getElementById('add-exp').onclick = () => {
     const container = document.getElementById('list-experiences');

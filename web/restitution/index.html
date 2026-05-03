@@ -1,782 +1,957 @@
 <!DOCTYPE html>
 <html lang="fr">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Restitution Analyse</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <title>Analyse de l'offre - RecruitAI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
+            --background: #f4f5f7;
+            --surface: #ffffff;
+            --surface-soft: #f7f8fa;
             --primary: #0052ff;
-            --primary-soft: #eef4fb;
-            --ink: #1e293b;
-            --body: #475569;
-            --muted: #94a3b8;
-            --surface-soft: #f8fafc;
-            --surface-strong: #f1f5f9;
-            --hairline: #e2e8f0;
-            --success: #16a34a;
-            --warning: #d97706;
-            --danger: #dc2626;
+            --primary-soft: #e8efff;
+            --on-surface: #0a0b0d;
+            --on-surface-variant: #434656;
+            --outline: #e4e8ef;
+            --text-secondary: #5e5e61;
+            --radius-card: 24px;
+            --radius-pill: 9999px;
+            --shadow-soft: 0 20px 60px rgba(10, 11, 13, 0.04);
+            --font-main: 'Inter', -apple-system, sans-serif;
         }
 
         * {
-            margin: 0;
-            padding: 0;
             box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
         }
 
         body {
+            font-family: var(--font-main);
             background: #ffffff;
-            color: var(--ink);
-            font-family: 'Inter', sans-serif;
-            line-height: 1.25;
+            color: var(--on-surface);
+            line-height: 1.6;
             margin: 0;
-            padding: 0;
-            min-height: 100vh;
-        }
-
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-            background: transparent;
-            padding: 40px;
+            padding: 40px 24px 64px;
+            display: flex;
+            justify-content: center;
         }
 
         body.is-framed {
             padding: 0 !important;
-            margin: 0 !important;
-            overflow: hidden !important;
+            background-color: transparent;
+            overflow: hidden;
         }
 
-        /* Header */
-        .offer-header {
-            margin-bottom: 48px;
+        .container {
+            max-width: 1120px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
         }
 
-        .offer-header h1 {
-            font-size: 32px;
-            font-weight: 700;
-            margin: 0 0 16px;
-            letter-spacing: -0.025em;
+        .hero,
+        .section-card,
+        .fit-box,
+        .state-box,
+        .empty-box {
+            background: var(--surface);
+            border: 1px solid var(--outline);
+            border-radius: var(--radius-card);
+            box-shadow: var(--shadow-soft);
+        }
+
+        .hero {
+            padding: 32px;
+        }
+
+        .hero-copy {
+            max-width: 800px;
+        }
+
+        .eyebrow {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin: 0 0 12px;
+        }
+
+        h1 {
+            font-size: clamp(30px, 4vw, 46px);
+            font-weight: 800;
+            letter-spacing: 0.05em;
+            margin: 0;
             line-height: 1.2;
         }
 
-        .offer-meta {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 16px;
-            align-items: center;
+        .meta {
             font-size: 14px;
-            color: var(--body);
+            color: var(--text-secondary);
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 4px;
+            margin-top: 18px;
         }
 
-        .offer-meta a {
+        .meta a {
             color: var(--primary);
             text-decoration: none;
             font-weight: 600;
         }
 
-        .offer-meta a:hover {
+        .meta a:hover {
             text-decoration: underline;
         }
 
         .meta-dot {
-            color: var(--muted);
+            color: var(--outline);
         }
 
-        /* Sections */
-        .section {
-            margin-bottom: 40px;
+        section {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
         }
 
-        .section-title {
+        .section-card {
+            padding: 28px;
+        }
+
+        h2 {
             font-size: 12px;
-            font-weight: 700;
-            text-transform: uppercase;
-            color: var(--primary);
-            letter-spacing: 0.1em;
-            margin-bottom: 16px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .section-title::after {
-            content: "";
-            flex: 1;
-            height: 1px;
-            background: var(--hairline);
-        }
-
-        .card {
-            background: transparent;
-            padding: 0;
-            border-radius: 0;
-            border: none;
-            margin-bottom: 32px;
-        }
-
-        .tag {
-            display: inline-block;
-            background: var(--primary-soft);
-            color: var(--primary);
-            padding: 6px 14px;
-            border-radius: 100px;
-            font-size: 13px;
-            font-weight: 600;
-            margin-right: 8px;
-            margin-bottom: 8px;
-        }
-
-        ul {
-            padding-left: 20px;
-            margin: 0;
-        }
-
-        li {
-            margin-bottom: 8px;
-            font-size: 15px;
-        }
-
-        /* Divider */
-        .divider {
-            border: none;
-            border-top: 1px solid var(--hairline);
-            margin: 56px 0;
-        }
-
-        /* AI Analysis Header */
-        .ai-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 32px;
-        }
-
-        .ai-header-left {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .ai-header h2 {
-            font-size: 24px;
-            font-weight: 700;
-            margin: 0;
-            letter-spacing: -0.01em;
-        }
-
-        .ai-badge {
-            background: linear-gradient(135deg, var(--primary), #6366f1);
-            color: white;
-            font-size: 11px;
-            font-weight: 800;
-            padding: 4px 10px;
-            border-radius: 6px;
             text-transform: uppercase;
             letter-spacing: 0.05em;
-            box-shadow: 0 2px 4px rgba(0, 82, 255, 0.2);
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin: 0;
         }
 
-        /* Fit score & Analysis */
-        .analysis-grid {
+        .content-text {
+            font-size: 16px;
+            color: var(--on-surface);
+            white-space: pre-line;
+        }
+
+        .lead {
+            font-size: 17px;
+            color: var(--on-surface-variant);
+            margin-top: 16px;
+        }
+
+        .grid-2,
+        .summary-grid,
+        .signal-grid,
+        .fit-columns,
+        .skeleton-grid {
             display: grid;
-            grid-template-columns: 1fr 1.5fr;
-            gap: 32px;
-            margin-bottom: 40px;
+            gap: 24px;
         }
 
-        @media (max-width: 768px) {
-            .analysis-grid {
-                grid-template-columns: 1fr;
-            }
+        .grid-2,
+        .summary-grid,
+        .fit-columns,
+        .skeleton-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
         }
 
-        .fit-card {
+        #generating-state {
             background: transparent;
+            border: none;
+            box-shadow: none;
             padding: 0;
+        }
+
+        #generating-state .skeleton-grid {
+            grid-template-columns: 1fr;
+            gap: 16px;
+            margin-top: 22px;
+        }
+
+        #generating-state .state-copy {
+            max-width: 760px;
+            margin-bottom: 18px;
+        }
+
+        .signal-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px 24px;
+        }
+
+        .detail-stack {
             display: flex;
             flex-direction: column;
             gap: 16px;
         }
 
-        .fit-score {
-            font-size: 64px;
-            font-weight: 800;
-            line-height: 1;
-            margin-bottom: 8px;
-            letter-spacing: -0.04em;
+        .detail-line {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
         }
 
-        .fit-score.high {
-            color: var(--success);
-        }
-
-        .fit-score.medium {
-            color: var(--warning);
-        }
-
-        .fit-score.low {
-            color: var(--danger);
-        }
-
-        .fit-label {
-            font-size: 13px;
-            font-weight: 700;
+        .detail-label {
+            min-width: 164px;
+            font-size: 12px;
             text-transform: uppercase;
-            color: var(--muted);
-            letter-spacing: 0.1em;
-            margin-bottom: 24px;
+            letter-spacing: 0.06em;
+            font-weight: 600;
+            color: var(--text-secondary);
+            flex: 0 0 auto;
         }
 
-        .fit-justification {
-            font-size: 14px;
-            color: var(--body);
-            line-height: 1.5;
-            text-align: left;
+        .detail-value {
+            flex: 1;
         }
 
-        /* Force/faiblesse chips */
-        .chip-list {
+        .list,
+        .clean-list,
+        .chips {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .list,
+        .clean-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .list li,
+        .clean-list li {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+        }
+
+        .list li::before {
+            content: "→";
+            color: var(--primary);
+            font-weight: bold;
+            flex: 0 0 auto;
+        }
+
+        .clean-list li::before {
+            content: "";
+            width: 8px;
+            height: 8px;
+            margin-top: 9px;
+            border-radius: 999px;
+            background: var(--primary);
+            flex: 0 0 auto;
+        }
+
+        .chip-cloud {
             display: flex;
             flex-wrap: wrap;
             gap: 8px;
         }
 
         .chip {
-            display: inline-block;
-            padding: 6px 0;
-            font-size: 14px;
-            font-weight: 500;
-            margin-right: 12px;
-        }
-
-        .chip.force {
-            color: var(--success);
-        }
-
-        .chip.faiblesse {
-            color: var(--danger);
-        }
-
-        .chip.force::before {
-            content: "✓ ";
-        }
-
-        .chip.faiblesse::before {
-            content: "× ";
-        }
-
-        /* Points attention */
-        .point-item {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 12px;
-            align-items: flex-start;
-            font-size: 14px;
-            padding: 12px;
+            padding: 7px 12px;
+            border-radius: var(--radius-pill);
+            font-size: 13px;
             background: var(--surface-soft);
-            border-radius: 10px;
+            color: var(--on-surface-variant);
+            border: 1px solid var(--outline);
         }
 
-        .point-cat {
-            font-size: 10px;
-            font-weight: 800;
+        .signal {
+            padding: 16px 18px;
+            border-radius: 18px;
+            background: var(--surface-soft);
+            border: 1px solid var(--outline);
+        }
+
+        .signal-label {
+            display: block;
+            font-size: 12px;
             text-transform: uppercase;
-            padding: 3px 8px;
-            border-radius: 6px;
-            white-space: nowrap;
-            margin-top: 2px;
+            letter-spacing: 0.06em;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+            font-weight: 600;
         }
 
-        .point-cat.forcer {
-            background: #dbeafe;
-            color: #1e40af;
+        .signal-value {
+            font-size: 15px;
+            color: var(--on-surface);
         }
 
-        .point-cat.adresser {
-            background: #fef3c7;
-            color: #92400e;
+        .fit-box {
+            padding: 28px;
         }
 
-        .point-cat.questionner {
-            background: #f3e8ff;
-            color: #6b21a8;
+        .fit-grid {
+            grid-template-columns: 180px minmax(0, 1fr);
+            gap: 24px;
+            align-items: start;
         }
 
-        .point-cat.vigilance {
-            background: #fecaca;
-            color: #991b1b;
+        .score-block {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            align-items: flex-start;
         }
 
-        /* Markdown rendering styles */
-        .card p {
-            margin-top: 0;
+        .score-circle {
+            width: 92px;
+            height: 92px;
+            border-radius: 50%;
+            background: linear-gradient(180deg, var(--primary), #0b3fb9);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-main);
+            font-size: 28px;
+            font-weight: 600;
+            letter-spacing: -0.03em;
+        }
+
+        .score-caption {
+            font-size: 13px;
+            color: var(--text-secondary);
+            max-width: 160px;
+        }
+
+        .fit-summary {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .fit-justification {
+            font-size: 16px;
+            color: var(--on-surface-variant);
+        }
+
+        .fit-panel {
+            padding: 20px;
+            border-radius: 18px;
+            border: 1px solid var(--outline);
+            background: var(--surface-soft);
+        }
+
+        .fit-panel h3 {
+            margin: 0 0 12px;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        .fit-panel.recommendations {
+            background: #f7f9ff;
+            border-color: #dce4ff;
+        }
+
+        .state-box {
+            padding: 40px 32px;
+        }
+
+        .state-copy {
+            max-width: 640px;
+        }
+
+        .state-title {
+            font-size: 24px;
+            font-weight: 400;
+            letter-spacing: -0.02em;
+            margin: 0 0 12px;
+        }
+
+        .inline-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            border-radius: var(--radius-pill);
+            background: var(--primary-soft);
+            color: var(--primary);
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .skeleton-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 28px;
+        }
+
+        .skeleton-row {
+            height: 16px;
+            border-radius: var(--radius-pill);
+            background: linear-gradient(90deg, #eef1f5 25%, #dde3eb 50%, #eef1f5 75%);
+            background-size: 200% 100%;
+            animation: skeleton-loading 1.4s infinite;
+        }
+
+        .skeleton-row.tall {
+            height: 22px;
+        }
+
+        .skeleton-row.short {
+            width: 45%;
+        }
+
+        .skeleton-card {
+            border: 1px solid var(--outline);
+            border-radius: 20px;
+            background: var(--surface-soft);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .skeleton-chip-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .skeleton-chip {
+            width: 96px;
+            height: 30px;
+            border-radius: var(--radius-pill);
+            background: linear-gradient(90deg, #eef1f5 25%, #dde3eb 50%, #eef1f5 75%);
+            background-size: 200% 100%;
+            animation: skeleton-loading 1.4s infinite;
+        }
+
+        .empty-box {
+            min-height: 100%;
+            padding: 0;
+            display: grid;
+            place-items: center;
+            background: transparent;
+            border: none;
+            box-shadow: none;
+        }
+
+        .empty-stack {
+            display: grid;
+            justify-items: center;
+            gap: 14px;
+            text-align: center;
+            max-width: 420px;
+        }
+
+        .empty-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: var(--primary-soft);
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
             margin-bottom: 16px;
         }
 
-        .card p:last-child {
-            margin-bottom: 0;
+        .empty-title {
+            font-size: 20px;
+            font-weight: 600;
+            letter-spacing: -0.01em;
+            margin: 0 0 8px;
         }
 
-        .card h1,
-        .card h2,
-        .card h3 {
-            font-size: 16px;
-            font-weight: 700;
-            margin: 20px 0 10px;
-            color: var(--ink);
+        .empty-copy {
+            max-width: 360px;
+            margin: 0;
+            color: var(--text-secondary);
         }
 
-        .card strong {
-            color: var(--ink);
+        .empty-actions {
+            margin-top: 20px;
         }
 
-        /* Hidden */
-        .hidden {
+        .primary-button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 22px;
+            border-radius: var(--radius-pill);
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .primary-button:disabled {
+            opacity: 0.7;
+            cursor: wait;
+        }
+
+        #empty-state,
+        #loading-state,
+        #generating-state,
+        #restitution-content {
             display: none;
+        }
+
+        #loading-state,
+        #generating-state {
+            text-align: left;
+        }
+
+        @keyframes skeleton-loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        @media (max-width: 900px) {
+            body {
+                padding: 16px;
+            }
+
+            .hero,
+            .section-card,
+            .fit-box,
+            .empty-box,
+            .state-box {
+                padding: 24px;
+            }
+
+            .grid-2,
+            .summary-grid,
+            .signal-grid,
+            .fit-grid,
+            .fit-columns,
+            .skeleton-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .detail-line {
+                flex-direction: column;
+            }
+
+            .detail-label {
+                min-width: 0;
+            }
         }
     </style>
 </head>
-
 <body>
     <div class="container">
-        <!-- SECTION HAUTE : Ce que dit l'offre -->
-        <div class="offer-header hidden" id="section-header">
-            <h1 id="job-title">Restitution</h1>
-            <div class="offer-meta" id="offer-meta"></div>
-        </div>
-
-        <div class="section hidden" id="section-resume">
-            <div class="card" id="resume-court"></div>
-        </div>
-
-        <div class="section hidden" id="section-stack">
-            <div class="section-title">Stack Technique</div>
-            <div id="stack-container"></div>
-        </div>
-
-        <div class="section hidden" id="section-missions">
-            <div class="section-title">Missions Clés</div>
-            <ul id="missions-list"></ul>
-        </div>
-
-        <div class="section hidden" id="section-exigences">
-            <div class="section-title">Exigences</div>
-            <ul id="exigences-list"></ul>
-        </div>
-
-        <div class="section hidden" id="section-softskills">
-            <div class="section-title">Soft Skills</div>
-            <div id="softskills-container"></div>
-        </div>
-
-        <!-- SECTION BASSE : Analyse IA personnalisée -->
-        <div id="ai-analysis-section" class="hidden">
-
-            <!-- NOUVELLES SECTIONS RICHES -->
-            <div class="section hidden" id="section-ai-entreprise">
-                <div class="section-title">L'Entreprise</div>
-                <div class="card" id="ai-entreprise"></div>
+        <div id="loading-state" class="state-box">
+            <div class="state-copy">
+                <div class="inline-badge">Chargement</div>
+                <h1 class="state-title">Préparation de la restitution</h1>
+                <p class="content-text">On récupère l’offre et l’instance associée avant d’afficher le rendu.</p>
             </div>
-
-            <div class="section hidden" id="section-ai-poste">
-                <div class="section-title">Le Poste</div>
-                <div class="card" id="ai-poste"></div>
+            <div class="skeleton-stack" aria-hidden="true">
+                <div class="skeleton-row tall" style="width: 58%"></div>
+                <div class="skeleton-row" style="width: 82%"></div>
+                <div class="skeleton-row" style="width: 71%"></div>
+                <div class="skeleton-row short"></div>
             </div>
+        </div>
 
-            <div class="section hidden" id="section-ai-profil">
-                <div class="section-title">Profil Recherché</div>
-                <div class="card" id="ai-profil"></div>
+        <div id="generating-state" class="state-box">
+            <div class="state-copy">
+                <h1 id="generating-title" class="state-title">Génération de la restitution</h1>
+                <div class="meta" id="generating-meta"></div>
             </div>
-
-            <div class="section hidden" id="section-ai-synthese">
-                <div class="section-title">Synthèse globale</div>
-                <div class="card" id="ai-synthese"></div>
-            </div>
-
-            <div class="analysis-grid">
-                <div class="fit-card">
-                    <div class="fit-label">Match Score</div>
-                    <div class="fit-score" id="ai-fit-score">—</div>
-                    <div class="fit-justification" id="ai-fit-justification"></div>
+            <div class="skeleton-grid" aria-hidden="true">
+                <div class="skeleton-card">
+                    <div class="skeleton-row tall" style="width: 62%"></div>
+                    <div class="skeleton-row" style="width: 94%"></div>
+                    <div class="skeleton-row" style="width: 88%"></div>
+                    <div class="skeleton-row" style="width: 74%"></div>
                 </div>
-
-                <div class="strengths-weaknesses">
-                    <div style="margin-bottom: 24px;">
-                        <div
-                            style="font-size: 13px; font-weight: 700; color: var(--ink); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.05em;">
-                            Points Forts</div>
-                        <div class="chip-list" id="ai-forces"></div>
+                <div class="skeleton-card">
+                    <div class="skeleton-row tall" style="width: 54%"></div>
+                    <div class="skeleton-row" style="width: 90%"></div>
+                    <div class="skeleton-row" style="width: 84%"></div>
+                    <div class="skeleton-row" style="width: 68%"></div>
+                </div>
+                <div class="skeleton-card">
+                    <div class="skeleton-row tall" style="width: 48%"></div>
+                    <div class="skeleton-chip-row">
+                        <div class="skeleton-chip"></div>
+                        <div class="skeleton-chip" style="width: 124px"></div>
+                        <div class="skeleton-chip" style="width: 88px"></div>
                     </div>
-                    <div>
-                        <div
-                            style="font-size: 13px; font-weight: 700; color: var(--ink); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.05em;">
-                            Points à travailler</div>
-                        <div class="chip-list" id="ai-faiblesses"></div>
-                    </div>
+                    <div class="skeleton-row" style="width: 86%"></div>
+                    <div class="skeleton-row" style="width: 72%"></div>
+                </div>
+                <div class="skeleton-card">
+                    <div class="skeleton-row tall" style="width: 64%"></div>
+                    <div class="skeleton-row" style="width: 86%"></div>
+                    <div class="skeleton-row" style="width: 81%"></div>
+                    <div class="skeleton-row" style="width: 59%"></div>
                 </div>
             </div>
+        </div>
 
-            <div class="section" id="section-implicite">
-                <div class="section-title">Lecture entre les lignes</div>
-                <div class="card" id="ai-implicite"></div>
+        <div id="empty-state" class="empty-box">
+            <div style="display: flex; flex-direction: column; align-items: center; justify-content: flex-start; height: 100vh; width: 100%; padding-top: 18vh; padding-left: 40px; padding-right: 40px; text-align: center; color: #64748b; background: #fff;">
+                <div style="width: 64px; height: 64px; background: #eff6ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 24px; color: #0052ff;">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 32px; height: 32px;">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+                    </svg>
+                </div>
+                <h2 style="font-size: 20px; font-weight: 700; line-height: 1.25; color: #1e293b; margin-bottom: 12px; text-transform: none; letter-spacing: normal;">Analyse non disponible</h2>
+                <button onclick="generate()" id="btn-generate" style="background: #0052ff; color: white; border: none; padding: 14px 32px; border-radius: 12px; font-weight: 600; cursor: pointer; font-size: 15px; box-shadow: 0 4px 12px rgba(0,82,255,0.2); transition: all 0.2s;">Générer l'analyse</button>
+            </div>
+        </div>
+
+        <div id="restitution-content">
+            <header class="hero">
+                <div class="hero-copy">
+                    <p class="eyebrow">Restitution d’offre</p>
+                    <h1 id="offre-titre">Chargement...</h1>
+                    <div class="meta" id="offre-meta"></div>
+                    <p class="lead" id="val-synthese-hero"></p>
+                </div>
+            </header>
+
+            <section class="section-card">
+                <h2>Description de l'entreprise</h2>
+                <div class="content-text" id="val-entreprise"></div>
+            </section>
+
+            <section class="section-card">
+                <h2>Description de l'offre</h2>
+                <div class="content-text" id="val-poste"></div>
+            </section>
+
+            <section class="section-card">
+                <h2>Missions clés</h2>
+                <ul class="clean-list" id="list-missions"></ul>
+            </section>
+
+            <div class="grid-2">
+                <section class="section-card">
+                    <h2>Hardskills</h2>
+                    <div class="chip-cloud" id="chips-hard"></div>
+                </section>
+                <section class="section-card">
+                    <h2>Softskills</h2>
+                    <div class="chip-cloud" id="chips-soft"></div>
+                </section>
             </div>
 
-            <div class="section" id="section-points">
-                <div class="section-title">Recommandations stratégiques</div>
-                <div id="ai-points"></div>
-            </div>
+            <section class="section-card">
+                <h2>Profil recherché</h2>
+                <div class="content-text" id="val-profil"></div>
+            </section>
 
+            <section class="section-card">
+                <h2>Exigences</h2>
+                <ul class="clean-list" id="list-exigences"></ul>
+            </section>
+
+            <section class="section-card">
+                <h2>Lecture entre les lignes</h2>
+                <div class="signal-grid">
+                    <div class="signal">
+                        <span class="signal-label">Autonomie</span>
+                        <div class="signal-value" id="val-autonomie"></div>
+                    </div>
+                    <div class="signal">
+                        <span class="signal-label">Maturité de l'équipe</span>
+                        <div class="signal-value" id="val-maturite"></div>
+                    </div>
+                    <div class="signal">
+                        <span class="signal-label">Culture</span>
+                        <div class="signal-value" id="val-culture"></div>
+                    </div>
+                    <div class="signal">
+                        <span class="signal-label">Stack implicite</span>
+                        <div class="signal-value" id="val-stack-implicite"></div>
+                    </div>
+                </div>
+            </section>
+
+            <div class="fit-box" id="card-fit">
+                <div class="fit-grid">
+                    <div class="score-block">
+                        <div class="score-circle" id="val-score">--</div>
+                        <div class="score-caption">Match Score sur 100, avec une lecture stricte de l’adéquation profil/offre.</div>
+                    </div>
+                    <div class="fit-summary">
+                        <div class="fit-justification" id="val-justification"></div>
+                        <div class="fit-columns">
+                            <div class="fit-panel">
+                                <h3>Points forts</h3>
+                                <ul class="clean-list" id="list-forces"></ul>
+                            </div>
+                            <div class="fit-panel recommendations">
+                                <h3>Points à travailler et recommandations stratégiques</h3>
+                                <ul class="clean-list" id="list-risques"></ul>
+                                <div class="content-text" id="val-questions"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
-        // Simple Markdown-to-HTML parser (Problem C)
-        function mdToHtml(md) {
-            if (!md) return "";
-            const links = [];
-            const linkified = md
-                .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/gim, (_, label, url) => {
-                    const token = `__LINK_${links.length}__`;
-                    links.push(`<a href="${url}" target="_blank" rel="noopener noreferrer">${label}</a>`);
-                    return token;
-                })
-                .replace(/(^|[^"'=])(https?:\/\/[^\s<]+[^\s<.)])/gim, (match, prefix, url) => {
-                    return `${prefix}<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`;
-                });
+        const urlParams = new URLSearchParams(window.location.search);
+        const offerSlug = urlParams.get('offer') || urlParams.get('offre');
+        const instanceSlug = urlParams.get('instance') || urlParams.get('instanceSlug') || urlParams.get('id');
+        let currentOffer = null;
+        let currentInstance = null;
 
-            return linkified
-                .replace(/^### (.*$)/gim, '<h3>$1</h3>')
-                .replace(/^## (.*$)/gim, '<h2>$1</h2>')
-                .replace(/^# (.*$)/gim, '<h1>$1</h1>')
-                .replace(/^\* (.*$)/gim, '<li>$1</li>')
-                .replace(/^- (.*$)/gim, '<li>$1</li>')
-                .replace(/\*\*(.*)\*\*/gim, '<strong>$1</strong>')
-                .replace(/<strong>alternance<\/strong>/gim, '')
-                .replace(/\*(.*)\*/gim, '<em>$1</em>')
-                .replace(/\n/gim, '<br>')
-                .replace(/__LINK_(\d+)__/g, (_, index) => links[Number(index)] || '');
-        }
+        async function init() {
+            if (!offerSlug) return;
 
-        async function loadRestitution() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const offerSlug = urlParams.get('offer') || urlParams.get('slug') || urlParams.get('id');
-            const instanceSlug = urlParams.get('instance') || urlParams.get('id');
-            
-            if (!offerSlug) {
-                renderRestitutionEmptyState();
-                return;
-            }
-
-            try {
-                // 1. Charger l'offre
-                const resOffre = await fetch(`/api/offres/${offerSlug}`);
-                let offreOk = false;
-                if (resOffre.ok) {
-                    const offre = await resOffre.json();
-                    renderOffre(offre);
-                    offreOk = true;
-                } else {
-                    console.warn("Offre brute non trouvée:", offerSlug);
-                    document.getElementById('job-title').innerText = offerSlug.replace(/_/g, ' ').toUpperCase();
-                }
-
-                // 2. Charger l'instance
-                const resInstance = instanceSlug
-                    ? await fetch(`/api/instances/${instanceSlug}`)
-                    : await fetch(`/api/offres/${offerSlug}/instance`);
-                
-                if (resInstance.ok) {
-                    const instance = await resInstance.json();
-                    renderInstance(instance);
-
-                    // Si on a une restitution mais pas d'offre, on nettoie les sections vides du haut
-                    if (!offreOk) {
-                        document.querySelectorAll('.section:not(#ai-analysis-section .section)').forEach(s => {
-                            if (!s.id.startsWith('section-ai')) s.classList.add('hidden');
-                        });
-                        document.querySelector('.offer-header').style.marginBottom = '0';
-                    }
-                } else {
-                    renderInstance({});
-                }
-            } catch (e) {
-                console.error('Erreur Critique:', e);
-            }
-        }
-
-        function renderRestitutionEmptyState() {
-            document.body.innerHTML = `
-                <div style="display: flex; flex-direction: column; align-items: center; justify-content: flex-start; height: 100vh; width: 100%; padding-top: 18vh; padding-left: 40px; padding-right: 40px; text-align: center; color: #64748b; background: #fff;">
-                    <div style="width: 64px; height: 64px; background: #eff6ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 24px; color: #0052ff;">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 32px; height: 32px;">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
-                        </svg>
-                    </div>
-                    <h2 style="font-size: 20px; font-weight: 700; color: #1e293b; margin-bottom: 12px;">Sélectionne une offre</h2>
-                </div>
-            `;
-        }
-
-        function renderOffre(offre) {
-            document.getElementById('job-title').innerText = offre.intitule || 'Offre sans titre';
-            const sectionHeader = document.getElementById('section-header');
-            if (sectionHeader) sectionHeader.classList.remove('hidden');
-
-            const meta = document.getElementById('offer-meta');
-            const parts = [];
-            if (offre.entreprise && offre.entreprise !== 'Non identifié') {
-                parts.push(`<strong>${escapeHtml(offre.entreprise)}</strong>`);
-            }
-            if (offre.localisation) parts.push(escapeHtml(offre.localisation));
-            if (offre.contrat && offre.contrat.toLowerCase() !== 'alternance') parts.push(escapeHtml(offre.contrat));
-            if (offre.source_url && offre.source_url !== 'manual') {
-                parts.push(`<a href="${escapeHtml(offre.source_url)}" target="_blank" rel="noopener">Voir l'offre</a>`);
-            }
-            meta.innerHTML = parts.join('<span class="meta-dot"> · </span>');
-
-            const s = offre.structured || {};
-
-            // Résumé avec rendu Markdown
-            const resumeEl = document.getElementById('resume-court');
-            const sectionResume = document.getElementById('section-resume');
-            if (s.resume_court && !s.resume_court.includes('Ingested via dashboard') && !s.resume_court.includes('échouée')) {
-                resumeEl.innerHTML = mdToHtml(s.resume_court);
-                if (sectionResume) sectionResume.classList.remove('hidden');
-            } else if (sectionResume) {
-                sectionResume.classList.add('hidden');
-            }
-
-            renderTags('stack-container', s.stack || [], 'section-stack');
-            renderList('missions-list', s.missions || [], 'section-missions');
-            renderList('exigences-list', s.exigences || [], 'section-exigences');
-            renderTags('softskills-container', s.soft_skills || [], 'section-softskills');
-        }
-
-        function renderInstance(instance) {
-            const restitution = instance.restitution || instance.notes?.restitution;
-            const hasRestitution = restitution && Object.keys(restitution).length > 0;
-
-            if (!hasRestitution) {
-                document.body.innerHTML = `
-                        <div style="display: flex; flex-direction: column; align-items: center; justify-content: flex-start; height: 100vh; width: 100%; padding-top: 18vh; padding-left: 40px; padding-right: 40px; text-align: center; color: #64748b; background: #fff;">
-                            <div style="width: 64px; height: 64px; background: #eff6ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 24px; color: #0052ff;">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 32px; height: 32px;">
-                                  <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25M9 16.5v.75m3-3v3M15 12v5.25m-4.5-15H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
-                                </svg>
-                            </div>
-                            <h2 style="font-size: 20px; font-weight: 700; color: #1e293b; margin-bottom: 12px;">Analyse non disponible</h2>
-                            <button id="btn-generate-now" style="
-                                background: var(--primary);
-                                color: white;
-                                border: none;
-                                padding: 14px 32px;
-                                border-radius: 12px;
-                                font-weight: 600;
-                                cursor: pointer;
-                                font-size: 15px;
-                                box-shadow: 0 4px 12px rgba(0,82,255,0.2);
-                                transition: all 0.2s;
-                            ">Générer l'analyse</button>
-                        </div>
-                    `;
-                if (window.lucide) lucide.createIcons();
-
-                const generateBtn = document.getElementById('btn-generate-now');
-                if (generateBtn) {
-                    generateBtn.onclick = async () => {
-                        generateBtn.disabled = true;
-                        generateBtn.innerText = "Génération en cours...";
-
-                        const urlParams = new URLSearchParams(window.location.search);
-                        const jobId = urlParams.get('instance') || urlParams.get('id') || urlParams.get('slug');
-
-                        try {
-                            const res = await fetch(`/api/instances/${jobId}/generate`, {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ deliverables: { restitution: true, resume: false, cover: false } })
-                            });
-                            if (res.ok) {
-                                window.location.reload();
-                            } else {
-                                alert("Erreur lors de la génération");
-                                generateBtn.disabled = false;
-                                generateBtn.innerText = "Réessayer";
-                            }
-                        } catch (e) {
-                            console.error(e);
-                            generateBtn.disabled = false;
-                            generateBtn.innerText = "Réessayer";
-                        }
-                    };
-                }
-                return;
-            }
-
-            document.getElementById('ai-analysis-section').classList.remove('hidden');
-
-            // Nouveaux champs riches
-            renderMarkdownCard('ai-entreprise', restitution.entreprise_resume, 'section-ai-entreprise');
-            renderMarkdownCard('ai-poste', restitution.poste_resume, 'section-ai-poste');
-            renderMarkdownCard('ai-profil', restitution.profil_recherche, 'section-ai-profil');
-
-            // Synthèse
-            renderMarkdownCard('ai-synthese', restitution.synthese, 'section-ai-synthese');
-
-            // Fit Analysis
-            if (restitution.fit) {
-                const score = restitution.fit.score;
-                const scoreEl = document.getElementById('ai-fit-score');
-                scoreEl.innerText = score;
-                scoreEl.className = 'fit-score ' + (score >= 75 ? 'high' : score >= 50 ? 'medium' : 'low');
-                document.getElementById('ai-fit-justification').innerText = restitution.fit.justification || '';
-                renderChips('ai-forces', restitution.fit.forces || [], 'force');
-                renderChips('ai-faiblesses', restitution.fit.faiblesses || [], 'faiblesse');
-            }
-
-            // Signaux implicites
-            if (restitution.implicite) {
-                const imp = restitution.implicite;
-                let html = "";
-                if (imp.niveau_autonomie) html += `<strong>Niveau d'autonomie :</strong> ${escapeHtml(imp.niveau_autonomie)}<br>`;
-                if (imp.maturite_equipe) html += `<strong>Maturité équipe :</strong> ${escapeHtml(imp.maturite_equipe)}<br>`;
-                if (imp.culture) html += `<strong>Culture :</strong> ${escapeHtml(imp.culture)}<br>`;
-                if (imp.stack_implicite?.length) html += `<strong>Stack probable :</strong> ${escapeHtml(imp.stack_implicite.join(', '))}<br>`;
-
-                if (html) {
-                    document.getElementById('ai-implicite').innerHTML = html;
-                    document.getElementById('section-implicite').classList.remove('hidden');
-                } else {
-                    document.getElementById('section-implicite').classList.add('hidden');
-                }
-            }
-
-            // Points d'attention
-            if (restitution.points_a_traiter?.length) {
-                const container = document.getElementById('ai-points');
-                container.innerHTML = '';
-                restitution.points_a_traiter.forEach(p => {
-                    const div = document.createElement('div');
-                    div.className = 'point-item';
-                    const cat = (p.categorie || 'vigilance').toLowerCase();
-                    div.innerHTML = `<span class="point-cat ${cat}">${escapeHtml(p.categorie || '!')}</span><span>${escapeHtml(p.message)}</span>`;
-                    container.appendChild(div);
-                });
-                document.getElementById('section-points').classList.remove('hidden');
-            } else {
-                document.getElementById('section-points').classList.add('hidden');
-            }
-
-            // Questions
-            renderList('ai-questions', restitution.questions_entretien || [], 'section-questions');
-        }
-
-        // Helpers
-        function renderMarkdownCard(id, text, sectionId) {
-            const el = document.getElementById(id);
-            if (!el) return;
-            if (text) {
-                el.innerHTML = mdToHtml(text);
-                if (sectionId) document.getElementById(sectionId).classList.remove('hidden');
-            } else if (sectionId) {
-                document.getElementById(sectionId).classList.add('hidden');
-            }
-        }
-
-        function renderTags(containerId, items, sectionId) {
-            const container = document.getElementById(containerId);
-            if (!container) return;
-            container.innerHTML = '';
-            if (!items || items.length === 0) {
-                if (sectionId) document.getElementById(sectionId).classList.add('hidden');
-                return;
-            }
-            if (sectionId) document.getElementById(sectionId).classList.remove('hidden');
-            items.forEach(s => {
-                const span = document.createElement('span');
-                span.className = 'tag';
-                span.innerText = s;
-                container.appendChild(span);
-            });
-        }
-
-        function renderList(listId, items, sectionId) {
-            const list = document.getElementById(listId);
-            if (!list) return;
-            list.innerHTML = '';
-            if (!items || items.length === 0) {
-                if (sectionId) document.getElementById(sectionId).classList.add('hidden');
-                return;
-            }
-            if (sectionId) document.getElementById(sectionId).classList.remove('hidden');
-            items.forEach(m => {
-                const li = document.createElement('li');
-                li.innerText = m;
-                list.appendChild(li);
-            });
-        }
-
-        function renderChips(containerId, items, chipClass) {
-            const container = document.getElementById(containerId);
-            if (!container) return;
-            container.innerHTML = '';
-            if (!items?.length) return;
-            items.forEach(item => {
-                const span = document.createElement('span');
-                span.className = `chip ${chipClass}`;
-                span.innerText = item;
-                container.appendChild(span);
-            });
-        }
-
-        function escapeHtml(str) {
-            if (!str) return "";
-            const div = document.createElement('div');
-            div.textContent = str;
-            return div.innerHTML;
-        }
-
-        function applyPreviewScale() {
-            if (window.self === window.top) return;
-
-            const page = document.querySelector('.a4-page');
-            const stage = document.querySelector('.page-stage');
-            if (!page || !stage) return;
-
-            page.style.transform = 'none';
-            page.style.left = '0px';
-            page.style.top = '0px';
-
-            requestAnimationFrame(() => {
-                const availableWidth = window.innerWidth - 32;
-                const availableHeight = window.innerHeight - 32;
-                const pageWidth = page.offsetWidth;
-                const pageHeight = page.offsetHeight;
-                const scale = Math.min(1, availableWidth / pageWidth, availableHeight / pageHeight);
-                const scaledWidth = pageWidth * scale;
-                const scaledHeight = pageHeight * scale;
-                const offsetX = Math.max(0, (availableWidth - scaledWidth) / 2);
-                const offsetY = 16;
-
-                page.style.transform = `scale(${scale})`;
-                page.style.left = `${offsetX}px`;
-                page.style.top = `${offsetY}px`;
-                stage.style.height = `${window.innerHeight}px`;
-            });
-        }
-
-        window.onload = () => {
             if (window.self !== window.top) {
                 document.body.classList.add('is-framed');
             }
-            loadRestitution();
-        };
+
+            try {
+                showLoading(true);
+                const [resOffre, resInstance] = await Promise.all([
+                    fetch(`/api/offres/${offerSlug}`),
+                    instanceSlug
+                        ? fetch(`/api/instances/${instanceSlug}`)
+                        : fetch(`/api/offres/${offerSlug}/instance`)
+                ]);
+
+                if (!resOffre.ok) throw new Error('Offre introuvable');
+                const offre = await resOffre.json();
+                currentOffer = offre;
+
+                let instance = null;
+                if (resInstance.ok) {
+                    instance = await resInstance.json();
+                }
+                currentInstance = instance;
+
+                renderHeader(offre);
+
+                if (instance && instance.restitution) {
+                    renderRestitution(instance.restitution);
+                    showContent(true);
+                } else if (instance && instance.status === 'generating' && isFreshGeneration(instance.updated_at)) {
+                    showGenerating(offre, instance);
+                } else {
+                    showEmpty(true);
+                }
+            } catch (err) {
+                console.error(err);
+                showEmpty(true);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function renderHeader(offre) {
+            document.getElementById('offre-titre').innerText = offre.intitule;
+            const parts = [`<strong>${escapeHtml(offre.entreprise || '')}</strong>`];
+            const offerUrl = resolveOfferUrl(offre);
+            if (offerUrl) {
+                parts.push(`<a href="${escapeAttribute(offerUrl)}" target="_blank" rel="noreferrer noopener">Visiter l'offre</a>`);
+            }
+            document.getElementById('offre-meta').innerHTML = parts.join('');
+            const generatingMeta = document.getElementById('generating-meta');
+            if (generatingMeta) {
+                generatingMeta.innerHTML = parts.join('');
+            }
+            const generatingTitle = document.getElementById('generating-title');
+            if (generatingTitle) {
+                generatingTitle.innerText = offre.intitule;
+            }
+        }
+
+        function renderRestitution(r) {
+            document.getElementById('val-synthese-hero').innerText = r.synthese;
+            document.getElementById('val-entreprise').innerText = r.entreprise_resume;
+            document.getElementById('val-poste').innerText = r.poste_resume;
+            document.getElementById('val-profil').innerText = r.profil_recherche;
+
+            renderList('list-missions', r.explicite.missions);
+            renderList('list-exigences', r.explicite.exigences_dures);
+            renderList('list-forces', r.fit.forces);
+
+            renderChips('chips-soft', r.explicite.soft_skills);
+            renderChips('chips-hard', r.explicite.stack_technique);
+
+            const imp = r.implicite;
+            document.getElementById('val-autonomie').innerText = imp.niveau_autonomie;
+            document.getElementById('val-maturite').innerText = imp.maturite_equipe;
+            document.getElementById('val-culture').innerText = imp.culture;
+            document.getElementById('val-stack-implicite').innerText = imp.stack_implicite?.length
+                ? imp.stack_implicite.join(' · ')
+                : 'Non explicite';
+
+            document.getElementById('val-score').innerText = r.fit.score;
+            document.getElementById('val-justification').innerText = r.fit.justification;
+
+            const risks = [
+                ...(r.fit.faiblesses || []).map(f => `Point faible à adresser : ${f}`),
+                ...(r.points_a_traiter || []).map(p => `[${String(p.categorie).toUpperCase()}] ${p.message}`)
+            ];
+            renderList('list-risques', risks);
+
+            const questions = Array.isArray(r.questions_entretien) ? r.questions_entretien : [];
+            document.getElementById('val-questions').innerText = questions.length
+                ? `Questions à creuser : ${questions.join(' · ')}`
+                : '';
+        }
+
+        function renderList(id, items) {
+            const el = document.getElementById(id);
+            el.innerHTML = '';
+            if (!items || items.length === 0) {
+                el.parentElement.style.display = 'none';
+                return;
+            }
+            el.parentElement.style.display = 'flex';
+            items.forEach(text => {
+                const li = document.createElement('li');
+                li.innerText = text;
+                el.appendChild(li);
+            });
+        }
+
+        function renderChips(id, items) {
+            const el = document.getElementById(id);
+            el.innerHTML = '';
+            if (!items || items.length === 0) {
+                el.parentElement.style.display = 'none';
+                return;
+            }
+            el.parentElement.style.display = 'flex';
+            items.forEach(text => {
+                const chip = document.createElement('span');
+                chip.className = 'chip';
+                chip.innerText = text;
+                el.appendChild(chip);
+            });
+        }
+
+        function showLoading(show) {
+            document.getElementById('loading-state').style.display = show ? 'block' : 'none';
+        }
+
+        function showEmpty(show) {
+            if (!show) {
+                document.getElementById('empty-state').style.display = 'none';
+                return;
+            }
+
+            const container = document.querySelector('.container');
+            if (!container) return;
+
+            container.innerHTML = `
+                <div style="display: flex; flex-direction: column; align-items: center; justify-content: flex-start; height: 100vh; width: 100%; padding-top: 18vh; padding-left: 40px; padding-right: 40px; text-align: center; color: #64748b; background: #fff;">
+                    <div style="width: 64px; height: 64px; background: #eff6ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 24px; color: #0052ff;">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 32px; height: 32px;">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+                        </svg>
+                    </div>
+                    <h2 style="font-size: 20px; font-weight: 700; line-height: 1.25; color: #1e293b; margin-bottom: 12px; text-transform: none; letter-spacing: normal;">Analyse non disponible</h2>
+                    <button onclick="generate()" id="btn-generate" style="background: #0052ff; color: white; border: none; padding: 14px 32px; border-radius: 12px; font-weight: 600; cursor: pointer; font-size: 15px; box-shadow: 0 4px 12px rgba(0,82,255,0.2); transition: all 0.2s;">Générer l'analyse</button>
+                </div>`;
+        }
+
+        function showContent(show) {
+            document.getElementById('restitution-content').style.display = show ? 'block' : 'none';
+            document.getElementById('loading-state').style.display = 'none';
+            document.getElementById('generating-state').style.display = 'none';
+            document.getElementById('empty-state').style.display = 'none';
+        }
+
+        function showGenerating(offre, instance) {
+            renderHeader(offre);
+            document.getElementById('generating-state').style.display = 'block';
+            document.getElementById('loading-state').style.display = 'none';
+            document.getElementById('empty-state').style.display = 'none';
+            document.getElementById('restitution-content').style.display = 'none';
+        }
+
+        async function generate(triggerId = 'btn-generate') {
+            const btn = document.getElementById(triggerId) || document.getElementById('btn-generate');
+            const originalText = btn ? btn.innerText : '';
+            if (btn) {
+                btn.innerText = 'Génération en cours...';
+                btn.disabled = true;
+            }
+
+            if (currentOffer) {
+                showGenerating(currentOffer, currentInstance || { status: 'generating' });
+            } else {
+                showLoading(true);
+            }
+
+            try {
+                const target = instanceSlug ? `/api/instances/${instanceSlug}/generate` : `/api/offres/${offerSlug}/generate`;
+                const res = await fetch(target, { method: 'POST' });
+                if (res.ok) {
+                    window.location.reload();
+                } else {
+                    const data = await res.json();
+                    alert('Erreur : ' + (data.error || 'Génération échouée'));
+                    showEmpty(true);
+                }
+            } catch (err) {
+                alert('Erreur réseau');
+                showEmpty(true);
+            } finally {
+                if (btn) {
+                    btn.innerText = originalText;
+                    btn.disabled = false;
+                }
+                if (!currentOffer) {
+                    showLoading(false);
+                }
+            }
+        }
+
+        function escapeHtml(value) {
+            return String(value)
+                .replaceAll('&', '&amp;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;')
+                .replaceAll('"', '&quot;')
+                .replaceAll("'", '&#39;');
+        }
+
+        function escapeAttribute(value) {
+            return escapeHtml(value).replaceAll('`', '&#96;');
+        }
+
+        function resolveOfferUrl(offre) {
+            if (offre?.source_url && offre.source_url !== 'manual') {
+                return offre.source_url;
+            }
+
+            const rawText = offre?.raw_text || '';
+            const markdownLink = rawText.match(/\((https?:\/\/[^)\s]+)\)/);
+            if (markdownLink) {
+                return markdownLink[1];
+            }
+
+            const bareUrl = rawText.match(/https?:\/\/[^\s<>")\]]+/);
+            return bareUrl ? bareUrl[0] : '';
+        }
+
+        function isFreshGeneration(updatedAt) {
+            if (!updatedAt) return false;
+
+            const updatedTime = new Date(updatedAt).getTime();
+            if (Number.isNaN(updatedTime)) return false;
+
+            return Date.now() - updatedTime < 2 * 60 * 1000;
+        }
+
+        init();
     </script>
 </body>
-
 </html>
