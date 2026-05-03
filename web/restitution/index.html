@@ -165,8 +165,11 @@
     </div>
 
     <div id="generating-state" style="display: flex; flex-direction: column; align-items: center; justify-content: flex-start; height: 100vh; width: 100%; padding-top: 18vh; text-align: center;">
-        <h2 style="font-size: var(--text-lg); font-weight: var(--weight-bold); color: var(--ink); margin-bottom: 32px;">Analyse par RecruitAI...</h2>
-        <div style="width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 16px;">
+        <div style="background: #eef2ff; width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 24px;">
+            <i data-lucide="sparkles" style="width: 24px; height: 24px; color: var(--primary);"></i>
+        </div>
+        <h2 style="font-size: var(--text-lg); font-weight: var(--weight-bold); color: var(--ink); margin-bottom: 32px;">Analyse en cours...</h2>
+        <div style="width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 16px; margin: 0 auto;">
             <div class="skeleton-bar" style="height: 14px; border-radius: 4px; width: 100%;"></div>
             <div class="skeleton-bar" style="height: 14px; border-radius: 4px; width: 90%;"></div>
             <div class="skeleton-bar" style="height: 14px; border-radius: 4px; width: 75%;"></div>
@@ -257,7 +260,7 @@
                 const metaEl = document.getElementById('offre-meta');
                 const parts = [offre.entreprise || ''];
                 if (offre.localisation) parts.push(offre.localisation);
-                if (offre.source_url) parts.push(`<a href="${offre.source_url}" target="_blank">Visiter profil</a>`);
+                if (offre.source_url) parts.push(`<a href="${offre.source_url}" target="_blank">Visiter l'offre</a>`);
                 metaEl.innerHTML = parts.join(' · ');
 
                 if (resInstance.ok) {
