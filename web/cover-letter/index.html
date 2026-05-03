@@ -1,91 +1,78 @@
 <!doctype html>
 <html lang="fr">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>CAVAZZA_Roméo_Cover_Letter</title>
-        <link rel="stylesheet" href="style.css" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-        <link
-            href="https://fonts.googleapis.com/css2?family=Arimo:wght@400;500;600;700&family=Open+Sans:wght@400;500;600;700&display=swap"
-            rel="stylesheet"
-        />
-        <script src="https://unpkg.com/lucide@latest"></script>
-    </head>
-    <body>
-        <div class="no-print actions">
-            <div id="generation-banner" style="display: none; background: #ffffff; border: 1px solid var(--hairline); padding: 12px 20px; border-radius: 12px; margin-bottom: 20px; align-items: center; justify-content: space-between;">
-                <span style="color: var(--body); font-size: 14px;">Cette lettre est un modèle générique.</span>
-                <button id="btn-generate-cover" style="background: var(--primary); color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 13px;">Générer la lettre</button>
-            </div>
-            <button id="download-pdf" class="btn">
-                <i data-lucide="download"></i> Télécharger en PDF (A4)
-            </button>
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CAVAZZA_Roméo_Cover_Letter</title>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Arimo:wght@400;500;600;700&family=Open+Sans:wght@400;500;600;700&display=swap"
+        rel="stylesheet" />
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+
+<body>
+    <div class="no-print actions">
+        <div id="generation-banner"
+            style="display: none; background: #ffffff; border: 1px solid var(--hairline); padding: 12px 20px; border-radius: 12px; margin-bottom: 20px; align-items: center; justify-content: space-between;">
+            <span style="color: var(--body); font-size: 14px;">Cette lettre est un modèle générique.</span>
+            <button id="btn-generate-cover"
+                style="background: var(--primary); color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 13px;">Générer
+                la lettre</button>
         </div>
+        <button id="download-pdf" class="btn">
+            <i data-lucide="download"></i> Télécharger en PDF (A4)
+        </button>
+    </div>
 
-        <div class="page-stage">
-            <main id="cl" class="a4-page">
-                <header class="cl-header">
-                    <div class="author-block">
-                        <h1 id="author-name"></h1>
-                        <div class="author-contact">
-                            <div id="author-address"></div>
-                            <div id="author-phone"></div>
-                            <div id="author-email"></div>
-                        </div>
-                        <div class="author-links">
-                            <a
-                                id="author-linkedin"
-                                href="#"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                >LinkedIn</a
-                            >
-                            <span class="divider">|</span>
-                            <a
-                                id="author-github"
-                                href="#"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                >GitHub</a
-                            >
-                            <span class="divider">|</span>
-                            <a
-                                id="author-website"
-                                href="#"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                >Site web</a
-                            >
-                        </div>
+    <div class="page-stage">
+        <main id="cl" class="a4-page">
+            <header class="cl-header">
+                <div class="author-block">
+                    <h1 id="author-name"></h1>
+                    <div class="author-contact">
+                        <div id="author-address"></div>
+                        <div id="author-phone"></div>
+                        <div id="author-email"></div>
                     </div>
-                    <div class="letter-meta">
-                        <div id="letter-company"></div>
-                        <div id="letter-date"></div>
+                    <div class="author-links">
+                        <a id="author-linkedin" href="#" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+                        <span class="divider">|</span>
+                        <a id="author-github" href="#" target="_blank" rel="noopener noreferrer">GitHub</a>
+                        <span class="divider">|</span>
+                        <a id="author-website" href="#" target="_blank" rel="noopener noreferrer">Site web</a>
                     </div>
-                </header>
+                </div>
+                <div class="letter-meta">
+                    <div id="letter-company"></div>
+                    <div id="letter-date"></div>
+                </div>
+            </header>
 
-                <section class="cl-body">
-                    <h2 id="letter-subject"></h2>
-                    <p id="letter-greeting"></p>
-                    <div id="letter-paragraphs"></div>
-                    <p id="letter-closing" class="closing"></p>
-                    <p id="letter-signature" class="signature"></p>
-                </section>
-            </main>
-        </div>
+            <section class="cl-body">
+                <h2 id="letter-subject"></h2>
+                <p id="letter-greeting"></p>
+                <div id="letter-paragraphs"></div>
+                <p id="letter-closing" class="closing"></p>
+                <p id="letter-signature" class="signature"></p>
+            </section>
+        </main>
+    </div>
 
-        <script src="script.js"></script>
-        <script>
-            if (window.lucide) {
-                window.lucide.createIcons();
-            } else {
-                document.addEventListener(
-                    "DOMContentLoaded",
-                    () => window.lucide && window.lucide.createIcons(),
-                );
-            }
-        </script>
-    </body>
+    <script src="script.js"></script>
+    <script>
+        if (window.lucide) {
+            window.lucide.createIcons();
+        } else {
+            document.addEventListener(
+                "DOMContentLoaded",
+                () => window.lucide && window.lucide.createIcons(),
+            );
+        }
+    </script>
+</body>
+
 </html>

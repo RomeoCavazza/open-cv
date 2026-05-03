@@ -2,8 +2,8 @@
     --cv-blue: #6d83f2;
     --cv-ink: #1e293b;
     --cv-muted: #64748b;
-    --cv-surface: #eef4fb;
-    --cv-preview-surface: #f3f4f6;
+    --cv-surface: #ffffff;
+    --cv-preview-surface: #ffffff;
     --font-main: 'Inter', sans-serif;
     --a4-width: 210mm;
     --a4-height: 297mm;
@@ -427,3 +427,4 @@ body.is-framed .a4-page {
         margin: 0;
     }
 }
+.hidden { display: none !important; }

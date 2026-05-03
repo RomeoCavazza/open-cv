@@ -18,5 +18,6 @@ pub struct Profil {
     pub resume_template: Option<Json>,
     pub cover_letter_template: Option<Json>,
     pub calendar_pdf: Option<Vec<u8>>,
+    pub notes: Json,
     pub created_at: DateTime<Utc>,
 }

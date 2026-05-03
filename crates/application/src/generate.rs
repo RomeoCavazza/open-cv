@@ -69,14 +69,6 @@ impl Livrables {
     }
 }
 
-#[derive(Debug, Clone)]
-pub struct GenerateOutput {
-    pub instance_id: InstanceId,
-    pub slug: Slug,
-    pub restitution: Option<Restitution>,
-    pub resume: Option<Resume>,
-    pub cover_letter: Option<CoverLetter>,
-}
 
 // ─────────────────────────────────────────────────────────────────
 // Erreurs spécifiques au use case
@@ -290,14 +282,14 @@ impl GenerateApplicationUseCase {
         let cover_letter = cover_letter_res?;
 
         // Étape 5 : VALIDATE
+        self.events.started(instance_id, GenerationStep::Validate);
         validate_outputs(
             &offre,
             restitution.as_ref(),
             resume.as_ref(),
             cover_letter.as_ref(),
         )?;
-
-        self.events.done(instance_id, GenerationStep::Done, None);
+        self.events.done(instance_id, GenerationStep::Validate, None);
 
         // Récupérer l'instance (soit l'existante, soit celle qu'on vient de créer au début de l'exécution)
         let mut instance = self
@@ -313,10 +305,15 @@ impl GenerateApplicationUseCase {
         instance.status = domain::InstanceStatus::Ready;
         instance.updated_at = Utc::now();
 
+        self.events.started(instance_id, GenerationStep::Persist);
         self.instances
             .upsert(&instance)
             .await
             .map_err(AppError::Repo)?;
+        self.events.done(instance_id, GenerationStep::Persist, None);
+
+        // Étape 7 : DONE
+        self.events.done(instance_id, GenerationStep::Done, None);
 
         Ok(instance)
     }

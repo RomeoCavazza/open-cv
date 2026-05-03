@@ -214,19 +214,18 @@ impl IntakeOffreUseCase {
             .map_err(AppError::Repo)?;
 
         if let Some(existing_offre) = existing {
-            // Offre existe déjà — vérifier si une instance draft existe
-            let has_instance = self
+            // Offre existe déjà — réutiliser l'instance liée à cette offre,
+            // même si son slug ne correspond pas exactement au slug d'offre.
+            if let Some(instance) = self
                 .instances
-                .get_by_slug(&existing_offre.slug)
+                .get_by_offre_id(existing_offre.id)
                 .await
                 .map_err(AppError::Repo)?
-                .is_some();
-
-            if has_instance {
-                info!(slug = %existing_offre.slug, "offre déjà ingérée avec instance");
+            {
+                info!(slug = %existing_offre.slug, instance_slug = %instance.slug, "offre déjà ingérée avec instance");
                 return Ok(IntakeOutput {
                     offre_slug: existing_offre.slug.to_string(),
-                    instance_slug: existing_offre.slug.to_string(),
+                    instance_slug: instance.slug.to_string(),
                     was_duplicate: true,
                 });
             }

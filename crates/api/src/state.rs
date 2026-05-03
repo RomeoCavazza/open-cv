@@ -9,6 +9,7 @@ pub struct AppState {
     pub pool: sqlx::PgPool,
     pub offre_repo: Arc<dyn OffreRepo>,
     pub instance_repo: Arc<dyn InstanceRepo>,
+    pub profil_repo: Arc<dyn ports::ProfilRepo>,
     pub generate_uc: Arc<GenerateApplicationUseCase>,
     pub intake_uc: Arc<IntakeOffreUseCase>,
     pub chunk_repo: Arc<dyn ports::ChunkRepo>,

@@ -32,7 +32,7 @@ export let i18n = {
             ph_drag_reorder: "Glisser pour réordonner",
             ph_role: "Titre", ph_link: "Lien", ph_period: "Période", ph_desc: "Description",
             ph_school: "École", ph_degree: "Diplôme", ph_lang: "Langue", ph_level: "Niveau",
-            inbox_count: "INBOX (0)", send: "Envoyer",
+            inbox_count: "INBOX", send: "Envoyer",
             internship: "Stage", apprenticeship_short: "Alternance", apprenticeship_full: "Apprentissage", cdd: "CDD", cdi: "CDI",
             ph_resume_json: "Contenu JSON du modèle de CV...", ph_cover_json: "Contenu JSON du modèle de lettre...",
             others: "AUTRES", profile_saved: "Profil sauvegardé !", profile_save_error: "Erreur de sauvegarde du profil.", json_invalid: "Le JSON du modèle CV ou du modèle lettre est invalide."
@@ -67,7 +67,7 @@ export let i18n = {
             ph_drag_reorder: "Drag to reorder",
             ph_role: "Title", ph_link: "Link", ph_period: "Period", ph_desc: "Description",
             ph_school: "School", ph_degree: "Degree", ph_lang: "Language", ph_level: "Level",
-            inbox_count: "INBOX (0)", send: "Send",
+            inbox_count: "INBOX", send: "Send",
             internship: "Internship", apprenticeship_short: "Apprenticeship", apprenticeship_full: "Full Apprenticeship", cdd: "Fixed-term", cdi: "Permanent",
             ph_resume_json: "Resume JSON template content...", ph_cover_json: "Cover letter JSON template content...",
             others: "OTHERS", profile_saved: "Profile saved!", profile_save_error: "Profile save failed.", json_invalid: "Resume or cover letter JSON template is invalid."

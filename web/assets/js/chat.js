@@ -1,7 +1,8 @@
 // chat.js - Manages the AI chat interaction
-async function appendMessage(role, text) {
+function appendMessage(role, text) {
     const sidebarBody = document.querySelector('.ai-sidebar-body');
     if (!sidebarBody) return;
+
     const msgDiv = document.createElement('div');
     msgDiv.className = `chat-message ${role}-message`;
     msgDiv.style.cssText = `margin-bottom:16px;padding:12px 16px;border-radius:12px;font-size:14px;line-height:1.5;max-width:85%;${role === 'user' ? 'background:#0052ff;color:white;margin-left:auto;' : 'background:#f1f5f9;color:#1e293b;border:1px solid #e2e8f0;'}`;
@@ -10,26 +11,117 @@ async function appendMessage(role, text) {
     sidebarBody.scrollTop = sidebarBody.scrollHeight;
 }
 
+function renderChatHistory(history) {
+    const sidebarBody = document.querySelector('.ai-sidebar-body');
+    if (!sidebarBody) return;
+    sidebarBody.innerHTML = '';
+
+    const entries = Array.isArray(history) ? history : [];
+    if (entries.length === 0) {
+        console.log("[Chat] History is empty, nothing to render.");
+    }
+
+    entries.forEach((entry) => {
+        if (!entry || !entry.role) return;
+        const role = entry.role === 'assistant' ? 'ai' : 'user';
+        const text = entry.content || '';
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `chat-message ${role}-message`;
+        msgDiv.style.cssText = `margin-bottom:16px;padding:12px 16px;border-radius:12px;font-size:14px;line-height:1.5;max-width:85%;${role === 'user' ? 'background:#0052ff;color:white;margin-left:auto;' : 'background:#f1f5f9;color:#1e293b;border:1px solid #e2e8f0;'}`;
+        msgDiv.textContent = text;
+        sidebarBody.appendChild(msgDiv);
+    });
+
+    sidebarBody.scrollTop = sidebarBody.scrollHeight;
+}
+
+function setSendButtonBusy(isBusy) {
+    const sendBtn = document.querySelector('.ai-send-btn');
+    if (!sendBtn) return;
+
+    sendBtn.disabled = isBusy;
+    sendBtn.classList.toggle('is-busy', isBusy);
+}
+
+function getActiveOfferSlug() {
+    const isAppView = document.getElementById('view-app')?.classList.contains('active');
+    if (!isAppView) return null;
+    return window.activeJobId || window.state?.activeJobId || null;
+}
+
+async function resolveActiveInstance() {
+    const offerSlug = getActiveOfferSlug();
+    if (!offerSlug) return null;
+
+    if (window.activeResolvedOfferSlug === offerSlug && window.activeInstanceSlug) {
+        if (window.activeInstanceData?.id) {
+            return window.activeInstanceData;
+        }
+        const resInstance = await fetch(`/api/instances/${window.activeInstanceSlug}`);
+        if (resInstance.ok) {
+            const instanceData = await resInstance.json();
+            window.activeInstanceData = instanceData;
+            return instanceData;
+        }
+        return { id: window.activeInstanceSlug, slug: window.activeInstanceSlug };
+    }
+
+    const resInstance = await fetch(`/api/offres/${offerSlug}/instance`);
+    if (!resInstance.ok) return null;
+
+    const instanceData = await resInstance.json();
+    window.activeResolvedOfferSlug = offerSlug;
+    window.activeInstanceSlug = instanceData?.slug || null;
+    window.activeInstanceData = instanceData;
+    return instanceData;
+}
+
+async function loadChatHistory() {
+    try {
+        const instanceData = await resolveActiveInstance();
+        let history = [];
+
+        if (instanceData) {
+            console.log("[Chat] Loading history from instance:", instanceData.slug);
+            history = instanceData?.notes?.chat_history || [];
+        } else {
+            console.log("[Chat] Loading global history from profile");
+            const res = await fetch('/api/profile/active');
+            if (res.ok) {
+                const profil = await res.json();
+                history = profil.notes?.chat_history || [];
+            }
+        }
+        renderChatHistory(history);
+    } catch (error) {
+        console.warn('Impossible de charger l\'historique du chat', error);
+    }
+}
+
+async function readChatErrorMessage(response) {
+    try {
+        const payload = await response.json();
+        return payload?.error || payload?.message || `Erreur HTTP ${response.status}`;
+    } catch (_) {
+        return `Erreur HTTP ${response.status}`;
+    }
+}
+
 async function sendChatMessage() {
     const input = document.getElementById('chat-input');
     const message = input.value.trim();
-    if (!message || !window.activeJobId) return;
+    if (!message) return;
+
+    const offerSlug = getActiveOfferSlug();
+    console.log("[Chat] Attempting to send message. OfferSlug:", offerSlug);
 
     appendMessage('user', message);
     input.value = '';
 
-    const resOffre = await fetch(`/api/offres/${window.activeJobId}/instance`);
-    if (!resOffre.ok) {
-        appendMessage('ai', "Erreur : Instance non trouvée.");
-        return;
-    }
-    const instanceData = await resOffre.json();
-    const instance_id = instanceData.id;
+    const instanceData = offerSlug ? await resolveActiveInstance() : null;
+    const instance_id = instanceData?.id || null;
 
-    input.disabled = true;
-    input.placeholder = "L'IA réfléchit...";
-    const sendBtn = document.querySelector('.ai-send-btn');
-    if (sendBtn) sendBtn.disabled = true;
+    setSendButtonBusy(true);
 
     try {
         const resChat = await fetch('/api/chat', {
@@ -38,47 +130,100 @@ async function sendChatMessage() {
             body: JSON.stringify({
                 message,
                 instance_id,
-                llm_provider: (window.state && window.state.selectedLlmProvider) || localStorage.getItem('recruitai_llm') || 'ollama'
+                llm_provider: window.state?.selectedLlmProvider || localStorage.getItem('recruitai_llm') || 'ollama'
             })
         });
 
         if (resChat.ok) {
             const result = await resChat.json();
-            appendMessage('ai', result.message || "Modifications appliquées !");
-            if (typeof window.updateIframe === 'function') window.updateIframe();
+            console.log("[Chat] Result received:", result);
+
+            if (result.updated_instance?.slug) {
+                window.activeInstanceSlug = result.updated_instance.slug;
+                // Defensive: ensure notes is an object if it arrived as a string
+                if (typeof result.updated_instance.notes === 'string') {
+                    try {
+                        result.updated_instance.notes = JSON.parse(result.updated_instance.notes);
+                    } catch (e) {
+                        console.warn("[Chat] Failed to parse notes string", e);
+                    }
+                }
+                window.activeInstanceData = result.updated_instance;
+                window.activeResolvedOfferSlug = offerSlug || window.activeResolvedOfferSlug;
+            }
+
+            const persistedHistory = result.updated_instance?.notes?.chat_history 
+                || (await fetch('/api/profile/active').then(r => r.json())).notes?.chat_history;
+            if (Array.isArray(persistedHistory) && persistedHistory.length > 0) {
+                console.log("[Chat] Rendering persisted history:", persistedHistory.length, "entries");
+                renderChatHistory(persistedHistory);
+            } else {
+                console.warn("[Chat] No persisted history found in response, falling back to local simulation");
+                renderChatHistory([
+                    { role: 'user', content: message },
+                    { role: 'assistant', content: result.message || "J'ai traité ta demande, mais l'historique de session n'est pas encore synchronisé." },
+                ]);
+            }
         } else {
-            appendMessage('ai', "L'IA a rencontré une erreur.");
+            const sidebarBody = document.querySelector('.ai-sidebar-body');
+            if (sidebarBody) {
+                const errorMessage = await readChatErrorMessage(resChat);
+                const msgDiv = document.createElement('div');
+                msgDiv.className = 'chat-message ai-message';
+                msgDiv.style.cssText = 'margin-bottom:16px;padding:12px 16px;border-radius:12px;font-size:14px;line-height:1.5;max-width:85%;background:#f1f5f9;color:#1e293b;border:1px solid #e2e8f0;';
+                msgDiv.textContent = `L'IA a rencontré une erreur : ${errorMessage}`;
+                sidebarBody.appendChild(msgDiv);
+            }
         }
     } catch (e) {
-        appendMessage('ai', "Erreur de connexion.");
+        const sidebarBody = document.querySelector('.ai-sidebar-body');
+        if (sidebarBody) {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = 'chat-message ai-message';
+            msgDiv.style.cssText = 'margin-bottom:16px;padding:12px 16px;border-radius:12px;font-size:14px;line-height:1.5;max-width:85%;background:#f1f5f9;color:#1e293b;border:1px solid #e2e8f0;';
+            msgDiv.textContent = `Erreur de connexion : ${e?.message || 'réseau indisponible'}`;
+            sidebarBody.appendChild(msgDiv);
+        }
     } finally {
-        input.disabled = false;
-        input.placeholder = "Demander des modifications...";
-        if (sendBtn) sendBtn.disabled = false;
+        setSendButtonBusy(false);
     }
 }
 
-// Attach listener
-document.addEventListener('DOMContentLoaded', () => {
-    const input = document.getElementById('chat-input');
-    const sendBtn = document.querySelector('.ai-send-btn');
+function initChat() {
+    console.log("[Chat] Initializing Event Delegation...");
+    
+    // Global listener for the Send Button (Event Delegation)
+    document.addEventListener('click', (e) => {
+        const btn = e.target.closest('#chat-send-btn');
+        if (btn) {
+            console.log("[Chat] Click on send button detected.");
+            sendChatMessage();
+        }
+    });
 
-    if (input) {
-        input.addEventListener('keydown', (e) => {
-            // User request: Enter = send, Ctrl+Enter = newline
-            if (e.key === 'Enter') {
-                if (e.ctrlKey) {
-                    // Let the default behavior (newline) happen
-                    return;
-                } else {
-                    e.preventDefault();
-                    sendChatMessage();
-                }
+    // Global listener for Enter key in the textarea (Event Delegation)
+    document.addEventListener('keydown', (e) => {
+        if (e.target.id === 'chat-input' && e.key === 'Enter') {
+            if (e.ctrlKey) {
+                return;
+            } else {
+                e.preventDefault();
+                console.log("[Chat] Enter key detected in input.");
+                sendChatMessage();
             }
-        });
-    }
+        }
+    });
 
-    if (sendBtn) {
-        sendBtn.onclick = sendChatMessage;
-    }
-});
+    loadChatHistory();
+}
+
+// Initial load
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initChat);
+} else {
+    initChat();
+}
+
+window.loadChatHistory = loadChatHistory;
+window.initChat = initChat;
+window.sendChatMessage = sendChatMessage;

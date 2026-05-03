@@ -58,7 +58,7 @@ Application generation runs through the central `GenerateApplicationUseCase`:
 1. **Retrieve**: fetch the most relevant profile chunks for the target job posting.
 2. **Rerank**: let the LLM score and filter those chunks.
 3. **Plan**: build an application strategy for the current offer.
-4. **Analysis**: generate a structured analysis of the offer.
+4. **Restitution**: generate a structured analysis of the offer.
 5. **Resume**: generate the structured resume payload.
 6. **Cover Letter**: generate the structured cover letter payload.
 7. **Validate / Persist**: apply basic business validation and save the instance to the database.

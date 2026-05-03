@@ -4,8 +4,8 @@
     --color-muted: #64748b;
     --color-accent: #88b7e1;
     --color-border: #d9e3f0;
-    --color-background: #eef4fb;
-    --color-preview-surface: #f3f4f6;
+    --color-background: #ffffff;
+    --color-preview-surface: #ffffff;
     --page-width: 210mm;
     --page-height: 297mm;
 }
@@ -282,3 +282,4 @@ body.is-framed .a4-page {
     }
 
 }
+.hidden { display: none !important; }

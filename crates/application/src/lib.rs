@@ -9,15 +9,11 @@ use thiserror::Error;
 pub mod chat;
 pub mod events;
 pub mod generate;
-pub mod index_profil;
 pub mod intake;
-
-#[cfg(any(test, feature = "test-mocks"))]
-pub mod test_mocks;
 
 pub use events::{EventBus, GenerationEvent, GenerationStep, StepStatus};
 pub use generate::{
-    GenerateApplicationUseCase, GenerateError, GenerateInput, GenerateOutput, Livrables,
+    GenerateApplicationUseCase, GenerateError, GenerateInput, Livrables,
 };
 pub use intake::{IntakeInput, IntakeOffreUseCase, IntakeOutput};
 

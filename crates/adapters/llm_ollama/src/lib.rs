@@ -6,14 +6,16 @@ use tracing::instrument;
 pub struct OllamaClient {
     base_url: String,
     model: String,
+    dimension: usize,
     http: reqwest::Client,
 }
 
 impl OllamaClient {
-    pub fn new(base_url: impl Into<String>, model: impl Into<String>) -> Self {
+    pub fn new(base_url: impl Into<String>, model: impl Into<String>, dimension: usize) -> Self {
         Self {
             base_url: base_url.into(),
             model: model.into(),
+            dimension,
             http: reqwest::Client::builder()
                 .timeout(std::time::Duration::from_secs(300)) // Ollama peut être lent en local
                 .build()
@@ -52,6 +54,12 @@ struct OllamaChatResponse {
 impl LlmClient for OllamaClient {
     #[instrument(skip(self, req), fields(model = %self.model))]
     async fn complete(&self, req: CompletionRequest) -> Result<CompletionResponse, LlmError> {
+        let use_json_format = req
+            .system
+            .as_ref()
+            .map(|s| s.contains("JSON"))
+            .unwrap_or(false);
+
         let mut messages = Vec::new();
         if let Some(sys) = req.system {
             messages.push(OllamaMessage {
@@ -73,7 +81,7 @@ impl LlmClient for OllamaClient {
             model: req.model.unwrap_or_else(|| self.model.clone()),
             messages,
             stream: false,
-            format: if req.system.as_ref().map(|s| s.contains("JSON")).unwrap_or(false) {
+            format: if use_json_format {
                 Some(serde_json::json!("json"))
             } else {
                 None
@@ -137,16 +145,36 @@ impl LlmClient for OllamaClient {
             content: format!("{}\n\n---\n\n{}", instruction, req.input),
         });
 
+        let mut cleaned_schema = req.json_schema.clone();
+        let mut use_full_schema = true;
+
+        if let Some(obj) = cleaned_schema.as_object_mut() {
+            obj.remove("$schema");
+            obj.remove("title");
+            
+            // Si le schéma contient des $ref, Ollama risque de planter (invalid JSON schema).
+            // On vérifie récursivement ou on cherche simplement la string "$ref".
+            let schema_str = serde_json::to_string(&cleaned_schema).unwrap_or_default();
+            if schema_str.contains("\"$ref\"") {
+                tracing::warn!("Schema for {} contains $ref, falling back to 'json' format for Ollama", req.schema_name);
+                use_full_schema = false;
+            }
+        }
+
         let body = OllamaChatRequest {
             model: req.model.unwrap_or_else(|| self.model.clone()),
             messages,
             stream: false,
-            format: Some(req.json_schema.clone()),
+            format: if use_full_schema {
+                Some(cleaned_schema)
+            } else {
+                Some(serde_json::json!("json"))
+            },
             options: None,
         };
 
         let url = format!("{}/api/chat", self.base_url);
-        let resp = self
+        let mut resp = self
             .http
             .post(&url)
             .json(&body)
@@ -154,11 +182,32 @@ impl LlmClient for OllamaClient {
             .await
             .map_err(|e| LlmError::Http(e.to_string()))?;
 
-        let status = resp.status().as_u16();
-        let raw = resp
+        let mut status = resp.status().as_u16();
+        let mut raw = resp
             .text()
             .await
             .map_err(|e| LlmError::Http(e.to_string()))?;
+
+        // Fallback automatique si le schéma est rejeté par Ollama
+        if status == 500 && raw.contains("invalid JSON schema in format") {
+            tracing::warn!("Ollama rejected the JSON schema. Retrying with format: 'json'...");
+            let mut fallback_body = body;
+            fallback_body.format = Some(serde_json::json!("json"));
+            
+            resp = self
+                .http
+                .post(&url)
+                .json(&fallback_body)
+                .send()
+                .await
+                .map_err(|e| LlmError::Http(e.to_string()))?;
+            
+            status = resp.status().as_u16();
+            raw = resp
+                .text()
+                .await
+                .map_err(|e| LlmError::Http(e.to_string()))?;
+        }
 
         if status != 200 {
             return Err(LlmError::ProviderStatus { status, body: raw });
@@ -244,7 +293,7 @@ impl ports::Embedder for OllamaClient {
     }
 
     fn dimension(&self) -> usize {
-        4096 // Qwen 2.5:7b a typiquement 4096 dimensions
+        self.dimension
     }
 
     fn name(&self) -> &'static str {

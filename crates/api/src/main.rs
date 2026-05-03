@@ -9,7 +9,6 @@
 use std::sync::Arc;
 
 use anyhow::Context;
-use async_trait::async_trait;
 use axum::{
     extract::{Path, Query, State},
     http::StatusCode,
@@ -48,7 +47,6 @@ async fn main() -> anyhow::Result<()> {
     let database_url =
         std::env::var("DATABASE_URL").context("DATABASE_URL non défini (vois .env.example)")?;
 
-    info!("connexion à Postgres...");
     info!("connexion à Postgres...");
     let pool = adapter_postgres::connect(&database_url)
         .await
@@ -105,6 +103,7 @@ async fn main() -> anyhow::Result<()> {
         Arc::new(adapter_llm_ollama::OllamaClient::new(
             ollama_base,
             ollama_model,
+            4096, // Qwen 2.5:7b default
         )),
     );
 
@@ -118,43 +117,17 @@ async fn main() -> anyhow::Result<()> {
         .cloned()
         .context("Aucun provider LLM disponible")?;
 
-    // Embedder (Mock pour débloquer la compilation sans clé OpenAI/Mistral)
-    struct MockEmbedder;
-    #[async_trait]
-    impl ports::Embedder for MockEmbedder {
-        async fn embed(
-            &self,
-            texts: &[&str],
-            _mode: ports::EmbedMode,
-        ) -> Result<Vec<Vec<f32>>, ports::EmbedError> {
-            Ok(texts
-                .iter()
-                .map(|text| pseudo_embedding(text, 1024))
-                .collect())
-        }
-        fn dimension(&self) -> usize {
-            1024
-        }
-        fn name(&self) -> &'static str {
-            "mock-embedder"
-        }
-    }
+    // Embedder (Utilise Ollama avec mxbai-embed-large en local)
+    let embed_base =
+        std::env::var("OLLAMA_BASE_URL").unwrap_or_else(|_| "http://localhost:11434".into());
+    let embed_model = std::env::var("OLLAMA_EMBED_MODEL").unwrap_or_else(|_| "mxbai-embed-large".into());
+    info!("Embedder: Ollama activé ({} @ {})", embed_model, embed_base);
 
-    fn pseudo_embedding(text: &str, dim: usize) -> Vec<f32> {
-        use std::hash::{Hash, Hasher};
-
-        let mut hasher = std::collections::hash_map::DefaultHasher::new();
-        text.hash(&mut hasher);
-        let seed = hasher.finish();
-
-        (0..dim)
-            .map(|i| {
-                let mixed = seed.wrapping_add(i as u64).wrapping_mul(2654435761);
-                ((mixed % 1000) as f32 / 1000.0) - 0.5
-            })
-            .collect()
-    }
-    let embedder = Arc::new(MockEmbedder);
+    let embedder: Arc<dyn ports::Embedder> = Arc::new(adapter_llm_ollama::OllamaClient::new(
+        embed_base,
+        embed_model,
+        1024, // mxbai-embed-large dimension
+    ));
 
     // Event Bus (Simple in-memory pour l'instant)
     let event_bus = Arc::new(application::events::EventBus::new());
@@ -184,6 +157,7 @@ async fn main() -> anyhow::Result<()> {
         pool: pool.clone(),
         offre_repo,
         instance_repo,
+        profil_repo: profil_repo.clone(),
         generate_uc,
         intake_uc,
         chunk_repo: chunk_repo.clone(),
@@ -522,6 +496,7 @@ async fn chat_handler(
 ) -> Result<Json<application::chat::ChatResponse>, ApiError> {
     let usecase = application::chat::ChatWithApplicationUseCase::new(
         state.instance_repo.clone(),
+        state.profil_repo.clone(),
         state.chunk_repo.clone(),
         state.embedder.clone(),
         state.llm_registry.as_ref().clone(),

@@ -357,6 +357,13 @@ impl InstanceRepo for InstanceRepoPg {
     }
 
     async fn upsert(&self, instance: &Instance) -> Result<(), RepoError> {
+        tracing::info!(
+            "DB: Upserting instance {} (slug: {}). Notes size: {} bytes, History entries: {}",
+            instance.id,
+            instance.slug.as_str(),
+            instance.notes.to_string().len(),
+            instance.notes.get("chat_history").and_then(|h| h.as_array()).map(|a| a.len()).unwrap_or(0)
+        );
         sqlx::query(
             r#"
             INSERT INTO instances (
@@ -405,7 +412,15 @@ impl InstanceRepo for InstanceRepoPg {
                    created_at, updated_at, sent_at
             FROM instances
             WHERE offre_id = $1
-            ORDER BY created_at DESC
+            ORDER BY
+                CASE
+                    WHEN restitution IS NOT NULL
+                      OR resume_json IS NOT NULL
+                      OR cover_letter_json IS NOT NULL
+                    THEN 0
+                    ELSE 1
+                END,
+                created_at DESC
             LIMIT 1
             "#,
         )
@@ -455,7 +470,7 @@ impl ports::ProfilRepo for ProfilRepoPg {
     async fn get_active(&self) -> Result<Option<domain::Profil>, ports::RepoError> {
         let row = sqlx::query!(
             r#"
-            SELECT id, label, content, is_active, calendar_pdf, resume_template, cover_letter_template, created_at
+            SELECT id, label, content, is_active, calendar_pdf, resume_template, cover_letter_template, notes, created_at
             FROM profils
             WHERE is_active = true
             LIMIT 1
@@ -473,6 +488,7 @@ impl ports::ProfilRepo for ProfilRepoPg {
             calendar_pdf: r.calendar_pdf,
             resume_template: r.resume_template,
             cover_letter_template: r.cover_letter_template,
+            notes: r.notes.unwrap_or_else(|| serde_json::json!({})),
             created_at: r.created_at,
         }))
     }
@@ -483,7 +499,7 @@ impl ports::ProfilRepo for ProfilRepoPg {
     ) -> Result<Option<domain::Profil>, ports::RepoError> {
         let row = sqlx::query!(
             r#"
-            SELECT id, label, content, is_active, calendar_pdf, resume_template, cover_letter_template, created_at
+            SELECT id, label, content, is_active, calendar_pdf, resume_template, cover_letter_template, notes, created_at
             FROM profils
             WHERE id = $1
             "#,
@@ -501,6 +517,7 @@ impl ports::ProfilRepo for ProfilRepoPg {
             calendar_pdf: r.calendar_pdf,
             resume_template: r.resume_template,
             cover_letter_template: r.cover_letter_template,
+            notes: r.notes.unwrap_or_else(|| serde_json::json!({})),
             created_at: r.created_at,
         }))
     }
@@ -508,7 +525,7 @@ impl ports::ProfilRepo for ProfilRepoPg {
     async fn list_all(&self) -> Result<Vec<domain::Profil>, ports::RepoError> {
         let rows = sqlx::query!(
             r#"
-            SELECT id, label, content, is_active, calendar_pdf, resume_template, cover_letter_template, created_at
+            SELECT id, label, content, is_active, calendar_pdf, resume_template, cover_letter_template, notes, created_at
             FROM profils
             ORDER BY created_at DESC
             "#
@@ -527,6 +544,7 @@ impl ports::ProfilRepo for ProfilRepoPg {
                 calendar_pdf: r.calendar_pdf,
                 resume_template: r.resume_template,
                 cover_letter_template: r.cover_letter_template,
+                notes: r.notes.unwrap_or_else(|| serde_json::json!({})),
                 created_at: r.created_at,
             })
             .collect())
@@ -535,15 +553,16 @@ impl ports::ProfilRepo for ProfilRepoPg {
     async fn upsert(&self, profil: &domain::Profil) -> Result<(), ports::RepoError> {
         sqlx::query!(
             r#"
-            INSERT INTO profils (id, label, content, is_active, calendar_pdf, resume_template, cover_letter_template, created_at)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+            INSERT INTO profils (id, label, content, is_active, calendar_pdf, resume_template, cover_letter_template, notes, created_at)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
             ON CONFLICT (id) DO UPDATE SET
                 label = EXCLUDED.label,
                 content = EXCLUDED.content,
                 is_active = EXCLUDED.is_active,
                 calendar_pdf = COALESCE(EXCLUDED.calendar_pdf, profils.calendar_pdf),
                 resume_template = COALESCE(EXCLUDED.resume_template, profils.resume_template),
-                cover_letter_template = COALESCE(EXCLUDED.cover_letter_template, profils.cover_letter_template)
+                cover_letter_template = COALESCE(EXCLUDED.cover_letter_template, profils.cover_letter_template),
+                notes = EXCLUDED.notes
             "#,
             profil.id.as_uuid(),
             profil.label,
@@ -552,6 +571,7 @@ impl ports::ProfilRepo for ProfilRepoPg {
             profil.calendar_pdf,
             profil.resume_template,
             profil.cover_letter_template,
+            profil.notes,
             profil.created_at
         )
         .execute(&self.pool)

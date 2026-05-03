@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,32 +8,36 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        :root { 
-            --primary: #0052ff; 
+        :root {
+            --primary: #0052ff;
             --primary-soft: #eef4fb;
-            --ink: #1e293b; 
-            --body: #475569; 
-            --muted: #94a3b8; 
-            --surface-soft: #f8fafc; 
-            --surface-strong: #f1f5f9; 
-            --hairline: #e2e8f0; 
+            --ink: #1e293b;
+            --body: #475569;
+            --muted: #94a3b8;
+            --surface-soft: #f8fafc;
+            --surface-strong: #f1f5f9;
+            --hairline: #e2e8f0;
             --success: #16a34a;
             --warning: #d97706;
             --danger: #dc2626;
         }
-        
-        * { box-sizing: border-box; }
-        
-        body { 
-            background: #ffffff; 
-            color: var(--ink); 
-            font-family: 'Inter', sans-serif; 
-            line-height: 1.6; 
-            margin: 0; 
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #ffffff;
+            color: var(--ink);
+            font-family: 'Inter', sans-serif;
+            line-height: 1.25;
+            margin: 0;
             padding: 0;
             min-height: 100vh;
         }
-        
+
         .container {
             max-width: 900px;
             margin: 0 auto;
@@ -40,51 +45,72 @@
             padding: 40px;
         }
 
+        body.is-framed {
+            padding: 0 !important;
+            margin: 0 !important;
+            overflow: hidden !important;
+        }
+
         /* Header */
-        .offer-header { margin-bottom: 48px; }
-        .offer-header h1 { 
-            font-size: 32px; 
-            font-weight: 700; 
-            margin: 0 0 16px; 
-            letter-spacing: -0.025em; 
+        .offer-header {
+            margin-bottom: 48px;
+        }
+
+        .offer-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            margin: 0 0 16px;
+            letter-spacing: -0.025em;
             line-height: 1.2;
         }
-        .offer-meta { 
-            display: flex; 
-            flex-wrap: wrap; 
-            gap: 16px; 
-            align-items: center; 
-            font-size: 14px; 
-            color: var(--body); 
+
+        .offer-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            align-items: center;
+            font-size: 14px;
+            color: var(--body);
         }
-        .offer-meta a { 
-            color: var(--primary); 
-            text-decoration: none; 
-            font-weight: 600; 
+
+        .offer-meta a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
         }
-        .offer-meta a:hover { text-decoration: underline; }
-        .meta-dot { color: var(--muted); }
+
+        .offer-meta a:hover {
+            text-decoration: underline;
+        }
+
+        .meta-dot {
+            color: var(--muted);
+        }
 
         /* Sections */
-        .section { margin-bottom: 40px; }
-        .section-title { 
-            font-size: 12px; 
-            font-weight: 700; 
-            text-transform: uppercase; 
-            color: var(--primary); 
-            letter-spacing: 0.1em; 
-            margin-bottom: 16px; 
+        .section {
+            margin-bottom: 40px;
+        }
+
+        .section-title {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--primary);
+            letter-spacing: 0.1em;
+            margin-bottom: 16px;
             display: flex;
             align-items: center;
             gap: 12px;
         }
+
         .section-title::after {
             content: "";
             flex: 1;
             height: 1px;
             background: var(--hairline);
         }
-        
+
         .card {
             background: transparent;
             padding: 0;
@@ -92,51 +118,66 @@
             border: none;
             margin-bottom: 32px;
         }
-        
-        .tag { 
-            display: inline-block; 
-            background: var(--primary-soft); 
+
+        .tag {
+            display: inline-block;
+            background: var(--primary-soft);
             color: var(--primary);
-            padding: 6px 14px; 
-            border-radius: 100px; 
-            font-size: 13px; 
-            font-weight: 600; 
-            margin-right: 8px; 
-            margin-bottom: 8px; 
+            padding: 6px 14px;
+            border-radius: 100px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-right: 8px;
+            margin-bottom: 8px;
         }
-        
-        ul { padding-left: 20px; margin: 0; }
-        li { margin-bottom: 8px; font-size: 15px; }
+
+        ul {
+            padding-left: 20px;
+            margin: 0;
+        }
+
+        li {
+            margin-bottom: 8px;
+            font-size: 15px;
+        }
 
         /* Divider */
-        .divider { 
-            border: none; 
-            border-top: 1px solid var(--hairline); 
-            margin: 56px 0; 
+        .divider {
+            border: none;
+            border-top: 1px solid var(--hairline);
+            margin: 56px 0;
         }
 
         /* AI Analysis Header */
-        .ai-header { 
-            display: flex; 
-            align-items: center; 
+        .ai-header {
+            display: flex;
+            align-items: center;
             justify-content: space-between;
-            margin-bottom: 32px; 
+            margin-bottom: 32px;
         }
+
         .ai-header-left {
             display: flex;
             align-items: center;
             gap: 12px;
         }
-        .ai-header h2 { font-size: 24px; font-weight: 700; margin: 0; letter-spacing: -0.01em; }
-        .ai-badge { 
+
+        .ai-header h2 {
+            font-size: 24px;
+            font-weight: 700;
+            margin: 0;
+            letter-spacing: -0.01em;
+        }
+
+        .ai-badge {
             background: linear-gradient(135deg, var(--primary), #6366f1);
-            color: white; 
-            font-size: 11px; 
-            font-weight: 800; 
-            padding: 4px 10px; 
-            border-radius: 6px; 
-            text-transform: uppercase; 
-            letter-spacing: 0.05em; 
+            color: white;
+            font-size: 11px;
+            font-weight: 800;
+            padding: 4px 10px;
+            border-radius: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
             box-shadow: 0 2px 4px rgba(0, 82, 255, 0.2);
         }
 
@@ -147,9 +188,11 @@
             gap: 32px;
             margin-bottom: 40px;
         }
-        
+
         @media (max-width: 768px) {
-            .analysis-grid { grid-template-columns: 1fr; }
+            .analysis-grid {
+                grid-template-columns: 1fr;
+            }
         }
 
         .fit-card {
@@ -159,18 +202,27 @@
             flex-direction: column;
             gap: 16px;
         }
-        
-        .fit-score { 
-            font-size: 64px; 
-            font-weight: 800; 
+
+        .fit-score {
+            font-size: 64px;
+            font-weight: 800;
             line-height: 1;
             margin-bottom: 8px;
             letter-spacing: -0.04em;
         }
-        .fit-score.high { color: var(--success); }
-        .fit-score.medium { color: var(--warning); }
-        .fit-score.low { color: var(--danger); }
-        
+
+        .fit-score.high {
+            color: var(--success);
+        }
+
+        .fit-score.medium {
+            color: var(--warning);
+        }
+
+        .fit-score.low {
+            color: var(--danger);
+        }
+
         .fit-label {
             font-size: 13px;
             font-weight: 700;
@@ -179,16 +231,21 @@
             letter-spacing: 0.1em;
             margin-bottom: 24px;
         }
-        
-        .fit-justification { 
-            font-size: 14px; 
-            color: var(--body); 
+
+        .fit-justification {
+            font-size: 14px;
+            color: var(--body);
             line-height: 1.5;
             text-align: left;
         }
 
         /* Force/faiblesse chips */
-        .chip-list { display: flex; flex-wrap: wrap; gap: 8px; }
+        .chip-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
         .chip {
             display: inline-block;
             padding: 6px 0;
@@ -196,79 +253,123 @@
             font-weight: 500;
             margin-right: 12px;
         }
-        .chip.force { color: var(--success); }
-        .chip.faiblesse { color: var(--danger); }
-        .chip.force::before { content: "✓ "; }
-        .chip.faiblesse::before { content: "× "; }
+
+        .chip.force {
+            color: var(--success);
+        }
+
+        .chip.faiblesse {
+            color: var(--danger);
+        }
+
+        .chip.force::before {
+            content: "✓ ";
+        }
+
+        .chip.faiblesse::before {
+            content: "× ";
+        }
 
         /* Points attention */
-        .point-item { 
-            display: flex; 
-            gap: 12px; 
-            margin-bottom: 12px; 
-            align-items: flex-start; 
-            font-size: 14px; 
+        .point-item {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 12px;
+            align-items: flex-start;
+            font-size: 14px;
             padding: 12px;
             background: var(--surface-soft);
             border-radius: 10px;
         }
-        .point-cat { 
-            font-size: 10px; 
-            font-weight: 800; 
-            text-transform: uppercase; 
-            padding: 3px 8px; 
-            border-radius: 6px; 
-            white-space: nowrap; 
+
+        .point-cat {
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            padding: 3px 8px;
+            border-radius: 6px;
+            white-space: nowrap;
             margin-top: 2px;
         }
-        .point-cat.forcer { background: #dbeafe; color: #1e40af; }
-        .point-cat.adresser { background: #fef3c7; color: #92400e; }
-        .point-cat.questionner { background: #f3e8ff; color: #6b21a8; }
-        .point-cat.vigilance { background: #fecaca; color: #991b1b; }
+
+        .point-cat.forcer {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .point-cat.adresser {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .point-cat.questionner {
+            background: #f3e8ff;
+            color: #6b21a8;
+        }
+
+        .point-cat.vigilance {
+            background: #fecaca;
+            color: #991b1b;
+        }
 
         /* Markdown rendering styles */
-        .card p { margin-top: 0; margin-bottom: 16px; }
-        .card p:last-child { margin-bottom: 0; }
-        .card h1, .card h2, .card h3 { 
-            font-size: 16px; 
-            font-weight: 700; 
-            margin: 20px 0 10px; 
+        .card p {
+            margin-top: 0;
+            margin-bottom: 16px;
+        }
+
+        .card p:last-child {
+            margin-bottom: 0;
+        }
+
+        .card h1,
+        .card h2,
+        .card h3 {
+            font-size: 16px;
+            font-weight: 700;
+            margin: 20px 0 10px;
             color: var(--ink);
         }
-        .card strong { color: var(--ink); }
+
+        .card strong {
+            color: var(--ink);
+        }
 
         /* Hidden */
-        .hidden { display: none; }
+        .hidden {
+            display: none;
+        }
     </style>
 </head>
+
 <body>
     <div class="container">
         <!-- SECTION HAUTE : Ce que dit l'offre -->
-        <div class="offer-header">
-            <h1 id="job-title">Analyse en cours...</h1>
+        <div class="offer-header hidden" id="section-header">
+            <h1 id="job-title">Restitution</h1>
             <div class="offer-meta" id="offer-meta"></div>
         </div>
 
-        <div class="section" id="section-resume">
+        <div class="section hidden" id="section-resume">
             <div class="card" id="resume-court"></div>
         </div>
 
-        <div class="section" id="section-stack">
+        <div class="section hidden" id="section-stack">
             <div class="section-title">Stack Technique</div>
             <div id="stack-container"></div>
         </div>
 
-        <div class="section" id="section-missions">
+        <div class="section hidden" id="section-missions">
             <div class="section-title">Missions Clés</div>
             <ul id="missions-list"></ul>
         </div>
 
-        <div class="section" id="section-exigences">
+        <div class="section hidden" id="section-exigences">
             <div class="section-title">Exigences</div>
             <ul id="exigences-list"></ul>
         </div>
 
-        <div class="section" id="section-softskills" class="hidden">
+        <div class="section hidden" id="section-softskills">
             <div class="section-title">Soft Skills</div>
             <div id="softskills-container"></div>
         </div>
@@ -277,22 +378,22 @@
         <div id="ai-analysis-section" class="hidden">
 
             <!-- NOUVELLES SECTIONS RICHES -->
-            <div class="section" id="section-ai-entreprise">
+            <div class="section hidden" id="section-ai-entreprise">
                 <div class="section-title">L'Entreprise</div>
                 <div class="card" id="ai-entreprise"></div>
             </div>
 
-            <div class="section" id="section-ai-poste">
+            <div class="section hidden" id="section-ai-poste">
                 <div class="section-title">Le Poste</div>
                 <div class="card" id="ai-poste"></div>
             </div>
 
-            <div class="section" id="section-ai-profil">
+            <div class="section hidden" id="section-ai-profil">
                 <div class="section-title">Profil Recherché</div>
                 <div class="card" id="ai-profil"></div>
             </div>
 
-            <div class="section">
+            <div class="section hidden" id="section-ai-synthese">
                 <div class="section-title">Synthèse globale</div>
                 <div class="card" id="ai-synthese"></div>
             </div>
@@ -303,14 +404,18 @@
                     <div class="fit-score" id="ai-fit-score">—</div>
                     <div class="fit-justification" id="ai-fit-justification"></div>
                 </div>
-                
+
                 <div class="strengths-weaknesses">
                     <div style="margin-bottom: 24px;">
-                        <div style="font-size: 13px; font-weight: 700; color: var(--ink); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.05em;">Points Forts</div>
+                        <div
+                            style="font-size: 13px; font-weight: 700; color: var(--ink); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.05em;">
+                            Points Forts</div>
                         <div class="chip-list" id="ai-forces"></div>
                     </div>
                     <div>
-                        <div style="font-size: 13px; font-weight: 700; color: var(--ink); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.05em;">Points à travailler</div>
+                        <div
+                            style="font-size: 13px; font-weight: 700; color: var(--ink); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.05em;">
+                            Points à travailler</div>
                         <div class="chip-list" id="ai-faiblesses"></div>
                     </div>
                 </div>
@@ -333,7 +438,18 @@
         // Simple Markdown-to-HTML parser (Problem C)
         function mdToHtml(md) {
             if (!md) return "";
-            return md
+            const links = [];
+            const linkified = md
+                .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/gim, (_, label, url) => {
+                    const token = `__LINK_${links.length}__`;
+                    links.push(`<a href="${url}" target="_blank" rel="noopener noreferrer">${label}</a>`);
+                    return token;
+                })
+                .replace(/(^|[^"'=])(https?:\/\/[^\s<]+[^\s<.)])/gim, (match, prefix, url) => {
+                    return `${prefix}<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`;
+                });
+
+            return linkified
                 .replace(/^### (.*$)/gim, '<h3>$1</h3>')
                 .replace(/^## (.*$)/gim, '<h2>$1</h2>')
                 .replace(/^# (.*$)/gim, '<h1>$1</h1>')
@@ -342,35 +458,42 @@
                 .replace(/\*\*(.*)\*\*/gim, '<strong>$1</strong>')
                 .replace(/<strong>alternance<\/strong>/gim, '')
                 .replace(/\*(.*)\*/gim, '<em>$1</em>')
-                .replace(/\n/gim, '<br>');
+                .replace(/\n/gim, '<br>')
+                .replace(/__LINK_(\d+)__/g, (_, index) => links[Number(index)] || '');
         }
 
         async function loadRestitution() {
             const urlParams = new URLSearchParams(window.location.search);
-            const jobId = urlParams.get('slug') || urlParams.get('id');
-            if (!jobId) {
+            const offerSlug = urlParams.get('offer') || urlParams.get('slug') || urlParams.get('id');
+            const instanceSlug = urlParams.get('instance') || urlParams.get('id');
+            
+            if (!offerSlug) {
+                renderRestitutionEmptyState();
                 return;
             }
 
             try {
                 // 1. Charger l'offre
-                const resOffre = await fetch(`/api/offres/${jobId}`);
+                const resOffre = await fetch(`/api/offres/${offerSlug}`);
                 let offreOk = false;
                 if (resOffre.ok) {
                     const offre = await resOffre.json();
                     renderOffre(offre);
                     offreOk = true;
                 } else {
-                    console.warn("Offre brute non trouvée:", jobId);
-                    document.getElementById('job-title').innerText = jobId.replace(/_/g, ' ').toUpperCase(); 
+                    console.warn("Offre brute non trouvée:", offerSlug);
+                    document.getElementById('job-title').innerText = offerSlug.replace(/_/g, ' ').toUpperCase();
                 }
 
                 // 2. Charger l'instance
-                const resInstance = await fetch(`/api/offres/${jobId}/instance`);
+                const resInstance = instanceSlug
+                    ? await fetch(`/api/instances/${instanceSlug}`)
+                    : await fetch(`/api/offres/${offerSlug}/instance`);
+                
                 if (resInstance.ok) {
                     const instance = await resInstance.json();
                     renderInstance(instance);
-                    
+
                     // Si on a une restitution mais pas d'offre, on nettoie les sections vides du haut
                     if (!offreOk) {
                         document.querySelectorAll('.section:not(#ai-analysis-section .section)').forEach(s => {
@@ -379,15 +502,30 @@
                         document.querySelector('.offer-header').style.marginBottom = '0';
                     }
                 } else {
-                    renderInstance({}); 
+                    renderInstance({});
                 }
             } catch (e) {
                 console.error('Erreur Critique:', e);
             }
         }
 
+        function renderRestitutionEmptyState() {
+            document.body.innerHTML = `
+                <div style="display: flex; flex-direction: column; align-items: center; justify-content: flex-start; height: 100vh; width: 100%; padding-top: 18vh; padding-left: 40px; padding-right: 40px; text-align: center; color: #64748b; background: #fff;">
+                    <div style="width: 64px; height: 64px; background: #eff6ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 24px; color: #0052ff;">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 32px; height: 32px;">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+                        </svg>
+                    </div>
+                    <h2 style="font-size: 20px; font-weight: 700; color: #1e293b; margin-bottom: 12px;">Sélectionne une offre</h2>
+                </div>
+            `;
+        }
+
         function renderOffre(offre) {
             document.getElementById('job-title').innerText = offre.intitule || 'Offre sans titre';
+            const sectionHeader = document.getElementById('section-header');
+            if (sectionHeader) sectionHeader.classList.remove('hidden');
 
             const meta = document.getElementById('offer-meta');
             const parts = [];
@@ -402,13 +540,15 @@
             meta.innerHTML = parts.join('<span class="meta-dot"> · </span>');
 
             const s = offre.structured || {};
-            
+
             // Résumé avec rendu Markdown
             const resumeEl = document.getElementById('resume-court');
+            const sectionResume = document.getElementById('section-resume');
             if (s.resume_court && !s.resume_court.includes('Ingested via dashboard') && !s.resume_court.includes('échouée')) {
                 resumeEl.innerHTML = mdToHtml(s.resume_court);
-            } else {
-                resumeEl.innerText = 'Résumé non disponible.';
+                if (sectionResume) sectionResume.classList.remove('hidden');
+            } else if (sectionResume) {
+                sectionResume.classList.add('hidden');
             }
 
             renderTags('stack-container', s.stack || [], 'section-stack');
@@ -419,13 +559,11 @@
 
         function renderInstance(instance) {
             const restitution = instance.restitution || instance.notes?.restitution;
-            
-            if (!restitution) {
-                // Reset complet pour éviter le "bloated" mais garder le container
-                const container = document.querySelector('.container');
-                if (container) {
-                    container.innerHTML = `
-                        <div style="display: flex; flex-direction: column; align-items: center; justify-content: flex-start; height: 100vh; padding-top: 18vh; padding-left: 40px; padding-right: 40px; text-align: center; color: #64748b; background: #fff;">
+            const hasRestitution = restitution && Object.keys(restitution).length > 0;
+
+            if (!hasRestitution) {
+                document.body.innerHTML = `
+                        <div style="display: flex; flex-direction: column; align-items: center; justify-content: flex-start; height: 100vh; width: 100%; padding-top: 18vh; padding-left: 40px; padding-right: 40px; text-align: center; color: #64748b; background: #fff;">
                             <div style="width: 64px; height: 64px; background: #eff6ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 24px; color: #0052ff;">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 32px; height: 32px;">
                                   <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25M9 16.5v.75m3-3v3M15 12v5.25m-4.5-15H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
@@ -446,35 +584,37 @@
                             ">Générer l'analyse</button>
                         </div>
                     `;
-                    if (window.lucide) lucide.createIcons();
-                }
+                if (window.lucide) lucide.createIcons();
 
-                document.getElementById('btn-generate-now').onclick = async () => {
-                    const btn = document.getElementById('btn-generate-now');
-                    btn.disabled = true;
-                    btn.innerText = "Génération en cours...";
-                    
-                    const urlParams = new URLSearchParams(window.location.search);
-                    const jobId = urlParams.get('slug') || urlParams.get('id');
+                const generateBtn = document.getElementById('btn-generate-now');
+                if (generateBtn) {
+                    generateBtn.onclick = async () => {
+                        generateBtn.disabled = true;
+                        generateBtn.innerText = "Génération en cours...";
 
-                    try {
-                        const res = await fetch(`/api/instances/${jobId}/generate`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ deliverables: { restitution: true, resume: false, cover: false } })
-                        });
-                        if (res.ok) {
-                            window.location.reload();
-                        } else {
-                            alert("Erreur lors de la génération");
-                            btn.disabled = false;
-                            btn.innerText = "Réessayer";
+                        const urlParams = new URLSearchParams(window.location.search);
+                        const jobId = urlParams.get('instance') || urlParams.get('id') || urlParams.get('slug');
+
+                        try {
+                            const res = await fetch(`/api/instances/${jobId}/generate`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ deliverables: { restitution: true, resume: false, cover: false } })
+                            });
+                            if (res.ok) {
+                                window.location.reload();
+                            } else {
+                                alert("Erreur lors de la génération");
+                                generateBtn.disabled = false;
+                                generateBtn.innerText = "Réessayer";
+                            }
+                        } catch (e) {
+                            console.error(e);
+                            generateBtn.disabled = false;
+                            generateBtn.innerText = "Réessayer";
                         }
-                    } catch (e) {
-                        console.error(e);
-                        btn.disabled = false;
-                    }
-                };
+                    };
+                }
                 return;
             }
 
@@ -484,9 +624,9 @@
             renderMarkdownCard('ai-entreprise', restitution.entreprise_resume, 'section-ai-entreprise');
             renderMarkdownCard('ai-poste', restitution.poste_resume, 'section-ai-poste');
             renderMarkdownCard('ai-profil', restitution.profil_recherche, 'section-ai-profil');
-            
+
             // Synthèse
-            renderMarkdownCard('ai-synthese', restitution.synthese);
+            renderMarkdownCard('ai-synthese', restitution.synthese, 'section-ai-synthese');
 
             // Fit Analysis
             if (restitution.fit) {
@@ -507,7 +647,7 @@
                 if (imp.maturite_equipe) html += `<strong>Maturité équipe :</strong> ${escapeHtml(imp.maturite_equipe)}<br>`;
                 if (imp.culture) html += `<strong>Culture :</strong> ${escapeHtml(imp.culture)}<br>`;
                 if (imp.stack_implicite?.length) html += `<strong>Stack probable :</strong> ${escapeHtml(imp.stack_implicite.join(', '))}<br>`;
-                
+
                 if (html) {
                     document.getElementById('ai-implicite').innerHTML = html;
                     document.getElementById('section-implicite').classList.remove('hidden');
@@ -539,6 +679,7 @@
         // Helpers
         function renderMarkdownCard(id, text, sectionId) {
             const el = document.getElementById(id);
+            if (!el) return;
             if (text) {
                 el.innerHTML = mdToHtml(text);
                 if (sectionId) document.getElementById(sectionId).classList.remove('hidden');
@@ -549,6 +690,7 @@
 
         function renderTags(containerId, items, sectionId) {
             const container = document.getElementById(containerId);
+            if (!container) return;
             container.innerHTML = '';
             if (!items || items.length === 0) {
                 if (sectionId) document.getElementById(sectionId).classList.add('hidden');
@@ -565,6 +707,7 @@
 
         function renderList(listId, items, sectionId) {
             const list = document.getElementById(listId);
+            if (!list) return;
             list.innerHTML = '';
             if (!items || items.length === 0) {
                 if (sectionId) document.getElementById(sectionId).classList.add('hidden');
@@ -580,6 +723,7 @@
 
         function renderChips(containerId, items, chipClass) {
             const container = document.getElementById(containerId);
+            if (!container) return;
             container.innerHTML = '';
             if (!items?.length) return;
             items.forEach(item => {
@@ -597,7 +741,42 @@
             return div.innerHTML;
         }
 
-        window.onload = loadRestitution;
+        function applyPreviewScale() {
+            if (window.self === window.top) return;
+
+            const page = document.querySelector('.a4-page');
+            const stage = document.querySelector('.page-stage');
+            if (!page || !stage) return;
+
+            page.style.transform = 'none';
+            page.style.left = '0px';
+            page.style.top = '0px';
+
+            requestAnimationFrame(() => {
+                const availableWidth = window.innerWidth - 32;
+                const availableHeight = window.innerHeight - 32;
+                const pageWidth = page.offsetWidth;
+                const pageHeight = page.offsetHeight;
+                const scale = Math.min(1, availableWidth / pageWidth, availableHeight / pageHeight);
+                const scaledWidth = pageWidth * scale;
+                const scaledHeight = pageHeight * scale;
+                const offsetX = Math.max(0, (availableWidth - scaledWidth) / 2);
+                const offsetY = 16;
+
+                page.style.transform = `scale(${scale})`;
+                page.style.left = `${offsetX}px`;
+                page.style.top = `${offsetY}px`;
+                stage.style.height = `${window.innerHeight}px`;
+            });
+        }
+
+        window.onload = () => {
+            if (window.self !== window.top) {
+                document.body.classList.add('is-framed');
+            }
+            loadRestitution();
+        };
     </script>
 </body>
+
 </html>

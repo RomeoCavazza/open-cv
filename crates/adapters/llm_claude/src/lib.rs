@@ -216,10 +216,16 @@ impl LlmClient for ClaudeClient {
 
     #[instrument(skip(self, req), fields(model = %self.model, schema = %req.schema_name))]
     async fn extract(&self, req: ExtractionRequest) -> Result<serde_json::Value, LlmError> {
+        let schema = if req.json_schema.is_string() && req.json_schema.as_str() == Some("json") {
+            serde_json::json!({ "type": "object" })
+        } else {
+            req.json_schema
+        };
+
         let tool = AnthropicTool {
             name: req.schema_name.clone(),
             description: req.schema_description.clone(),
-            input_schema: req.json_schema,
+            input_schema: schema,
         };
 
         let user_content = if req.instruction.is_empty() {

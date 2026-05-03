@@ -105,6 +105,7 @@ input:checked + .slider { background-color: var(--primary); }
 input:checked + .slider:before { transform: translateX(16px); }
 
 /* Layout */
+.app-layout { display: flex; flex: 1; overflow: hidden; position: relative; }
 .view { display: none; flex: 1; overflow: hidden; }
 .view.active { display: flex; }
 
@@ -451,7 +452,7 @@ textarea:focus { border-color: var(--primary); }
     height: 16px;
 }
 
-.content-main { flex: 1; background: var(--surface-soft); display: flex; flex-direction: column; }
+.content-main { flex: 1; background: #ffffff; display: flex; flex-direction: column; }
 .tabs-bar { height: 64px; background: var(--canvas); border-bottom: 1px solid var(--hairline); display: flex; justify-content: space-between; padding: 0 24px 0 32px; }
 .tabs-links { display: flex; gap: 32px; height: 100%; }
 .tab { height: 100%; display: flex; align-items: center; font-size: 0.875rem; font-weight: 500; color: var(--body); cursor: pointer; border-bottom: 2px solid transparent; }
@@ -580,6 +581,31 @@ textarea:focus { border-color: var(--primary); }
     font-size: 12px;
     font-weight: 600;
     cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.ai-send-btn .ai-send-icon {
+    width: 16px;
+    height: 16px;
+}
+.ai-send-btn .ai-send-icon-busy {
+    display: none;
+}
+.ai-send-btn.is-busy .ai-send-icon-ready {
+    display: none;
+}
+.ai-send-btn.is-busy .ai-send-icon-busy {
+    display: inline-block;
+}
+.ai-send-btn.is-busy {
+    background: #cbd5e1;
+    color: #64748b;
+    cursor: wait;
+    box-shadow: none;
+}
+.ai-send-btn:disabled {
+    opacity: 1;
 }
 
 @media (max-width: 1280px) {

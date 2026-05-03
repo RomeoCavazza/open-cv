@@ -39,6 +39,13 @@ pub enum Role {
 }
 
 #[derive(Debug, Clone)]
+pub struct ChatRequest {
+    pub message: String,
+    pub instance_id: Option<String>,
+    pub llm_provider: String,
+}
+
+#[derive(Debug, Clone)]
 pub struct ExtractionRequest {
     pub system: Option<String>,
     pub instruction: String,

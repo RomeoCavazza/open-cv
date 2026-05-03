@@ -4,6 +4,8 @@ import * as ui from './ui.js';
 
 // --- Dashboard Logic ---
 
+let offersLoadSeq = 0;
+
 const views = { 
     ingest: document.getElementById('view-ingest'), 
     app: document.getElementById('view-app'), 
@@ -18,10 +20,18 @@ function switchView(viewName) {
     views[viewName].classList.add('active');
     views[viewName].scrollTop = 0;
     document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-    if (viewName === 'ingest') document.getElementById('nav-dashboard').classList.add('active');
-    if (viewName === 'app') { document.getElementById('nav-app').classList.add('active'); loadOffers(); }
+    if (viewName === 'ingest') {
+        document.getElementById('nav-dashboard').classList.add('active');
+        loadOffers();
+    }
+    if (viewName === 'app') {
+        document.getElementById('nav-app').classList.add('active');
+        loadOffers();
+        if (!state.activeJobId) resetIframeToEmptyState();
+    }
     if (viewName === 'profile') document.getElementById('nav-profile').classList.add('active');
     updatePath();
+    if (typeof window.loadChatHistory === 'function') window.loadChatHistory();
 }
 
 // Expose for legacy scripts (chat.js)
@@ -160,9 +170,11 @@ function updateCalendarDocumentUI(documentValue) {
 }
 
 async function loadOffers() {
+    const loadSeq = ++offersLoadSeq;
     try {
         const data = await api.fetchOffers();
         const offers = data.entries || [];
+        if (loadSeq !== offersLoadSeq) return;
         
         renderDashboardApplications(offers);
         renderDashboardTreatedOffers(offers);
@@ -182,7 +194,8 @@ async function loadOffers() {
             return flags.archived && !flags.oldCv && !flags.deleted;
         });
         
-        document.getElementById('sidebar-inbox-header').textContent = `${inboxLabel} (${visibleInboxOffers.length})`;
+        const inboxCount = visibleInboxOffers.length || offers.length;
+        document.getElementById('sidebar-inbox-header').textContent = `${inboxLabel} (${inboxCount})`;
         
         const groups = {};
         visibleInboxOffers.forEach(o => {
@@ -256,7 +269,12 @@ async function loadOffers() {
                     loadOffers();
                 };
                 
-                card.onclick = () => { state.setActiveJobId(o.job_id); loadOffers(); updateIframe(); };
+                card.onclick = () => { 
+                    state.setActiveJobId(o.job_id); 
+                    loadOffers(); 
+                    updateIframe(); 
+                    if (typeof window.loadChatHistory === 'function') window.loadChatHistory();
+                };
                 groupContainer.appendChild(card);
             });
         });
@@ -300,14 +318,50 @@ async function loadOffers() {
                     loadOffers();
                 };
                 
-                card.onclick = () => { state.setActiveJobId(o.job_id); loadOffers(); updateIframe(); };
+                card.onclick = () => { 
+                    state.setActiveJobId(o.job_id); 
+                    loadOffers(); 
+                    updateIframe(); 
+                    if (typeof window.loadChatHistory === 'function') window.loadChatHistory();
+                };
                 list.appendChild(card);
             });
         }
 
-        const fallbackActive = visibleInboxOffers[0] || visibleArchivedOffers[0];
-        if (!state.activeJobId && fallbackActive) { state.setActiveJobId(fallbackActive.job_id); updateIframe(); loadOffers(); }
     } catch (e) {}
+}
+
+function resetIframeToEmptyState() {
+        const iframe = document.getElementById('iframe-doc');
+        if (!iframe) return;
+
+    iframe.removeAttribute('src');
+        iframe.srcdoc = `<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        html, body { height: 100%; margin: 0; background: #fff; font-family: Inter, system-ui, sans-serif; }
+        .empty-state { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 18vh; text-align: center; }
+        .icon { width: 64px; height: 64px; border-radius: 50%; background: #eff6ff; color: #0052ff; display: flex; align-items: center; justify-content: center; margin-bottom: 24px; }
+        h2 { margin: 0; font-size: 20px; font-weight: 700; color: #1e293b; margin-bottom: 12px; }
+    </style>
+</head>
+<body>
+    <div class="empty-state">
+        <div class="icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+            </svg>
+        </div>
+        <h2>Aucune offre sélectionnée</h2>
+    </div>
+</body>
+</html>`;
+        window.activeInstanceSlug = null;
+        window.activeInstanceData = null;
+        window.activeResolvedOfferSlug = null;
 }
 
 function renderDashboardApplications(offers) {
@@ -480,12 +534,57 @@ function renderDashboardTreatedOffers(offers) {
     });
 }
 
-function updateIframe() {
-    if (!state.activeJobId) return;
+async function updateIframe(options = {}) {
+    if (!state.activeJobId) {
+        resetIframeToEmptyState();
+        return;
+    }
+    const { syncChatHistory = true } = options;
+
+    const offerSlug = state.activeJobId;
+    const activeTab = state.activeTab;
     const iframe = document.getElementById('iframe-doc');
-    const path = state.activeTab === 'restitution' ? '/restitution/index.html' : (state.activeTab === 'resume' ? '/resume/index.html' : '/cover-letter/index.html');
-    iframe.src = `${path}?id=${state.activeJobId}&v=${Date.now()}`;
-    window.activeJobId = state.activeJobId; // Expose for chat.js
+    if (!iframe) return;
+
+    const path = activeTab === 'restitution'
+        ? '/restitution/index.html'
+        : (activeTab === 'resume' ? '/resume/index.html' : '/cover-letter/index.html');
+
+    let instanceSlug = window.activeInstanceSlug || offerSlug;
+
+    if (window.activeResolvedOfferSlug !== offerSlug || !window.activeInstanceSlug) {
+        try {
+            const res = await fetch(`/api/offres/${offerSlug}/instance`);
+            if (res.ok) {
+                const instance = await res.json();
+                if (instance && instance.slug) {
+                    instanceSlug = instance.slug;
+                    window.activeInstanceData = instance;
+                }
+            }
+        } catch (error) {
+            console.warn('Impossible de résoudre le slug de l\'instance', error);
+        }
+    }
+
+    if (state.activeJobId !== offerSlug || state.activeTab !== activeTab) return;
+
+    window.activeResolvedOfferSlug = offerSlug;
+    window.activeInstanceSlug = instanceSlug;
+    if (!window.activeInstanceData?.slug || window.activeInstanceData.slug !== instanceSlug) {
+        window.activeInstanceData = window.activeInstanceData && window.activeInstanceData.slug === instanceSlug
+            ? window.activeInstanceData
+            : { id: instanceSlug, slug: instanceSlug };
+    }
+    const query = activeTab === 'restitution'
+        ? `offer=${encodeURIComponent(offerSlug)}&instance=${encodeURIComponent(instanceSlug)}`
+        : `id=${encodeURIComponent(instanceSlug)}&offer=${encodeURIComponent(offerSlug)}`;
+    iframe.removeAttribute('srcdoc');
+    iframe.src = `${path}?${query}&v=${Date.now()}`;
+    window.activeJobId = offerSlug; // Expose for chat.js
+    if (syncChatHistory && typeof window.loadChatHistory === 'function') {
+        window.loadChatHistory();
+    }
     updatePath();
 }
 
@@ -794,6 +893,6 @@ document.getElementById('prof-annexe-bulk-file').onchange = async (e) => {
 syncLlmSelectors(state.selectedLlmProvider);
 syncDelivSelectors(state.delivConfig);
 loadProfile();
-loadOffers();
+loadOffers(); // <--- Added this
 handleRouting();
 ui.updateUIStrings();

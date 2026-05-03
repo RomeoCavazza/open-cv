@@ -219,15 +219,22 @@ impl LlmClient for OpenAiClient {
             messages,
             max_tokens: req.max_tokens,
             temperature: None,
-            response_format: Some(OpenAiResponseFormat {
-                format_type: "json_schema".into(),
-                json_schema: Some(OpenAiJsonSchema {
-                    name: req.schema_name,
-                    description: Some(req.schema_description),
-                    schema: req.json_schema,
-                    strict: true,
-                }),
-            }),
+            response_format: if req.json_schema.is_string() && req.json_schema.as_str() == Some("json") {
+                Some(OpenAiResponseFormat {
+                    format_type: "json_object".into(),
+                    json_schema: None,
+                })
+            } else {
+                Some(OpenAiResponseFormat {
+                    format_type: "json_schema".into(),
+                    json_schema: Some(OpenAiJsonSchema {
+                        name: req.schema_name,
+                        description: Some(req.schema_description),
+                        schema: req.json_schema,
+                        strict: false,
+                    }),
+                })
+            },
         };
 
         let start = std::time::Instant::now();

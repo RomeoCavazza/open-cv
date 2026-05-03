@@ -86,6 +86,7 @@ CREATE TABLE IF NOT EXISTS profils (
     calendar_pdf            BYTEA,
     resume_template         JSONB,
     cover_letter_template   JSONB,
+    notes                   JSONB       NOT NULL DEFAULT '{}'::jsonb,
     created_at              TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE UNIQUE INDEX IF NOT EXISTS profils_one_active ON profils (is_active) WHERE is_active = true;
