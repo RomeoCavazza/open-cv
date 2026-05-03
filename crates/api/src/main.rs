@@ -491,6 +491,7 @@ async fn chat_handler(
     Json(req): Json<application::chat::ChatRequest>,
 ) -> Result<Json<application::chat::ChatResponse>, ApiError> {
     let usecase = application::chat::ChatWithApplicationUseCase::new(
+        state.offre_repo.clone(),
         state.instance_repo.clone(),
         state.profil_repo.clone(),
         state.chunk_repo.clone(),
