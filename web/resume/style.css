@@ -34,7 +34,7 @@ body {
 /* Let's just add it at the end of body or use a specific selector */
 body.is-framed {
     padding: 0 !important;
-    background: transparent !important;
+    background: #ffffff !important;
     overflow: hidden !important;
 }
 body.is-framed .no-print.actions {
