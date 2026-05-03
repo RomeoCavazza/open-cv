@@ -19,7 +19,7 @@ use axum::{
 use ports::{InstanceRepo, OffreRepo};
 use serde::Deserialize;
 use tower_http::{services::ServeDir, trace::TraceLayer};
-use tracing::info;
+use tracing::{info, error};
 
 mod errors;
 mod state;
@@ -226,31 +226,29 @@ async fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
+
 async fn generate_instance(
     State(state): State<AppState>,
-    Path(slug): Path<String>,
-    Query(q): Query<serde_json::Value>, // Temporary way to get query params
+    Path(slug_str): Path<String>,
+    Query(params): Query<std::collections::HashMap<String, String>>,
 ) -> Result<StatusCode, ApiError> {
-    let slug = domain::Slug::parse(slug).map_err(|e| ApiError::BadRequest(e.to_string()))?;
+    let slug = domain::Slug::parse(slug_str.clone()).map_err(|e| ApiError::BadRequest(e.to_string()))?;
 
-    let llm_provider = q
+    let llm_provider = params
         .get("llm_provider")
-        .and_then(|v| v.as_str())
         .and_then(|p| state.llm_registry.get(p))
         .cloned();
 
-    // 1. Récupérer l'instance pour avoir l'offre_id et profil_id
     let instance = state
         .instance_repo
         .get_by_slug(&slug)
         .await
         .map_err(|e| ApiError::Internal(e.to_string()))?
-        .ok_or_else(|| ApiError::NotFound(format!("Instance {} inconnue", slug)))?;
+        .ok_or_else(|| ApiError::NotFound(format!("Instance {} inconnue", slug_str)))?;
 
-    // 2. Lancer la génération
-    let restitution = q.get("restitution").map(|v| v.as_bool().unwrap_or(v.as_str() == Some("true"))).unwrap_or(true);
-    let resume = q.get("resume").map(|v| v.as_bool().unwrap_or(v.as_str() == Some("true"))).unwrap_or(true);
-    let cover_letter = q.get("cover_letter").map(|v| v.as_bool().unwrap_or(v.as_str() == Some("true"))).unwrap_or(true);
+    let restitution = params.get("restitution").map(|v| v == "true").unwrap_or(true);
+    let resume = params.get("resume").map(|v| v == "true").unwrap_or(true);
+    let cover_letter = params.get("cover_letter").map(|v| v == "true").unwrap_or(true);
 
     let input = application::generate::GenerateInput {
         offre_id: instance.offre_id,
@@ -263,25 +261,15 @@ async fn generate_instance(
         },
     };
 
-    state
-        .generate_uc
-        .execute(input, llm_provider)
-        .await
-        .map_err(|e| match e {
-            application::generate::GenerateError::AucunChunkPertinent => ApiError::BadRequest(
-                "Aucun chunk de profil disponible pour cette génération. Il faut d'abord indexer le profil dans la base."
-                    .to_string(),
-            ),
-            application::generate::GenerateError::AucunLivrable
-            | application::generate::GenerateError::Invalide(_) => {
-                ApiError::BadRequest(e.to_string())
-            }
-            _ => ApiError::Internal(e.to_string()),
-        })?;
+    tokio::spawn(async move {
+        match state.generate_uc.execute(input, llm_provider).await {
+            Ok(_) => info!(slug = %slug_str, "génération terminée avec succès"),
+            Err(e) => error!(slug = %slug_str, error = %e, "échec de la génération en arrière-plan"),
+        }
+    });
 
     Ok(StatusCode::ACCEPTED)
 }
-
 fn init_tracing() {
     use tracing_subscriber::{fmt, prelude::*, EnvFilter};
 
