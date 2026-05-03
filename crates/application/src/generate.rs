@@ -512,6 +512,7 @@ impl GenerateApplicationUseCase {
     // ─────────────────────────────────────────────────────────────
     // Étape 4a — RESTITUTION (parallèle)
     // ─────────────────────────────────────────────────────────────
+    // ─────────────────────────────────────────────────────────────
     async fn maybe_generate_restitution(
         &self,
         livrables: Livrables,
@@ -527,25 +528,21 @@ impl GenerateApplicationUseCase {
 
         let req = ports::ExtractionRequest {
             system: Some(
-                "Tu es un Analyste Recrutement de haut niveau. Ta mission est de produire une fiche de restitution \
-                 d'offre d'emploi extrêmement précise, analytique et structurée pour un candidat ingénieur. \
-                 Ton ton doit être factuel, incisif et dépourvu de fioritures marketing. \
-                 Tu dois lire entre les lignes pour identifier les enjeux réels derrière les mots-clés."
+                "Tu es un Architecte-RH Visionnaire et Expert Tech. Ton rôle n'est pas de lire l'offre, mais de la DECODER. \
+                 Tu dois agir comme un 'devin' technique qui comprend les non-dits d'une entreprise tech. \
+                 Analyse les missions pour déduire la réalité du quotidien, les défis invisibles (dette, urgences, scale) \
+                 et l'écosystème technique complet nécessaire au succès (ex: si on parle d'IA, déduis Python, Docker, API REST, Monitoring). \
+                 Ton ton est expert, bavard, analytique et extrêmement pertinent."
                     .into(),
             ),
-            instruction: "Analyse cette offre très précisément. Produis une restitution structurée selon le schéma JSON. \
-                 \n\nRÈGLES DE RÉDACTION :\
-                 - 'synthese' : Une analyse globale de 2-3 phrases sur l'opportunité.\
-                 - 'entreprise_resume' : Focus sur le secteur, la taille et surtout les enjeux techniques/business actuels.\
-                 - 'poste_resume' : Contexte de l'équipe, objectifs concrets du poste et pourquoi il est ouvert.\
-                 - 'profil_recherche' : Au-delà du diplôme, décris le mindset et les expériences clés attendues.\
-                 - 'fit' : Sois sévère sur le score (0-100). Justifie par des preuves textuelles.\
-                 - 'explicite.stack_technique' : Liste la stack, les outils, les langages et les frameworks explicitement mentionnés.\
-                 - 'implicite' : Déduis la maturité de l'équipe et la culture à partir du vocabulaire utilisé.\
-                 - 'points_a_traiter' : Identifie les zones de risque ou les points où le candidat doit se préparer.\
-                 \n\nCONTRAINTES STRICTES :\
-                 - PAS de Markdown brut, de liens ou de menus de navigation.\
-                 - Si l'input est du bruit, indique-le dans 'synthese'."
+            instruction: "Produis une analyse 'Reverse-Engineering' de cette offre. \
+                 \n\nRÈGLES D'EXPERTISE (SOIS BAVARD) :\
+                 - 'synthese' : Analyse en profondeur la RÉALITÉ et les ENJEUX réels derrière le poste. Que cachent les mots ?\
+                 - 'missions' : Détaille les défis concrets et quotidiens. Ne te contente pas de lister, explique le 'pourquoi'.\
+                 - 'stack_technique' : Expertise d'architecte : liste les outils cités ET tout l'écosystème déduit (Docker, CI/CD, Frameworks).\
+                 - 'profil_recherche' : Décris le tempérament et les compétences 'hard' nécessaires pour survivre et briller.\
+                 - 'fit_score' : Jugement d'expert sur la pertinence du combo missions/moyens.\
+                 - 'exigences' : Liste les pré-requis critiques et les soft skills indispensables."
                 .into(),
             input: format!(
                 "Entreprise: {}\nIntitulé: {}\nLocalisation: {}\nContrat: {}\n\nTexte brut de l'offre:\n{}",
@@ -578,10 +575,6 @@ impl GenerateApplicationUseCase {
             .done(instance_id, GenerationStep::Restitution, None);
         Ok(Some(restitution))
     }
-
-    // ─────────────────────────────────────────────────────────────
-    // Étape 4b — RESUME (parallèle)
-    // ─────────────────────────────────────────────────────────────
     #[allow(clippy::too_many_arguments)]
     async fn maybe_generate_resume(
         &self,
