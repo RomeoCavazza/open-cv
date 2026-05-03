@@ -187,11 +187,11 @@ impl GenerateApplicationUseCase {
         let existing_instance = input.existing_instance.clone();
         let now = Utc::now();
         let (instance_id, slug, created_at, existing_notes) = match existing_instance {
-            Some(instance) => (
+            Some(ref instance) => (
                 instance.id,
-                instance.slug,
+                instance.slug.clone(),
                 instance.created_at,
-                Some(instance.notes),
+                Some(instance.notes.clone()),
             ),
             None => {
                 let instance_id = InstanceId::new();
@@ -207,6 +207,19 @@ impl GenerateApplicationUseCase {
             offre.entreprise, profil.label
         );
 
+        let old = existing_instance.as_ref();
+        let rest = if input.livrables.restitution { None } else { old.and_then(|i| i.restitution.clone()) };
+        let resu = if input.livrables.resume { None } else { old.and_then(|i| i.resume_json.clone()) };
+        let cove = if input.livrables.cover_letter { None } else { old.and_then(|i| i.cover_letter_json.clone()) };
+
+        info!(
+            "Init génération: restitution={} resume={} cover_letter={} (restitution_input={})",
+            rest.is_some(),
+            resu.is_some(),
+            cove.is_some(),
+            input.livrables.restitution
+        );
+
         self.instances
             .upsert(&Instance {
                 id: instance_id,
@@ -214,13 +227,13 @@ impl GenerateApplicationUseCase {
                 offre_id: offre.id,
                 profil_id: profil.id,
                 status: domain::InstanceStatus::Generating,
-                restitution: None,
-                resume_json: None,
-                cover_letter_json: None,
+                restitution: rest,
+                resume_json: resu,
+                cover_letter_json: cove,
                 notes: existing_notes.unwrap_or_else(|| serde_json::json!({})),
                 created_at,
                 updated_at: Utc::now(),
-                sent_at: None,
+                sent_at: old.and_then(|i| i.sent_at),
             })
             .await
             .map_err(AppError::Repo)?;
@@ -254,11 +267,12 @@ impl GenerateApplicationUseCase {
             self.events
                 .done(instance_id, GenerationStep::Plan, Some(plan.angle.clone()));
 
-            // Étape 4 : 3 générations en parallèle.
-            // tokio::join! attend les 3, peu importe l'ordre de terminaison.
-            let (restitution_res, resume_res, cover_letter_res) = tokio::join!(
-                self.maybe_generate_restitution(input.livrables, &offre, instance_id, llm.clone()),
-                self.maybe_generate_resume(
+            // Étape 4 : Génération séquentielle (plus stable en local qu en parallèle)
+            let restitution = self
+                .maybe_generate_restitution(input.livrables, &offre, instance_id, llm.clone())
+                .await?;
+            let resume = self
+                .maybe_generate_resume(
                     input.livrables,
                     &offre,
                     &profil,
@@ -266,8 +280,10 @@ impl GenerateApplicationUseCase {
                     &plan,
                     instance_id,
                     llm.clone(),
-                ),
-                self.maybe_generate_cover_letter(
+                )
+                .await?;
+            let cover_letter = self
+                .maybe_generate_cover_letter(
                     input.livrables,
                     &offre,
                     &profil,
@@ -275,12 +291,8 @@ impl GenerateApplicationUseCase {
                     &plan,
                     instance_id,
                     llm.clone(),
-                ),
-            );
-
-            let restitution = restitution_res?;
-            let resume = resume_res?;
-            let cover_letter = cover_letter_res?;
+                )
+                .await?;
 
             // Étape 5 : VALIDATE
             self.events.started(instance_id, GenerationStep::Validate);
@@ -292,7 +304,6 @@ impl GenerateApplicationUseCase {
             )?;
             self.events.done(instance_id, GenerationStep::Validate, None);
 
-            // Récupérer l'instance (soit l'existante, soit celle qu'on vient de créer au début de l'exécution)
             let mut instance = self
                 .instances
                 .get_by_id(instance_id)
@@ -300,9 +311,18 @@ impl GenerateApplicationUseCase {
                 .map_err(AppError::Repo)?
                 .ok_or_else(|| AppError::Other("Instance introuvable après génération".into()))?;
 
-            instance.restitution = restitution.map(|r| serde_json::to_value(r).unwrap());
-            instance.resume_json = resume.map(|r| serde_json::to_value(r).unwrap());
-            instance.cover_letter_json = cover_letter.map(|cl| serde_json::to_value(cl).unwrap());
+            if let Some(r) = restitution { 
+                info!("Enregistrement: Restitution OK");
+                instance.restitution = Some(serde_json::to_value(r).unwrap()); 
+            }
+            if let Some(r) = resume { 
+                info!("Enregistrement: Resume OK");
+                instance.resume_json = Some(serde_json::to_value(r).unwrap()); 
+            }
+            if let Some(cl) = cover_letter { 
+                info!("Enregistrement: CoverLetter OK");
+                instance.cover_letter_json = Some(serde_json::to_value(cl).unwrap()); 
+            }
             instance.status = domain::InstanceStatus::Ready;
             instance.updated_at = Utc::now();
 
@@ -747,13 +767,13 @@ fn validate_outputs(
 ) -> Result<(), GenerateError> {
     // Restitution : score doit être ≤ 100.
     if let Some(r) = restitution {
-        if r.fit.score > 100 {
+        if r.fit_score > 100 {
             tracing::warn!(
                 "Validation: score de fit > 100 (score={}). On cap à 100.",
-                r.fit.score
+                r.fit_score
             );
             // On pourrait le caper ici si on voulait, mais on garde l'erreur pour Phase 3 debug
-            // return Err(GenerateError::Invalide(format!("score de fit > 100 : {}", r.fit.score)));
+            // return Err(GenerateError::Invalide(format!("score de fit > 100 : {}", r.fit_score)));
         }
     }
 

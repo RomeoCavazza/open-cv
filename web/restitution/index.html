@@ -9,693 +9,152 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --background: #f4f5f7;
+            --background: #f8fafc;
             --surface: #ffffff;
-            --surface-soft: #f7f8fa;
+            --surface-soft: #f1f5f9;
             --primary: #0052ff;
-            --primary-soft: #e8efff;
-            --on-surface: #0a0b0d;
-            --on-surface-variant: #434656;
-            --outline: #e4e8ef;
-            --text-secondary: #5e5e61;
-            --radius-card: 24px;
+            --primary-active: #003ecc;
+            --primary-soft: #eff6ff;
+            --ink: #0f172a;
+            --body: #475569;
+            --muted: #94a3b8;
+            --outline: #e2e8f0;
+            --radius-xl: 24px;
+            --radius-lg: 16px;
             --radius-pill: 9999px;
-            --shadow-soft: 0 20px 60px rgba(10, 11, 13, 0.04);
-            --font-main: 'Inter', -apple-system, sans-serif;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
         }
 
-        * {
-            box-sizing: border-box;
-            -webkit-font-smoothing: antialiased;
-        }
+        * { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
 
         body {
-            font-family: var(--font-main);
+            font-family: 'Inter', -apple-system, sans-serif;
             background: #ffffff;
-            color: var(--on-surface);
-            line-height: 1.6;
+            color: var(--ink);
+            line-height: 1.25;
             margin: 0;
-            padding: 40px 24px 64px;
-            display: flex;
-            justify-content: center;
+            padding: 0;
+            overflow-y: auto;
         }
 
-        body.is-framed {
-            padding: 0 !important;
-            background-color: #ffffff;
-            overflow: hidden;
-        }
+        body.is-framed { padding: 0 !important; background: #ffffff; }
 
         .container {
-            max-width: 1120px;
-            width: 100%;
+            max-width: 1000px;
+            margin: 0 auto;
             display: flex;
             flex-direction: column;
             gap: 24px;
+            padding: 40px 24px;
         }
 
-        .hero,
-        .section-card,
-        .fit-box,
-        .state-box,
-        .empty-box {
-            background: var(--surface);
-            border: 1px solid var(--outline);
-            border-radius: var(--radius-card);
-            box-shadow: var(--shadow-soft);
-        }
+        /* --- UI COMPONENTS --- */
+        .card { background: var(--surface); border: 1px solid var(--outline); border-radius: var(--radius-lg); padding: 32px; box-shadow: var(--shadow-sm); }
+        .hero { padding: 40px; background: var(--surface); border-bottom: 1px solid var(--outline); border-radius: var(--radius-xl); box-shadow: var(--shadow-md); }
+        .eyebrow { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 800; color: var(--primary); margin-bottom: 12px; }
+        h1 { font-size: 36px; font-weight: 800; margin: 0; letter-spacing: -0.03em; line-height: 1.1; }
+        h2 { font-size: 18px; font-weight: 700; margin: 0 0 16px; }
+        .meta { color: var(--body); margin-top: 16px; font-size: 15px; font-weight: 500; }
 
-        .hero {
-            padding: 32px;
-        }
-
-        .hero-copy {
-            max-width: 800px;
-        }
-
-        .eyebrow {
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            font-weight: 600;
-            color: var(--text-secondary);
-            margin: 0 0 12px;
-        }
-
-        h1 {
-            font-size: clamp(30px, 4vw, 46px);
-            font-weight: 800;
-            letter-spacing: 0.05em;
-            margin: 0;
-            line-height: 1.2;
-        }
-
-        .meta {
-            font-size: 14px;
-            color: var(--text-secondary);
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 4px;
-            margin-top: 18px;
-        }
-
-        .meta a {
-            color: var(--primary);
-            text-decoration: none;
-            font-weight: 600;
-        }
-
-        .meta a:hover {
-            text-decoration: underline;
-        }
-
-        .meta-dot {
-            color: var(--outline);
-        }
-
-        section {
-            display: flex;
-            flex-direction: column;
-            gap: 14px;
-        }
-
-        .section-card {
-            padding: 28px;
-        }
-
-        h2 {
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            font-weight: 600;
-            color: var(--text-secondary);
-            margin: 0;
-        }
-
-        .content-text {
-            font-size: 16px;
-            color: var(--on-surface);
-            white-space: pre-line;
-        }
-
-        .lead {
-            font-size: 17px;
-            color: var(--on-surface-variant);
-            margin-top: 16px;
-        }
-
-        .grid-2,
-        .summary-grid,
-        .signal-grid,
-        .fit-columns,
-        .skeleton-grid {
-            display: grid;
-            gap: 24px;
-        }
-
-        .grid-2,
-        .summary-grid,
-        .fit-columns,
-        .skeleton-grid {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-
-        #generating-state {
-            background: transparent;
-            border: none;
-            box-shadow: none;
-            padding: 0;
-        }
-
-        #generating-state .skeleton-grid {
-            grid-template-columns: 1fr;
-            gap: 16px;
-            margin-top: 22px;
-        }
-
-        #generating-state .state-copy {
-            max-width: 760px;
-            margin-bottom: 18px;
-        }
-
-        .signal-grid {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 14px 24px;
-        }
-
-        .detail-stack {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-
-        .detail-line {
-            display: flex;
-            gap: 12px;
-            align-items: flex-start;
-        }
-
-        .detail-label {
-            min-width: 164px;
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 0.06em;
-            font-weight: 600;
-            color: var(--text-secondary);
-            flex: 0 0 auto;
-        }
-
-        .detail-value {
-            flex: 1;
-        }
-
-        .list,
-        .clean-list,
-        .chips {
-            margin: 0;
-            padding: 0;
-            list-style: none;
-        }
-
-        .list,
-        .clean-list {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .list li,
-        .clean-list li {
-            display: flex;
-            gap: 12px;
-            align-items: flex-start;
-        }
-
-        .list li::before {
-            content: "→";
-            color: var(--primary);
-            font-weight: bold;
-            flex: 0 0 auto;
-        }
-
-        .clean-list li::before {
-            content: "";
-            width: 8px;
-            height: 8px;
-            margin-top: 9px;
-            border-radius: 999px;
-            background: var(--primary);
-            flex: 0 0 auto;
-        }
-
-        .chip-cloud {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-        .chip {
-            padding: 7px 12px;
-            border-radius: var(--radius-pill);
-            font-size: 13px;
-            background: var(--surface-soft);
-            color: var(--on-surface-variant);
-            border: 1px solid var(--outline);
-        }
-
-        .signal {
-            padding: 16px 18px;
-            border-radius: 18px;
-            background: var(--surface-soft);
-            border: 1px solid var(--outline);
-        }
-
-        .signal-label {
-            display: block;
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 0.06em;
-            color: var(--text-secondary);
-            margin-bottom: 6px;
-            font-weight: 600;
-        }
-
-        .signal-value {
-            font-size: 15px;
-            color: var(--on-surface);
-        }
-
-        .fit-box {
-            padding: 28px;
-        }
-
-        .fit-grid {
-            grid-template-columns: 180px minmax(0, 1fr);
-            gap: 24px;
-            align-items: start;
-        }
-
-        .score-block {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            align-items: flex-start;
-        }
-
-        .score-circle {
-            width: 92px;
-            height: 92px;
-            border-radius: 50%;
-            background: linear-gradient(180deg, var(--primary), #0b3fb9);
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-family: var(--font-main);
-            font-size: 28px;
-            font-weight: 600;
-            letter-spacing: -0.03em;
-        }
-
-        .score-caption {
-            font-size: 13px;
-            color: var(--text-secondary);
-            max-width: 160px;
-        }
-
-        .fit-summary {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-
-        .fit-justification {
-            font-size: 16px;
-            color: var(--on-surface-variant);
-        }
-
-        .fit-panel {
-            padding: 20px;
-            border-radius: 18px;
-            border: 1px solid var(--outline);
-            background: var(--surface-soft);
-        }
-
-        .fit-panel h3 {
-            margin: 0 0 12px;
-            font-size: 13px;
-            text-transform: uppercase;
-            letter-spacing: 0.06em;
-            color: var(--text-secondary);
-            font-weight: 600;
-        }
-
-        .fit-panel.recommendations {
-            background: #f7f9ff;
-            border-color: #dce4ff;
-        }
-
-        .state-box {
-            padding: 40px 32px;
-        }
-
-        .state-copy {
-            max-width: 640px;
-        }
-
-        .state-title {
-            font-size: 24px;
-            font-weight: 400;
-            letter-spacing: -0.02em;
-            margin: 0 0 12px;
-        }
-
-        .inline-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 6px 12px;
-            border-radius: var(--radius-pill);
-            background: var(--primary-soft);
-            color: var(--primary);
-            font-size: 13px;
-            font-weight: 600;
-        }
-
-        .skeleton-stack {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            margin-top: 28px;
-        }
-
-        .skeleton-row {
-            height: 16px;
-            border-radius: var(--radius-pill);
-            background: linear-gradient(90deg, #eef1f5 25%, #dde3eb 50%, #eef1f5 75%);
-            background-size: 200% 100%;
-            animation: skeleton-loading 1.4s infinite;
-        }
-
-        .skeleton-row.tall {
-            height: 22px;
-        }
-
-        .skeleton-row.short {
-            width: 45%;
-        }
-
-        .skeleton-card {
-            border: 1px solid var(--outline);
-            border-radius: 20px;
-            background: var(--surface-soft);
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .skeleton-chip-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-        .skeleton-chip {
-            width: 96px;
-            height: 30px;
-            border-radius: var(--radius-pill);
-            background: linear-gradient(90deg, #eef1f5 25%, #dde3eb 50%, #eef1f5 75%);
-            background-size: 200% 100%;
-            animation: skeleton-loading 1.4s infinite;
-        }
-
-        .empty-box {
-            min-height: 100%;
-            padding: 0;
-            display: grid;
-            place-items: center;
-            background: transparent;
-            border: none;
-            box-shadow: none;
-        }
-
-        .empty-stack {
-            display: grid;
-            justify-items: center;
-            gap: 14px;
-            text-align: center;
-            max-width: 420px;
-        }
-
-        .empty-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            background: var(--primary-soft);
-            color: var(--primary);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 16px;
-        }
-
-        .empty-title {
-            font-size: 20px;
-            font-weight: 600;
-            letter-spacing: -0.01em;
-            margin: 0 0 8px;
-        }
-
-        .empty-copy {
-            max-width: 360px;
-            margin: 0;
-            color: var(--text-secondary);
-        }
-
-        .empty-actions {
-            margin-top: 20px;
-        }
-
-        .primary-button {
+        .btn-primary {
             background: var(--primary);
             color: white;
             border: none;
-            padding: 12px 22px;
-            border-radius: var(--radius-pill);
+            padding: 14px 32px;
+            border-radius: 12px;
+            font-weight: 600;
             cursor: pointer;
-            font-weight: 600;
+            transition: all 0.2s;
+            font-size: 15px;
+            box-shadow: 0 4px 12px rgba(0,82,255,0.2);
         }
+        .btn-primary:hover { background: var(--primary-active); transform: translateY(-1px); }
 
-        .primary-button:disabled {
-            opacity: 0.7;
-            cursor: wait;
-        }
+        .score-banner { display: flex; align-items: center; gap: 32px; background: var(--primary-soft); padding: 32px; border-radius: var(--radius-lg); border: 1px solid var(--outline); }
+        .score-circle { width: 80px; height: 80px; background: var(--primary); border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; flex-shrink: 0; }
+        .score-val { font-size: 32px; font-weight: 800; line-height: 1; }
+        .score-lab { font-size: 10px; font-weight: 700; text-transform: uppercase; opacity: 0.9; }
 
-        #empty-state,
-        #loading-state,
-        #generating-state,
-        #restitution-content {
-            display: none;
-        }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+        .list-items { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 10px; }
+        .list-items li { position: relative; padding-left: 24px; font-size: 14px; color: var(--body); }
+        .list-items li::before { content: "→"; position: absolute; left: 0; color: var(--primary); font-weight: 800; }
+        .chip { display: inline-block; padding: 4px 12px; background: var(--surface-soft); border: 1px solid var(--outline); border-radius: var(--radius-pill); font-size: 12px; font-weight: 600; margin: 0 6px 6px 0; color: var(--body); }
+        .label-muted { font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--muted); letter-spacing: 0.05em; margin-bottom: 8px; }
 
-        #loading-state,
-        #generating-state {
-            text-align: left;
-        }
-
-        @keyframes skeleton-loading {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
-        }
-
-        @media (max-width: 900px) {
-            body {
-                padding: 16px;
-            }
-
-            .hero,
-            .section-card,
-            .fit-box,
-            .empty-box,
-            .state-box {
-                padding: 24px;
-            }
-
-            .grid-2,
-            .summary-grid,
-            .signal-grid,
-            .fit-grid,
-            .fit-columns,
-            .skeleton-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .detail-line {
-                flex-direction: column;
-            }
-
-            .detail-label {
-                min-width: 0;
-            }
-        }
+        #loading-state, #generating-state, #empty-state, #restitution-content { display: none; }
+        .state-container { text-align: center; padding: 100px 24px; }
+        .pulse { animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div id="loading-state" class="state-box">
-            <div class="state-copy">
-                <div class="inline-badge">Chargement</div>
-                <h1 class="state-title">Préparation de la restitution</h1>
-                <p class="content-text">On récupère l’offre et l’instance associée avant d’afficher le rendu.</p>
-            </div>
-            <div class="skeleton-stack" aria-hidden="true">
-                <div class="skeleton-row tall" style="width: 58%"></div>
-                <div class="skeleton-row" style="width: 82%"></div>
-                <div class="skeleton-row" style="width: 71%"></div>
-                <div class="skeleton-row short"></div>
-            </div>
+    <!-- Empty State (Standard Layout matching CV/Letter) -->
+    <div id="empty-state" style="display: flex; flex-direction: column; align-items: center; justify-content: flex-start; height: 100vh; width: 100%; padding-top: 18vh; padding-left: 40px; padding-right: 40px; text-align: center; color: #64748b; background: #fff;">
+        <div style="width: 64px; height: 64px; background: #eff6ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 24px; color: #0052ff;">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 32px; height: 32px;">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+            </svg>
         </div>
+        <h2 style="font-size: 20px; font-weight: 700; color: #1e293b; margin-bottom: 12px;">Analyse non disponible</h2>
+        <button class="btn-primary" onclick="handleGenerate()">Générer l'analyse</button>
+    </div>
 
-        <div id="generating-state" class="state-box">
-            <div class="state-copy">
-                <h1 id="generating-title" class="state-title">Génération de la restitution</h1>
-                <div class="meta" id="generating-meta"></div>
-            </div>
-            <div class="skeleton-grid" aria-hidden="true">
-                <div class="skeleton-card">
-                    <div class="skeleton-row tall" style="width: 62%"></div>
-                    <div class="skeleton-row" style="width: 94%"></div>
-                    <div class="skeleton-row" style="width: 88%"></div>
-                    <div class="skeleton-row" style="width: 74%"></div>
-                </div>
-                <div class="skeleton-card">
-                    <div class="skeleton-row tall" style="width: 54%"></div>
-                    <div class="skeleton-row" style="width: 90%"></div>
-                    <div class="skeleton-row" style="width: 84%"></div>
-                    <div class="skeleton-row" style="width: 68%"></div>
-                </div>
-                <div class="skeleton-card">
-                    <div class="skeleton-row tall" style="width: 48%"></div>
-                    <div class="skeleton-chip-row">
-                        <div class="skeleton-chip"></div>
-                        <div class="skeleton-chip" style="width: 124px"></div>
-                        <div class="skeleton-chip" style="width: 88px"></div>
-                    </div>
-                    <div class="skeleton-row" style="width: 86%"></div>
-                    <div class="skeleton-row" style="width: 72%"></div>
-                </div>
-                <div class="skeleton-card">
-                    <div class="skeleton-row tall" style="width: 64%"></div>
-                    <div class="skeleton-row" style="width: 86%"></div>
-                    <div class="skeleton-row" style="width: 81%"></div>
-                    <div class="skeleton-row" style="width: 59%"></div>
-                </div>
-            </div>
+    <!-- Generating State -->
+    <div id="generating-state" style="display: flex; flex-direction: column; align-items: center; justify-content: flex-start; height: 100vh; width: 100%; padding-top: 18vh; padding-left: 40px; padding-right: 40px; text-align: center; color: #64748b; background: #fff;">
+        <div style="width: 64px; height: 64px; background: #eff6ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 24px; color: #0052ff;" class="pulse">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 32px; height: 32px;">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.456-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" />
+            </svg>
         </div>
-
-        <div id="empty-state" class="empty-box">
-            <div style="display: flex; flex-direction: column; align-items: center; justify-content: flex-start; height: 100vh; width: 100%; padding-top: 18vh; padding-left: 40px; padding-right: 40px; text-align: center; color: #64748b; background: #fff;">
-                <div style="width: 64px; height: 64px; background: #eff6ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 24px; color: #0052ff;">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 32px; height: 32px;">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
-                    </svg>
-                </div>
-                <h2 style="font-size: 20px; font-weight: 700; line-height: 1.25; color: #1e293b; margin-bottom: 12px; text-transform: none; letter-spacing: normal;">Analyse non disponible</h2>
-                <button onclick="generate()" id="btn-generate" style="background: #0052ff; color: white; border: none; padding: 14px 32px; border-radius: 12px; font-weight: 600; cursor: pointer; font-size: 15px; box-shadow: 0 4px 12px rgba(0,82,255,0.2); transition: all 0.2s;">Générer l'analyse</button>
-            </div>
+        <h2 style="font-size: 20px; font-weight: 700; color: #1e293b; margin-bottom: 12px;">Analyse en cours...</h2>
+        <p style="color: #64748b; max-width: 420px;">Ollama prépare votre analyse structurée en temps réel.</p>
+        <div style="margin-top: 32px; width: 100%; max-width: 320px; display: flex; flex-direction: column; gap: 12px;">
+            <div class="pulse" style="height: 12px; background: #f1f5f9; border-radius: 4px; width: 100%;"></div>
+            <div class="pulse" style="height: 12px; background: #f1f5f9; border-radius: 4px; width: 85%;"></div>
+            <div class="pulse" style="height: 12px; background: #f1f5f9; border-radius: 4px; width: 60%;"></div>
         </div>
+    </div>
 
-        <div id="restitution-content">
-            <header class="hero">
-                <div class="hero-copy">
-                    <p class="eyebrow">Restitution d’offre</p>
-                    <h1 id="offre-titre">Chargement...</h1>
-                    <div class="meta" id="offre-meta"></div>
-                    <p class="lead" id="val-synthese-hero"></p>
+    <div id="loading-state" style="text-align: center; padding: 100px;"><h2>Chargement...</h2></div>
+
+    <div id="restitution-content">
+        <div class="container">
+            <div class="hero">
+                <p class="eyebrow">RecruitAI Restitution</p>
+                <h1 id="offre-titre"></h1>
+                <div id="offre-meta" class="meta"></div>
+                <div style="margin-top: 32px; padding: 24px; background: var(--primary-soft); border-radius: 16px; border: 1px solid var(--outline);">
+                    <p id="val-synthese" style="margin: 0; font-size: 17px; font-weight: 500; color: var(--primary);"></p>
                 </div>
-            </header>
-
-            <section class="section-card">
-                <h2>Description de l'entreprise</h2>
-                <div class="content-text" id="val-entreprise"></div>
-            </section>
-
-            <section class="section-card">
-                <h2>Description de l'offre</h2>
-                <div class="content-text" id="val-poste"></div>
-            </section>
-
-            <section class="section-card">
-                <h2>Missions clés</h2>
-                <ul class="clean-list" id="list-missions"></ul>
-            </section>
-
+            </div>
+            <div class="score-banner">
+                <div class="score-circle"><span class="score-val" id="val-score">0</span><span class="score-lab">Fit</span></div>
+                <div><div class="label-muted">Justification du score</div><div id="val-justification" style="font-size: 16px; font-weight: 600;"></div></div>
+            </div>
             <div class="grid-2">
-                <section class="section-card">
-                    <h2>Hardskills</h2>
-                    <div class="chip-cloud" id="chips-hard"></div>
-                </section>
-                <section class="section-card">
-                    <h2>Softskills</h2>
-                    <div class="chip-cloud" id="chips-soft"></div>
-                </section>
+                <div class="card"><h2 class="section-title">L'Entreprise</h2><p id="val-entreprise" style="font-size: 14px; color: var(--body); margin: 0;"></p></div>
+                <div class="card"><h2 class="section-title">Le Poste</h2><p id="val-poste" style="font-size: 14px; color: var(--body); margin: 0;"></p></div>
             </div>
-
-            <section class="section-card">
-                <h2>Profil recherché</h2>
-                <div class="content-text" id="val-profil"></div>
-            </section>
-
-            <section class="section-card">
-                <h2>Exigences</h2>
-                <ul class="clean-list" id="list-exigences"></ul>
-            </section>
-
-            <section class="section-card">
-                <h2>Lecture entre les lignes</h2>
-                <div class="signal-grid">
-                    <div class="signal">
-                        <span class="signal-label">Autonomie</span>
-                        <div class="signal-value" id="val-autonomie"></div>
-                    </div>
-                    <div class="signal">
-                        <span class="signal-label">Maturité de l'équipe</span>
-                        <div class="signal-value" id="val-maturite"></div>
-                    </div>
-                    <div class="signal">
-                        <span class="signal-label">Culture</span>
-                        <div class="signal-value" id="val-culture"></div>
-                    </div>
-                    <div class="signal">
-                        <span class="signal-label">Stack implicite</span>
-                        <div class="signal-value" id="val-stack-implicite"></div>
-                    </div>
+            <div class="grid-2">
+                <div class="card"><h2 class="section-title">Forces du profil</h2><ul id="list-forces" class="list-items"></ul></div>
+                <div class="card"><h2 class="section-title">Points de vigilance</h2><ul id="list-risques" class="list-items"></ul></div>
+            </div>
+            <div class="card">
+                <h2 class="section-title">Missions & Stack</h2>
+                <div class="grid-2"><div><div class="label-muted">Missions clés</div><ul id="list-missions" class="list-items"></ul></div><div><div class="label-muted">Stack</div><div id="chips-stack" style="margin-top: 8px;"></div></div></div>
+            </div>
+            <div class="card">
+                <h2 class="section-title">Profil & Conditions</h2>
+                <div class="grid-2">
+                    <div><div class="label-muted">Profil</div><p id="val-profil" style="font-size: 14px; color: var(--body); margin-bottom: 16px;"></p><div class="label-muted">Exigences</div><ul id="list-exigences" class="list-items"></ul></div>
+                    <div style="display: flex; flex-direction: column; gap: 12px;"><div class="label-muted">Pratique</div><div class="chip">Contrat: <span id="val-contrat">-</span></div><div class="chip">Lieu: <span id="val-lieu">-</span></div><div class="chip">Remote: <span id="val-remote">-</span></div></div>
                 </div>
-            </section>
-
-            <div class="fit-box" id="card-fit">
-                <div class="fit-grid">
-                    <div class="score-block">
-                        <div class="score-circle" id="val-score">--</div>
-                        <div class="score-caption">Match Score sur 100, avec une lecture stricte de l’adéquation profil/offre.</div>
-                    </div>
-                    <div class="fit-summary">
-                        <div class="fit-justification" id="val-justification"></div>
-                        <div class="fit-columns">
-                            <div class="fit-panel">
-                                <h3>Points forts</h3>
-                                <ul class="clean-list" id="list-forces"></ul>
-                            </div>
-                            <div class="fit-panel recommendations">
-                                <h3>Points à travailler et recommandations stratégiques</h3>
-                                <ul class="clean-list" id="list-risques"></ul>
-                                <div class="content-text" id="val-questions"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            </div>
+            <div class="card">
+                <h2 class="section-title">Préparation d'entretien</h2>
+                <div class="grid-2"><div><div class="label-muted">Focus</div><ul id="list-points-attention" class="list-items"></ul></div><div><div class="label-muted">Questions</div><ul id="list-questions" class="list-items"></ul></div></div>
             </div>
         </div>
     </div>
@@ -703,252 +162,103 @@
     <script>
         const urlParams = new URLSearchParams(window.location.search);
         const offerSlug = urlParams.get('offer') || urlParams.get('offre');
-        const instanceSlug = urlParams.get('instance') || urlParams.get('instanceSlug') || urlParams.get('id');
-        let currentOffer = null;
-        let currentInstance = null;
+        const instanceSlug = urlParams.get('instance') || urlParams.get('id');
+        let pollInterval = null;
 
         async function init() {
             if (!offerSlug) return;
-
-            if (window.self !== window.top) {
-                document.body.classList.add('is-framed');
-            }
-
-            try {
-                showLoading(true);
-                const [resOffre, resInstance] = await Promise.all([
-                    fetch(`/api/offres/${offerSlug}`),
-                    instanceSlug
-                        ? fetch(`/api/instances/${instanceSlug}`)
-                        : fetch(`/api/offres/${offerSlug}/instance`)
-                ]);
-
-                if (!resOffre.ok) throw new Error('Offre introuvable');
-                const offre = await resOffre.json();
-                currentOffer = offre;
-
-                let instance = null;
-                if (resInstance.ok) {
-                    instance = await resInstance.json();
-                }
-                currentInstance = instance;
-
-                renderHeader(offre);
-
-                if (instance && instance.restitution) {
-                    renderRestitution(instance.restitution);
-                    showContent(true);
-                } else if (instance && instance.status === 'generating' && isFreshGeneration(instance.updated_at)) {
-                    showGenerating(offre, instance);
-                } else {
-                    showEmpty(true);
-                }
-            } catch (err) {
-                console.error(err);
-                showEmpty(true);
-            } finally {
-                showLoading(false);
-            }
+            if (window.self !== window.top) document.body.classList.add('is-framed');
+            await checkStatus();
         }
 
-        function renderHeader(offre) {
-            document.getElementById('offre-titre').innerText = offre.intitule;
-            const parts = [`<strong>${escapeHtml(offre.entreprise || '')}</strong>`];
-            const offerUrl = resolveOfferUrl(offre);
-            if (offerUrl) {
-                parts.push(`<a href="${escapeAttribute(offerUrl)}" target="_blank" rel="noreferrer noopener">Visiter l'offre</a>`);
-            }
-            document.getElementById('offre-meta').innerHTML = parts.join('');
-            const generatingMeta = document.getElementById('generating-meta');
-            if (generatingMeta) {
-                generatingMeta.innerHTML = parts.join('');
-            }
-            const generatingTitle = document.getElementById('generating-title');
-            if (generatingTitle) {
-                generatingTitle.innerText = offre.intitule;
-            }
+        async function checkStatus() {
+            try {
+                const [resOffre, resInstance] = await Promise.all([
+                    fetch(`/api/offres/${offerSlug}`),
+                    instanceSlug ? fetch(`/api/instances/${instanceSlug}`) : fetch(`/api/offres/${offerSlug}/instance`)
+                ]);
+                if (!resOffre.ok) return;
+                const offre = await resOffre.json();
+                document.getElementById('offre-titre').innerText = offre.intitule;
+                document.getElementById('offre-meta').innerText = (offre.entreprise || '') + (offre.localisation ? ` · ${offre.localisation}` : '');
+
+                if (resInstance.ok) {
+                    const instance = await resInstance.json();
+                    if (instance.restitution) {
+                        renderRestitution(instance.restitution);
+                        showContent();
+                        if (pollInterval) clearInterval(pollInterval);
+                    } else if (instance.status === 'generating') {
+                        showGenerating();
+                        if (!pollInterval) pollInterval = setInterval(checkStatus, 2000);
+                    } else {
+                        showEmpty();
+                        if (pollInterval) clearInterval(pollInterval);
+                    }
+                } else { showEmpty(); }
+            } catch (e) { console.error(e); }
         }
 
         function renderRestitution(r) {
-            document.getElementById('val-synthese-hero').innerText = r.synthese;
-            document.getElementById('val-entreprise').innerText = r.entreprise_resume;
-            document.getElementById('val-poste').innerText = r.poste_resume;
+            document.getElementById('val-score').innerText = r.fit_score;
+            document.getElementById('val-justification').innerText = r.fit_justification;
+            document.getElementById('val-synthese').innerText = r.synthese;
+            document.getElementById('val-entreprise').innerText = r.entreprise;
+            document.getElementById('val-poste').innerText = r.poste;
             document.getElementById('val-profil').innerText = r.profil_recherche;
-
-            renderList('list-missions', r.explicite.missions);
-            renderList('list-exigences', r.explicite.exigences_dures);
-            renderList('list-forces', r.fit.forces);
-
-            renderChips('chips-soft', r.explicite.soft_skills);
-            renderChips('chips-hard', r.explicite.stack_technique);
-
-            const imp = r.implicite;
-            document.getElementById('val-autonomie').innerText = imp.niveau_autonomie;
-            document.getElementById('val-maturite').innerText = imp.maturite_equipe;
-            document.getElementById('val-culture').innerText = imp.culture;
-            document.getElementById('val-stack-implicite').innerText = imp.stack_implicite?.length
-                ? imp.stack_implicite.join(' · ')
-                : 'Non explicite';
-
-            document.getElementById('val-score').innerText = r.fit.score;
-            document.getElementById('val-justification').innerText = r.fit.justification;
-
-            const risks = [
-                ...(r.fit.faiblesses || []).map(f => `Point faible à adresser : ${f}`),
-                ...(r.points_a_traiter || []).map(p => `[${String(p.categorie).toUpperCase()}] ${p.message}`)
-            ];
-            renderList('list-risques', risks);
-
-            const questions = Array.isArray(r.questions_entretien) ? r.questions_entretien : [];
-            document.getElementById('val-questions').innerText = questions.length
-                ? `Questions à creuser : ${questions.join(' · ')}`
-                : '';
+            document.getElementById('val-contrat').innerText = r.contrat || '-';
+            document.getElementById('val-lieu').innerText = r.localisation || '-';
+            document.getElementById('val-remote').innerText = r.remote || '-';
+            renderList('list-forces', r.forces);
+            renderList('list-risques', r.faiblesses);
+            renderList('list-missions', r.missions);
+            renderList('list-exigences', r.exigences);
+            renderList('list-points-attention', r.points_attention);
+            renderList('list-questions', r.questions_entretien);
+            const stack = document.getElementById('chips-stack');
+            stack.innerHTML = '';
+            (r.stack_technique || []).forEach(s => {
+                const span = document.createElement('span');
+                span.className = 'chip';
+                span.innerText = s;
+                stack.appendChild(span);
+            });
         }
 
         function renderList(id, items) {
             const el = document.getElementById(id);
             el.innerHTML = '';
-            if (!items || items.length === 0) {
-                el.parentElement.style.display = 'none';
-                return;
-            }
-            el.parentElement.style.display = 'flex';
-            items.forEach(text => {
+            (items || []).forEach(t => {
                 const li = document.createElement('li');
-                li.innerText = text;
+                li.innerText = t;
                 el.appendChild(li);
             });
         }
 
-        function renderChips(id, items) {
-            const el = document.getElementById(id);
-            el.innerHTML = '';
-            if (!items || items.length === 0) {
-                el.parentElement.style.display = 'none';
-                return;
-            }
-            el.parentElement.style.display = 'flex';
-            items.forEach(text => {
-                const chip = document.createElement('span');
-                chip.className = 'chip';
-                chip.innerText = text;
-                el.appendChild(chip);
-            });
+        async function handleGenerate() {
+            showGenerating();
+            const target = instanceSlug ? `/api/instances/${instanceSlug}/generate?restitution=true&resume=false&cover_letter=false` : `/api/offres/${offerSlug}/generate`;
+            await fetch(target, { method: 'POST' });
+            if (!pollInterval) pollInterval = setInterval(checkStatus, 2000);
         }
 
-        function showLoading(show) {
-            document.getElementById('loading-state').style.display = show ? 'block' : 'none';
-        }
-
-        function showEmpty(show) {
-            if (!show) {
-                document.getElementById('empty-state').style.display = 'none';
-                return;
-            }
-
-            const container = document.querySelector('.container');
-            if (!container) return;
-
-            container.innerHTML = `
-                <div style="display: flex; flex-direction: column; align-items: center; justify-content: flex-start; height: 100vh; width: 100%; padding-top: 18vh; padding-left: 40px; padding-right: 40px; text-align: center; color: #64748b; background: #fff;">
-                    <div style="width: 64px; height: 64px; background: #eff6ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 24px; color: #0052ff;">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 32px; height: 32px;">
-                          <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
-                        </svg>
-                    </div>
-                    <h2 style="font-size: 20px; font-weight: 700; line-height: 1.25; color: #1e293b; margin-bottom: 12px; text-transform: none; letter-spacing: normal;">Analyse non disponible</h2>
-                    <button onclick="generate()" id="btn-generate" style="background: #0052ff; color: white; border: none; padding: 14px 32px; border-radius: 12px; font-weight: 600; cursor: pointer; font-size: 15px; box-shadow: 0 4px 12px rgba(0,82,255,0.2); transition: all 0.2s;">Générer l'analyse</button>
-                </div>`;
-        }
-
-        function showContent(show) {
-            document.getElementById('restitution-content').style.display = show ? 'block' : 'none';
+        function showGenerating() {
+            document.getElementById('generating-state').style.display = 'flex';
+            document.getElementById('restitution-content').style.display = 'none';
+            document.getElementById('empty-state').style.display = 'none';
             document.getElementById('loading-state').style.display = 'none';
+        }
+        function showEmpty() {
+            document.getElementById('empty-state').style.display = 'flex';
+            document.getElementById('restitution-content').style.display = 'none';
+            document.getElementById('generating-state').style.display = 'none';
+            document.getElementById('loading-state').style.display = 'none';
+        }
+        function showContent() {
+            document.getElementById('restitution-content').style.display = 'block';
             document.getElementById('generating-state').style.display = 'none';
             document.getElementById('empty-state').style.display = 'none';
-        }
-
-        function showGenerating(offre, instance) {
-            renderHeader(offre);
-            document.getElementById('generating-state').style.display = 'block';
             document.getElementById('loading-state').style.display = 'none';
-            document.getElementById('empty-state').style.display = 'none';
-            document.getElementById('restitution-content').style.display = 'none';
-        }
-
-        async function generate(triggerId = 'btn-generate') {
-            const btn = document.getElementById(triggerId) || document.getElementById('btn-generate');
-            const originalText = btn ? btn.innerText : '';
-            if (btn) {
-                btn.innerText = 'Génération en cours...';
-                btn.disabled = true;
-            }
-
-            if (currentOffer) {
-                showGenerating(currentOffer, currentInstance || { status: 'generating' });
-            } else {
-                showLoading(true);
-            }
-
-            try {
-                const target = instanceSlug ? `/api/instances/${instanceSlug}/generate` : `/api/offres/${offerSlug}/generate`;
-                const res = await fetch(target, { method: 'POST' });
-                if (res.ok) {
-                    window.location.reload();
-                } else {
-                    const data = await res.json();
-                    alert('Erreur : ' + (data.error || 'Génération échouée'));
-                    showEmpty(true);
-                }
-            } catch (err) {
-                alert('Erreur réseau');
-                showEmpty(true);
-            } finally {
-                if (btn) {
-                    btn.innerText = originalText;
-                    btn.disabled = false;
-                }
-                if (!currentOffer) {
-                    showLoading(false);
-                }
-            }
-        }
-
-        function escapeHtml(value) {
-            return String(value)
-                .replaceAll('&', '&amp;')
-                .replaceAll('<', '&lt;')
-                .replaceAll('>', '&gt;')
-                .replaceAll('"', '&quot;')
-                .replaceAll("'", '&#39;');
-        }
-
-        function escapeAttribute(value) {
-            return escapeHtml(value).replaceAll('`', '&#96;');
-        }
-
-        function resolveOfferUrl(offre) {
-            if (offre?.source_url && offre.source_url !== 'manual') {
-                return offre.source_url;
-            }
-
-            const rawText = offre?.raw_text || '';
-            const markdownLink = rawText.match(/\((https?:\/\/[^)\s]+)\)/);
-            if (markdownLink) {
-                return markdownLink[1];
-            }
-
-            const bareUrl = rawText.match(/https?:\/\/[^\s<>")\]]+/);
-            return bareUrl ? bareUrl[0] : '';
-        }
-
-        function isFreshGeneration(updatedAt) {
-            if (!updatedAt) return false;
-
-            const updatedTime = new Date(updatedAt).getTime();
-            if (Number.isNaN(updatedTime)) return false;
-
-            return Date.now() - updatedTime < 2 * 60 * 1000;
         }
 
         init();

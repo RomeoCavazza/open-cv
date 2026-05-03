@@ -248,11 +248,19 @@ async fn generate_instance(
         .ok_or_else(|| ApiError::NotFound(format!("Instance {} inconnue", slug)))?;
 
     // 2. Lancer la génération
+    let restitution = q.get("restitution").map(|v| v.as_bool().unwrap_or(v.as_str() == Some("true"))).unwrap_or(true);
+    let resume = q.get("resume").map(|v| v.as_bool().unwrap_or(v.as_str() == Some("true"))).unwrap_or(true);
+    let cover_letter = q.get("cover_letter").map(|v| v.as_bool().unwrap_or(v.as_str() == Some("true"))).unwrap_or(true);
+
     let input = application::generate::GenerateInput {
         offre_id: instance.offre_id,
         profil_id: instance.profil_id,
         existing_instance: Some(instance),
-        livrables: application::generate::Livrables::default(),
+        livrables: application::generate::Livrables {
+            restitution,
+            resume,
+            cover_letter,
+        },
     };
 
     state

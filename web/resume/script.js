@@ -156,11 +156,9 @@ function renderTemplateResume(data) {
         const title = exp.role || exp.company;
         const sub = exp.role ? exp.company : "";
         div.innerHTML = `
-                <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2px;">
-                    <h4>${title}</h4>
-                    <div class="period">${exp.period}</div>
-                </div>
+                <h4>${title}</h4>
                 ${sub ? `<div class="company">${sub}</div>` : ''}
+                <div class="period" style="margin-top: 1px; margin-bottom: 3px;">${exp.period}</div>
                 <ul>${exp.description.map(line => `<li>${line}</li>`).join('')}</ul>
             `;
         expContainer.appendChild(div);
@@ -175,14 +173,9 @@ function renderTemplateResume(data) {
             div.className = 'exp-item';
             const title = proj.role || proj.company;
             const sub = proj.role ? proj.company : "";
-            div.innerHTML = `
-                    <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2px;">
-                        <h4>${title}</h4>
-                        <div class="period">${proj.period}</div>
-                    </div>
-                    ${sub ? `<div class="company">${sub}</div>` : ''}
-                    <ul>${proj.description.map(line => `<li>${line}</li>`).join('')}</ul>
-                `;
+            div.innerHTML = `<h4>${title}<span style="font-style: italic; font-weight: normal; font-size: 0.75rem; color: var(--cv-muted); margin-left: 6px; display: inline-block;"> (${proj.period})</span></h4>` +
+                (sub ? `<div class="company">${sub}</div>` : '') +
+                `<ul>${proj.description.map(line => `<li>${line}</li>`).join('')}</ul>`;
             projContainer.appendChild(div);
         });
     }

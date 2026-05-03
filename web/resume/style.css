@@ -428,3 +428,4 @@ body.is-framed .a4-page {
     }
 }
 .hidden { display: none !important; }
+.contact-item a:hover, .contact-item a:hover span { text-decoration: underline !important; cursor: pointer; }

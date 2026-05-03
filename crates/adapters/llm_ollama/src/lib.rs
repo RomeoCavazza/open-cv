@@ -17,7 +17,7 @@ impl OllamaClient {
             model: model.into(),
             dimension,
             http: reqwest::Client::builder()
-                .timeout(std::time::Duration::from_secs(300)) // Ollama peut être lent en local
+                .timeout(std::time::Duration::from_secs(600)) // Ollama peut être lent en local
                 .build()
                 .expect("client HTTP valide"),
         }
@@ -88,7 +88,8 @@ impl LlmClient for OllamaClient {
             },
             options: req
                 .temperature
-                .map(|t| serde_json::json!({ "temperature": t })),
+                .map(|t| serde_json::json!({ "temperature": t, "num_ctx": 8192 }))
+                .or_else(|| Some(serde_json::json!({ "num_ctx": 8192 }))),
         };
 
         let start = std::time::Instant::now();
@@ -170,7 +171,7 @@ impl LlmClient for OllamaClient {
             } else {
                 Some(serde_json::json!("json"))
             },
-            options: None,
+            options: Some(serde_json::json!({ "num_ctx": 8192 })),
         };
 
         let url = format!("{}/api/chat", self.base_url);

@@ -31,7 +31,7 @@ body {
     height: 100vh;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
+    overflow-y: auto;
 }
 
 /* Top Navigation */
@@ -105,8 +105,8 @@ input:checked + .slider { background-color: var(--primary); }
 input:checked + .slider:before { transform: translateX(16px); }
 
 /* Layout */
-.app-layout { display: flex; flex: 1; overflow: hidden; position: relative; }
-.view { display: none; flex: 1; overflow: hidden; }
+.app-layout { display: flex; flex: 1; overflow: initial; position: relative; }
+.view { display: none; flex: 1; overflow: initial; }
 .view.active { display: flex; }
 
 .muted-remove-btn {
