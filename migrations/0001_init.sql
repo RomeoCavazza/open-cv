@@ -83,6 +83,8 @@ CREATE TABLE IF NOT EXISTS profils (
     label                   TEXT        NOT NULL,
     content                 JSONB       NOT NULL,
     is_active               BOOLEAN     NOT NULL DEFAULT false,
+    -- photo and calendar are stored as binary blobs; optional
+    profile_photo           BYTEA,
     calendar_pdf            BYTEA,
     resume_template         JSONB,
     cover_letter_template   JSONB,
