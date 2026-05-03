@@ -56,7 +56,8 @@ define_id!(ChunkId);
 define_id!(InstanceId);
 define_id!(LlmCallId);
 
-/// Slug humain-lisible. Compat avec le file system (`data/instances/<slug>/`).
+/// Slug humain-lisible (ex: `safran_alternance_ia__a3b2c1d0`).
+/// Historiquement stocké dans `data/instances/`, maintenant persisté en base PostgreSQL.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(transparent)]
 pub struct Slug(String);
