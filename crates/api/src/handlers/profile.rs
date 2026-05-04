@@ -9,9 +9,9 @@ use domain::{AnnexeId, Profil};
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
 
-mod helpers;
+mod mapping;
 
-use helpers::{
+use mapping::{
     active_profile_content, active_profile_cover_letter_template,
     active_profile_resume_template_or_content, apply_persisted_markers, apply_profile_update,
     build_annexe_from_request, build_annexe_metadata, build_download_response,

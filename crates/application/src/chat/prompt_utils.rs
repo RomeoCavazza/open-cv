@@ -6,7 +6,7 @@ pub(super) fn build_profile_prompt_context(profil: &domain::Profil) -> serde_jso
     serde_json::json!({
         "id": profil.id,
         "label": profil.label,
-        "content": profil.content,
+        "content": serde_json::to_value(&profil.content).unwrap_or_default(),
         "is_active": profil.is_active,
         "resume_template": profil.resume_template,
         "cover_letter_template": profil.cover_letter_template,
@@ -194,7 +194,7 @@ mod tests {
         Profil {
             id: ProfilId::new(),
             label: "Test Profil".into(),
-            content: json!({"foo": "bar"}),
+            content: domain::ProfilContent::default(),
             is_active: true,
             profile_photo: None,
             calendar_pdf: None,

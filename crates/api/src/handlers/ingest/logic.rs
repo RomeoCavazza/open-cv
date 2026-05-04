@@ -62,7 +62,7 @@ pub(super) fn build_generate_input(
         profil_id,
         existing_instance: Some(instance),
         livrables: Livrables {
-            restitution: config.analysis,
+            analysis: config.analysis,
             resume: config.resume,
             cover_letter: config.cover,
         },

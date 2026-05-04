@@ -286,7 +286,6 @@ export function createSkillRow(item = { category: "", items: [] }) {
 }
 
 export function createAnnexeRow(item = {}) {
-    console.log("[UI] Rendu de l'annexe:", item.label || item.name || item.id);
     const div = document.createElement('div');
     div.className = 'form-row-annexe';
     div.style = "display:flex; flex-direction:column; gap:0; margin-bottom:12px; border:1px solid var(--hairline); border-radius:10px; background:var(--canvas); overflow:hidden; transition: all 0.2s ease;";

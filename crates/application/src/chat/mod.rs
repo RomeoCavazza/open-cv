@@ -12,9 +12,9 @@ use crate::prompts;
 
 const MAX_CHAT_HISTORY_ENTRIES: usize = 20;
 
-mod helpers;
+mod prompt_utils;
 
-use self::helpers::{
+use self::prompt_utils::{
     build_offer_prompt_context, build_profile_prompt_context, extract_chat_history,
     push_chat_history, render_chat_history_for_prompt, wants_identity, wants_mutation,
 };
@@ -50,9 +50,9 @@ enum ChatOutputKind {
 #[derive(Debug, Clone, Serialize, Deserialize, schemars::JsonSchema)]
 struct ChatMutationOutput {
     #[serde(default)]
-    resume: Option<serde_json::Value>,
+    resume: Option<domain::Resume>,
     #[serde(default)]
-    cover: Option<serde_json::Value>,
+    cover: Option<domain::CoverLetter>,
     message: String,
 }
 
@@ -66,29 +66,26 @@ pub struct ChatWithApplicationUseCase {
     pub embedder: Arc<dyn Embedder>,
     pub llm_registry: std::collections::HashMap<String, Arc<dyn LlmClient>>,
 }
-
-pub struct ChatDependencies {
-    pub offre_repo: Arc<dyn ports::OffreRepo>,
-    pub instance_repo: Arc<dyn InstanceRepo>,
-    pub profil_repo: Arc<dyn ProfilRepo>,
-    pub annexe_repo: Arc<dyn AnnexeRepo>,
-    pub chunk_repo: Arc<dyn ChunkRepo>,
-    pub message_repo: Arc<dyn MessageRepo>,
-    pub embedder: Arc<dyn Embedder>,
-    pub llm_registry: std::collections::HashMap<String, Arc<dyn LlmClient>>,
-}
-
 impl ChatWithApplicationUseCase {
-    pub fn new(deps: ChatDependencies) -> Self {
+    pub fn new(
+        offre_repo: Arc<dyn ports::OffreRepo>,
+        instance_repo: Arc<dyn InstanceRepo>,
+        profil_repo: Arc<dyn ProfilRepo>,
+        annexe_repo: Arc<dyn AnnexeRepo>,
+        chunk_repo: Arc<dyn ChunkRepo>,
+        message_repo: Arc<dyn MessageRepo>,
+        embedder: Arc<dyn Embedder>,
+        llm_registry: std::collections::HashMap<String, Arc<dyn LlmClient>>,
+    ) -> Self {
         Self {
-            offre_repo: deps.offre_repo,
-            instance_repo: deps.instance_repo,
-            profil_repo: deps.profil_repo,
-            annexe_repo: deps.annexe_repo,
-            chunk_repo: deps.chunk_repo,
-            message_repo: deps.message_repo,
-            embedder: deps.embedder,
-            llm_registry: deps.llm_registry,
+            offre_repo,
+            instance_repo,
+            profil_repo,
+            annexe_repo,
+            chunk_repo,
+            message_repo,
+            embedder,
+            llm_registry,
         }
     }
 
@@ -213,16 +210,12 @@ impl ChatWithApplicationUseCase {
         };
 
         if let Some(res) = new_data.resume {
-            if !res.is_null() {
-                instance.resume_json = Some(res);
-                instance.status = domain::InstanceStatus::Ready;
-            }
+            instance.resume_json = Some(res);
+            instance.status = domain::InstanceStatus::Ready;
         }
         if let Some(cov) = new_data.cover {
-            if !cov.is_null() {
-                instance.cover_letter_json = Some(cov);
-                instance.status = domain::InstanceStatus::Ready;
-            }
+            instance.cover_letter_json = Some(cov);
+            instance.status = domain::InstanceStatus::Ready;
         }
 
         let assistant_msg = Message::new(instance.id, MessageRole::Assistant, ai_message.clone());

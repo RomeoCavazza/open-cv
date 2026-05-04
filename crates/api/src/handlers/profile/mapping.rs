@@ -19,63 +19,44 @@ pub(super) async fn resolve_active_profile(
 }
 
 pub(super) fn active_profile_content(profil: Profil) -> JsonValue {
-    profil.content
+    serde_json::to_value(profil.content).expect("ProfilContent is always serializable")
 }
 
 pub(super) fn active_profile_resume_template_or_content(profil: Profil) -> JsonValue {
-    if let Some(template) = profil
-        .content
-        .get("documents")
-        .and_then(|docs| docs.get("resume_template"))
-    {
+    if let Some(template) = &profil.content.documents.resume_template {
         return template.clone();
     }
 
-    profil.content
+    serde_json::to_value(profil.content).expect("ProfilContent is always serializable")
 }
 
 pub(super) fn active_profile_cover_letter_template(profil: Profil) -> Result<JsonValue, ApiError> {
     profil
         .content
-        .get("documents")
-        .and_then(|docs| docs.get("cover_letter_template"))
-        .cloned()
+        .documents
+        .cover_letter_template
+        .clone()
         .ok_or_else(|| ApiError::NotFound("Aucun modèle de lettre trouvé".to_string()))
 }
 
 pub(super) fn apply_persisted_markers(profil: &mut Profil) {
     if profil.profile_photo.is_some() {
-        if let Some(profile) = profil
-            .content
-            .get_mut("profile")
-            .and_then(|p| p.as_object_mut())
-        {
-            profile.insert(
-                "image".to_string(),
-                JsonValue::String("persisted:bytea".to_string()),
-            );
-        }
+        profil.content.profile.image = "persisted:bytea".to_string();
     }
 
     if profil.calendar_pdf.is_some() {
-        if let Some(documents) = profil
-            .content
-            .get_mut("documents")
-            .and_then(|d| d.as_object_mut())
-        {
-            documents.insert(
-                "apprenticeship_calendar".to_string(),
-                JsonValue::String("persisted:bytea".to_string()),
-            );
-        }
+        profil.content.documents.apprenticeship_calendar =
+            Some(serde_json::json!("persisted:bytea"));
     }
 }
 
 pub(super) fn apply_profile_update(profil: &mut Profil, new_content: JsonValue) {
-    merge_profile_content(&mut profil.content, new_content);
-    extract_profile_photo(profil);
-    extract_calendar_pdf(profil);
-    apply_persisted_markers(profil);
+    if let Ok(content) = serde_json::from_value::<domain::ProfilContent>(new_content) {
+        profil.content = content;
+        extract_profile_photo(profil);
+        extract_calendar_pdf(profil);
+        apply_persisted_markers(profil);
+    }
 }
 
 pub(super) fn decode_data_url(payload: &str) -> Result<Vec<u8>, String> {
@@ -128,68 +109,36 @@ pub(super) fn build_download_response(annexe: Annexe) -> ([(&'static str, String
     (headers, annexe.content)
 }
 
-fn merge_profile_content(existing: &mut JsonValue, new_content: JsonValue) {
-    if let (Some(old_obj), Some(new_obj)) = (existing.as_object_mut(), new_content.as_object()) {
-        for (key, value) in new_obj {
-            if key == "documents" {
-                if let (Some(old_docs), Some(new_docs)) = (
-                    old_obj
-                        .get_mut("documents")
-                        .and_then(|docs| docs.as_object_mut()),
-                    value.as_object(),
-                ) {
-                    for (doc_key, doc_value) in new_docs {
-                        if !doc_value.is_null() {
-                            old_docs.insert(doc_key.clone(), doc_value.clone());
-                        }
-                    }
-                } else {
-                    old_obj.insert(key.clone(), value.clone());
-                }
-            } else {
-                old_obj.insert(key.clone(), value.clone());
-            }
-        }
-    } else {
-        *existing = new_content;
-    }
-}
-
 fn extract_profile_photo(profil: &mut Profil) {
-    if let Some(profile) = profil.content.get("profile").and_then(|p| p.as_object()) {
-        if let Some(image) = profile.get("image").and_then(|value| value.as_str()) {
-            if let Some(payload) = image
-                .strip_prefix("data:")
-                .and_then(|_| image.split(',').nth(1))
-            {
-                if let Ok(bytes) = decode_data_url(payload) {
-                    profil.profile_photo = Some(bytes);
-                }
-            }
+    let image = &profil.content.profile.image;
+    if let Some(payload) = image
+        .strip_prefix("data:")
+        .and_then(|_| image.split(',').nth(1))
+    {
+        if let Ok(bytes) = decode_data_url(payload) {
+            profil.profile_photo = Some(bytes);
         }
     }
 }
 
 fn extract_calendar_pdf(profil: &mut Profil) {
-    if let Some(documents) = profil.content.get("documents").and_then(|d| d.as_object()) {
-        if let Some(calendar) = documents.get("apprenticeship_calendar") {
-            if let Some(data_url) = calendar.get("data_url").and_then(|value| value.as_str()) {
-                if let Some(payload) = data_url
-                    .strip_prefix("data:")
-                    .and_then(|_| data_url.split(',').nth(1))
-                {
-                    if let Ok(bytes) = decode_data_url(payload) {
-                        profil.calendar_pdf = Some(bytes);
-                    }
+    if let Some(calendar) = &profil.content.documents.apprenticeship_calendar {
+        if let Some(data_url) = calendar.get("data_url").and_then(|value| value.as_str()) {
+            if let Some(payload) = data_url
+                .strip_prefix("data:")
+                .and_then(|_| data_url.split(',').nth(1))
+            {
+                if let Ok(bytes) = decode_data_url(payload) {
+                    profil.calendar_pdf = Some(bytes);
                 }
-            } else if let Some(data_url) = calendar.as_str() {
-                if let Some(payload) = data_url
-                    .strip_prefix("data:")
-                    .and_then(|_| data_url.split(',').nth(1))
-                {
-                    if let Ok(bytes) = decode_data_url(payload) {
-                        profil.calendar_pdf = Some(bytes);
-                    }
+            }
+        } else if let Some(data_url) = calendar.as_str() {
+            if let Some(payload) = data_url
+                .strip_prefix("data:")
+                .and_then(|_| data_url.split(',').nth(1))
+            {
+                if let Ok(bytes) = decode_data_url(payload) {
+                    profil.calendar_pdf = Some(bytes);
                 }
             }
         }
@@ -204,20 +153,16 @@ mod tests {
     use serde_json::json;
 
     fn build_profile(with_resume_template: bool) -> Profil {
-        let documents = if with_resume_template {
-            json!({"resume_template": {"foo": "bar"}})
-        } else {
-            json!({})
-        };
+        let mut content = domain::ProfilContent::default();
+        content.profile.firstname = "Original".into();
+        if with_resume_template {
+            content.documents.resume_template = Some(json!({"foo": "bar"}));
+        }
 
         Profil {
             id: ProfilId::new(),
             label: "Test".into(),
-            content: json!({
-                "profile": {},
-                "documents": documents,
-                "title": "Original"
-            }),
+            content,
             is_active: true,
             profile_photo: None,
             calendar_pdf: None,
@@ -237,7 +182,7 @@ mod tests {
     #[test]
     fn active_profile_content_returns_raw_content() {
         let profil = build_profile(true);
-        assert_eq!(active_profile_content(profil)["title"], json!("Original"));
+        assert_eq!(active_profile_content(profil)["profile"]["firstname"], json!("Original"));
     }
 
     #[test]
@@ -252,21 +197,13 @@ mod tests {
     #[test]
     fn active_profile_resume_template_falls_back_to_content() {
         let profil = build_profile(false);
-        assert_eq!(
-            active_profile_resume_template_or_content(profil),
-            json!({
-                "profile": {},
-                "documents": {},
-                "title": "Original"
-            })
-        );
+        let res = active_profile_resume_template_or_content(profil);
+        assert_eq!(res["profile"]["firstname"], json!("Original"));
     }
 
     #[test]
     fn active_profile_cover_letter_template_errors_when_missing() {
-        let mut profil = build_profile(true);
-        profil.content["documents"] = json!({});
-
+        let profil = build_profile(true);
         let error = active_profile_cover_letter_template(profil).expect_err("missing template");
         assert!(matches!(error, ApiError::NotFound(_)));
     }
@@ -279,10 +216,10 @@ mod tests {
 
         apply_persisted_markers(&mut profil);
 
-        assert_eq!(profil.content["profile"]["image"], json!("persisted:bytea"));
+        assert_eq!(profil.content.profile.image, "persisted:bytea");
         assert_eq!(
-            profil.content["documents"]["apprenticeship_calendar"],
-            json!("persisted:bytea")
+            profil.content.documents.apprenticeship_calendar,
+            Some(json!("persisted:bytea"))
         );
     }
 
@@ -291,27 +228,47 @@ mod tests {
         let mut profil = build_profile(true);
         let new_content = json!({
             "profile": {
+                "firstname": "Updated",
+                "lastname": "",
+                "title": "",
+                "offer_type": "",
+                "pitch": "",
+                "location": "",
+                "phone": "",
+                "email": "",
+                "linkedin": "",
+                "website": "",
+                "github": "",
                 "image": "data:image/png;base64,aGVsbG8="
             },
+            "apprenticeship": {
+                "duration": "",
+                "rhythm": ""
+            },
+            "experiences": [],
+            "projects": [],
+            "education": [],
+            "skills": [],
+            "languages": [],
             "documents": {
+                "resume_template": {"foo": "bar"},
                 "apprenticeship_calendar": {
                     "data_url": "data:application/pdf;base64,d29ybGQ="
                 }
-            },
-            "title": "Updated"
+            }
         });
 
         apply_profile_update(&mut profil, new_content);
 
-        assert_eq!(profil.content["title"], json!("Updated"));
+        assert_eq!(profil.content.profile.firstname, "Updated");
         assert_eq!(
-            profil.content["documents"]["resume_template"],
-            json!({"foo": "bar"})
+            profil.content.documents.resume_template,
+            Some(json!({"foo": "bar"}))
         );
-        assert_eq!(profil.content["profile"]["image"], json!("persisted:bytea"));
+        assert_eq!(profil.content.profile.image, "persisted:bytea");
         assert_eq!(
-            profil.content["documents"]["apprenticeship_calendar"],
-            json!("persisted:bytea")
+            profil.content.documents.apprenticeship_calendar,
+            Some(json!("persisted:bytea"))
         );
         assert_eq!(profil.profile_photo, Some(b"hello".to_vec()));
         assert_eq!(profil.calendar_pdf, Some(b"world".to_vec()));

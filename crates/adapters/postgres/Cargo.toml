@@ -14,7 +14,6 @@ domain      = { path = "../../domain" }
 ports       = { path = "../../ports" }
 async-trait = { workspace = true }
 sqlx        = { workspace = true }
-serde       = { workspace = true }
 serde_json  = { workspace = true }
 uuid        = { workspace = true }
 chrono      = { workspace = true }

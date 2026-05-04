@@ -1,27 +1,29 @@
 // chat.js - Manages the AI chat interaction
+import { EVENTS, on } from './modules/events.js';
+
 let pendingAttachments = [];
 
 function updateAttachmentsUI() {
     const container = document.getElementById('ai-chat-attachments');
     if (!container) return;
-    
+
     if (pendingAttachments.length === 0) {
         container.style.display = 'none';
         container.innerHTML = '';
         return;
     }
-    
+
     container.style.display = 'flex';
     container.style.cssText = 'display:flex; gap:8px; padding:8px; overflow-x:auto; background:#f8fafc; border-bottom:1px solid #e2e8f0;';
     container.innerHTML = '';
-    
+
     pendingAttachments.forEach((file, index) => {
         const chip = document.createElement('div');
         chip.style.cssText = 'display:flex; align-items:center; gap:6px; background:white; padding:4px 8px; border-radius:16px; border:1px solid #cbd5e1; font-size:11px; white-space:nowrap;';
-        
+
         const name = document.createElement('span');
         name.textContent = file.name.length > 15 ? file.name.substring(0, 12) + '...' : file.name;
-        
+
         const remove = document.createElement('button');
         remove.textContent = '×';
         remove.style.cssText = 'border:none; background:none; cursor:pointer; font-weight:bold; color:#64748b; font-size:14px;';
@@ -29,7 +31,7 @@ function updateAttachmentsUI() {
             pendingAttachments.splice(index, 1);
             updateAttachmentsUI();
         };
-        
+
         chip.appendChild(name);
         chip.appendChild(remove);
         container.appendChild(chip);
@@ -54,7 +56,6 @@ function renderChatHistory(history) {
 
     const entries = Array.isArray(history) ? history : [];
     if (entries.length === 0) {
-        console.log("[Chat] History is empty, nothing to render.");
     }
 
     entries.forEach((entry) => {
@@ -118,10 +119,8 @@ async function loadChatHistory() {
         let history = [];
 
         if (instanceData) {
-            console.log("[Chat] Loading history from instance:", instanceData.slug);
             history = instanceData?.notes?.chat_history || [];
         } else {
-            console.log("[Chat] Loading global history from profile");
             const res = await fetch('/api/profile/active');
             if (res.ok) {
                 const profil = await res.json();
@@ -149,7 +148,6 @@ async function sendChatMessage() {
     if (!message) return;
 
     const offerSlug = getActiveOfferSlug();
-    console.log("[Chat] Attempting to send message. OfferSlug:", offerSlug);
 
     appendMessage('user', message);
     input.value = '';
@@ -177,7 +175,6 @@ async function sendChatMessage() {
 
         if (resChat.ok) {
             const result = await resChat.json();
-            console.log("[Chat] Result received:", result);
 
             if (result.updated_instance?.slug) {
                 window.activeInstanceSlug = result.updated_instance.slug;
@@ -204,7 +201,6 @@ async function sendChatMessage() {
                 }
             }
             if (Array.isArray(persistedHistory) && persistedHistory.length > 0) {
-                console.log("[Chat] Rendering persisted history:", persistedHistory.length, "entries");
                 pendingAttachments = [];
                 updateAttachmentsUI();
                 renderChatHistory(persistedHistory);
@@ -241,8 +237,7 @@ async function sendChatMessage() {
 }
 
 function initChat() {
-    console.log("[Chat] Initializing Event Delegation...");
-    
+
     // File attachment handling
     document.addEventListener('change', async (e) => {
         if (e.target.id === 'ai-chat-file-input') {
@@ -274,7 +269,6 @@ function initChat() {
     document.addEventListener('click', (e) => {
         const btn = e.target.closest('#chat-send-btn');
         if (btn) {
-            console.log("[Chat] Click on send button detected.");
             sendChatMessage();
         }
     });
@@ -286,7 +280,6 @@ function initChat() {
                 return;
             } else {
                 e.preventDefault();
-                console.log("[Chat] Enter key detected in input.");
                 sendChatMessage();
             }
         }
@@ -301,6 +294,15 @@ if (document.readyState === 'loading') {
 } else {
     initChat();
 }
+
+// Subscribe to events
+on(EVENTS.OFFER_SELECTED, () => {
+    loadChatHistory();
+});
+
+on(EVENTS.INGEST_COMPLETED, () => {
+    loadChatHistory();
+});
 
 window.loadChatHistory = loadChatHistory;
 window.initChat = initChat;
