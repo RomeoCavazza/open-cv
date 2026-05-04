@@ -10,6 +10,10 @@ use domain::{Annexe, AnnexeId, Profil};
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
 
+mod helpers;
+
+use helpers::{apply_profile_update, apply_persisted_markers, decode_data_url};
+
 pub async fn get_active_profile_handler(
     State(state): State<AppState>,
 ) -> Result<Json<Profil>, ApiError> {
@@ -21,33 +25,7 @@ pub async fn get_active_profile_handler(
         .map_err(|e| ApiError::Internal(e.to_string()))?
         .ok_or_else(|| ApiError::NotFound("Aucun profil actif trouvé".to_string()))?;
 
-    // INJECTION DES MARQUEURS BINAIRES
-    // On informe le frontend que ces données existent en DB (BYTEA)
-    if profil.profile_photo.is_some() {
-        if let Some(p) = profil
-            .content
-            .get_mut("profile")
-            .and_then(|p| p.as_object_mut())
-        {
-            p.insert(
-                "image".to_string(),
-                serde_json::Value::String("persisted:bytea".to_string()),
-            );
-        }
-    }
-
-    if profil.calendar_pdf.is_some() {
-        if let Some(d) = profil
-            .content
-            .get_mut("documents")
-            .and_then(|d| d.as_object_mut())
-        {
-            d.insert(
-                "apprenticeship_calendar".to_string(),
-                serde_json::Value::String("persisted:bytea".to_string()),
-            );
-        }
-    }
+    apply_persisted_markers(&mut profil);
 
     Ok(Json(profil))
 }
@@ -135,89 +113,7 @@ pub async fn update_active_profile_handler(
         .map_err(|e| ApiError::Internal(e.to_string()))?
         .ok_or_else(|| ApiError::NotFound("Aucun profil actif trouvé".to_string()))?;
 
-    // FUSION INTELLIGENTE : On garde l'ancien contenu et on écrase seulement ce qui arrive
-    if let (Some(old_obj), Some(new_obj)) =
-        (profil.content.as_object_mut(), new_content.as_object())
-    {
-        for (k, v) in new_obj {
-            // On n'écrase pas avec du null/vide si c'est sensible (documents)
-            if k == "documents" {
-                if let (Some(old_docs), Some(new_docs)) = (
-                    old_obj.get_mut("documents").and_then(|d| d.as_object_mut()),
-                    v.as_object(),
-                ) {
-                    for (dk, dv) in new_docs {
-                        if !dv.is_null() {
-                            old_docs.insert(dk.clone(), dv.clone());
-                        }
-                    }
-                } else {
-                    old_obj.insert(k.clone(), v.clone());
-                }
-            } else {
-                old_obj.insert(k.clone(), v.clone());
-            }
-        }
-    } else {
-        profil.content = new_content;
-    }
-
-    // EXTRACTION DES BINAIRES (Photo, Calendrier)
-    // On extrait depuis le JSON pour peupler les colonnes BYTEA dédiées
-    if let Some(profile) = profil.content.get("profile").and_then(|p| p.as_object()) {
-        if let Some(img_base64) = profile.get("image").and_then(|i| i.as_str()) {
-            if img_base64.starts_with("data:") {
-                if let Some(b64_part) = img_base64.split(',').nth(1) {
-                    use base64::{engine::general_purpose, Engine as _};
-                    if let Ok(bytes) = general_purpose::STANDARD.decode(b64_part) {
-                        profil.profile_photo = Some(bytes);
-                    }
-                }
-            }
-        }
-    }
-
-    if let Some(docs) = profil.content.get("documents").and_then(|d| d.as_object()) {
-        if let Some(cal_data) = docs.get("apprenticeship_calendar") {
-            // Si c'est un objet avec data_url (nouveau format frontend)
-            if let Some(data_url) = cal_data.get("data_url").and_then(|u| u.as_str()) {
-                if data_url.starts_with("data:") {
-                    if let Some(b64_part) = data_url.split(',').nth(1) {
-                        use base64::{engine::general_purpose, Engine as _};
-                        if let Ok(bytes) = general_purpose::STANDARD.decode(b64_part) {
-                            profil.calendar_pdf = Some(bytes);
-                        }
-                    }
-                }
-            }
-            // Si c'est directement une string data_url (ancien format)
-            else if let Some(data_url) = cal_data.as_str() {
-                if data_url.starts_with("data:") {
-                    if let Some(b64_part) = data_url.split(',').nth(1) {
-                        use base64::{engine::general_purpose, Engine as _};
-                        if let Ok(bytes) = general_purpose::STANDARD.decode(b64_part) {
-                            profil.calendar_pdf = Some(bytes);
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    // Nettoyage optionnel du JSON pour ne pas stocker le binaire en double (gain de place)
-    // On garde le champ mais on vide la data lourde si on a réussi l'extraction
-    if profil.profile_photo.is_some() {
-        if let Some(p) = profil
-            .content
-            .get_mut("profile")
-            .and_then(|p| p.as_object_mut())
-        {
-            p.insert(
-                "image".to_string(),
-                serde_json::Value::String("persisted:bytea".to_string()),
-            );
-        }
-    }
+    apply_profile_update(&mut profil, new_content);
 
     state
         .generate_uc
@@ -303,9 +199,7 @@ pub async fn upload_annexe_handler(
         .nth(1)
         .ok_or_else(|| ApiError::BadRequest("Format de donnée invalide".to_string()))?;
 
-    use base64::{engine::general_purpose, Engine as _};
-    let content = general_purpose::STANDARD
-        .decode(b64_data)
+    let content = decode_data_url(b64_data)
         .map_err(|e| ApiError::BadRequest(format!("Base64 invalide : {}", e)))?;
 
     let annexe = Annexe {

@@ -20,7 +20,7 @@ use std::sync::Arc;
 
 use chrono::Utc;
 use domain::{
-    Chunk, CoverLetter, Instance, InstanceId, Offre, OffreId, ProfilId, Restitution, Resume, Slug,
+    Chunk, CoverLetter, Instance, InstanceId, Offre, OffreId, ProfilId, Restitution, Resume,
 };
 use ports::{
     ChunkRepo, EmbedMode, Embedder, ExtractionRequest, InstanceRepo, LlmClient, OffreRepo,
@@ -733,7 +733,7 @@ mod tests {
     use chrono::Utc;
     use domain::{
         ChunkKind, CoverLetter, Objet, OffreStructured, Paragraphe, ParagrapheRole, Profil,
-        Signature,
+        Signature, Slug,
     };
     use serde_json::json;
 

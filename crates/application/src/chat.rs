@@ -10,6 +10,13 @@ use tracing::info;
 
 const MAX_CHAT_HISTORY_ENTRIES: usize = 20;
 
+mod helpers;
+
+use self::helpers::{
+    build_offer_prompt_context, build_profile_prompt_context, extract_chat_history,
+    push_chat_history, render_chat_history_for_prompt, wants_identity, wants_mutation,
+};
+
 #[derive(Debug, Deserialize)]
 pub struct ChatRequest {
     pub message: String,
@@ -119,8 +126,8 @@ impl ChatWithApplicationUseCase {
             .await?
             .ok_or_else(|| anyhow::anyhow!("Offre non trouvée"))?;
 
-        let wants_mutation = Self::wants_mutation(&req.message);
-        let wants_identity = Self::wants_identity(&req.message);
+        let wants_mutation = wants_mutation(&req.message);
+        let wants_identity = wants_identity(&req.message);
 
         // 1b. Charger l'historique depuis la table messages
         let history = self.message_repo.list_by_instance_id(instance.id).await?;
@@ -178,7 +185,7 @@ impl ChatWithApplicationUseCase {
             TU DOIS RÉPONDRE EXCLUSIVEMENT PAR UN OBJET JSON avec une seule clé 'message'."
         };
 
-        let history_prompt = Self::render_chat_history_for_prompt(&history);
+        let history_prompt = render_chat_history_for_prompt(&history);
 
         let mut user_input = vec![ports::MessageContent::Text(format!(
             "IDENTITÉ DE L'UTILISATEUR (Profil complet):\n{}\n\n\
@@ -190,9 +197,9 @@ impl ChatWithApplicationUseCase {
             DEMANDE DE L'UTILISATEUR: {}\n\n\
             JSON ACTUEL DU CV: {}\n\n\
             JSON ACTUEL DE LA LETTRE: {}",
-            serde_json::to_string_pretty(&Self::build_profile_prompt_context(&profil))?,
+            serde_json::to_string_pretty(&build_profile_prompt_context(&profil))?,
             serde_json::to_string_pretty(&self.annexe_repo.list_by_profil_id(profil.id).await?)?,
-            serde_json::to_string_pretty(&Self::build_offer_prompt_context(&offre))?,
+            serde_json::to_string_pretty(&build_offer_prompt_context(&offre))?,
             serde_json::to_string_pretty(&instance.restitution)?,
             rag_context,
             history_prompt,
@@ -279,14 +286,14 @@ impl ChatWithApplicationUseCase {
         // TODO: Créer une table global_messages ou autoriser instance_id NULL.
         // En attendant, on garde profil.notes pour le GLOBAL mais on nettoie INSTANCE.
 
-        let chat_history = Self::extract_chat_history(&profil.notes);
+        let chat_history = extract_chat_history(&profil.notes);
         info!(
             "Chat (Global): Historique extrait ({} entrées)",
             chat_history.len()
         );
 
         // 1b. Sauvegarder le message utilisateur
-        Self::push_chat_history(&mut profil.notes, "user", &req.message);
+        push_chat_history(&mut profil.notes, "user", &req.message);
         self.profil_repo.upsert(&profil).await?;
 
         // 2. Choisir le LLM
@@ -306,7 +313,7 @@ impl ChatWithApplicationUseCase {
             TU DOIS RÉPONDRE EXCLUSIVEMENT PAR UN OBJET JSON avec une seule clé 'message'. \
             INTERDICTION DE METTRE DU TEXTE AVANT OU APRÈS LE JSON.";
 
-        let history_prompt = Self::render_chat_history_for_prompt(&chat_history);
+        let history_prompt = render_chat_history_for_prompt(&chat_history);
 
         let mut user_input = vec![ports::MessageContent::Text(format!(
             "IDENTITÉ DE L'UTILISATEUR (Profil complet):\n{}\n\n\
@@ -315,7 +322,7 @@ impl ChatWithApplicationUseCase {
             DÉTAILS DU PARCOURS (RAG):\n{}\n\n\
             HISTORIQUE RÉCENT DU CHAT:\n{}\n\n\
             DEMANDE DE L'UTILISATEUR: {}",
-            serde_json::to_string_pretty(&Self::build_profile_prompt_context(&profil))?,
+            serde_json::to_string_pretty(&build_profile_prompt_context(&profil))?,
             serde_json::to_string_pretty(&self.annexe_repo.list_by_profil_id(profil.id).await?)?,
             offres.len(),
             serde_json::to_string_pretty(
@@ -354,7 +361,7 @@ impl ChatWithApplicationUseCase {
             .to_string();
 
         // 7. Sauvegarder l'historique
-        Self::push_chat_history(&mut profil.notes, "assistant", &ai_message);
+        push_chat_history(&mut profil.notes, "assistant", &ai_message);
         self.profil_repo.upsert(&profil).await?;
 
         Ok(ChatResponse {
@@ -430,190 +437,6 @@ impl ChatWithApplicationUseCase {
             .map_err(|e| anyhow::anyhow!(e))
     }
 
-    fn build_profile_prompt_context(profil: &domain::Profil) -> serde_json::Value {
-        serde_json::json!({
-            "id": profil.id,
-            "label": profil.label,
-            "content": profil.content,
-            "is_active": profil.is_active,
-            "resume_template": profil.resume_template,
-            "cover_letter_template": profil.cover_letter_template,
-            "has_calendar_pdf": profil.calendar_pdf.is_some(),
-            "notes": profil.notes,
-            "created_at": profil.created_at,
-        })
-    }
-
-    fn build_offer_prompt_context(offre: &domain::Offre) -> serde_json::Value {
-        let raw_text_preview = if offre.raw_text.chars().count() > 4000 {
-            offre.raw_text.chars().take(4000).collect::<String>() + "…"
-        } else {
-            offre.raw_text.clone()
-        };
-
-        serde_json::json!({
-            "id": offre.id,
-            "slug": offre.slug,
-            "source_url": offre.source_url,
-            "source_host": offre.source_host,
-            "entreprise": offre.entreprise,
-            "intitule": offre.intitule,
-            "localisation": offre.localisation,
-            "contrat": offre.contrat,
-            "structured": offre.structured,
-            "raw_text_preview": raw_text_preview,
-            "scraped_at": offre.scraped_at,
-            "last_seen_at": offre.last_seen_at,
-            "closed_at": offre.closed_at,
-            "categorie": offre.categorie,
-        })
-    }
-
-    fn wants_mutation(message: &str) -> bool {
-        let lowered = message.to_lowercase();
-        let mutation_markers = [
-            "modifie",
-            "modifier",
-            "change",
-            "changer",
-            "corrige",
-            "corriger",
-            "ajoute",
-            "ajouter",
-            "supprime",
-            "enlève",
-            "retire",
-            "remplace",
-            "mets",
-            "mettre",
-            "réécris",
-            "reecris",
-            "réécrire",
-            "reecrire",
-            "actualise",
-            "actualiser",
-            "adapte",
-            "adapter",
-            "réorganise",
-            "reorganise",
-            "modification",
-            "édition",
-            "edite",
-            "éditer",
-            "editer",
-        ];
-
-        mutation_markers
-            .iter()
-            .any(|marker| lowered.contains(marker))
-    }
-
-    fn wants_identity(message: &str) -> bool {
-        let lowered = message.to_lowercase();
-        let identity_markers = [
-            "comment je m'appelle",
-            "c'est quoi mon nom",
-            "quel est mon nom",
-            "tu sais comment je m'appelle",
-            "tu connais mon nom",
-            "je m'appelle comment",
-        ];
-
-        identity_markers
-            .iter()
-            .any(|marker| lowered.contains(marker))
-    }
-
-    fn extract_chat_history(notes: &serde_json::Value) -> Vec<Message> {
-        notes
-            .get("chat_history")
-            .and_then(|v| v.as_array())
-            .map(|entries| {
-                entries
-                    .iter()
-                    .filter_map(|entry| {
-                        let role_str = entry.get("role")?.as_str()?;
-                        let role = match role_str {
-                            "user" => MessageRole::User,
-                            "assistant" => MessageRole::Assistant,
-                            _ => MessageRole::System,
-                        };
-                        let content = entry.get("content")?.as_str()?.to_string();
-                        // Pour l'historique extrait de JSON, on génère un ID temporaire
-                        Some(Message {
-                            id: uuid::Uuid::new_v4(),
-                            instance_id: domain::InstanceId::new(),
-                            role,
-                            content,
-                            created_at: chrono::Utc::now(),
-                        })
-                    })
-                    .collect()
-            })
-            .unwrap_or_default()
-    }
-
-    fn render_chat_history_for_prompt(history: &[Message]) -> String {
-        if history.is_empty() {
-            return "Aucun historique".to_string();
-        }
-
-        history
-            .iter()
-            .rev()
-            .take(12)
-            .collect::<Vec<_>>()
-            .into_iter()
-            .rev()
-            .map(|m| {
-                let label = match m.role {
-                    MessageRole::Assistant => "IA",
-                    MessageRole::User => "UTILISATEUR",
-                    MessageRole::System => "SYSTEME",
-                };
-                format!("{label}: {}", m.content)
-            })
-            .collect::<Vec<_>>()
-            .join("\n")
-    }
-
-    fn push_chat_history(notes: &mut serde_json::Value, role: &str, content: &str) {
-        info!("Chat: Pushing history for role: {}", role);
-
-        // Initialiser si ce n'est pas un objet
-        if !notes.is_object() {
-            *notes = serde_json::json!({});
-        }
-
-        let Some(obj) = notes.as_object_mut() else {
-            return;
-        };
-
-        // Récupérer ou créer l'array chat_history
-        let history_value = obj
-            .entry("chat_history")
-            .or_insert_with(|| serde_json::json!([]));
-        if !history_value.is_array() {
-            *history_value = serde_json::json!([]);
-        }
-        let Some(history) = history_value.as_array_mut() else {
-            return;
-        };
-
-        history.push(serde_json::json!({
-            "role": role,
-            "content": content,
-            "ts": chrono::Utc::now().to_rfc3339(),
-        }));
-
-        // Limiter la taille
-        if history.len() > MAX_CHAT_HISTORY_ENTRIES {
-            let excess = history.len() - MAX_CHAT_HISTORY_ENTRIES;
-            history.drain(0..excess);
-        }
-
-        info!("Chat: History size now: {} entries", history.len());
-    }
 }
 
 #[cfg(test)]
@@ -977,35 +800,21 @@ mod tests {
 
     #[test]
     fn detects_read_only_questions() {
-        assert!(!ChatWithApplicationUseCase::wants_mutation(
-            "comment je m'appelle ? c'est quoi l'offre ?"
-        ));
-        assert!(!ChatWithApplicationUseCase::wants_mutation(
-            "tu vois l'offre, mon cv et ma lettre de motivation ?"
-        ));
+        assert!(!wants_mutation("comment je m'appelle ? c'est quoi l'offre ?"));
+        assert!(!wants_mutation("tu vois l'offre, mon cv et ma lettre de motivation ?"));
     }
 
     #[test]
     fn detects_mutation_requests() {
-        assert!(ChatWithApplicationUseCase::wants_mutation(
-            "modifie mon CV pour mieux mettre mon titre"
-        ));
-        assert!(ChatWithApplicationUseCase::wants_mutation(
-            "ajoute une expérience dans la lettre"
-        ));
+        assert!(wants_mutation("modifie mon CV pour mieux mettre mon titre"));
+        assert!(wants_mutation("ajoute une expérience dans la lettre"));
     }
 
     #[test]
     fn detects_identity_requests() {
-        assert!(ChatWithApplicationUseCase::wants_identity(
-            "tu sais comment je m'appelle ?"
-        ));
-        assert!(ChatWithApplicationUseCase::wants_identity(
-            "c'est quoi mon nom exactement ?"
-        ));
-        assert!(!ChatWithApplicationUseCase::wants_identity(
-            "tu peux résumer l'offre ?"
-        ));
+        assert!(wants_identity("tu sais comment je m'appelle ?"));
+        assert!(wants_identity("c'est quoi mon nom exactement ?"));
+        assert!(!wants_identity("tu peux résumer l'offre ?"));
     }
 
     #[test]
@@ -1013,11 +822,7 @@ mod tests {
         let mut notes = json!({});
 
         for idx in 0..=MAX_CHAT_HISTORY_ENTRIES {
-            ChatWithApplicationUseCase::push_chat_history(
-                &mut notes,
-                "user",
-                &format!("message-{idx}"),
-            );
+            push_chat_history(&mut notes, "user", &format!("message-{idx}"));
         }
 
         let history = notes
@@ -1037,7 +842,7 @@ mod tests {
             .map(|idx| Message::new(instance_id, MessageRole::User, format!("message-{idx}")))
             .collect();
 
-        let rendered = ChatWithApplicationUseCase::render_chat_history_for_prompt(&history);
+        let rendered = render_chat_history_for_prompt(&history);
 
         assert!(rendered.starts_with("UTILISATEUR: message-1"));
         assert!(rendered.contains("UTILISATEUR: message-12"));
