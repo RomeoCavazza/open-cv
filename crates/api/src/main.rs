@@ -33,9 +33,11 @@ mod handlers {
 }
 use handlers::ingest::ingest_handler;
 use handlers::profile::{
+    delete_annexe_handler, download_annexe_handler,
     get_active_profile_cover_letter_template_handler, get_active_profile_handler,
     get_active_profile_resume_handler, get_active_profile_resume_template_handler,
-    list_profiles_handler, update_active_profile_handler,
+    list_annexes_handler, list_profiles_handler, update_active_profile_handler,
+    upload_annexe_handler,
 };
 
 #[tokio::main]
@@ -66,6 +68,8 @@ async fn main() -> anyhow::Result<()> {
         Arc::new(adapter_postgres::ProfilRepoPg::new(pool.clone()));
     let chunk_repo: Arc<dyn ports::ChunkRepo> =
         Arc::new(adapter_postgres::ChunkRepoPg::new(pool.clone()));
+    let annexe_repo: Arc<dyn ports::AnnexeRepo> =
+        Arc::new(adapter_postgres::AnnexeRepoPg::new(pool.clone()));
 
     // LLM Registry (Multiple providers)
     let mut llm_map: std::collections::HashMap<String, Arc<dyn ports::LlmClient>> =
@@ -161,6 +165,7 @@ async fn main() -> anyhow::Result<()> {
         generate_uc,
         intake_uc,
         chunk_repo: chunk_repo.clone(),
+        annexe_repo,
         embedder: embedder.clone(),
         llm_registry,
     };
@@ -191,6 +196,10 @@ async fn main() -> anyhow::Result<()> {
             get(get_active_profile_calendar_handler),
         )
         .route(
+            "/api/profile/active/photo",
+            get(get_active_profile_photo_handler),
+        )
+        .route(
             "/api/profile/active/resume-template",
             get(get_active_profile_resume_template_handler),
         )
@@ -198,6 +207,8 @@ async fn main() -> anyhow::Result<()> {
             "/api/profile/active/cover-letter-template",
             get(get_active_profile_cover_letter_template_handler),
         )
+        .route("/api/profile/active/annexes", get(list_annexes_handler).post(upload_annexe_handler))
+        .route("/api/profile/active/annexes/:id", get(download_annexe_handler).delete(delete_annexe_handler))
         .route("/api/instances/:slug", get(get_instance_by_slug))
         .route("/api/instances/:slug/resume", get(get_instance_resume))
         .route(
@@ -215,7 +226,7 @@ async fn main() -> anyhow::Result<()> {
         .route("/profil", get(get_index))
         .fallback_service(ServeDir::new(web_dir))
         .layer(TraceLayer::new_for_http())
-        .layer(axum::extract::DefaultBodyLimit::max(20 * 1024 * 1024))
+        .layer(axum::extract::DefaultBodyLimit::max(50 * 1024 * 1024))
         .with_state(state);
 
     let bind = std::env::var("BIND").unwrap_or_else(|_| "127.0.0.1:8000".to_string());
@@ -486,6 +497,7 @@ async fn get_index() -> impl IntoResponse {
         Err(_) => (StatusCode::NOT_FOUND, "index.html non trouvé").into_response(),
     }
 }
+
 async fn chat_handler(
     State(state): State<AppState>,
     Json(req): Json<application::chat::ChatRequest>,
@@ -527,6 +539,25 @@ async fn get_active_profile_calendar_handler(
                     "Aucun calendrier configuré",
                 )
                     .into_response()
+            }
+        }
+        _ => (axum::http::StatusCode::NOT_FOUND, "Profil introuvable").into_response(),
+    }
+}
+
+async fn get_active_profile_photo_handler(
+    State(state): State<AppState>,
+) -> impl axum::response::IntoResponse {
+    let row = sqlx::query!("SELECT profile_photo FROM profils WHERE is_active = true LIMIT 1")
+        .fetch_optional(&state.pool)
+        .await;
+
+    match row {
+        Ok(Some(r)) => {
+            if let Some(bytes) = r.profile_photo {
+                ([(axum::http::header::CONTENT_TYPE, "image/jpeg")], bytes).into_response()
+            } else {
+                (axum::http::StatusCode::NOT_FOUND, "Aucune photo configurée").into_response()
             }
         }
         _ => (axum::http::StatusCode::NOT_FOUND, "Profil introuvable").into_response(),

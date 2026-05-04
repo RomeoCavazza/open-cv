@@ -1,0 +1,155 @@
+{
+  "profile": {
+    "name": "ROMEO CAVAZZA",
+    "title": "ALTERNANCE — DATA ANALYSTE",
+    "image": "assets/profile-picture.jpg",
+    "location": "Paris, 11e",
+    "email": "romeo.cavazza@gmail.com",
+    "phone": "06.99.25.67.58",
+    "website": "www.romeocavazza.com",
+    "linkedin": "in/romeo-cavazza/",
+    "github": "github.com/RomeoCavazza",
+    "pitch": "Étudiant en Master Big Data, passionné par l'ingénierie des données, je souhaite développer et mettre en pratique mes compétences en pipelines ETL, analyse statistique et Cloud au sein de Safran."
+  },
+  "apprenticeship": {
+    "duration": "24 mois",
+    "start": "septembre 2026",
+    "rhythm": "6 semaines en entreprise / 2 semaines en cours"
+  },
+  "experiences": [
+    {
+      "company": "FCNet, Paris, France",
+      "role": "AI Consultant & Formateur",
+      "period": "Janvier-Juin 2026",
+      "description": [
+        "Conception de modules d'IA appliquée et démonstrateurs techniques",
+        "Animation de formations et production de documentation technique",
+        "Vulgarisation de cas d'usage data et automatisation"
+      ]
+    },
+    {
+      "company": "Revolvr, Paris, France",
+      "role": "AI Automation Engineer – R&D Intern",
+      "period": "Février-Juillet 2025",
+      "description": [
+        "Développement de pipelines d'ingestion et analyse automatisée de données",
+        "Intégration d'APIs et industrialisation d'outils de détection de signaux",
+        "Production de workflows d'analyse pour usages métier"
+      ]
+    },
+    {
+      "company": "Home Lab — Plateforme inertielle",
+      "role": "",
+      "period": "2025–présent",
+      "description": [
+        "Acquisition inertielle/GPS (MPU6050, NEO-6M) via firmware C++ et gateway Python",
+        "Analyse fréquentielle, détection d'anomalies et monitoring InfluxDB/Grafana"
+      ]
+    },
+    {
+      "company": "Hackathon — Algorithmique appliquée à la couverture 5G",
+      "role": "",
+      "period": "2026",
+      "description": [
+        "Modélisation et optimisation du placement d'antennes via Python, Numba et CUDA",
+        "Heuristiques de couverture et traitement de données spatiales avec NumPy"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "school": "EPITECH, Paris, France",
+      "degree": "Master of Science — Big Data",
+      "period": "2026 – 2028"
+    },
+    {
+      "school": "EPITECH, Paris, France",
+      "degree": "Pré-MSc — Python, CUDA, NumPy, Pandas, Rust, Algorithmique.",
+      "period": "2025 – 2026"
+    },
+    {
+      "school": "HarvardX, edX",
+      "degree": "CS50W — Introduction to Computer Science<br>CS50W — Web Programming with Python and JavaScript",
+      "period": ""
+    }
+  ],
+  "skills": [
+    {
+      "category": "Intelligence Artificielle",
+      "items": [
+        "Python",
+        "NumPy",
+        "SciPy",
+        "pandas",
+        "scikit-learn",
+        "PyTorch"
+      ]
+    },
+    {
+      "category": "Ingénierie des données",
+      "items": [
+        "SQL",
+        "PostgreSQL",
+        "InfluxDB",
+        "TimescaleDB"
+      ]
+    },
+    {
+      "category": "Calcul scientifique",
+      "items": [
+        "Jupyter",
+        "Numba",
+        "CUDA"
+      ]
+    },
+    {
+      "category": "DevOps",
+      "items": [
+        "Linux",
+        "Docker",
+        "Git",
+        "GitHub Actions",
+        "Pytest"
+      ]
+    },
+    {
+      "category": "Instrumentation",
+      "items": [
+        "C",
+        "C++",
+        "Arduino",
+        "I2C",
+        "SPI",
+        "UART",
+        "USB"
+      ]
+    }
+  ],
+  "languages": [
+    {
+      "name": "Français",
+      "level": "natif"
+    },
+    {
+      "name": "Anglais",
+      "level": "C1"
+    },
+    {
+      "name": "Allemand",
+      "level": "B1"
+    }
+  ],
+  "labels": {
+    "duration": "Durée :",
+    "rhythm": "Rythme :",
+    "contact": "CONTACT",
+    "skills": "COMPÉTENCES",
+    "languages": "LANGUES",
+    "experiences": "EXPÉRIENCES",
+    "education": "FORMATIONS",
+    "linkedin": "LinkedIn",
+    "github": "GitHub",
+    "website": "Site web",
+    "download": "Télécharger en PDF (A4)"
+  }
+}

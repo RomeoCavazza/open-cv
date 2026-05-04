@@ -1,0 +1,39 @@
+{
+  "profile": {
+    "name": "Roméo CAVAZZA",
+    "address": "88ter Avenue Parmentier, 75011 Paris",
+    "phone": "06 99 25 67 58",
+    "email": "romeo.cavazza@gmail.com",
+    "links": {
+      "linkedin": "linkedin.com/in/romeo-cavazza",
+      "github": "github.com/RomeoCavazza",
+      "website": "www.romeocavazza.com"
+    }
+  },
+  "letter": {
+    "company": "Safran",
+    "date": "25 avril 2026",
+    "subject": "ALTERNANCE - ALTERNANCE — INGÉNIEUR DEVOPS",
+    "pitch": "Étudiant en Master Robotique & IoT, passionné par la détection d'anomalies, je souhaite développer et mettre en pratique mes compétences en programmation scientifique, acquisition de données et apprentissage automatique au sein de Safran.",
+    "metadata": [
+      "Durée : 24 mois — à partir de septembre 2026",
+      "Rythme : 6 semaines en entreprise / 2 semaines en cours"
+    ],
+    "greeting": "Madame, Monsieur,",
+    "paragraphs": [
+      "Actuellement étudiant en Master Robotique & IoT à EPITECH Paris, je souhaite rejoindre Safran dans le cadre de l'alternance INGÉNIEUR DEVOPS.",
+      "Ma formation en informatique m'a permis de développer des bases solides en Python/SciPy, algorithmique, Linux et Docker. En parallèle, j'ai mené plusieurs projets personnels autour de l'acquisition instrumentée et du traitement du signal, d'une station inertielle à un programme expérimental optique/RF en cours de développement. Ces travaux m'ont donné une première expérience concrète de pipelines de données scientifiques et de modèles de détection d'anomalies.",
+      "Cette offre me motive particulièrement car elle se situe à l'intersection de l'acquisition de signaux physiques, de la simulation numérique et du machine learning, trois domaines dans lesquels je souhaite construire mon parcours.",
+      "L'environnement technique de Safran me permettrait d'apprendre sur des problématiques exigeantes et concrètes, et je serais heureux d'y apporter en retour mon goût pour l'instrumentation, l'analyse de données et mes premiers modèles développés avec scikit-learn."
+    ],
+    "closing": "Je reste à votre disposition pour échanger sur ma candidature.",
+    "signature": "Cordialement,\nRoméo Cavazza",
+    "boldKeyword": "ALTERNANCE",
+    "labels": {
+      "linkedin": "LinkedIn",
+      "github": "GitHub",
+      "website": "Site web",
+      "download": "Télécharger en PDF (A4)"
+    }
+  }
+}

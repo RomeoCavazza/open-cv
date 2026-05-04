@@ -130,6 +130,7 @@ dependencies = [
  "application",
  "async-trait",
  "axum",
+ "base64",
  "chrono",
  "domain",
  "dotenvy",

@@ -4,8 +4,11 @@
 //! viendront en Phase 1-2.
 
 use async_trait::async_trait;
-use domain::{Instance, InstanceId, InstanceStatus, Offre, OffreId, OffreStructured, Slug};
-use ports::{InstanceRepo, OffreRepo, RepoError};
+use domain::{
+    Annexe, AnnexeId, Instance, InstanceId, InstanceStatus, Offre, OffreId, OffreStructured, Profil,
+    ProfilId, Slug,
+};
+use ports::{AnnexeRepo, InstanceRepo, OffreRepo, RepoError};
 use sqlx::PgPool;
 
 pub struct OffreRepoPg {
@@ -452,6 +455,108 @@ impl InstanceRepo for InstanceRepoPg {
 }
 
 // ─────────────────────────────────────────────────────────────────
+// AnnexeRepoPg
+// ─────────────────────────────────────────────────────────────────
+
+pub struct AnnexeRepoPg {
+    pool: PgPool,
+}
+
+impl AnnexeRepoPg {
+    pub fn new(pool: PgPool) -> Self {
+        Self { pool }
+    }
+}
+
+#[async_trait::async_trait]
+impl ports::AnnexeRepo for AnnexeRepoPg {
+    async fn get_by_id(&self, id: AnnexeId) -> Result<Option<Annexe>, RepoError> {
+        let row = sqlx::query!(
+            r#"
+            SELECT id, profil_id, label, filename, content_type, content, created_at
+            FROM annexes
+            WHERE id = $1
+            "#,
+            id.as_uuid()
+        )
+        .fetch_optional(&self.pool)
+        .await
+        .map_err(map_sqlx)?;
+
+        Ok(row.map(|r| Annexe {
+            id: AnnexeId::from_uuid(r.id),
+            profil_id: ProfilId::from_uuid(r.profil_id),
+            label: r.label,
+            filename: r.filename,
+            content_type: r.content_type,
+            content: r.content,
+            created_at: r.created_at,
+        }))
+    }
+
+    async fn list_by_profil_id(&self, profil_id: ProfilId) -> Result<Vec<Annexe>, RepoError> {
+        let rows = sqlx::query!(
+            r#"
+            SELECT id, profil_id, label, filename, content_type, content, created_at
+            FROM annexes
+            WHERE profil_id = $1
+            ORDER BY created_at DESC
+            "#,
+            profil_id.as_uuid()
+        )
+        .fetch_all(&self.pool)
+        .await
+        .map_err(map_sqlx)?;
+
+        Ok(rows
+            .into_iter()
+            .map(|r| Annexe {
+                id: AnnexeId::from_uuid(r.id),
+                profil_id: ProfilId::from_uuid(r.profil_id),
+                label: r.label,
+                filename: r.filename,
+                content_type: r.content_type,
+                content: r.content,
+                created_at: r.created_at,
+            })
+            .collect())
+    }
+
+    async fn upsert(&self, annexe: &Annexe) -> Result<(), RepoError> {
+        sqlx::query!(
+            r#"
+            INSERT INTO annexes (id, profil_id, label, filename, content_type, content, created_at)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            ON CONFLICT (id) DO UPDATE SET
+                label = EXCLUDED.label,
+                filename = EXCLUDED.filename,
+                content_type = EXCLUDED.content_type,
+                content = EXCLUDED.content
+            "#,
+            annexe.id.as_uuid(),
+            annexe.profil_id.as_uuid(),
+            annexe.label,
+            annexe.filename,
+            annexe.content_type,
+            annexe.content,
+            annexe.created_at
+        )
+        .execute(&self.pool)
+        .await
+        .map_err(map_sqlx)?;
+        Ok(())
+    }
+
+    async fn delete(&self, id: AnnexeId) -> Result<(), RepoError> {
+        sqlx::query!("DELETE FROM annexes WHERE id = $1", id.as_uuid())
+            .execute(&self.pool)
+            .await
+            .map_err(map_sqlx)?;
+        Ok(())
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────
 // ProfilRepo
 // ─────────────────────────────────────────────────────────────────
 
@@ -470,7 +575,7 @@ impl ports::ProfilRepo for ProfilRepoPg {
     async fn get_active(&self) -> Result<Option<domain::Profil>, ports::RepoError> {
         let row = sqlx::query!(
             r#"
-            SELECT id, label, content, is_active, calendar_pdf, resume_template, cover_letter_template, notes, created_at
+            SELECT id, label, content, is_active, profile_photo, calendar_pdf, resume_template, cover_letter_template, notes, created_at
             FROM profils
             WHERE is_active = true
             LIMIT 1
@@ -485,6 +590,7 @@ impl ports::ProfilRepo for ProfilRepoPg {
             label: r.label,
             content: r.content,
             is_active: r.is_active,
+            profile_photo: r.profile_photo,
             calendar_pdf: r.calendar_pdf,
             resume_template: r.resume_template,
             cover_letter_template: r.cover_letter_template,
@@ -499,7 +605,7 @@ impl ports::ProfilRepo for ProfilRepoPg {
     ) -> Result<Option<domain::Profil>, ports::RepoError> {
         let row = sqlx::query!(
             r#"
-            SELECT id, label, content, is_active, calendar_pdf, resume_template, cover_letter_template, notes, created_at
+            SELECT id, label, content, is_active, profile_photo, calendar_pdf, resume_template, cover_letter_template, notes, created_at
             FROM profils
             WHERE id = $1
             "#,
@@ -514,6 +620,7 @@ impl ports::ProfilRepo for ProfilRepoPg {
             label: r.label,
             content: r.content,
             is_active: r.is_active,
+            profile_photo: r.profile_photo,
             calendar_pdf: r.calendar_pdf,
             resume_template: r.resume_template,
             cover_letter_template: r.cover_letter_template,
@@ -525,7 +632,7 @@ impl ports::ProfilRepo for ProfilRepoPg {
     async fn list_all(&self) -> Result<Vec<domain::Profil>, ports::RepoError> {
         let rows = sqlx::query!(
             r#"
-            SELECT id, label, content, is_active, calendar_pdf, resume_template, cover_letter_template, notes, created_at
+            SELECT id, label, content, is_active, profile_photo, calendar_pdf, resume_template, cover_letter_template, notes, created_at
             FROM profils
             ORDER BY created_at DESC
             "#
@@ -541,6 +648,7 @@ impl ports::ProfilRepo for ProfilRepoPg {
                 label: r.label,
                 content: r.content,
                 is_active: r.is_active,
+                profile_photo: r.profile_photo,
                 calendar_pdf: r.calendar_pdf,
                 resume_template: r.resume_template,
                 cover_letter_template: r.cover_letter_template,
@@ -553,12 +661,13 @@ impl ports::ProfilRepo for ProfilRepoPg {
     async fn upsert(&self, profil: &domain::Profil) -> Result<(), ports::RepoError> {
         sqlx::query!(
             r#"
-            INSERT INTO profils (id, label, content, is_active, calendar_pdf, resume_template, cover_letter_template, notes, created_at)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+            INSERT INTO profils (id, label, content, is_active, profile_photo, calendar_pdf, resume_template, cover_letter_template, notes, created_at)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
             ON CONFLICT (id) DO UPDATE SET
                 label = EXCLUDED.label,
                 content = EXCLUDED.content,
                 is_active = EXCLUDED.is_active,
+                profile_photo = COALESCE(EXCLUDED.profile_photo, profils.profile_photo),
                 calendar_pdf = COALESCE(EXCLUDED.calendar_pdf, profils.calendar_pdf),
                 resume_template = COALESCE(EXCLUDED.resume_template, profils.resume_template),
                 cover_letter_template = COALESCE(EXCLUDED.cover_letter_template, profils.cover_letter_template),
@@ -568,6 +677,7 @@ impl ports::ProfilRepo for ProfilRepoPg {
             profil.label,
             profil.content,
             profil.is_active,
+            profil.profile_photo,
             profil.calendar_pdf,
             profil.resume_template,
             profil.cover_letter_template,

@@ -89,9 +89,9 @@ window.addEventListener('popstate', handleRouting);
 
 async function loadProfile() {
     try {
-        const profil = await api.fetchProfile();
-        state.setActiveProfilId(profil.id || null);
-        const content = profil.content;
+        const profileResponse = await api.fetchProfile();
+        const content = profileResponse.content; // C'est ici que sont les vraies données
+        state.setActiveProfilId(profileResponse.id || null);
         
         state.setLoadedProfileExtras(Object.fromEntries(
             Object.entries(content).filter(([key]) => ![
@@ -117,14 +117,15 @@ async function loadProfile() {
         document.getElementById('prof-resume-template').value = ui.stringifyDocument(content.documents?.resume_template || content.resume_template);
         document.getElementById('prof-cover-letter-template').value = ui.stringifyDocument(content.documents?.cover_letter_template || content.cover_letter_template);
         
-        state.setLoadedApprenticeshipCalendarDocument(content.documents?.apprenticeship_calendar || null);
-        updateCalendarDocumentUI(state.loadedApprenticeshipCalendarDocument);
         
         state.setLoadedProfileImage(content.profile?.image || "");
-        document.getElementById('prof-image-base64').value = state.loadedProfileImage;
+        document.getElementById('prof-image-base64').value = (content.profile?.image === "persisted:bytea") ? "" : state.loadedProfileImage;
         
         if (content.profile?.image) {
-            document.getElementById('prof-image-preview').style.backgroundImage = `url(${content.profile.image})`;
+            const imageUrl = (content.profile.image === "persisted:bytea") 
+                ? `/api/profile/active/photo?t=${Date.now()}` 
+                : content.profile.image;
+            document.getElementById('prof-image-preview').style.backgroundImage = `url(${imageUrl})`;
             document.getElementById('preview-placeholder').style.display = 'none';
         } else {
             document.getElementById('prof-image-preview').style.backgroundImage = '';
@@ -137,37 +138,20 @@ async function loadProfile() {
         ui.renderList('list-languages', content.languages || [], ui.createLangRow);
         ui.renderList('list-skills', content.skills || [], ui.createSkillRow);
         
-        const docs = (content.documents && typeof content.documents === 'object') ? content.documents : {};
-        ui.renderList('list-annexes', docs.annexes || [], ui.createAnnexeRow);
+        // Fetch and render annexes separately
+        console.log("Chargement des annexes depuis l'API...");
+        try {
+            const annexes = await api.fetchAnnexes();
+            console.log(`${annexes?.length || 0} annexes reçues du serveur`);
+            ui.renderList('list-annexes', annexes || [], ui.createAnnexeRow);
+        } catch (annexError) {
+            console.error("Échec du chargement des annexes", annexError);
+        }
         
         ui.updateUIStrings();
     } catch (e) { console.warn("Profile load failed", e); }
 }
 
-function updateCalendarDocumentUI(documentValue) {
-    const preview = document.getElementById('prof-apprenticeship-calendar-preview');
-    const legacy = document.getElementById('prof-apprenticeship-calendar-legacy');
-    const legacyValue = document.getElementById('prof-apprenticeship-calendar-legacy-value');
-    
-    if (!documentValue) {
-        legacy.style.display = 'none';
-        preview.src = '/api/profile/active/calendar';
-        preview.style.display = 'block';
-        return;
-    }
-
-    if (typeof documentValue === 'string') {
-        preview.style.display = 'none';
-        legacy.style.display = 'block';
-        legacyValue.value = documentValue;
-        return;
-    }
-
-    if (documentValue.data_url) {
-        preview.style.display = 'block';
-        preview.src = documentValue.data_url;
-    }
-}
 
 async function loadOffers() {
     const loadSeq = ++offersLoadSeq;
@@ -638,71 +622,105 @@ document.getElementById('btn-save-profile').onclick = async () => {
         return;
     }
 
-    const content = {
-        ...state.loadedProfileExtras,
-        profile: {
-            firstname: document.getElementById('prof-firstname').value,
-            lastname: document.getElementById('prof-lastname').value,
-            name: document.getElementById('prof-firstname').value + " " + document.getElementById('prof-lastname').value,
-            image: document.getElementById('prof-image-base64').value || state.loadedProfileImage || "",
-            title: document.getElementById('prof-title').value,
-            pitch: document.getElementById('prof-pitch').value,
-            location: document.getElementById('prof-location').value,
-            phone: document.getElementById('prof-phone').value,
-            email: document.getElementById('prof-email').value,
-            linkedin: document.getElementById('prof-linkedin').value,
-            website: document.getElementById('prof-website').value,
-            github: document.getElementById('prof-github').value,
-            offer_type: document.getElementById('prof-offer-type').value
-        },
-        apprenticeship: {
-            duration: document.getElementById('prof-duration').value,
-            rhythm: document.getElementById('prof-rhythm').value,
-            start: "septembre 2026"
-        },
-        experiences: Array.from(document.querySelectorAll('#list-experiences .form-row-exp')).map(row => ({
-            role: row.querySelector('.exp-role').value,
-            company: row.querySelector('.exp-company').value,
-            period: row.querySelector('.exp-period').value,
-            description: row.querySelector('.exp-desc').value.split('\n').filter(l => l.trim())
-        })),
-        projects: Array.from(document.querySelectorAll('#list-projects .form-row-exp')).map(row => ({
-            role: row.querySelector('.exp-role').value,
-            company: row.querySelector('.exp-company').value,
-            period: row.querySelector('.exp-period').value,
-            description: row.querySelector('.exp-desc').value.split('\n').filter(l => l.trim())
-        })),
-        education: Array.from(document.querySelectorAll('.form-row-edu')).map(row => ({
-            school: row.querySelector('.edu-school').value,
-            degree: row.querySelector('.edu-degree').value,
-            period: row.querySelector('.edu-period').value
-        })),
-        languages: Array.from(document.querySelectorAll('.form-row-lang')).map(row => ({
-            name: row.querySelector('.lang-name').value,
-            level: row.querySelector('.lang-level').value
-        })),
-        skills: Array.from(document.querySelectorAll('.skill-cat-row')).map(row => ({
-            category: row.querySelector('.skill-cat-name').value,
-            items: Array.from(row.querySelectorAll('.skills-pills-container .skill-pill')).map(p => {
-                const textEl = p.querySelector('.skill-text');
-                return textEl ? textEl.innerText.trim() : p.innerText.replace(' ×', '').trim();
-            })
-        })).filter(group => group.category.trim() || group.items.length > 0),
-        documents: {
-            resume_template: resumeTemplate && Object.keys(resumeTemplate).length > 0 ? resumeTemplate : undefined,
-            cover_letter_template: coverLetterTemplate && Object.keys(coverLetterTemplate).length > 0 ? coverLetterTemplate : undefined,
-            apprenticeship_calendar: state.loadedApprenticeshipCalendarDocument || undefined,
-            annexes: Array.from(document.querySelectorAll('.form-row-annexe')).map(row => ({
-                label: row.querySelector('.annexe-name').value,
-                name: row.dataset.fileName,
-                type: row.dataset.fileType,
-                data_url: row.dataset.fileData
-            })).filter(a => a.label.trim() || a.name)
-        },
-        labels: { contact: "CONTACT", skills: "COMPÉTENCES", languages: "LANGUES", experiences: "EXPÉRIENCES", projects: "PROJETS", education: "FORMATIONS", download: "Download PDF (A4)" }
-    };
-
     try {
+        // 1. Handle Annexes Deletions & Uploads FIRST
+        const annexeRows = Array.from(document.querySelectorAll('.form-row-annexe'));
+        const annexesMeta = [];
+
+        for (const row of annexeRows) {
+            const id = row.dataset.fileId;
+            const isMarkedDeleted = row.dataset.markedForDeletion === "true";
+
+            if (isMarkedDeleted && id) {
+                await api.deleteAnnexe(id);
+                continue;
+            }
+
+            if (!id && row.dataset.fileData) {
+                // New upload
+                const newId = await api.uploadAnnexe({
+                    label: row.querySelector('.annexe-name').value,
+                    filename: row.dataset.fileName,
+                    content_type: row.dataset.fileType,
+                    data_url: row.dataset.fileData
+                });
+                annexesMeta.push({
+                    id: newId,
+                    label: row.querySelector('.annexe-name').value,
+                    filename: row.dataset.fileName,
+                    content_type: row.dataset.fileType
+                });
+            } else if (id && !isMarkedDeleted) {
+                // Already in DB, keep meta
+                annexesMeta.push({
+                    id: id,
+                    label: row.querySelector('.annexe-name').value,
+                    filename: row.dataset.fileName,
+                    content_type: row.dataset.fileType
+                });
+            }
+        }
+
+        // 2. Prepare Profile Content (Lightweight)
+        const content = {
+            ...state.loadedProfileExtras,
+            profile: {
+                firstname: document.getElementById('prof-firstname').value,
+                lastname: document.getElementById('prof-lastname').value,
+                name: document.getElementById('prof-firstname').value + " " + document.getElementById('prof-lastname').value,
+                image: document.getElementById('prof-image-base64').value || state.loadedProfileImage || "",
+                title: document.getElementById('prof-title').value,
+                pitch: document.getElementById('prof-pitch').value,
+                location: document.getElementById('prof-location').value,
+                phone: document.getElementById('prof-phone').value,
+                email: document.getElementById('prof-email').value,
+                linkedin: document.getElementById('prof-linkedin').value,
+                website: document.getElementById('prof-website').value,
+                github: document.getElementById('prof-github').value,
+                offer_type: document.getElementById('prof-offer-type').value
+            },
+            apprenticeship: {
+                duration: document.getElementById('prof-duration').value,
+                rhythm: document.getElementById('prof-rhythm').value,
+                start: "septembre 2026"
+            },
+            experiences: Array.from(document.querySelectorAll('#list-experiences .form-row-exp')).map(row => ({
+                role: row.querySelector('.exp-role').value,
+                company: row.querySelector('.exp-company').value,
+                period: row.querySelector('.exp-period').value,
+                description: row.querySelector('.exp-desc').value.split('\n').filter(l => l.trim())
+            })),
+            projects: Array.from(document.querySelectorAll('#list-projects .form-row-exp')).map(row => ({
+                role: row.querySelector('.exp-role').value,
+                company: row.querySelector('.exp-company').value,
+                period: row.querySelector('.exp-period').value,
+                description: row.querySelector('.exp-desc').value.split('\n').filter(l => l.trim())
+            })),
+            education: Array.from(document.querySelectorAll('.form-row-edu')).map(row => ({
+                school: row.querySelector('.edu-school').value,
+                degree: row.querySelector('.edu-degree').value,
+                period: row.querySelector('.edu-period').value
+            })),
+            languages: Array.from(document.querySelectorAll('.form-row-lang')).map(row => ({
+                name: row.querySelector('.lang-name').value,
+                level: row.querySelector('.lang-level').value
+            })),
+            skills: Array.from(document.querySelectorAll('.skill-cat-row')).map(row => ({
+                category: row.querySelector('.skill-cat-name').value,
+                items: Array.from(row.querySelectorAll('.skills-pills-container .skill-pill')).map(p => {
+                    const textEl = p.querySelector('.skill-text');
+                    return textEl ? textEl.innerText.trim() : p.innerText.replace(' ×', '').trim();
+                })
+            })).filter(group => group.category.trim() || group.items.length > 0),
+            documents: {
+                resume_template: resumeTemplate && Object.keys(resumeTemplate).length > 0 ? resumeTemplate : undefined,
+                cover_letter_template: coverLetterTemplate && Object.keys(coverLetterTemplate).length > 0 ? coverLetterTemplate : undefined,
+                annexes: annexesMeta // Metadata only, binary is in DB
+            },
+            labels: { contact: "CONTACT", skills: "COMPÉTENCES", languages: "LANGUES", experiences: "EXPÉRIENCES", projects: "PROJETS", education: "FORMATIONS", download: "Download PDF (A4)" }
+        };
+
+        // 3. Save profile
         await api.saveProfile(content);
         alert(state.i18n.translations[state.i18n.current].profile_saved);
         await loadProfile();

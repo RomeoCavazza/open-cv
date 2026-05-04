@@ -1,8 +1,18 @@
 //! Traits des repositories — l'interface entre le domaine et la persistence.
 
 use async_trait::async_trait;
-use domain::{Chunk, Instance, InstanceId, Offre, OffreId, Profil, ProfilId, Slug};
+use domain::{
+    Annexe, AnnexeId, Chunk, Instance, InstanceId, Offre, OffreId, Profil, ProfilId, Slug,
+};
 use thiserror::Error;
+
+#[async_trait]
+pub trait AnnexeRepo: Send + Sync {
+    async fn get_by_id(&self, id: AnnexeId) -> Result<Option<Annexe>, RepoError>;
+    async fn list_by_profil_id(&self, profil_id: ProfilId) -> Result<Vec<Annexe>, RepoError>;
+    async fn upsert(&self, annexe: &Annexe) -> Result<(), RepoError>;
+    async fn delete(&self, id: AnnexeId) -> Result<(), RepoError>;
+}
 
 #[async_trait]
 pub trait OffreRepo: Send + Sync {

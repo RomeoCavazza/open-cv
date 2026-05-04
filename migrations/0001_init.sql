@@ -5,6 +5,17 @@ CREATE EXTENSION IF NOT EXISTS pgcrypto;
 CREATE EXTENSION IF NOT EXISTS vector;
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
 
+-- ─────────────────────────────────────────────────────────────────────────
+-- UTILS
+-- ─────────────────────────────────────────────────────────────────────────
+CREATE OR REPLACE FUNCTION fn_set_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = now();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
 DROP TABLE IF EXISTS llm_calls CASCADE;
 DROP TABLE IF EXISTS messages CASCADE;
 DROP TABLE IF EXISTS instances CASCADE;
@@ -143,17 +154,30 @@ CREATE TABLE IF NOT EXISTS instances (
 CREATE INDEX IF NOT EXISTS instances_offre  ON instances(offre_id);
 CREATE INDEX IF NOT EXISTS instances_status ON instances(status);
 
+DROP TRIGGER IF EXISTS tg_instances_updated_at ON instances;
+CREATE TRIGGER tg_instances_updated_at
+    BEFORE UPDATE ON instances
+    FOR EACH ROW
+    EXECUTE FUNCTION fn_set_updated_at();
+
 -- ─────────────────────────────────────────────────────────────────────────
 -- MESSAGES (CHAT)
 -- ─────────────────────────────────────────────────────────────────────────
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'message_role') THEN
+        CREATE TYPE message_role AS ENUM ('user', 'assistant', 'system');
+    END IF;
+END $$;
+
 CREATE TABLE IF NOT EXISTS messages (
     id              UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
     instance_id     UUID        NOT NULL REFERENCES instances(id) ON DELETE CASCADE,
-    role            TEXT        NOT NULL, -- 'user' ou 'assistant'
+    role            message_role NOT NULL,
     content         TEXT        NOT NULL,
     created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
 );
-CREATE INDEX IF NOT EXISTS messages_instance ON messages(instance_id);
+CREATE INDEX IF NOT EXISTS messages_instance      ON messages(instance_id);
+CREATE INDEX IF NOT EXISTS messages_instance_time ON messages(instance_id, created_at);
 
 -- ─────────────────────────────────────────────────────────────────────────
 -- LLM_CALLS
@@ -194,6 +218,20 @@ SELECT
 FROM llm_calls
 GROUP BY 1, 2, 3, 4
 ORDER BY 1 DESC;
+
+-- ─────────────────────────────────────────────────────────────────────────
+-- ANNEXES (DOCUMENTS BINAIRES)
+-- ─────────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS annexes (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    profil_id UUID NOT NULL REFERENCES profils(id) ON DELETE CASCADE,
+    label TEXT NOT NULL,
+    filename TEXT NOT NULL,
+    content_type TEXT NOT NULL,
+    content BYTEA NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS annexes_profil ON annexes(profil_id);
 
 
 

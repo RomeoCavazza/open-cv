@@ -4,20 +4,32 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use serde_json::Value as Json;
 
-use crate::ids::ProfilId;
+use crate::ids::{ProfilId, AnnexeId};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Profil {
     pub id: ProfilId,
-    /// Label humain : "v2026-04", "data-focus", etc.
     pub label: String,
-    /// Profil structuré complet (libre, sera défini quand tu importeras
-    /// `data/user/profile.md`).
     pub content: Json,
     pub is_active: bool,
+    #[serde(skip)]
+    pub profile_photo: Option<Vec<u8>>,
+    #[serde(skip)]
+    pub calendar_pdf: Option<Vec<u8>>,
     pub resume_template: Option<Json>,
     pub cover_letter_template: Option<Json>,
-    pub calendar_pdf: Option<Vec<u8>>,
     pub notes: Json,
+    pub created_at: DateTime<Utc>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Annexe {
+    pub id: AnnexeId,
+    pub profil_id: ProfilId,
+    pub label: String,
+    pub filename: String,
+    pub content_type: String,
+    #[serde(skip)]
+    pub content: Vec<u8>,
     pub created_at: DateTime<Utc>,
 }

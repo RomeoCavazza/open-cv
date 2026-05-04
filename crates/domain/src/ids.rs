@@ -55,6 +55,7 @@ define_id!(ProfilId);
 define_id!(ChunkId);
 define_id!(InstanceId);
 define_id!(LlmCallId);
+define_id!(AnnexeId);
 
 /// Slug humain-lisible (ex: `safran_alternance_ia__a3b2c1d0`).
 /// Historiquement stocké dans `data/instances/`, maintenant persisté en base PostgreSQL.

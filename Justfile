@@ -32,8 +32,12 @@ migrate:
 psql:
     psql -h localhost -U alternance -d alternance
 
-# rebuild auto sur changement
+# lance l'api en mode développement
 dev:
+    cargo run -p api
+
+# version avec auto-rebuild (nécessite: cargo install cargo-watch)
+watch:
     cargo watch -x 'run -p api'
 
 # tests

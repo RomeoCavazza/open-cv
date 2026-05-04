@@ -237,29 +237,49 @@ export function createSkillRow(item = { category: "", items: [] }) {
 }
 
 export function createAnnexeRow(item = {}) {
+    console.log("[UI] Rendu de l'annexe:", item.label || item.name || item.id);
     const div = document.createElement('div');
-    div.className = 'doc-field-row form-row-annexe';
-    div.style.marginBottom = '24px';
-    div.dataset.fileData = item.data_url || "";
-    div.dataset.fileType = item.type || "";
-    div.dataset.fileName = item.name || "";
+    div.className = 'form-row-annexe';
+    div.style = "display:flex; flex-direction:column; gap:0; margin-bottom:12px; border:1px solid var(--hairline); border-radius:10px; background:var(--canvas); overflow:hidden; transition: all 0.2s ease;";
     
+    const eyeSvg = `<svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg>`;
+    const eyeSlashSvg = `<svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" /></svg>`;
+
+    // Mapping des données (supporte le format API et le format local)
+    const id = item.id || "";
+    const label = item.label || item.name || item.filename || 'Nouveau document';
+    const contentType = item.content_type || item.type || "";
+    const filename = item.filename || item.name || "";
+    const dataUrl = item.data_url || "";
+
+    div.dataset.fileId = id;
+    div.dataset.fileData = dataUrl;
+    div.dataset.fileType = contentType;
+    div.dataset.fileName = filename;
+    
+    const hasFile = !!(id || dataUrl);
+    const downloadUrl = id ? `/api/profile/active/annexes/${id}` : dataUrl;
+
     div.innerHTML = `
-        <div class="doc-field-header" style="margin-bottom:8px;">
-            <div class="doc-field-info">
-                <input type="text" class="annexe-name profile-field-label" data-i18n-value="ph_annexe_name_default" value="${item.label || item.name || ''}" style="background:transparent; border:none; color:var(--heading); padding:0; margin:0; outline:none; width:auto; min-width:200px; cursor:text;">
-            </div>
-            <div style="display:flex; gap:12px; align-items:center;">
-                <div style="display:flex; gap:4px;">
-                    <button type="button" class="muted-remove-btn annexe-remove-btn" style="padding:4px 8px;">×</button>
+        <div class="annexe-header" style="display:flex; align-items:center; justify-content:space-between; padding:10px 16px; cursor:default;">
+            <div style="display:flex; align-items:center; gap:12px; flex:1;">
+                <div class="annexe-icon" style="color:var(--primary); display:flex; align-items:center; opacity: 0.5;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
                 </div>
+                <input type="text" class="annexe-name" value="${label}" placeholder="Nom du document" style="background:transparent; border:none; font-size:14px; font-weight:600; color:var(--heading); width:100%; outline:none; padding: 4px 0;">
+            </div>
+            <div style="display:flex; gap:6px; align-items:center;">
+                <button type="button" class="annexe-view-btn" style="background:transparent; border:none; color:var(--muted-strong); cursor:pointer; padding:6px; border-radius:50%; display:${hasFile ? 'flex' : 'none'}; align-items:center; justify-content:center; transition: all 0.2s;" title="Aperçu">
+                    ${eyeSvg}
+                </button>
+                <button type="button" class="annexe-upload-btn" style="background:transparent; border:1px dashed var(--hairline); color:var(--muted-strong); cursor:pointer; padding:4px 10px; border-radius:6px; font-size:11px; display:${hasFile ? 'none' : 'block'}; transition: all 0.2s;">
+                    Joindre
+                </button>
+                <button type="button" class="annexe-remove-btn" style="background:transparent; border:none; color:var(--muted-strong); cursor:pointer; padding:6px; border-radius:50%; font-size:18px; line-height:1; display:flex; align-items:center; justify-content:center; transition: all 0.2s;">×</button>
             </div>
         </div>
-        <div class="annexe-preview-container" style="position:relative; width:100%; height:200px; border:1px solid var(--hairline); border-radius:8px; background:white; overflow:hidden; cursor:pointer;">
-            <iframe class="annexe-preview" style="width:100%; height:100%; border:none; pointer-events:none; ${item.data_url ? '' : 'display:none;'}"></iframe>
-            <div class="annexe-preview-placeholder" data-i18n="ph_click_select_file" style="position:absolute; inset:0; display:${item.data_url ? 'none' : 'flex'}; align-items:center; justify-content:center; color:var(--muted); font-size:12px;">
-                Cliquez pour sélectionner un fichier
-            </div>
+        <div class="annexe-preview-container" style="display:none; border-top:1px solid var(--hairline); background:white;">
+            <iframe class="annexe-preview" style="width:100%; height:500px; border:none; display:block;"></iframe>
         </div>
         <input type="file" class="annexe-file-input" style="display:none;">
     `;
@@ -268,16 +288,61 @@ export function createAnnexeRow(item = {}) {
     const nameInput = div.querySelector('.annexe-name');
     const preview = div.querySelector('.annexe-preview');
     const previewContainer = div.querySelector('.annexe-preview-container');
-    const placeholder = div.querySelector('.annexe-preview-placeholder');
+    const viewBtn = div.querySelector('.annexe-view-btn');
+    const uploadBtn = div.querySelector('.annexe-upload-btn');
+    const removeBtn = div.querySelector('.annexe-remove-btn');
+
+    // Hover effects discrets
+    [viewBtn, removeBtn].forEach(btn => {
+        btn.onmouseover = () => { 
+            btn.style.color = 'var(--primary)';
+        };
+        btn.onmouseout = () => { 
+            btn.style.color = 'var(--muted-strong)';
+        };
+    });
     
-    if (item.data_url) {
-        preview.src = item.data_url;
+    uploadBtn.onmouseover = () => {
+        uploadBtn.style.background = 'rgba(0,0,0,0.04)';
+        uploadBtn.style.borderColor = 'var(--primary)';
+        uploadBtn.style.color = 'var(--primary)';
+    };
+    uploadBtn.onmouseout = () => {
+        uploadBtn.style.background = 'transparent';
+        uploadBtn.style.borderColor = 'var(--hairline)';
+        uploadBtn.style.color = 'var(--muted-strong)';
+    };
+    
+    if (downloadUrl) {
+        preview.src = downloadUrl;
     }
     
-    const triggerUpload = () => fileInput.click();
-    previewContainer.onclick = triggerUpload;
+    viewBtn.onclick = (e) => {
+        e.stopPropagation();
+        const isHidden = previewContainer.style.display === 'none';
+        previewContainer.style.display = isHidden ? 'block' : 'none';
+        viewBtn.innerHTML = isHidden ? eyeSlashSvg : eyeSvg;
+        viewBtn.style.color = isHidden ? 'var(--primary)' : 'var(--muted-strong)';
+        
+        // Lazy load for remote files
+        if (isHidden && div.dataset.fileId && !preview.src.includes('/api/')) {
+            preview.src = `/api/profile/active/annexes/${div.dataset.fileId}`;
+        }
+    };
     
-    div.querySelector('.annexe-remove-btn').onclick = () => div.remove();
+    uploadBtn.onclick = () => fileInput.click();
+    
+    removeBtn.onclick = async () => {
+        if (div.dataset.fileId) {
+            // On marquera pour suppression lors de la sauvegarde du profil, 
+            // ou on supprime direct si on veut être radical. 
+            // Ici on se contente de retirer du DOM, le dashboard gérera la suite.
+            div.dataset.markedForDeletion = "true";
+            div.style.display = 'none';
+        } else {
+            div.remove();
+        }
+    };
     
     fileInput.onchange = async (e) => {
         const file = e.target.files[0];
@@ -287,13 +352,19 @@ export function createAnnexeRow(item = {}) {
             div.dataset.fileData = dataUrl;
             div.dataset.fileType = file.type;
             div.dataset.fileName = file.name;
+            
             if (!nameInput.value.trim() || nameInput.value === 'Nouveau document') {
                 const rawName = file.name.split('.')[0];
                 nameInput.value = rawName.charAt(0).toUpperCase() + rawName.slice(1);
             }
+            
             preview.src = dataUrl;
-            preview.style.display = 'block';
-            placeholder.style.display = 'none';
+            viewBtn.style.display = 'flex';
+            uploadBtn.style.display = 'none';
+            
+            previewContainer.style.display = 'block';
+            viewBtn.innerHTML = eyeSlashSvg;
+            viewBtn.style.color = 'var(--primary)';
         } catch (err) {
             console.error("Annexe load failed", err);
         }

@@ -14,6 +14,7 @@ export async function saveProfile(content) {
     });
     if (!res.ok) {
         const errorText = await res.text();
+        console.error("ERREUR SAUVEGARDE PROFIL:", errorText);
         throw new Error(errorText || `HTTP ${res.status}`);
     }
     return res;
@@ -33,4 +34,30 @@ export async function runIngest(payload) {
     });
     if (!res.ok) throw new Error('Ingest failed');
     return res;
+}
+
+export async function fetchAnnexes() {
+    const res = await fetch('/api/profile/active/annexes');
+    if (!res.ok) throw new Error('Failed to fetch annexes');
+    return await res.json();
+}
+
+export async function uploadAnnexe(annexe) {
+    const res = await fetch('/api/profile/active/annexes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(annexe)
+    });
+    if (!res.ok) throw new Error('Upload failed');
+    return await res.json();
+}
+
+export async function deleteAnnexe(id) {
+    const res = await fetch(`/api/profile/active/annexes/${id}`, { method: 'DELETE' });
+    if (!res.ok) throw new Error('Delete failed');
+    return res;
+}
+
+export function getAnnexeUrl(id) {
+    return `/api/profile/active/annexes/${id}`;
 }

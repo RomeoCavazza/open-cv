@@ -714,6 +714,7 @@ mod tests {
             is_active: true,
             resume_template: Some(json!({"template": "cv"})),
             cover_letter_template: Some(json!({"template": "lettre"})),
+            profile_photo: None,
             calendar_pdf: None,
             notes: json!({}),
             created_at: Utc::now(),
