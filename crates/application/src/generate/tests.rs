@@ -40,7 +40,13 @@ fn build_test_profil() -> Profil {
     Profil {
         id: ProfilId::new(),
         label: "Profil test".into(),
-        content: json!({"title": "Ingénieur logiciel"}),
+        content: domain::ProfilContent {
+            profile: domain::ProfileSection {
+                title: "Ingénieur logiciel".into(),
+                ..Default::default()
+            },
+            ..Default::default()
+        },
         is_active: true,
         profile_photo: None,
         calendar_pdf: None,
