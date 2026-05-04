@@ -54,7 +54,6 @@ function renderChatHistory(history) {
 
     const entries = Array.isArray(history) ? history : [];
     if (entries.length === 0) {
-        console.log("[Chat] History is empty, nothing to render.");
     }
 
     entries.forEach((entry) => {
@@ -118,10 +117,8 @@ async function loadChatHistory() {
         let history = [];
 
         if (instanceData) {
-            console.log("[Chat] Loading history from instance:", instanceData.slug);
             history = instanceData?.notes?.chat_history || [];
         } else {
-            console.log("[Chat] Loading global history from profile");
             const res = await fetch('/api/profile/active');
             if (res.ok) {
                 const profil = await res.json();
@@ -149,7 +146,6 @@ async function sendChatMessage() {
     if (!message) return;
 
     const offerSlug = getActiveOfferSlug();
-    console.log("[Chat] Attempting to send message. OfferSlug:", offerSlug);
 
     appendMessage('user', message);
     input.value = '';
@@ -177,7 +173,6 @@ async function sendChatMessage() {
 
         if (resChat.ok) {
             const result = await resChat.json();
-            console.log("[Chat] Result received:", result);
 
             if (result.updated_instance?.slug) {
                 window.activeInstanceSlug = result.updated_instance.slug;
@@ -204,7 +199,6 @@ async function sendChatMessage() {
                 }
             }
             if (Array.isArray(persistedHistory) && persistedHistory.length > 0) {
-                console.log("[Chat] Rendering persisted history:", persistedHistory.length, "entries");
                 pendingAttachments = [];
                 updateAttachmentsUI();
                 renderChatHistory(persistedHistory);
@@ -241,7 +235,6 @@ async function sendChatMessage() {
 }
 
 function initChat() {
-    console.log("[Chat] Initializing Event Delegation...");
     
     // File attachment handling
     document.addEventListener('change', async (e) => {
@@ -274,7 +267,6 @@ function initChat() {
     document.addEventListener('click', (e) => {
         const btn = e.target.closest('#chat-send-btn');
         if (btn) {
-            console.log("[Chat] Click on send button detected.");
             sendChatMessage();
         }
     });
@@ -286,7 +278,6 @@ function initChat() {
                 return;
             } else {
                 e.preventDefault();
-                console.log("[Chat] Enter key detected in input.");
                 sendChatMessage();
             }
         }

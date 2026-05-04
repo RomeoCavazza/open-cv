@@ -5,9 +5,9 @@ use axum::{extract::State, Json};
 use serde::Deserialize;
 use uuid::Uuid;
 
-mod helpers;
+mod logic;
 
-use helpers::{build_generate_input, parse_input_items, resolve_ingest_profile, should_generate};
+use logic::{build_generate_input, parse_input_items, resolve_ingest_profile, should_generate};
 
 #[derive(Deserialize)]
 #[allow(dead_code)]

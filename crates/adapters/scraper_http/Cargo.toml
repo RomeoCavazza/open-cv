@@ -16,5 +16,3 @@ reqwest      = { workspace = true }
 scraper      = { workspace = true }
 encoding_rs  = { workspace = true }
 url          = { workspace = true }
-tracing      = { workspace = true }
-tokio        = { workspace = true }

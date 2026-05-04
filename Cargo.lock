@@ -8,14 +8,10 @@ version = "0.1.0"
 dependencies = [
  "async-trait",
  "base64",
- "domain",
  "ports",
  "reqwest",
- "schemars",
  "serde",
  "serde_json",
- "thiserror",
- "tokio",
  "tracing",
 ]
 
@@ -29,7 +25,6 @@ dependencies = [
  "reqwest",
  "serde",
  "serde_json",
- "thiserror",
  "tracing",
 ]
 
@@ -41,10 +36,8 @@ dependencies = [
  "base64",
  "ports",
  "reqwest",
- "schemars",
  "serde",
  "serde_json",
- "thiserror",
  "tracing",
 ]
 
@@ -56,7 +49,6 @@ dependencies = [
  "chrono",
  "domain",
  "ports",
- "serde",
  "serde_json",
  "sqlx",
  "tracing",
@@ -72,8 +64,6 @@ dependencies = [
  "ports",
  "reqwest",
  "scraper",
- "tokio",
- "tracing",
  "url",
 ]
 
@@ -118,25 +108,19 @@ dependencies = [
  "adapter-scraper-http",
  "anyhow",
  "application",
- "async-trait",
  "axum",
  "base64",
  "chrono",
  "domain",
  "dotenvy",
- "once_cell",
  "ports",
- "schemars",
  "serde",
  "serde_json",
- "sha2",
  "sqlx",
  "tokio",
- "tower",
  "tower-http",
  "tracing",
  "tracing-subscriber",
- "url",
  "uuid",
 ]
 
@@ -1480,10 +1464,7 @@ name = "ports"
 version = "0.1.0"
 dependencies = [
  "async-trait",
- "base64",
  "domain",
- "schemars",
- "serde",
  "serde_json",
  "thiserror",
 ]
