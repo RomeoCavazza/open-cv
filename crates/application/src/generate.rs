@@ -34,6 +34,9 @@ use tracing::{info, warn};
 use crate::events::{EventBus, GenerationStep};
 use crate::AppError;
 
+mod helpers;
+use self::helpers::{build_generation_input, build_slug, truncate, validate_outputs};
+
 // ─────────────────────────────────────────────────────────────────
 // Inputs / outputs
 // ─────────────────────────────────────────────────────────────────
@@ -718,131 +721,6 @@ fn build_query_text(offre: &Offre) -> String {
         offre.structured.missions.join(" ; "),
         offre.structured.exigences.join(" ; "),
     )
-}
-
-fn build_generation_input(
-    offre: &Offre,
-    profil: &domain::Profil,
-    retained: &[Chunk],
-    plan: &CandidaturePlan,
-) -> String {
-    let chunks_listing = retained
-        .iter()
-        .map(|c| format!("### {} — {}\n{}", c.kind.as_str(), c.titre, c.content))
-        .collect::<Vec<_>>()
-        .join("\n\n");
-
-    format!(
-        "## OFFRE\nEntreprise: {}\nIntitulé: {}\nLocalisation: {}\n\n## RÉSUMÉ DE L'OFFRE\n{}\n\n## STACK\n{}\n\n## MISSIONS\n{}\n\n## EXIGENCES\n{}\n\n## PLAN STRATÉGIQUE\nAngle: {}\nForces à souligner: {}\nMots-clés critiques: {}\n\n## PROFIL CANDIDAT\n{}\n\n## CHUNKS PERTINENTS DU PROFIL\n{}",
-        offre.entreprise,
-        offre.intitule,
-        offre.localisation.as_deref().unwrap_or("non précisé"),
-        offre.structured.resume_court,
-        offre.structured.stack.join(", "),
-        offre.structured.missions.join(" ; "),
-        offre.structured.exigences.join(" ; "),
-        plan.angle,
-        plan.forces_a_souligner.join(" ; "),
-        plan.mots_cles_critiques.join(", "),
-        serde_json::to_string_pretty(&profil.content).unwrap_or_default(),
-        chunks_listing,
-    )
-}
-
-fn build_slug(offre: &Offre, instance_id: InstanceId) -> Slug {
-    // Format : <offre_slug>__<short_instance_id>
-    // Garantit l'unicité même si on génère plusieurs instances pour la même offre.
-    let short = instance_id.to_string().chars().take(8).collect::<String>();
-    let combined = format!("{}__{}", offre.slug.as_str(), short);
-    Slug::parse(combined).unwrap_or_else(|_| {
-        // Fallback en cas de slug invalide (ne devrait jamais arriver)
-        Slug::parse(format!("instance_{}", short)).expect("short id is always valid")
-    })
-}
-
-fn truncate(s: &str, max_chars: usize) -> String {
-    if s.chars().count() <= max_chars {
-        s.to_string()
-    } else {
-        let truncated: String = s.chars().take(max_chars).collect();
-        format!("{truncated}…")
-    }
-}
-
-// ─────────────────────────────────────────────────────────────────
-// Étape 5 — VALIDATE
-// ─────────────────────────────────────────────────────────────────
-
-fn validate_outputs(
-    offre: &Offre,
-    restitution: Option<&Restitution>,
-    resume: Option<&Resume>,
-    cover_letter: Option<&CoverLetter>,
-) -> Result<(), GenerateError> {
-    // Restitution : score doit être ≤ 100.
-    if let Some(r) = restitution {
-        if r.fit_score > 100 {
-            tracing::warn!(
-                "Validation: score de fit > 100 (score={}). On cap à 100.",
-                r.fit_score
-            );
-            // On pourrait le caper ici si on voulait, mais on garde l'erreur pour Phase 3 debug
-            // return Err(GenerateError::Invalide(format!("score de fit > 100 : {}", r.fit_score)));
-        }
-    }
-
-    // Resume : doit avoir au moins 1 expérience ou 1 formation pour être "utile".
-    if let Some(r) = resume {
-        if r.experiences.is_empty() && r.formations.is_empty() {
-            tracing::error!("Validation CV: Aucune expérience ET aucune formation trouvée.");
-            return Err(GenerateError::Invalide(
-                "CV vide (ni expérience ni formation)".into(),
-            ));
-        }
-        if r.experiences.is_empty() {
-            tracing::warn!(
-                "Validation CV: Aucune expérience trouvée pour l'offre '{}'",
-                offre.intitule
-            );
-        }
-        if r.formations.is_empty() {
-            tracing::warn!(
-                "Validation CV: Aucune formation trouvée pour l'offre '{}'",
-                offre.intitule
-            );
-        }
-    }
-
-    // Cover Letter : doit être complète (salutation + accroche + clôture)
-    if let Some(cl) = cover_letter {
-        if !cl.est_complete() {
-            tracing::error!(
-                "Validation Lettre: Structure incomplète pour '{}'",
-                offre.entreprise
-            );
-            return Err(GenerateError::Invalide(
-                "lettre incomplète (manque salutation/accroche/clôture)".into(),
-            ));
-        }
-
-        let texte_complet: String = cl
-            .paragraphes
-            .iter()
-            .map(|p| p.contenu.as_str())
-            .collect::<Vec<_>>()
-            .join(" ");
-        let entreprise_lower = offre.entreprise.to_lowercase();
-
-        if !texte_complet.to_lowercase().contains(&entreprise_lower) {
-            // Anti-hallucination ou oubli : on logge un warning mais on accepte (Phase 3 relax)
-            tracing::warn!(
-                "Validation Lettre: L'entreprise '{}' n'est pas mentionnée dans le texte. Validation assouplie.",
-                offre.entreprise
-            );
-        }
-    }
-
-    Ok(())
 }
 
 // ─────────────────────────────────────────────────────────────────
