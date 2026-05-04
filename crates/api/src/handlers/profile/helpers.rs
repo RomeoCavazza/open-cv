@@ -133,7 +133,9 @@ fn merge_profile_content(existing: &mut JsonValue, new_content: JsonValue) {
         for (key, value) in new_obj {
             if key == "documents" {
                 if let (Some(old_docs), Some(new_docs)) = (
-                    old_obj.get_mut("documents").and_then(|docs| docs.as_object_mut()),
+                    old_obj
+                        .get_mut("documents")
+                        .and_then(|docs| docs.as_object_mut()),
                     value.as_object(),
                 ) {
                     for (doc_key, doc_value) in new_docs {
@@ -156,7 +158,10 @@ fn merge_profile_content(existing: &mut JsonValue, new_content: JsonValue) {
 fn extract_profile_photo(profil: &mut Profil) {
     if let Some(profile) = profil.content.get("profile").and_then(|p| p.as_object()) {
         if let Some(image) = profile.get("image").and_then(|value| value.as_str()) {
-            if let Some(payload) = image.strip_prefix("data:").and_then(|_| image.split(',').nth(1)) {
+            if let Some(payload) = image
+                .strip_prefix("data:")
+                .and_then(|_| image.split(',').nth(1))
+            {
                 if let Ok(bytes) = decode_data_url(payload) {
                     profil.profile_photo = Some(bytes);
                 }
@@ -169,13 +174,19 @@ fn extract_calendar_pdf(profil: &mut Profil) {
     if let Some(documents) = profil.content.get("documents").and_then(|d| d.as_object()) {
         if let Some(calendar) = documents.get("apprenticeship_calendar") {
             if let Some(data_url) = calendar.get("data_url").and_then(|value| value.as_str()) {
-                if let Some(payload) = data_url.strip_prefix("data:").and_then(|_| data_url.split(',').nth(1)) {
+                if let Some(payload) = data_url
+                    .strip_prefix("data:")
+                    .and_then(|_| data_url.split(',').nth(1))
+                {
                     if let Ok(bytes) = decode_data_url(payload) {
                         profil.calendar_pdf = Some(bytes);
                     }
                 }
             } else if let Some(data_url) = calendar.as_str() {
-                if let Some(payload) = data_url.strip_prefix("data:").and_then(|_| data_url.split(',').nth(1)) {
+                if let Some(payload) = data_url
+                    .strip_prefix("data:")
+                    .and_then(|_| data_url.split(',').nth(1))
+                {
                     if let Ok(bytes) = decode_data_url(payload) {
                         profil.calendar_pdf = Some(bytes);
                     }
@@ -232,7 +243,10 @@ mod tests {
     #[test]
     fn active_profile_resume_template_prefers_template() {
         let profil = build_profile(true);
-        assert_eq!(active_profile_resume_template_or_content(profil), json!({"foo": "bar"}));
+        assert_eq!(
+            active_profile_resume_template_or_content(profil),
+            json!({"foo": "bar"})
+        );
     }
 
     #[test]
@@ -290,9 +304,15 @@ mod tests {
         apply_profile_update(&mut profil, new_content);
 
         assert_eq!(profil.content["title"], json!("Updated"));
-        assert_eq!(profil.content["documents"]["resume_template"], json!({"foo": "bar"}));
+        assert_eq!(
+            profil.content["documents"]["resume_template"],
+            json!({"foo": "bar"})
+        );
         assert_eq!(profil.content["profile"]["image"], json!("persisted:bytea"));
-        assert_eq!(profil.content["documents"]["apprenticeship_calendar"], json!("persisted:bytea"));
+        assert_eq!(
+            profil.content["documents"]["apprenticeship_calendar"],
+            json!("persisted:bytea")
+        );
         assert_eq!(profil.profile_photo, Some(b"hello".to_vec()));
         assert_eq!(profil.calendar_pdf, Some(b"world".to_vec()));
     }

@@ -30,7 +30,8 @@ pub const INSTANCE_DEFAULT_SYSTEM: &str = "Tu es un assistant de lecture factuel
     N'invente jamais un nom, une offre, une expérience ou une modification. \
     TU DOIS RÉPONDRE EXCLUSIVEMENT PAR UN OBJET JSON avec une seule clé 'message'.";
 
-pub const GLOBAL_CHAT_SYSTEM: &str = "Tu es un coach de carrière expert. Tu as accès au profil complet de l'utilisateur. \
+pub const GLOBAL_CHAT_SYSTEM: &str =
+    "Tu es un coach de carrière expert. Tu as accès au profil complet de l'utilisateur. \
     Tu peux aussi voir la liste des offres d'emploi disponibles en base. \
     Réponds de manière constructive et encourageante. \
     TU DOIS RÉPONDRE EXCLUSIVEMENT PAR UN OBJET JSON avec une seule clé 'message'. \

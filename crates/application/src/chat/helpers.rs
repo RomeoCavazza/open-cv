@@ -75,7 +75,9 @@ pub(super) fn wants_mutation(message: &str) -> bool {
         "editer",
     ];
 
-    mutation_markers.iter().any(|marker| lowered.contains(marker))
+    mutation_markers
+        .iter()
+        .any(|marker| lowered.contains(marker))
 }
 
 pub(super) fn wants_identity(message: &str) -> bool {
@@ -89,7 +91,9 @@ pub(super) fn wants_identity(message: &str) -> bool {
         "je m'appelle comment",
     ];
 
-    identity_markers.iter().any(|marker| lowered.contains(marker))
+    identity_markers
+        .iter()
+        .any(|marker| lowered.contains(marker))
 }
 
 pub(super) fn extract_chat_history(notes: &serde_json::Value) -> Vec<Message> {
@@ -155,7 +159,9 @@ pub(super) fn push_chat_history(notes: &mut serde_json::Value, role: &str, conte
         return;
     };
 
-    let history_value = obj.entry("chat_history").or_insert_with(|| serde_json::json!([]));
+    let history_value = obj
+        .entry("chat_history")
+        .or_insert_with(|| serde_json::json!([]));
     if !history_value.is_array() {
         *history_value = serde_json::json!([]);
     }
@@ -237,7 +243,14 @@ mod tests {
 
         assert_eq!(profile_json["label"], json!("Test Profil"));
         assert_eq!(offer_json["entreprise"], json!("Example SA"));
-        assert_eq!(offer_json["raw_text_preview"].as_str().unwrap().chars().count(), 4001);
+        assert_eq!(
+            offer_json["raw_text_preview"]
+                .as_str()
+                .unwrap()
+                .chars()
+                .count(),
+            4001
+        );
     }
 
     #[test]

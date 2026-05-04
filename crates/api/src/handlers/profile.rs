@@ -12,9 +12,10 @@ use serde_json::Value as JsonValue;
 mod helpers;
 
 use helpers::{
-    active_profile_cover_letter_template, active_profile_content,
-    active_profile_resume_template_or_content, apply_profile_update, apply_persisted_markers,
-    build_annexe_from_request, build_annexe_metadata, build_download_response, resolve_active_profile,
+    active_profile_content, active_profile_cover_letter_template,
+    active_profile_resume_template_or_content, apply_persisted_markers, apply_profile_update,
+    build_annexe_from_request, build_annexe_metadata, build_download_response,
+    resolve_active_profile,
 };
 
 pub async fn get_active_profile_handler(
@@ -133,8 +134,7 @@ pub async fn upload_annexe_handler(
     tracing::debug!("Taille de la data URL : {} chars", req.data_url.len());
     let profil = resolve_active_profile(state.profil_repo.as_ref()).await?;
 
-    let annexe = build_annexe_from_request(profil.id, req)
-        .map_err(ApiError::BadRequest)?;
+    let annexe = build_annexe_from_request(profil.id, req).map_err(ApiError::BadRequest)?;
 
     state
         .annexe_repo

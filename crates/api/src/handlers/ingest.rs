@@ -36,7 +36,8 @@ pub async fn ingest_handler(
         return Err(ApiError::BadRequest("input vide".to_string()));
     }
 
-    let profil = resolve_ingest_profile(state.intake_uc.profils.as_ref(), payload.profil_id).await?;
+    let profil =
+        resolve_ingest_profile(state.intake_uc.profils.as_ref(), payload.profil_id).await?;
     let items = parse_input_items(&raw_input);
 
     let llm_provider = payload
@@ -62,7 +63,11 @@ pub async fn ingest_handler(
                         .await
                         .map_err(|e| ApiError::Internal(e.to_string()))?
                     {
-                        let gen_input = build_generate_input(instance, profil.id, payload.config.as_ref().unwrap());
+                        let gen_input = build_generate_input(
+                            instance,
+                            profil.id,
+                            payload.config.as_ref().unwrap(),
+                        );
 
                         state
                             .generate_uc

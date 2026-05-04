@@ -1,11 +1,11 @@
+use crate::errors::ApiError;
+use crate::state::AppState;
 use axum::{
     extract::{Path, Query, State},
     http::StatusCode,
     response::Json,
 };
-use crate::state::AppState;
-use crate::errors::ApiError;
-use tracing::{info, error};
+use tracing::{error, info};
 
 pub async fn get_instance_by_slug(
     State(state): State<AppState>,
@@ -92,9 +92,15 @@ pub async fn generate_instance(
         .map_err(|e| ApiError::Internal(e.to_string()))?
         .ok_or_else(|| ApiError::NotFound(format!("Instance {} inconnue", slug_str)))?;
 
-    let restitution = params.get("restitution").map(|v| v == "true").unwrap_or(true);
+    let restitution = params
+        .get("restitution")
+        .map(|v| v == "true")
+        .unwrap_or(true);
     let resume = params.get("resume").map(|v| v == "true").unwrap_or(true);
-    let cover_letter = params.get("cover_letter").map(|v| v == "true").unwrap_or(true);
+    let cover_letter = params
+        .get("cover_letter")
+        .map(|v| v == "true")
+        .unwrap_or(true);
 
     let input = application::generate::GenerateInput {
         offre_id: instance.offre_id,

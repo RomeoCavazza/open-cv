@@ -143,10 +143,7 @@ struct TestAnnexeRepo;
 
 #[async_trait]
 impl ports::AnnexeRepo for TestAnnexeRepo {
-    async fn get_by_id(
-        &self,
-        _id: domain::AnnexeId,
-    ) -> Result<Option<domain::Annexe>, RepoError> {
+    async fn get_by_id(&self, _id: domain::AnnexeId) -> Result<Option<domain::Annexe>, RepoError> {
         Ok(None)
     }
     async fn list_by_profil_id(
@@ -193,11 +190,7 @@ impl ChunkRepo for TestChunkRepo {
 
 #[async_trait]
 impl Embedder for TestEmbedder {
-    async fn embed(
-        &self,
-        texts: &[&str],
-        _mode: EmbedMode,
-    ) -> Result<Vec<Vec<f32>>, EmbedError> {
+    async fn embed(&self, texts: &[&str], _mode: EmbedMode) -> Result<Vec<Vec<f32>>, EmbedError> {
         Ok(texts.iter().map(|_| vec![0.1, 0.2]).collect())
     }
 
@@ -357,8 +350,12 @@ fn build_usecase(stores: Arc<TestStores>) -> ChatWithApplicationUseCase {
 
 #[test]
 fn detects_read_only_questions() {
-    assert!(!wants_mutation("comment je m'appelle ? c'est quoi l'offre ?"));
-    assert!(!wants_mutation("tu vois l'offre, mon cv et ma lettre de motivation ?"));
+    assert!(!wants_mutation(
+        "comment je m'appelle ? c'est quoi l'offre ?"
+    ));
+    assert!(!wants_mutation(
+        "tu vois l'offre, mon cv et ma lettre de motivation ?"
+    ));
 }
 
 #[test]
@@ -388,8 +385,14 @@ fn push_chat_history_trims_old_entries() {
         .expect("chat history should exist");
 
     assert_eq!(history.len(), MAX_CHAT_HISTORY_ENTRIES);
-    assert_eq!(history.first().and_then(|entry| entry.get("content")), Some(&json!("message-1")));
-    assert_eq!(history.last().and_then(|entry| entry.get("content")), Some(&json!(format!("message-{}", MAX_CHAT_HISTORY_ENTRIES))));
+    assert_eq!(
+        history.first().and_then(|entry| entry.get("content")),
+        Some(&json!("message-1"))
+    );
+    assert_eq!(
+        history.last().and_then(|entry| entry.get("content")),
+        Some(&json!(format!("message-{}", MAX_CHAT_HISTORY_ENTRIES)))
+    );
 }
 
 #[test]

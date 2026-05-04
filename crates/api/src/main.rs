@@ -221,10 +221,7 @@ async fn main() -> anyhow::Result<()> {
             "/api/instances/:slug/cover-letter",
             get(get_instance_cover_letter),
         )
-        .route(
-            "/api/instances/:slug/generate",
-            post(generate_instance),
-        )
+        .route("/api/instances/:slug/generate", post(generate_instance))
         .route("/", get(get_index))
         .route("/applications", get(get_index))
         .route("/applications/:slug", get(get_index))

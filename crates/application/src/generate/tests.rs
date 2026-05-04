@@ -1,8 +1,9 @@
+use super::helpers::{build_generation_input, build_slug, truncate, validate_outputs};
 use super::*;
 use chrono::Utc;
 use domain::{
-    ChunkKind, CoverLetter, Objet, OffreStructured, Paragraphe, ParagrapheRole, Profil,
-    Signature, Slug,
+    Chunk, ChunkKind, CoverLetter, InstanceId, Objet, Offre, OffreId, OffreStructured, Paragraphe,
+    ParagrapheRole, Profil, ProfilId, Resume, Signature, Slug,
 };
 use serde_json::json;
 
@@ -59,7 +60,10 @@ fn build_test_plan() -> CandidaturePlan {
     }
 }
 
-fn build_test_resume(experiences: Vec<domain::Experience>, formations: Vec<domain::Formation>) -> Resume {
+fn build_test_resume(
+    experiences: Vec<domain::Experience>,
+    formations: Vec<domain::Formation>,
+) -> Resume {
     Resume {
         identite: domain::Identite {
             nom_complet: "Test User".into(),
@@ -87,7 +91,7 @@ fn build_test_resume(experiences: Vec<domain::Experience>, formations: Vec<domai
         formations,
         projets: vec![],
         langues: vec![],
-        ...domain::Resume::default()
+        ..domain::Resume::default()
     }
 }
 
@@ -213,8 +217,11 @@ fn validate_outputs_rejects_empty_resume() {
 #[test]
 fn validate_outputs_rejects_incomplete_cover_letter() {
     let offre = build_test_offre();
-    let cover_letter = build_test_cover_letter(&[ParagrapheRole::Salutation, ParagrapheRole::Accroche]);
+    let cover_letter =
+        build_test_cover_letter(&[ParagrapheRole::Salutation, ParagrapheRole::Accroche]);
     let result = validate_outputs(&offre, None, None, Some(&cover_letter));
 
-    assert!(matches!(result, Err(GenerateError::Invalide(message)) if message.contains("lettre incomplète")));
+    assert!(
+        matches!(result, Err(GenerateError::Invalide(message)) if message.contains("lettre incomplète"))
+    );
 }

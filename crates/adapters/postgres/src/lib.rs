@@ -1,12 +1,12 @@
 //! Adapter Postgres — implémente les traits de `ports::repos`.
 
-mod helpers;
-mod offre;
-mod instance;
 mod annexe;
-mod message;
-mod profil;
 mod chunk;
+mod helpers;
+mod instance;
+mod message;
+mod offre;
+mod profil;
 
 pub use annexe::AnnexeRepoPg;
 pub use chunk::ChunkRepoPg;

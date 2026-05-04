@@ -7,7 +7,7 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]
 pub struct Resume {
     pub identite: Identite,
     pub accroche: Accroche,
@@ -19,13 +19,13 @@ pub struct Resume {
     pub langues: Vec<Langue>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]
 pub struct Identite {
     pub nom_complet: String,
     pub photo_url: Option<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]
 pub struct Accroche {
     /// Ex: "ALTERNANCE — DÉVELOPPEUR IA"
     pub titre: String,
@@ -37,7 +37,7 @@ pub struct Accroche {
     pub rythme: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]
 pub struct Contact {
     pub localisation: String,
     pub telephone: Option<String>,
@@ -47,14 +47,14 @@ pub struct Contact {
     pub github: Option<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]
 pub struct GroupeCompetences {
     /// "Programmation", "MLOps", "Algorithmie", etc.
     pub categorie: String,
     pub items: Vec<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]
 pub struct Experience {
     pub poste: String,
     pub entreprise: String,
@@ -65,7 +65,7 @@ pub struct Experience {
     pub bullets: Vec<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]
 pub struct Formation {
     pub etablissement: String,
     pub localisation: Option<String>,
@@ -74,7 +74,7 @@ pub struct Formation {
     pub details: Option<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]
 pub struct Projet {
     pub nom: String,
     /// "(2025 — Présent)" ou similaire.
@@ -83,7 +83,7 @@ pub struct Projet {
     pub lien: Option<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]
 pub struct Langue {
     pub langue: String,
     /// "natif", "C1", "B2", etc.

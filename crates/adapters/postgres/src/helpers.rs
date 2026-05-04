@@ -1,5 +1,8 @@
 use chrono::{DateTime, Utc};
-use domain::{Annexe, AnnexeId, Chunk, ChunkId, Instance, InstanceId, InstanceStatus, Message, MessageRole, Offre, OffreId, OffreStructured, Profil, ProfilId, Slug};
+use domain::{
+    Annexe, AnnexeId, Chunk, ChunkId, Instance, InstanceId, InstanceStatus, Message, MessageRole,
+    Offre, OffreId, OffreStructured, Profil, ProfilId, Slug,
+};
 use ports::RepoError;
 
 pub(super) fn map_sqlx(e: sqlx::Error) -> RepoError {

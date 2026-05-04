@@ -1,12 +1,14 @@
-use std::sync::Arc;
-use domain::{Chunk, InstanceId, Offre, Restitution, Resume, CoverLetter, ProfilId};
-use ports::{EmbedMode, LlmClient, ExtractionRequest};
-use tracing::warn;
+use super::helpers::{build_generation_input, build_query_text, truncate};
+use super::{
+    CandidaturePlan, GenerateApplicationUseCase, GenerateError, Livrables, RerankResponse,
+};
+use crate::events::GenerationStep;
 use crate::prompts;
 use crate::AppError;
-use super::{GenerateApplicationUseCase, GenerateError, RerankResponse, CandidaturePlan, Livrables};
-use super::helpers::{build_query_text, truncate, build_generation_input};
-use crate::events::GenerationStep;
+use domain::{Chunk, CoverLetter, InstanceId, Offre, ProfilId, Restitution, Resume};
+use ports::{EmbedMode, ExtractionRequest, LlmClient};
+use std::sync::Arc;
+use tracing::warn;
 
 pub async fn retrieve_chunks(
     this: &GenerateApplicationUseCase,
@@ -146,8 +148,11 @@ pub async fn maybe_generate_restitution(
     instance_id: InstanceId,
     llm: Arc<dyn LlmClient>,
 ) -> Result<Option<Restitution>, GenerateError> {
-    if !livrables.restitution { return Ok(None); }
-    this.events.started(instance_id, GenerationStep::Restitution);
+    if !livrables.restitution {
+        return Ok(None);
+    }
+    this.events
+        .started(instance_id, GenerationStep::Restitution);
 
     let req = ports::ExtractionRequest {
         system: Some(prompts::generate::RESTITUTION_SYSTEM.into()),
@@ -168,16 +173,19 @@ pub async fn maybe_generate_restitution(
     };
 
     let response_json = llm.extract(req).await.map_err(|e| {
-        this.events.failed(instance_id, GenerationStep::Restitution, e.to_string());
+        this.events
+            .failed(instance_id, GenerationStep::Restitution, e.to_string());
         AppError::Other(e.to_string())
     })?;
 
     let restitution: Restitution = serde_json::from_value(response_json).map_err(|e| {
-        this.events.failed(instance_id, GenerationStep::Restitution, e.to_string());
+        this.events
+            .failed(instance_id, GenerationStep::Restitution, e.to_string());
         AppError::Other(e.to_string())
     })?;
 
-    this.events.done(instance_id, GenerationStep::Restitution, None);
+    this.events
+        .done(instance_id, GenerationStep::Restitution, None);
     Ok(Some(restitution))
 }
 
@@ -191,7 +199,9 @@ pub async fn maybe_generate_resume(
     instance_id: InstanceId,
     llm: Arc<dyn LlmClient>,
 ) -> Result<Option<Resume>, GenerateError> {
-    if !livrables.resume { return Ok(None); }
+    if !livrables.resume {
+        return Ok(None);
+    }
     this.events.started(instance_id, GenerationStep::Resume);
 
     let req = ExtractionRequest {
@@ -208,12 +218,14 @@ pub async fn maybe_generate_resume(
     };
 
     let response_json = llm.extract(req).await.map_err(|e| {
-        this.events.failed(instance_id, GenerationStep::Resume, e.to_string());
+        this.events
+            .failed(instance_id, GenerationStep::Resume, e.to_string());
         AppError::Other(e.to_string())
     })?;
 
     let resume: Resume = serde_json::from_value(response_json).map_err(|e| {
-        this.events.failed(instance_id, GenerationStep::Resume, e.to_string());
+        this.events
+            .failed(instance_id, GenerationStep::Resume, e.to_string());
         AppError::Other(e.to_string())
     })?;
 
@@ -231,8 +243,11 @@ pub async fn maybe_generate_cover_letter(
     instance_id: InstanceId,
     llm: Arc<dyn LlmClient>,
 ) -> Result<Option<CoverLetter>, GenerateError> {
-    if !livrables.cover_letter { return Ok(None); }
-    this.events.started(instance_id, GenerationStep::CoverLetter);
+    if !livrables.cover_letter {
+        return Ok(None);
+    }
+    this.events
+        .started(instance_id, GenerationStep::CoverLetter);
 
     let req = ExtractionRequest {
         system: Some(prompts::generate::COVER_LETTER_SYSTEM.into()),
@@ -248,15 +263,18 @@ pub async fn maybe_generate_cover_letter(
     };
 
     let response_json = llm.extract(req).await.map_err(|e| {
-        this.events.failed(instance_id, GenerationStep::CoverLetter, e.to_string());
+        this.events
+            .failed(instance_id, GenerationStep::CoverLetter, e.to_string());
         AppError::Other(e.to_string())
     })?;
 
     let cover_letter: CoverLetter = serde_json::from_value(response_json).map_err(|e| {
-        this.events.failed(instance_id, GenerationStep::CoverLetter, e.to_string());
+        this.events
+            .failed(instance_id, GenerationStep::CoverLetter, e.to_string());
         AppError::Other(e.to_string())
     })?;
 
-    this.events.done(instance_id, GenerationStep::CoverLetter, None);
+    this.events
+        .done(instance_id, GenerationStep::CoverLetter, None);
     Ok(Some(cover_letter))
 }

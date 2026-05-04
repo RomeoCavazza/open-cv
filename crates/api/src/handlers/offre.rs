@@ -1,9 +1,9 @@
+use crate::errors::ApiError;
+use crate::state::AppState;
 use axum::{
     extract::{Path, Query, State},
     response::Json,
 };
-use crate::state::AppState;
-use crate::errors::ApiError;
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
@@ -20,8 +20,16 @@ fn infer_business_category(slug: &str, title: &str) -> &'static str {
     let haystack = format!("{} {}", slug.to_lowercase(), title.to_lowercase());
 
     if [
-        "data", " ai", "ia", "intelligence artificielle", "llm",
-        "langchain", "gallica", "automation", "scientist", "machine learning",
+        "data",
+        " ai",
+        "ia",
+        "intelligence artificielle",
+        "llm",
+        "langchain",
+        "gallica",
+        "automation",
+        "scientist",
+        "machine learning",
     ]
     .iter()
     .any(|needle| haystack.contains(needle))
@@ -30,8 +38,16 @@ fn infer_business_category(slug: &str, title: &str) -> &'static str {
     }
 
     if [
-        "developpeur", "développeur", "software", "java", "api",
-        "logiciel", "full stack", "full-stack", "embarqu", "engineering",
+        "developpeur",
+        "développeur",
+        "software",
+        "java",
+        "api",
+        "logiciel",
+        "full stack",
+        "full-stack",
+        "embarqu",
+        "engineering",
     ]
     .iter()
     .any(|needle| haystack.contains(needle))
@@ -40,7 +56,11 @@ fn infer_business_category(slug: &str, title: &str) -> &'static str {
     }
 
     if [
-        "pilotage", "projet", "transformation", "strategie", "stratégie",
+        "pilotage",
+        "projet",
+        "transformation",
+        "strategie",
+        "stratégie",
     ]
     .iter()
     .any(|needle| haystack.contains(needle))

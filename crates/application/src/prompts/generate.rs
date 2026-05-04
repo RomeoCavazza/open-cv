@@ -14,7 +14,8 @@ pub const PLAN_SYSTEM: &str = "Tu es un coach RH qui prépare la stratégie d'un
                                Tu dois identifier l'angle le plus efficace, les forces à \
                                souligner, et les éventuelles faiblesses à adresser.";
 
-pub const PLAN_INSTRUCTION: &str = "Produis un plan de candidature pour cette offre, à partir des chunks de profil retenus.";
+pub const PLAN_INSTRUCTION: &str =
+    "Produis un plan de candidature pour cette offre, à partir des chunks de profil retenus.";
 
 pub const RESTITUTION_SYSTEM: &str = "Tu es un Architecte-RH Visionnaire et Expert Tech. Ton rôle n'est pas de lire l'offre, mais de la DECODER. \
                                       Tu dois agir comme un 'devin' technique qui comprend les non-dits d'une entreprise tech. \
@@ -45,5 +46,6 @@ pub const COVER_LETTER_SYSTEM: &str = "Tu rédiges des lettres de motivation en 
                                        pourquoi, clôture. Tu n'inventes rien. Tu es concret, sobre, \
                                        sans formules grandiloquentes ni emphase artificielle.";
 
-pub const COVER_LETTER_INSTRUCTION: &str = "Rédige une lettre de motivation pour cette offre, en respectant \
+pub const COVER_LETTER_INSTRUCTION: &str =
+    "Rédige une lettre de motivation pour cette offre, en respectant \
                                             le schéma fourni. Chaque paragraphe est typé.";

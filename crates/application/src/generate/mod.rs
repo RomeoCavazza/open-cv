@@ -1,16 +1,11 @@
 //! `GenerateApplicationUseCase` — Orchestrateur du pipeline.
 
-use std::sync::Arc;
 use chrono::Utc;
-use domain::{
-    Instance, InstanceId, Offre, OffreId, ProfilId,
-};
-use ports::{
-    ChunkRepo, Embedder, InstanceRepo, LlmClient, OffreRepo,
-    ProfilRepo,
-};
-use serde::{Deserialize, Serialize};
+use domain::{Instance, InstanceId, Offre, OffreId, ProfilId};
+use ports::{ChunkRepo, Embedder, InstanceRepo, LlmClient, OffreRepo, ProfilRepo};
 use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
+use std::sync::Arc;
 use tracing::info;
 
 use crate::events::{EventBus, GenerationStep};
@@ -185,9 +180,21 @@ impl GenerateApplicationUseCase {
         );
 
         let old = existing_instance.as_ref();
-        let rest = if input.livrables.restitution { None } else { old.and_then(|i| i.restitution.clone()) };
-        let resu = if input.livrables.resume { None } else { old.and_then(|i| i.resume_json.clone()) };
-        let cove = if input.livrables.cover_letter { None } else { old.and_then(|i| i.cover_letter_json.clone()) };
+        let rest = if input.livrables.restitution {
+            None
+        } else {
+            old.and_then(|i| i.restitution.clone())
+        };
+        let resu = if input.livrables.resume {
+            None
+        } else {
+            old.and_then(|i| i.resume_json.clone())
+        };
+        let cove = if input.livrables.cover_letter {
+            None
+        } else {
+            old.and_then(|i| i.cover_letter_json.clone())
+        };
 
         self.instances
             .upsert(&Instance {
@@ -211,46 +218,99 @@ impl GenerateApplicationUseCase {
             // Étape 1 : RETRIEVE
             self.events.started(instance_id, GenerationStep::Retrieve);
             let candidates = self.retrieve_chunks(&offre, profil.id).await?;
-            self.events.done(instance_id, GenerationStep::Retrieve, Some(format!("{} chunks candidats", candidates.len())));
+            self.events.done(
+                instance_id,
+                GenerationStep::Retrieve,
+                Some(format!("{} chunks candidats", candidates.len())),
+            );
 
-            if candidates.is_empty() { return Err(GenerateError::AucunChunkPertinent); }
+            if candidates.is_empty() {
+                return Err(GenerateError::AucunChunkPertinent);
+            }
 
             // Étape 2 : RERANK
             self.events.started(instance_id, GenerationStep::Rerank);
             let retained = self.rerank(&offre, &candidates, llm.clone()).await?;
-            self.events.done(instance_id, GenerationStep::Rerank, Some(format!("{} chunks retenus", retained.len())));
+            self.events.done(
+                instance_id,
+                GenerationStep::Rerank,
+                Some(format!("{} chunks retenus", retained.len())),
+            );
 
             // Étape 3 : PLAN
             self.events.started(instance_id, GenerationStep::Plan);
             let plan = self.plan(&offre, &retained, llm.clone()).await?;
-            self.events.done(instance_id, GenerationStep::Plan, Some(plan.angle.clone()));
+            self.events
+                .done(instance_id, GenerationStep::Plan, Some(plan.angle.clone()));
 
             // Étape 4 : Génération séquentielle
-            let restitution = self.maybe_generate_restitution(input.livrables, &offre, instance_id, llm.clone()).await?;
-            let resume = self.maybe_generate_resume(input.livrables, &offre, &profil, &retained, &plan, instance_id, llm.clone()).await?;
-            let cover_letter = self.maybe_generate_cover_letter(input.livrables, &offre, &profil, &retained, &plan, instance_id, llm.clone()).await?;
+            let restitution = self
+                .maybe_generate_restitution(input.livrables, &offre, instance_id, llm.clone())
+                .await?;
+            let resume = self
+                .maybe_generate_resume(
+                    input.livrables,
+                    &offre,
+                    &profil,
+                    &retained,
+                    &plan,
+                    instance_id,
+                    llm.clone(),
+                )
+                .await?;
+            let cover_letter = self
+                .maybe_generate_cover_letter(
+                    input.livrables,
+                    &offre,
+                    &profil,
+                    &retained,
+                    &plan,
+                    instance_id,
+                    llm.clone(),
+                )
+                .await?;
 
             // Étape 5 : VALIDATE
             self.events.started(instance_id, GenerationStep::Validate);
-            validate_outputs(&offre, restitution.as_ref(), resume.as_ref(), cover_letter.as_ref())?;
-            self.events.done(instance_id, GenerationStep::Validate, None);
+            validate_outputs(
+                &offre,
+                restitution.as_ref(),
+                resume.as_ref(),
+                cover_letter.as_ref(),
+            )?;
+            self.events
+                .done(instance_id, GenerationStep::Validate, None);
 
-            let mut instance = self.instances.get_by_id(instance_id).await.map_err(AppError::Repo)?
+            let mut instance = self
+                .instances
+                .get_by_id(instance_id)
+                .await
+                .map_err(AppError::Repo)?
                 .ok_or_else(|| AppError::Other("Instance introuvable après génération".into()))?;
 
-            if let Some(r) = restitution { instance.restitution = Some(serde_json::to_value(r).unwrap()); }
-            if let Some(r) = resume { instance.resume_json = Some(serde_json::to_value(r).unwrap()); }
-            if let Some(cl) = cover_letter { instance.cover_letter_json = Some(serde_json::to_value(cl).unwrap()); }
+            if let Some(r) = restitution {
+                instance.restitution = Some(serde_json::to_value(r).unwrap());
+            }
+            if let Some(r) = resume {
+                instance.resume_json = Some(serde_json::to_value(r).unwrap());
+            }
+            if let Some(cl) = cover_letter {
+                instance.cover_letter_json = Some(serde_json::to_value(cl).unwrap());
+            }
             instance.status = domain::InstanceStatus::Ready;
             instance.updated_at = Utc::now();
 
             self.events.started(instance_id, GenerationStep::Persist);
-            self.instances.upsert(&instance).await.map_err(AppError::Repo)?;
+            self.instances
+                .upsert(&instance)
+                .await
+                .map_err(AppError::Repo)?;
             self.events.done(instance_id, GenerationStep::Persist, None);
             self.events.done(instance_id, GenerationStep::Done, None);
 
             Ok(instance)
-        }.await;
+        }
+        .await;
 
         match pipeline_result {
             Ok(instance) => Ok(instance),
@@ -311,7 +371,17 @@ impl GenerateApplicationUseCase {
         instance_id: domain::InstanceId,
         llm: Arc<dyn LlmClient>,
     ) -> Result<Option<domain::Resume>, GenerateError> {
-        steps::maybe_generate_resume(self, livrables, offre, profil, retained, plan, instance_id, llm).await
+        steps::maybe_generate_resume(
+            self,
+            livrables,
+            offre,
+            profil,
+            retained,
+            plan,
+            instance_id,
+            llm,
+        )
+        .await
     }
 
     async fn maybe_generate_cover_letter(
@@ -324,7 +394,16 @@ impl GenerateApplicationUseCase {
         instance_id: domain::InstanceId,
         llm: Arc<dyn LlmClient>,
     ) -> Result<Option<domain::CoverLetter>, GenerateError> {
-        steps::maybe_generate_cover_letter(self, livrables, offre, profil, retained, plan, instance_id, llm).await
+        steps::maybe_generate_cover_letter(
+            self,
+            livrables,
+            offre,
+            profil,
+            retained,
+            plan,
+            instance_id,
+            llm,
+        )
+        .await
     }
 }
-

@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use domain::{Message, InstanceId, ProfilId};
+use domain::{InstanceId, Message, ProfilId};
 use ports::{MessageRepo, RepoError};
 use sqlx::PgPool;
 
