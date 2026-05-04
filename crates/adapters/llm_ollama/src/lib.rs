@@ -1,4 +1,5 @@
 use async_trait::async_trait;
+use base64::Engine;
 use ports::{CompletionRequest, CompletionResponse, ExtractionRequest, LlmClient, LlmError, Role};
 use serde::{Deserialize, Serialize};
 use tracing::instrument;
@@ -39,6 +40,8 @@ struct OllamaChatRequest {
 struct OllamaMessage {
     role: String,
     content: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    images: Option<Vec<String>>,
 }
 
 #[derive(Deserialize)]
@@ -65,15 +68,31 @@ impl LlmClient for OllamaClient {
             messages.push(OllamaMessage {
                 role: "system".into(),
                 content: sys,
+                images: None,
             });
         }
         for m in req.messages {
+            let mut text_content = String::new();
+            let mut images = Vec::new();
+            for content in m.content {
+                match content {
+                    ports::MessageContent::Text(t) => text_content.push_str(&t),
+                    ports::MessageContent::Image { data, .. } => {
+                        images.push(base64::engine::general_purpose::STANDARD.encode(data));
+                    }
+                }
+            }
             messages.push(OllamaMessage {
                 role: match m.role {
                     Role::User => "user".into(),
                     Role::Assistant => "assistant".into(),
                 },
-                content: m.content,
+                content: text_content,
+                images: if images.is_empty() {
+                    None
+                } else {
+                    Some(images)
+                },
             });
         }
 
@@ -132,6 +151,7 @@ impl LlmClient for OllamaClient {
             messages.push(OllamaMessage {
                 role: "system".into(),
                 content: sys,
+                images: None,
             });
         }
 
@@ -141,9 +161,28 @@ impl LlmClient for OllamaClient {
             serde_json::to_string_pretty(&req.json_schema).unwrap()
         );
 
+        let mut text_input = instruction;
+        let mut images = Vec::new();
+        for content in req.input {
+            match content {
+                ports::MessageContent::Text(t) => {
+                    text_input.push_str("\n\n---\n\n");
+                    text_input.push_str(&t);
+                }
+                ports::MessageContent::Image { data, .. } => {
+                    images.push(base64::engine::general_purpose::STANDARD.encode(data));
+                }
+            }
+        }
+
         messages.push(OllamaMessage {
             role: "user".into(),
-            content: format!("{}\n\n---\n\n{}", instruction, req.input),
+            content: text_input,
+            images: if images.is_empty() {
+                None
+            } else {
+                Some(images)
+            },
         });
 
         let mut cleaned_schema = req.json_schema.clone();
@@ -152,12 +191,15 @@ impl LlmClient for OllamaClient {
         if let Some(obj) = cleaned_schema.as_object_mut() {
             obj.remove("$schema");
             obj.remove("title");
-            
+
             // Si le schéma contient des $ref, Ollama risque de planter (invalid JSON schema).
             // On vérifie récursivement ou on cherche simplement la string "$ref".
             let schema_str = serde_json::to_string(&cleaned_schema).unwrap_or_default();
             if schema_str.contains("\"$ref\"") {
-                tracing::warn!("Schema for {} contains $ref, falling back to 'json' format for Ollama", req.schema_name);
+                tracing::warn!(
+                    "Schema for {} contains $ref, falling back to 'json' format for Ollama",
+                    req.schema_name
+                );
                 use_full_schema = false;
             }
         }
@@ -194,7 +236,7 @@ impl LlmClient for OllamaClient {
             tracing::warn!("Ollama rejected the JSON schema. Retrying with format: 'json'...");
             let mut fallback_body = body;
             fallback_body.format = Some(serde_json::json!("json"));
-            
+
             resp = self
                 .http
                 .post(&url)
@@ -202,7 +244,7 @@ impl LlmClient for OllamaClient {
                 .send()
                 .await
                 .map_err(|e| LlmError::Http(e.to_string()))?;
-            
+
             status = resp.status().as_u16();
             raw = resp
                 .text()

@@ -65,7 +65,7 @@ Application generation runs through the central `GenerateApplicationUseCase`:
 
 ## 5. The `LlmClient` Trait
 
-All AI integration is abstracted behind a single trait in `crates/ports/src/llm.rs`:
+All AI integration is abstracted behind a single trait in `crates/ports/src/llm.rs`. The system now supports **multimodal inputs** (Text + Images via Base64).
 
 ```rust
 #[async_trait]
@@ -74,6 +74,7 @@ pub trait LlmClient: Send + Sync {
     async fn complete(&self, req: CompletionRequest) -> Result<CompletionResponse, LlmError>;
 
     /// Structured generation: a JSON schema goes in, JSON comes out.
+    /// Supports Vec<MessageContent> for multimodal inputs.
     async fn extract(&self, req: ExtractionRequest) -> Result<serde_json::Value, LlmError>;
 
     fn name(&self) -> &'static str;

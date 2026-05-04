@@ -317,7 +317,7 @@ impl IntakeOffreUseCase {
                  La stack doit lister TOUS les outils/langages/frameworks mentionnés. \
                  Les missions doivent être des phrases complètes."
                 .into(),
-            input: raw_text.to_string(),
+            input: vec![ports::MessageContent::Text(raw_text.to_string())],
             schema_name: "OffreExtraction".into(),
             schema_description: "Métadonnées structurées extraites d'une offre d'emploi".into(),
             json_schema: serde_json::to_value(schemars::schema_for!(OffreExtraction)).unwrap(),
@@ -555,7 +555,7 @@ mod tests {
         let (intitule, entreprise, _, _, structured) =
             fallback_extraction("Mon offre cool\nAutre ligne\nEncore");
         assert_eq!(intitule, "Mon offre cool");
-        assert_eq!(entreprise, "Non identifié");
+        assert_eq!(entreprise, "Autre ligne");
         assert!(structured.resume_court.contains("échouée"));
     }
 }

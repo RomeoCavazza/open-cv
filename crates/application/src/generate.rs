@@ -69,7 +69,6 @@ impl Livrables {
     }
 }
 
-
 // ─────────────────────────────────────────────────────────────────
 // Erreurs spécifiques au use case
 // ─────────────────────────────────────────────────────────────────
@@ -208,9 +207,21 @@ impl GenerateApplicationUseCase {
         );
 
         let old = existing_instance.as_ref();
-        let rest = if input.livrables.restitution { None } else { old.and_then(|i| i.restitution.clone()) };
-        let resu = if input.livrables.resume { None } else { old.and_then(|i| i.resume_json.clone()) };
-        let cove = if input.livrables.cover_letter { None } else { old.and_then(|i| i.cover_letter_json.clone()) };
+        let rest = if input.livrables.restitution {
+            None
+        } else {
+            old.and_then(|i| i.restitution.clone())
+        };
+        let resu = if input.livrables.resume {
+            None
+        } else {
+            old.and_then(|i| i.resume_json.clone())
+        };
+        let cove = if input.livrables.cover_letter {
+            None
+        } else {
+            old.and_then(|i| i.cover_letter_json.clone())
+        };
 
         info!(
             "Init génération: restitution={} resume={} cover_letter={} (restitution_input={})",
@@ -302,7 +313,8 @@ impl GenerateApplicationUseCase {
                 resume.as_ref(),
                 cover_letter.as_ref(),
             )?;
-            self.events.done(instance_id, GenerationStep::Validate, None);
+            self.events
+                .done(instance_id, GenerationStep::Validate, None);
 
             let mut instance = self
                 .instances
@@ -311,17 +323,17 @@ impl GenerateApplicationUseCase {
                 .map_err(AppError::Repo)?
                 .ok_or_else(|| AppError::Other("Instance introuvable après génération".into()))?;
 
-            if let Some(r) = restitution { 
+            if let Some(r) = restitution {
                 info!("Enregistrement: Restitution OK");
-                instance.restitution = Some(serde_json::to_value(r).unwrap()); 
+                instance.restitution = Some(serde_json::to_value(r).unwrap());
             }
-            if let Some(r) = resume { 
+            if let Some(r) = resume {
                 info!("Enregistrement: Resume OK");
-                instance.resume_json = Some(serde_json::to_value(r).unwrap()); 
+                instance.resume_json = Some(serde_json::to_value(r).unwrap());
             }
-            if let Some(cl) = cover_letter { 
+            if let Some(cl) = cover_letter {
                 info!("Enregistrement: CoverLetter OK");
-                instance.cover_letter_json = Some(serde_json::to_value(cl).unwrap()); 
+                instance.cover_letter_json = Some(serde_json::to_value(cl).unwrap());
             }
             instance.status = domain::InstanceStatus::Ready;
             instance.updated_at = Utc::now();
@@ -343,7 +355,12 @@ impl GenerateApplicationUseCase {
         match pipeline_result {
             Ok(instance) => Ok(instance),
             Err(error) => {
-                if let Ok(Some(mut instance)) = self.instances.get_by_id(instance_id).await.map_err(AppError::Repo) {
+                if let Ok(Some(mut instance)) = self
+                    .instances
+                    .get_by_id(instance_id)
+                    .await
+                    .map_err(AppError::Repo)
+                {
                     instance.status = domain::InstanceStatus::Failed;
                     instance.updated_at = Utc::now();
                     let _ = self.instances.upsert(&instance).await;
@@ -418,7 +435,7 @@ impl GenerateApplicationUseCase {
                  pour cette offre, par ordre de priorité décroissante.",
                 candidates.len()
             ),
-            input: format!(
+            input: vec![ports::MessageContent::Text(format!(
                 "## OFFRE\nEntreprise: {}\nIntitulé: {}\nMissions: {}\nStack: {}\nExigences: {}\n\n## CHUNKS CANDIDATS\n{}",
                 offre.entreprise,
                 offre.intitule,
@@ -426,7 +443,7 @@ impl GenerateApplicationUseCase {
                 offre.structured.stack.join(", "),
                 offre.structured.exigences.join(" ; "),
                 listing
-            ),
+            ))],
             schema_name: "RerankResponse".into(),
             schema_description: "Sélection des chunks pertinents avec justification".into(),
             json_schema: serde_json::to_value(schemars::schema_for!(RerankResponse)).unwrap(),
@@ -489,10 +506,10 @@ impl GenerateApplicationUseCase {
             instruction: "Produis un plan de candidature pour cette offre, à partir des \
                  chunks de profil retenus."
                 .into(),
-            input: format!(
+            input: vec![ports::MessageContent::Text(format!(
                 "## OFFRE\n{}\n## ENTREPRISE: {}\n## INTITULÉ: {}\n\n## CHUNKS RETENUS\n{}",
                 offre.structured.resume_court, offre.entreprise, offre.intitule, chunks_listing,
-            ),
+            ))],
             schema_name: "CandidaturePlan".into(),
             schema_description: "Stratégie de la candidature".into(),
             json_schema: serde_json::to_value(schemars::schema_for!(CandidaturePlan)).unwrap(),
@@ -544,14 +561,14 @@ impl GenerateApplicationUseCase {
                  - 'fit_score' : Jugement d'expert sur la pertinence du combo missions/moyens.\
                  - 'exigences' : Liste les pré-requis critiques et les soft skills indispensables."
                 .into(),
-            input: format!(
+            input: vec![ports::MessageContent::Text(format!(
                 "Entreprise: {}\nIntitulé: {}\nLocalisation: {}\nContrat: {}\n\nTexte brut de l'offre:\n{}",
                 offre.entreprise,
                 offre.intitule,
                 offre.localisation.as_deref().unwrap_or("?"),
                 offre.contrat.as_deref().unwrap_or("?"),
                 truncate(&offre.raw_text, 12000),
-            ),
+            ))],
             schema_name: "Restitution".into(),
             schema_description: "Fiche d'analyse haute-fidélité d'une offre".into(),
             json_schema: serde_json::to_value(schemars::schema_for!(Restitution)).unwrap(),
@@ -603,7 +620,9 @@ impl GenerateApplicationUseCase {
             instruction: "Génère un CV adapté à cette offre, en respectant le schéma fourni. \
                  Mets en avant les expériences/projets/compétences les plus pertinents."
                 .into(),
-            input: build_generation_input(offre, profil, retained, plan),
+            input: vec![ports::MessageContent::Text(build_generation_input(
+                offre, profil, retained, plan,
+            ))],
             schema_name: "Resume".into(),
             schema_description: "CV structuré, contenu adapté à l'offre".into(),
             json_schema: serde_json::to_value(schemars::schema_for!(Resume)).unwrap(),
@@ -658,7 +677,9 @@ impl GenerateApplicationUseCase {
             instruction: "Rédige une lettre de motivation pour cette offre, en respectant \
                  le schéma fourni. Chaque paragraphe est typé."
                 .into(),
-            input: build_generation_input(offre, profil, retained, plan),
+            input: vec![ports::MessageContent::Text(build_generation_input(
+                offre, profil, retained, plan,
+            ))],
             schema_name: "CoverLetter".into(),
             schema_description: "Lettre structurée par paragraphes typés".into(),
             json_schema: serde_json::to_value(schemars::schema_for!(CoverLetter)).unwrap(),

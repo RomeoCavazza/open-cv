@@ -74,7 +74,12 @@ pub async fn ingest_handler(
                 if let Some(config) = &payload.config {
                     if config.analysis || config.resume || config.cover {
                         // On récupère l'instance qu'on vient de créer (ou l'existante)
-                        if let Some(instance) = state.instance_repo.get_by_id(output.instance_id).await.map_err(|e| ApiError::Internal(e.to_string()))? {
+                        if let Some(instance) = state
+                            .instance_repo
+                            .get_by_id(output.instance_id)
+                            .await
+                            .map_err(|e| ApiError::Internal(e.to_string()))?
+                        {
                             let gen_input = application::generate::GenerateInput {
                                 offre_id: instance.offre_id,
                                 profil_id: profil.id,
@@ -85,9 +90,12 @@ pub async fn ingest_handler(
                                     cover_letter: config.cover,
                                 },
                             };
-                            
+
                             // On lance la génération de manière synchrone
-                            let _ = state.generate_uc.execute(gen_input, llm_provider.clone()).await;
+                            let _ = state
+                                .generate_uc
+                                .execute(gen_input, llm_provider.clone())
+                                .await;
                         }
                     }
                 }

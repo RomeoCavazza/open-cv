@@ -1,4 +1,40 @@
 // chat.js - Manages the AI chat interaction
+let pendingAttachments = [];
+
+function updateAttachmentsUI() {
+    const container = document.getElementById('ai-chat-attachments');
+    if (!container) return;
+    
+    if (pendingAttachments.length === 0) {
+        container.style.display = 'none';
+        container.innerHTML = '';
+        return;
+    }
+    
+    container.style.display = 'flex';
+    container.style.cssText = 'display:flex; gap:8px; padding:8px; overflow-x:auto; background:#f8fafc; border-bottom:1px solid #e2e8f0;';
+    container.innerHTML = '';
+    
+    pendingAttachments.forEach((file, index) => {
+        const chip = document.createElement('div');
+        chip.style.cssText = 'display:flex; align-items:center; gap:6px; background:white; padding:4px 8px; border-radius:16px; border:1px solid #cbd5e1; font-size:11px; white-space:nowrap;';
+        
+        const name = document.createElement('span');
+        name.textContent = file.name.length > 15 ? file.name.substring(0, 12) + '...' : file.name;
+        
+        const remove = document.createElement('button');
+        remove.textContent = '×';
+        remove.style.cssText = 'border:none; background:none; cursor:pointer; font-weight:bold; color:#64748b; font-size:14px;';
+        remove.onclick = () => {
+            pendingAttachments.splice(index, 1);
+            updateAttachmentsUI();
+        };
+        
+        chip.appendChild(name);
+        chip.appendChild(remove);
+        container.appendChild(chip);
+    });
+}
 function appendMessage(role, text) {
     const sidebarBody = document.querySelector('.ai-sidebar-body');
     if (!sidebarBody) return;
@@ -130,7 +166,12 @@ async function sendChatMessage() {
             body: JSON.stringify({
                 message,
                 instance_id,
-                llm_provider: window.state?.selectedLlmProvider || localStorage.getItem('recruitai_llm') || 'ollama'
+                llm_provider: window.state?.selectedLlmProvider || localStorage.getItem('recruitai_llm') || 'ollama',
+                attachments: pendingAttachments.map(a => ({
+                    name: a.name,
+                    content_type: a.type,
+                    data: a.dataUrl
+                }))
             })
         });
 
@@ -156,6 +197,8 @@ async function sendChatMessage() {
                 || (await fetch('/api/profile/active').then(r => r.json())).notes?.chat_history;
             if (Array.isArray(persistedHistory) && persistedHistory.length > 0) {
                 console.log("[Chat] Rendering persisted history:", persistedHistory.length, "entries");
+                pendingAttachments = [];
+                updateAttachmentsUI();
                 renderChatHistory(persistedHistory);
             } else {
                 console.warn("[Chat] No persisted history found in response, falling back to local simulation");
@@ -192,6 +235,33 @@ async function sendChatMessage() {
 function initChat() {
     console.log("[Chat] Initializing Event Delegation...");
     
+    // File attachment handling
+    document.addEventListener('change', async (e) => {
+        if (e.target.id === 'ai-chat-file-input') {
+            const files = Array.from(e.target.files || []);
+            for (const file of files) {
+                const reader = new FileReader();
+                reader.onload = (rev) => {
+                    pendingAttachments.push({
+                        name: file.name,
+                        type: file.type,
+                        dataUrl: rev.target.result
+                    });
+                    updateAttachmentsUI();
+                };
+                reader.readAsDataURL(file);
+            }
+            e.target.value = '';
+        }
+    });
+
+    document.addEventListener('click', (e) => {
+        const btn = e.target.closest('#ai-chat-attach-btn');
+        if (btn) {
+            document.getElementById('ai-chat-file-input').click();
+        }
+    });
+
     // Global listener for the Send Button (Event Delegation)
     document.addEventListener('click', (e) => {
         const btn = e.target.closest('#chat-send-btn');

@@ -19,7 +19,7 @@ use axum::{
 use ports::{InstanceRepo, OffreRepo};
 use serde::Deserialize;
 use tower_http::{services::ServeDir, trace::TraceLayer};
-use tracing::{info, error};
+use tracing::{error, info};
 
 mod errors;
 mod state;
@@ -124,7 +124,8 @@ async fn main() -> anyhow::Result<()> {
     // Embedder (Utilise Ollama avec mxbai-embed-large en local)
     let embed_base =
         std::env::var("OLLAMA_BASE_URL").unwrap_or_else(|_| "http://localhost:11434".into());
-    let embed_model = std::env::var("OLLAMA_EMBED_MODEL").unwrap_or_else(|_| "mxbai-embed-large".into());
+    let embed_model =
+        std::env::var("OLLAMA_EMBED_MODEL").unwrap_or_else(|_| "mxbai-embed-large".into());
     info!("Embedder: Ollama activé ({} @ {})", embed_model, embed_base);
 
     let embedder: Arc<dyn ports::Embedder> = Arc::new(adapter_llm_ollama::OllamaClient::new(
@@ -207,8 +208,14 @@ async fn main() -> anyhow::Result<()> {
             "/api/profile/active/cover-letter-template",
             get(get_active_profile_cover_letter_template_handler),
         )
-        .route("/api/profile/active/annexes", get(list_annexes_handler).post(upload_annexe_handler))
-        .route("/api/profile/active/annexes/:id", get(download_annexe_handler).delete(delete_annexe_handler))
+        .route(
+            "/api/profile/active/annexes",
+            get(list_annexes_handler).post(upload_annexe_handler),
+        )
+        .route(
+            "/api/profile/active/annexes/:id",
+            get(download_annexe_handler).delete(delete_annexe_handler),
+        )
         .route("/api/instances/:slug", get(get_instance_by_slug))
         .route("/api/instances/:slug/resume", get(get_instance_resume))
         .route(
@@ -237,13 +244,13 @@ async fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
-
 async fn generate_instance(
     State(state): State<AppState>,
     Path(slug_str): Path<String>,
     Query(params): Query<std::collections::HashMap<String, String>>,
 ) -> Result<StatusCode, ApiError> {
-    let slug = domain::Slug::parse(slug_str.clone()).map_err(|e| ApiError::BadRequest(e.to_string()))?;
+    let slug =
+        domain::Slug::parse(slug_str.clone()).map_err(|e| ApiError::BadRequest(e.to_string()))?;
 
     let llm_provider = params
         .get("llm_provider")
@@ -257,9 +264,15 @@ async fn generate_instance(
         .map_err(|e| ApiError::Internal(e.to_string()))?
         .ok_or_else(|| ApiError::NotFound(format!("Instance {} inconnue", slug_str)))?;
 
-    let restitution = params.get("restitution").map(|v| v == "true").unwrap_or(true);
+    let restitution = params
+        .get("restitution")
+        .map(|v| v == "true")
+        .unwrap_or(true);
     let resume = params.get("resume").map(|v| v == "true").unwrap_or(true);
-    let cover_letter = params.get("cover_letter").map(|v| v == "true").unwrap_or(true);
+    let cover_letter = params
+        .get("cover_letter")
+        .map(|v| v == "true")
+        .unwrap_or(true);
 
     let input = application::generate::GenerateInput {
         offre_id: instance.offre_id,
@@ -275,7 +288,9 @@ async fn generate_instance(
     tokio::spawn(async move {
         match state.generate_uc.execute(input, llm_provider).await {
             Ok(_) => info!(slug = %slug_str, "génération terminée avec succès"),
-            Err(e) => error!(slug = %slug_str, error = %e, "échec de la génération en arrière-plan"),
+            Err(e) => {
+                error!(slug = %slug_str, error = %e, "échec de la génération en arrière-plan")
+            }
         }
     });
 
@@ -506,6 +521,7 @@ async fn chat_handler(
         state.offre_repo.clone(),
         state.instance_repo.clone(),
         state.profil_repo.clone(),
+        state.annexe_repo.clone(),
         state.chunk_repo.clone(),
         state.embedder.clone(),
         state.llm_registry.as_ref().clone(),

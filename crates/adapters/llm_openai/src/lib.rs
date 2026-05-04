@@ -1,4 +1,5 @@
 use async_trait::async_trait;
+use base64::Engine;
 use ports::{CompletionRequest, CompletionResponse, ExtractionRequest, LlmClient, LlmError, Role};
 use serde::{Deserialize, Serialize};
 use tracing::instrument;
@@ -61,7 +62,28 @@ struct OpenAiRequest {
 #[derive(Serialize)]
 struct OpenAiMessage {
     role: String,
-    content: String,
+    content: OpenAiContent,
+}
+
+#[derive(Serialize)]
+#[serde(untagged)]
+enum OpenAiContent {
+    String(String),
+    Blocks(Vec<OpenAiContentBlock>),
+}
+
+#[derive(Serialize)]
+#[serde(tag = "type")]
+enum OpenAiContentBlock {
+    #[serde(rename = "text")]
+    Text { text: String },
+    #[serde(rename = "image_url")]
+    ImageUrl { image_url: OpenAiImageUrl },
+}
+
+#[derive(Serialize)]
+struct OpenAiImageUrl {
+    url: String, // "data:image/jpeg;base64,..."
 }
 
 #[derive(Serialize)]
@@ -126,7 +148,7 @@ impl LlmClient for OpenAiClient {
         if let Some(sys) = req.system {
             messages.push(OpenAiMessage {
                 role: "system".into(),
-                content: sys,
+                content: OpenAiContent::String(sys),
             });
         }
         for m in req.messages {
@@ -135,7 +157,27 @@ impl LlmClient for OpenAiClient {
                     Role::User => "user".into(),
                     Role::Assistant => "assistant".into(),
                 },
-                content: m.content,
+                content: OpenAiContent::Blocks(
+                    m.content
+                        .iter()
+                        .map(|c| match c {
+                            ports::MessageContent::Text(text) => {
+                                OpenAiContentBlock::Text { text: text.clone() }
+                            }
+                            ports::MessageContent::Image { data, content_type } => {
+                                OpenAiContentBlock::ImageUrl {
+                                    image_url: OpenAiImageUrl {
+                                        url: format!(
+                                            "data:{};base64,{}",
+                                            content_type,
+                                            base64::engine::general_purpose::STANDARD.encode(data)
+                                        ),
+                                    },
+                                }
+                            }
+                        })
+                        .collect(),
+                ),
             });
         }
 
@@ -199,19 +241,39 @@ impl LlmClient for OpenAiClient {
         if let Some(sys) = req.system {
             messages.push(OpenAiMessage {
                 role: "system".into(),
-                content: sys,
+                content: OpenAiContent::String(sys),
             });
         }
 
-        let user_content = if req.instruction.is_empty() {
-            req.input.clone()
-        } else {
-            format!("{}\n\n---\n\n{}", req.instruction, req.input)
-        };
-
         messages.push(OpenAiMessage {
             role: "user".into(),
-            content: user_content,
+            content: OpenAiContent::Blocks({
+                let mut blocks = Vec::new();
+                if !req.instruction.is_empty() {
+                    blocks.push(OpenAiContentBlock::Text {
+                        text: req.instruction.clone(),
+                    });
+                }
+                for input_content in req.input {
+                    match input_content {
+                        ports::MessageContent::Text(text) => {
+                            blocks.push(OpenAiContentBlock::Text { text })
+                        }
+                        ports::MessageContent::Image { data, content_type } => {
+                            blocks.push(OpenAiContentBlock::ImageUrl {
+                                image_url: OpenAiImageUrl {
+                                    url: format!(
+                                        "data:{};base64,{}",
+                                        content_type,
+                                        base64::engine::general_purpose::STANDARD.encode(data)
+                                    ),
+                                },
+                            })
+                        }
+                    }
+                }
+                blocks
+            }),
         });
 
         let body = OpenAiRequest {
@@ -219,7 +281,9 @@ impl LlmClient for OpenAiClient {
             messages,
             max_tokens: req.max_tokens,
             temperature: None,
-            response_format: if req.json_schema.is_string() && req.json_schema.as_str() == Some("json") {
+            response_format: if req.json_schema.is_string()
+                && req.json_schema.as_str() == Some("json")
+            {
                 Some(OpenAiResponseFormat {
                     format_type: "json_object".into(),
                     json_schema: None,

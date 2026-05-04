@@ -18,6 +18,7 @@ pub trait AnnexeRepo: Send + Sync {
 pub trait OffreRepo: Send + Sync {
     async fn get_by_id(&self, id: OffreId) -> Result<Option<Offre>, RepoError>;
     async fn get_by_slug(&self, slug: &Slug) -> Result<Option<Offre>, RepoError>;
+    async fn list_all(&self) -> Result<Vec<Offre>, RepoError>;
     async fn list_recent(&self, limit: u32) -> Result<Vec<Offre>, RepoError>;
     async fn upsert(&self, offre: &Offre) -> Result<(), RepoError>;
     async fn count(&self) -> Result<u64, RepoError>;

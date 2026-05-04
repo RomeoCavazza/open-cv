@@ -12,9 +12,7 @@ pub mod generate;
 pub mod intake;
 
 pub use events::{EventBus, GenerationEvent, GenerationStep, StepStatus};
-pub use generate::{
-    GenerateApplicationUseCase, GenerateError, GenerateInput, Livrables,
-};
+pub use generate::{GenerateApplicationUseCase, GenerateError, GenerateInput, Livrables};
 pub use intake::{IntakeInput, IntakeOffreUseCase, IntakeOutput};
 
 #[derive(Debug, Error)]

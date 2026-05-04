@@ -7,6 +7,7 @@ name = "adapter-llm-claude"
 version = "0.1.0"
 dependencies = [
  "async-trait",
+ "base64",
  "domain",
  "ports",
  "reqwest",
@@ -23,6 +24,7 @@ name = "adapter-llm-ollama"
 version = "0.1.0"
 dependencies = [
  "async-trait",
+ "base64",
  "ports",
  "reqwest",
  "serde",
@@ -36,6 +38,7 @@ name = "adapter-llm-openai"
 version = "0.1.0"
 dependencies = [
  "async-trait",
+ "base64",
  "ports",
  "reqwest",
  "schemars",
@@ -156,6 +159,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "async-trait",
+ "base64",
  "chrono",
  "domain",
  "ports",
@@ -1541,6 +1545,7 @@ name = "ports"
 version = "0.1.0"
 dependencies = [
  "async-trait",
+ "base64",
  "domain",
  "schemars",
  "serde",

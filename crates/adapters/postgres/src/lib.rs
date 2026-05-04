@@ -5,7 +5,7 @@
 
 use async_trait::async_trait;
 use domain::{
-    Annexe, AnnexeId, Instance, InstanceId, InstanceStatus, Offre, OffreId, OffreStructured, Profil,
+    Annexe, AnnexeId, Instance, InstanceId, InstanceStatus, Offre, OffreId, OffreStructured,
     ProfilId, Slug,
 };
 use ports::{AnnexeRepo, InstanceRepo, OffreRepo, RepoError};
@@ -97,6 +97,44 @@ impl OffreRepo for OffreRepoPg {
             })
         })
         .transpose()
+    }
+
+    async fn list_all(&self) -> Result<Vec<Offre>, RepoError> {
+        let rows = sqlx::query!(
+            r#"
+            SELECT id, slug, source_url, source_host, source_hash,
+                   entreprise, intitule, localisation, contrat,
+                   raw_text, structured, scraped_at, last_seen_at, closed_at, categorie
+            FROM offres
+            ORDER BY scraped_at DESC
+            "#
+        )
+        .fetch_all(&self.pool)
+        .await
+        .map_err(map_sqlx)?;
+
+        rows.into_iter()
+            .map(|r| {
+                Ok(Offre {
+                    id: OffreId::from_uuid(r.id),
+                    slug: Slug::parse(r.slug).map_err(|e| RepoError::Other(e.to_string()))?,
+                    source_url: r.source_url,
+                    source_host: r.source_host,
+                    source_hash: r.source_hash,
+                    entreprise: r.entreprise,
+                    intitule: r.intitule,
+                    localisation: r.localisation,
+                    contrat: r.contrat,
+                    raw_text: r.raw_text,
+                    structured: serde_json::from_value::<OffreStructured>(r.structured)
+                        .map_err(|e| RepoError::Other(e.to_string()))?,
+                    scraped_at: r.scraped_at,
+                    last_seen_at: r.last_seen_at,
+                    closed_at: r.closed_at,
+                    categorie: r.categorie,
+                })
+            })
+            .collect()
     }
 
     async fn list_recent(&self, limit: u32) -> Result<Vec<Offre>, RepoError> {
@@ -365,7 +403,12 @@ impl InstanceRepo for InstanceRepoPg {
             instance.id,
             instance.slug.as_str(),
             instance.notes.to_string().len(),
-            instance.notes.get("chat_history").and_then(|h| h.as_array()).map(|a| a.len()).unwrap_or(0)
+            instance
+                .notes
+                .get("chat_history")
+                .and_then(|h| h.as_array())
+                .map(|a| a.len())
+                .unwrap_or(0)
         );
         sqlx::query(
             r#"
@@ -469,7 +512,7 @@ impl AnnexeRepoPg {
 }
 
 #[async_trait::async_trait]
-impl ports::AnnexeRepo for AnnexeRepoPg {
+impl AnnexeRepo for AnnexeRepoPg {
     async fn get_by_id(&self, id: AnnexeId) -> Result<Option<Annexe>, RepoError> {
         let row = sqlx::query!(
             r#"

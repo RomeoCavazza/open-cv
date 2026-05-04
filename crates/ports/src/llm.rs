@@ -27,9 +27,30 @@ pub struct CompletionResponse {
 }
 
 #[derive(Debug, Clone)]
+pub enum MessageContent {
+    Text(String),
+    Image { data: Vec<u8>, content_type: String },
+}
+
+#[derive(Debug, Clone)]
 pub struct Message {
     pub role: Role,
-    pub content: String,
+    pub content: Vec<MessageContent>,
+}
+
+impl Message {
+    pub fn user(text: impl Into<String>) -> Self {
+        Self {
+            role: Role::User,
+            content: vec![MessageContent::Text(text.into())],
+        }
+    }
+    pub fn assistant(text: impl Into<String>) -> Self {
+        Self {
+            role: Role::Assistant,
+            content: vec![MessageContent::Text(text.into())],
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -49,7 +70,7 @@ pub struct ChatRequest {
 pub struct ExtractionRequest {
     pub system: Option<String>,
     pub instruction: String,
-    pub input: String,
+    pub input: Vec<MessageContent>,
     pub schema_name: String,
     pub schema_description: String,
     pub json_schema: serde_json::Value,

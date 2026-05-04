@@ -1,5 +1,8 @@
+use base64::Engine;
 use domain::Instance;
-use ports::{ChunkRepo, EmbedMode, Embedder, ExtractionRequest, InstanceRepo, LlmClient, ProfilRepo};
+use ports::{
+    ChunkRepo, EmbedMode, Embedder, ExtractionRequest, InstanceRepo, LlmClient, ProfilRepo,
+};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tracing::info;
@@ -11,6 +14,15 @@ pub struct ChatRequest {
     pub message: String,
     pub instance_id: Option<String>,
     pub llm_provider: String,
+    #[serde(default)]
+    pub attachments: Vec<ChatAttachment>,
+}
+
+#[derive(Debug, Deserialize, Clone)]
+pub struct ChatAttachment {
+    pub name: String,
+    pub content_type: String,
+    pub data: String, // Base64 (data:image/jpeg;base64,...)
 }
 
 #[derive(Debug, Serialize)]
@@ -44,6 +56,7 @@ pub struct ChatWithApplicationUseCase {
     pub offre_repo: Arc<dyn ports::OffreRepo>,
     pub instance_repo: Arc<dyn InstanceRepo>,
     pub profil_repo: Arc<dyn ProfilRepo>,
+    pub annexe_repo: Arc<dyn ports::AnnexeRepo>,
     pub chunk_repo: Arc<dyn ChunkRepo>,
     pub embedder: Arc<dyn Embedder>,
     pub llm_registry: std::collections::HashMap<String, Arc<dyn LlmClient>>,
@@ -54,6 +67,7 @@ impl ChatWithApplicationUseCase {
         offre_repo: Arc<dyn ports::OffreRepo>,
         instance_repo: Arc<dyn InstanceRepo>,
         profil_repo: Arc<dyn ProfilRepo>,
+        annexe_repo: Arc<dyn ports::AnnexeRepo>,
         chunk_repo: Arc<dyn ChunkRepo>,
         embedder: Arc<dyn Embedder>,
         llm_registry: std::collections::HashMap<String, Arc<dyn LlmClient>>,
@@ -62,6 +76,7 @@ impl ChatWithApplicationUseCase {
             offre_repo,
             instance_repo,
             profil_repo,
+            annexe_repo,
             chunk_repo,
             embedder,
             llm_registry,
@@ -78,7 +93,11 @@ impl ChatWithApplicationUseCase {
         self.execute_global_chat(req).await
     }
 
-    async fn execute_instance_chat(&self, instance_id: &str, req: ChatRequest) -> anyhow::Result<ChatResponse> {
+    async fn execute_instance_chat(
+        &self,
+        instance_id: &str,
+        req: ChatRequest,
+    ) -> anyhow::Result<ChatResponse> {
         // 1. Récupérer l'instance actuelle
         let instance_uuid = uuid::Uuid::parse_str(instance_id)?;
         let mut instance = self
@@ -104,7 +123,10 @@ impl ChatWithApplicationUseCase {
         let wants_identity = Self::wants_identity(&req.message);
 
         let chat_history = Self::extract_chat_history(&instance.notes);
-        info!("Chat (Instance): Historique extrait ({} entrées)", chat_history.len());
+        info!(
+            "Chat (Instance): Historique extrait ({} entrées)",
+            chat_history.len()
+        );
 
         // 1c. SAUVEGARDER LE MESSAGE UTILISATEUR IMMÉDIATEMENT
         Self::push_chat_history(&mut instance.notes, "user", &req.message);
@@ -115,7 +137,9 @@ impl ChatWithApplicationUseCase {
         let llm = self.get_llm(&req.llm_provider)?;
 
         // 3. RAG (Fragments spécifiques)
-        let rag_context = self.get_rag_context(instance.profil_id, &req.message).await?;
+        let rag_context = self
+            .get_rag_context(instance.profil_id, &req.message)
+            .await?;
 
         // 4. Construire le prompt selon l'intention
         let system_prompt = if wants_mutation {
@@ -152,8 +176,9 @@ impl ChatWithApplicationUseCase {
 
         let history_prompt = Self::render_chat_history_for_prompt(&chat_history);
 
-        let user_prompt = format!(
+        let mut user_input = vec![ports::MessageContent::Text(format!(
             "IDENTITÉ DE L'UTILISATEUR (Profil complet):\n{}\n\n\
+            ANNEXES DISPONIBLES (en DB):\n{}\n\n\
             OFFRE CIBLÉE (fiche brute et structurée):\n{}\n\n\
             ANALYSE DE L'OFFRE CIBLÉE (Restitution):\n{}\n\n\
             FRAGMENTS DE PARCOURS (RAG):\n{}\n\n\
@@ -162,6 +187,7 @@ impl ChatWithApplicationUseCase {
             JSON ACTUEL DU CV: {}\n\n\
             JSON ACTUEL DE LA LETTRE: {}",
             serde_json::to_string_pretty(&Self::build_profile_prompt_context(&profil))?,
+            serde_json::to_string_pretty(&self.annexe_repo.list_by_profil_id(profil.id).await?)?,
             serde_json::to_string_pretty(&Self::build_offer_prompt_context(&offre))?,
             serde_json::to_string_pretty(&instance.restitution)?,
             rag_context,
@@ -169,15 +195,32 @@ impl ChatWithApplicationUseCase {
             req.message,
             serde_json::to_string_pretty(&instance.resume_json)?,
             serde_json::to_string_pretty(&instance.cover_letter_json)?
-        );
+        ))];
+
+        // Ajouter les attachments de la requête (Vision)
+        for att in req.attachments {
+            if att.content_type.starts_with("image/") {
+                let b64 = att.data.split(',').nth(1).unwrap_or(&att.data);
+                if let Ok(data) = base64::engine::general_purpose::STANDARD.decode(b64) {
+                    user_input.push(ports::MessageContent::Image {
+                        data,
+                        content_type: att.content_type,
+                    });
+                }
+            }
+        }
 
         // 5. Appeler le LLM
         let response_json = self
             .call_llm_extract(
                 llm,
                 system_prompt,
-                user_prompt,
-                if wants_mutation { ChatOutputKind::Mutation } else { ChatOutputKind::MessageOnly },
+                user_input,
+                if wants_mutation {
+                    ChatOutputKind::Mutation
+                } else {
+                    ChatOutputKind::MessageOnly
+                },
             )
             .await?;
 
@@ -224,7 +267,10 @@ impl ChatWithApplicationUseCase {
             .ok_or_else(|| anyhow::anyhow!("Aucun profil actif trouvé"))?;
 
         let chat_history = Self::extract_chat_history(&profil.notes);
-        info!("Chat (Global): Historique extrait ({} entrées)", chat_history.len());
+        info!(
+            "Chat (Global): Historique extrait ({} entrées)",
+            chat_history.len()
+        );
 
         // 1b. Sauvegarder le message utilisateur
         Self::push_chat_history(&mut profil.notes, "user", &req.message);
@@ -236,32 +282,61 @@ impl ChatWithApplicationUseCase {
         // 3. RAG
         let rag_context = self.get_rag_context(profil.id, &req.message).await?;
 
+        // 3b. Liste des offres pour répondre aux questions globales
+        let offres = self.offre_repo.list_all().await?;
+
         // 4. Prompt Global
-        let system_prompt = "Tu es un coach de carrière expert. Tu as accès au profil complet de l'utilisateur. \
+        let system_prompt =
+            "Tu es un coach de carrière expert. Tu as accès au profil complet de l'utilisateur. \
+            Tu peux aussi voir la liste des offres d'emploi disponibles en base. \
             Réponds de manière constructive et encourageante. \
             TU DOIS RÉPONDRE EXCLUSIVEMENT PAR UN OBJET JSON avec une seule clé 'message'. \
             INTERDICTION DE METTRE DU TEXTE AVANT OU APRÈS LE JSON.";
 
         let history_prompt = Self::render_chat_history_for_prompt(&chat_history);
 
-        let user_prompt = format!(
+        let mut user_input = vec![ports::MessageContent::Text(format!(
             "IDENTITÉ DE L'UTILISATEUR (Profil complet):\n{}\n\n\
+            ANNEXES DISPONIBLES (en DB):\n{}\n\n\
+            OFFRES DISPONIBLES EN BASE ({} offres):\n{}\n\n\
             DÉTAILS DU PARCOURS (RAG):\n{}\n\n\
             HISTORIQUE RÉCENT DU CHAT:\n{}\n\n\
             DEMANDE DE L'UTILISATEUR: {}",
             serde_json::to_string_pretty(&Self::build_profile_prompt_context(&profil))?,
+            serde_json::to_string_pretty(&self.annexe_repo.list_by_profil_id(profil.id).await?)?,
+            offres.len(),
+            serde_json::to_string_pretty(
+                &offres
+                    .iter()
+                    .map(|o| (o.slug.to_string(), o.intitule.clone(), o.entreprise.clone()))
+                    .collect::<Vec<_>>()
+            )?,
             rag_context,
             history_prompt,
             req.message
-        );
+        ))];
+
+        // Ajouter les attachments (Vision)
+        for att in req.attachments {
+            if att.content_type.starts_with("image/") {
+                let b64 = att.data.split(',').nth(1).unwrap_or(&att.data);
+                if let Ok(data) = base64::engine::general_purpose::STANDARD.decode(b64) {
+                    user_input.push(ports::MessageContent::Image {
+                        data,
+                        content_type: att.content_type,
+                    });
+                }
+            }
+        }
 
         // 5. Appeler le LLM
         let response_json = self
-            .call_llm_extract(llm, system_prompt, user_prompt, ChatOutputKind::MessageOnly)
+            .call_llm_extract(llm, system_prompt, user_input, ChatOutputKind::MessageOnly)
             .await?;
 
         // 6. Analyser
-        let ai_message = response_json["message"].as_str()
+        let ai_message = response_json["message"]
+            .as_str()
             .unwrap_or("Désolé, je n'ai pas pu générer de réponse.")
             .to_string();
 
@@ -282,7 +357,11 @@ impl ChatWithApplicationUseCase {
             .ok_or_else(|| anyhow::anyhow!("LLM '{}' non configuré", provider))
     }
 
-    async fn get_rag_context(&self, profil_id: domain::ProfilId, message: &str) -> anyhow::Result<String> {
+    async fn get_rag_context(
+        &self,
+        profil_id: domain::ProfilId,
+        message: &str,
+    ) -> anyhow::Result<String> {
         let query_text = format!("{} career context", message);
         let embeddings = self
             .embedder
@@ -309,7 +388,7 @@ impl ChatWithApplicationUseCase {
         &self,
         llm: Arc<dyn LlmClient>,
         system: &str,
-        input: String,
+        input: Vec<ports::MessageContent>,
         kind: ChatOutputKind,
     ) -> anyhow::Result<serde_json::Value> {
         let extraction_req = ExtractionRequest {
@@ -333,7 +412,9 @@ impl ChatWithApplicationUseCase {
             max_tokens: Some(4000),
         };
 
-        llm.extract(extraction_req).await.map_err(|e| anyhow::anyhow!(e))
+        llm.extract(extraction_req)
+            .await
+            .map_err(|e| anyhow::anyhow!(e))
     }
 
     fn build_profile_prompt_context(profil: &domain::Profil) -> serde_json::Value {
@@ -409,7 +490,9 @@ impl ChatWithApplicationUseCase {
             "editer",
         ];
 
-        mutation_markers.iter().any(|marker| lowered.contains(marker))
+        mutation_markers
+            .iter()
+            .any(|marker| lowered.contains(marker))
     }
 
     fn wants_identity(message: &str) -> bool {
@@ -423,7 +506,9 @@ impl ChatWithApplicationUseCase {
             "je m'appelle comment",
         ];
 
-        identity_markers.iter().any(|marker| lowered.contains(marker))
+        identity_markers
+            .iter()
+            .any(|marker| lowered.contains(marker))
     }
 
     fn extract_chat_history(notes: &serde_json::Value) -> Vec<ChatHistoryEntry> {
@@ -456,7 +541,11 @@ impl ChatWithApplicationUseCase {
             .into_iter()
             .rev()
             .map(|entry| {
-                let label = if entry.role == "assistant" { "IA" } else { "UTILISATEUR" };
+                let label = if entry.role == "assistant" {
+                    "IA"
+                } else {
+                    "UTILISATEUR"
+                };
                 format!("{label}: {}", entry.content)
             })
             .collect::<Vec<_>>()
@@ -465,14 +554,14 @@ impl ChatWithApplicationUseCase {
 
     fn push_chat_history(notes: &mut serde_json::Value, role: &str, content: &str) {
         info!("Chat: Pushing history for role: {}", role);
-        
+
         // Initialiser si ce n'est pas un objet
         if !notes.is_object() {
             *notes = serde_json::json!({});
         }
 
         let obj = notes.as_object_mut().unwrap();
-        
+
         // Récupérer ou créer l'array chat_history
         let history = obj
             .entry("chat_history")
@@ -491,7 +580,7 @@ impl ChatWithApplicationUseCase {
             let excess = history.len() - MAX_CHAT_HISTORY_ENTRIES;
             history.drain(0..excess);
         }
-        
+
         info!("Chat: History size now: {} entries", history.len());
     }
 }
@@ -501,8 +590,14 @@ mod tests {
     use super::*;
     use async_trait::async_trait;
     use chrono::Utc;
-    use domain::{Chunk, ChunkKind, Instance, InstanceId, InstanceStatus, Offre, OffreId, OffreStructured, Profil, ProfilId, Slug};
-    use ports::{ChunkRepo, EmbedError, EmbedMode, Embedder, ExtractionRequest, InstanceRepo, LlmClient, LlmError, OffreRepo, ProfilRepo, RepoError};
+    use domain::{
+        Chunk, ChunkKind, Instance, InstanceId, InstanceStatus, Offre, OffreId, OffreStructured,
+        Profil, ProfilId, Slug,
+    };
+    use ports::{
+        ChunkRepo, EmbedError, EmbedMode, Embedder, ExtractionRequest, InstanceRepo, LlmClient,
+        LlmError, OffreRepo, ProfilRepo, RepoError,
+    };
     use serde_json::json;
     use std::sync::{Arc, Mutex};
 
@@ -605,6 +700,10 @@ mod tests {
             Ok((offre.slug.as_str() == slug.as_str()).then_some(offre))
         }
 
+        async fn list_all(&self) -> Result<Vec<Offre>, RepoError> {
+            Ok(vec![self.stores.offre.lock().unwrap().clone()])
+        }
+
         async fn list_recent(&self, _limit: u32) -> Result<Vec<Offre>, RepoError> {
             Ok(vec![self.stores.offre.lock().unwrap().clone()])
         }
@@ -624,6 +723,24 @@ mod tests {
             _hash: &[u8],
         ) -> Result<Option<Offre>, RepoError> {
             Ok(None)
+        }
+    }
+
+    struct TestAnnexeRepo;
+
+    #[async_trait]
+    impl ports::AnnexeRepo for TestAnnexeRepo {
+        async fn get_by_id(&self, _id: domain::AnnexeId) -> Result<Option<domain::Annexe>, RepoError> {
+            Ok(None)
+        }
+        async fn list_by_profil_id(&self, _profil_id: domain::ProfilId) -> Result<Vec<domain::Annexe>, RepoError> {
+            Ok(vec![])
+        }
+        async fn upsert(&self, _annexe: &domain::Annexe) -> Result<(), RepoError> {
+            Ok(())
+        }
+        async fn delete(&self, _id: domain::AnnexeId) -> Result<(), RepoError> {
+            Ok(())
         }
     }
 
@@ -657,7 +774,11 @@ mod tests {
 
     #[async_trait]
     impl Embedder for TestEmbedder {
-        async fn embed(&self, texts: &[&str], _mode: EmbedMode) -> Result<Vec<Vec<f32>>, EmbedError> {
+        async fn embed(
+            &self,
+            texts: &[&str],
+            _mode: EmbedMode,
+        ) -> Result<Vec<Vec<f32>>, EmbedError> {
             Ok(texts.iter().map(|_| vec![0.1, 0.2]).collect())
         }
 
@@ -672,7 +793,10 @@ mod tests {
 
     #[async_trait]
     impl LlmClient for RecordingLlm {
-        async fn complete(&self, _req: ports::CompletionRequest) -> Result<ports::CompletionResponse, LlmError> {
+        async fn complete(
+            &self,
+            _req: ports::CompletionRequest,
+        ) -> Result<ports::CompletionResponse, LlmError> {
             Err(LlmError::Other("not used".into()))
         }
 
@@ -767,25 +891,44 @@ mod tests {
 
     fn build_usecase(stores: Arc<TestStores>) -> ChatWithApplicationUseCase {
         ChatWithApplicationUseCase::new(
-            Arc::new(TestOffreRepo { stores: stores.clone() }),
-            Arc::new(TestInstanceRepo { stores: stores.clone() }),
-            Arc::new(TestProfilRepo { stores: stores.clone() }),
+            Arc::new(TestOffreRepo {
+                stores: stores.clone(),
+            }),
+            Arc::new(TestInstanceRepo {
+                stores: stores.clone(),
+            }),
+            Arc::new(TestProfilRepo {
+                stores: stores.clone(),
+            }),
+            Arc::new(TestAnnexeRepo),
             Arc::new(TestChunkRepo),
             Arc::new(TestEmbedder),
-            std::iter::once(("ollama".to_string(), Arc::new(RecordingLlm { stores }) as Arc<dyn LlmClient>)).collect(),
+            std::iter::once((
+                "ollama".to_string(),
+                Arc::new(RecordingLlm { stores }) as Arc<dyn LlmClient>,
+            ))
+            .collect(),
         )
     }
 
     #[test]
     fn detects_read_only_questions() {
-        assert!(!ChatWithApplicationUseCase::wants_mutation("comment je m'appelle ? c'est quoi l'offre ?"));
-        assert!(!ChatWithApplicationUseCase::wants_mutation("tu vois l'offre, mon cv et ma lettre de motivation ?"));
+        assert!(!ChatWithApplicationUseCase::wants_mutation(
+            "comment je m'appelle ? c'est quoi l'offre ?"
+        ));
+        assert!(!ChatWithApplicationUseCase::wants_mutation(
+            "tu vois l'offre, mon cv et ma lettre de motivation ?"
+        ));
     }
 
     #[test]
     fn detects_mutation_requests() {
-        assert!(ChatWithApplicationUseCase::wants_mutation("modifie mon CV pour mieux mettre mon titre"));
-        assert!(ChatWithApplicationUseCase::wants_mutation("ajoute une expérience dans la lettre"));
+        assert!(ChatWithApplicationUseCase::wants_mutation(
+            "modifie mon CV pour mieux mettre mon titre"
+        ));
+        assert!(ChatWithApplicationUseCase::wants_mutation(
+            "ajoute une expérience dans la lettre"
+        ));
     }
 
     #[tokio::test]
@@ -794,11 +937,13 @@ mod tests {
         let stores = Arc::new(TestStores::new(instance, profil, offre));
         let usecase = build_usecase(stores.clone());
 
+        let instance_id_str = stores.instance.lock().unwrap().id.to_string();
         let response = usecase
             .execute(ChatRequest {
                 message: "comment je m'appelle ? c'est quoi l'offre ?".into(),
-                instance_id: Some(stores.instance.lock().unwrap().id.to_string()),
+                instance_id: Some(instance_id_str),
                 llm_provider: "ollama".into(),
+                attachments: vec![],
             })
             .await
             .expect("chat should succeed");
@@ -813,9 +958,20 @@ mod tests {
         assert!(!schema_text.contains("\"cover\""));
 
         let instance_after = stores.instance.lock().unwrap().clone();
-        assert_eq!(instance_after.resume_json, Some(json!({"current": "resume"})));
-        assert_eq!(instance_after.cover_letter_json, Some(json!({"current": "cover"})));
-        assert_eq!(instance_after.notes["chat_history"].as_array().map(|v| v.len()), Some(2));
+        assert_eq!(
+            instance_after.resume_json,
+            Some(json!({"current": "resume"}))
+        );
+        assert_eq!(
+            instance_after.cover_letter_json,
+            Some(json!({"current": "cover"}))
+        );
+        assert_eq!(
+            instance_after.notes["chat_history"]
+                .as_array()
+                .map(|v| v.len()),
+            Some(2)
+        );
     }
 
     #[tokio::test]
@@ -824,11 +980,13 @@ mod tests {
         let stores = Arc::new(TestStores::new(instance, profil, offre));
         let usecase = build_usecase(stores.clone());
 
+        let instance_id_str = stores.instance.lock().unwrap().id.to_string();
         let response = usecase
             .execute(ChatRequest {
                 message: "modifie mon CV et ma lettre pour mettre en avant Rust".into(),
-                instance_id: Some(stores.instance.lock().unwrap().id.to_string()),
+                instance_id: Some(instance_id_str),
                 llm_provider: "ollama".into(),
+                attachments: vec![],
             })
             .await
             .expect("chat should succeed");
@@ -843,7 +1001,10 @@ mod tests {
 
         let instance_after = stores.instance.lock().unwrap().clone();
         assert_eq!(instance_after.resume_json, Some(json!({"updated": true})));
-        assert_eq!(instance_after.cover_letter_json, Some(json!({"updated": true})));
+        assert_eq!(
+            instance_after.cover_letter_json,
+            Some(json!({"updated": true}))
+        );
         assert_eq!(instance_after.status, InstanceStatus::Ready);
     }
 }

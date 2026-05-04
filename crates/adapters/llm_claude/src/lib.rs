@@ -5,6 +5,7 @@
 //! - `extract` : génération structurée via Tool Use (structured output)
 
 use async_trait::async_trait;
+use base64::Engine;
 use ports::{CompletionRequest, CompletionResponse, ExtractionRequest, LlmClient, LlmError, Role};
 use serde::{Deserialize, Serialize};
 use tracing::instrument;
@@ -72,7 +73,24 @@ struct AnthropicRequest {
 #[derive(Serialize)]
 struct AnthropicMessage {
     role: String,
-    content: String,
+    content: Vec<AnthropicContentBlock>,
+}
+
+#[derive(Serialize)]
+#[serde(tag = "type")]
+enum AnthropicContentBlock {
+    #[serde(rename = "text")]
+    Text { text: String },
+    #[serde(rename = "image")]
+    Image { source: AnthropicImageSource },
+}
+
+#[derive(Serialize)]
+struct AnthropicImageSource {
+    #[serde(rename = "type")]
+    source_type: String, // "base64"
+    media_type: String,
+    data: String,
 }
 
 #[derive(Serialize)]
@@ -136,7 +154,24 @@ impl LlmClient for ClaudeClient {
                     Role::User => "user".into(),
                     Role::Assistant => "assistant".into(),
                 },
-                content: m.content.clone(),
+                content: m
+                    .content
+                    .iter()
+                    .map(|c| match c {
+                        ports::MessageContent::Text(text) => {
+                            AnthropicContentBlock::Text { text: text.clone() }
+                        }
+                        ports::MessageContent::Image { data, content_type } => {
+                            AnthropicContentBlock::Image {
+                                source: AnthropicImageSource {
+                                    source_type: "base64".into(),
+                                    media_type: content_type.clone(),
+                                    data: base64::engine::general_purpose::STANDARD.encode(data),
+                                },
+                            }
+                        }
+                    })
+                    .collect(),
             })
             .collect();
 
@@ -228,19 +263,38 @@ impl LlmClient for ClaudeClient {
             input_schema: schema,
         };
 
-        let user_content = if req.instruction.is_empty() {
-            req.input.clone()
-        } else {
-            format!("{}\n\n---\n\n{}", req.instruction, req.input)
-        };
-
         let body = AnthropicRequest {
             model: req.model.unwrap_or_else(|| self.model.clone()),
             max_tokens: req.max_tokens.unwrap_or(4096),
             system: req.system,
             messages: vec![AnthropicMessage {
                 role: "user".into(),
-                content: user_content,
+                content: {
+                    let mut blocks = Vec::new();
+                    if !req.instruction.is_empty() {
+                        blocks.push(AnthropicContentBlock::Text {
+                            text: req.instruction.clone(),
+                        });
+                    }
+                    for input_content in req.input {
+                        match input_content {
+                            ports::MessageContent::Text(text) => {
+                                blocks.push(AnthropicContentBlock::Text { text })
+                            }
+                            ports::MessageContent::Image { data, content_type } => {
+                                blocks.push(AnthropicContentBlock::Image {
+                                    source: AnthropicImageSource {
+                                        source_type: "base64".into(),
+                                        media_type: content_type,
+                                        data: base64::engine::general_purpose::STANDARD
+                                            .encode(data),
+                                    },
+                                })
+                            }
+                        }
+                    }
+                    blocks
+                },
             }],
             temperature: None,
             tools: Some(vec![tool]),

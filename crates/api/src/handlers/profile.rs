@@ -1,8 +1,12 @@
 use crate::errors::ApiError;
 use crate::state::AppState;
-use axum::{extract::{State, Path}, Json, response::IntoResponse};
-use axum::http::header::{CONTENT_TYPE, CONTENT_DISPOSITION};
-use domain::{Annexe, AnnexeId, Profil, ProfilId};
+use axum::http::header::{CONTENT_DISPOSITION, CONTENT_TYPE};
+use axum::{
+    extract::{Path, State},
+    response::IntoResponse,
+    Json,
+};
+use domain::{Annexe, AnnexeId, Profil};
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
 
@@ -20,14 +24,28 @@ pub async fn get_active_profile_handler(
     // INJECTION DES MARQUEURS BINAIRES
     // On informe le frontend que ces données existent en DB (BYTEA)
     if profil.profile_photo.is_some() {
-        if let Some(p) = profil.content.get_mut("profile").and_then(|p| p.as_object_mut()) {
-            p.insert("image".to_string(), serde_json::Value::String("persisted:bytea".to_string()));
+        if let Some(p) = profil
+            .content
+            .get_mut("profile")
+            .and_then(|p| p.as_object_mut())
+        {
+            p.insert(
+                "image".to_string(),
+                serde_json::Value::String("persisted:bytea".to_string()),
+            );
         }
     }
-    
+
     if profil.calendar_pdf.is_some() {
-        if let Some(d) = profil.content.get_mut("documents").and_then(|d| d.as_object_mut()) {
-            d.insert("apprenticeship_calendar".to_string(), serde_json::Value::String("persisted:bytea".to_string()));
+        if let Some(d) = profil
+            .content
+            .get_mut("documents")
+            .and_then(|d| d.as_object_mut())
+        {
+            d.insert(
+                "apprenticeship_calendar".to_string(),
+                serde_json::Value::String("persisted:bytea".to_string()),
+            );
         }
     }
 
@@ -171,7 +189,7 @@ pub async fn update_active_profile_handler(
                         }
                     }
                 }
-            } 
+            }
             // Si c'est directement une string data_url (ancien format)
             else if let Some(data_url) = cal_data.as_str() {
                 if data_url.starts_with("data:") {
@@ -189,8 +207,15 @@ pub async fn update_active_profile_handler(
     // Nettoyage optionnel du JSON pour ne pas stocker le binaire en double (gain de place)
     // On garde le champ mais on vide la data lourde si on a réussi l'extraction
     if profil.profile_photo.is_some() {
-        if let Some(p) = profil.content.get_mut("profile").and_then(|p| p.as_object_mut()) {
-            p.insert("image".to_string(), serde_json::Value::String("persisted:bytea".to_string()));
+        if let Some(p) = profil
+            .content
+            .get_mut("profile")
+            .and_then(|p| p.as_object_mut())
+        {
+            p.insert(
+                "image".to_string(),
+                serde_json::Value::String("persisted:bytea".to_string()),
+            );
         }
     }
 
@@ -228,7 +253,11 @@ pub async fn list_annexes_handler(
         .await
         .map_err(|e| ApiError::Internal(e.to_string()))?;
 
-    tracing::info!("{} annexes trouvées pour le profil {}", annexes.len(), profil.id);
+    tracing::info!(
+        "{} annexes trouvées pour le profil {}",
+        annexes.len(),
+        profil.id
+    );
 
     let metadata = annexes
         .into_iter()
@@ -248,14 +277,18 @@ pub struct UploadAnnexeRequest {
     pub label: String,
     pub filename: String,
     pub content_type: String,
-    pub data_url: String, 
+    pub data_url: String,
 }
 
 pub async fn upload_annexe_handler(
     State(state): State<AppState>,
     Json(req): Json<UploadAnnexeRequest>,
 ) -> Result<Json<AnnexeId>, ApiError> {
-    tracing::info!("Upload d'une nouvelle annexe : {} ({})", req.label, req.filename);
+    tracing::info!(
+        "Upload d'une nouvelle annexe : {} ({})",
+        req.label,
+        req.filename
+    );
     tracing::debug!("Taille de la data URL : {} chars", req.data_url.len());
     let profil = state
         .profil_repo
