@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value as Json;
 
 use crate::ids::{InstanceId, OffreId, ProfilId, Slug};
+use crate::{Restitution, Resume, CoverLetter};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -53,9 +54,9 @@ pub struct Instance {
     pub offre_id: OffreId,
     pub profil_id: ProfilId,
     pub status: InstanceStatus,
-    pub restitution: Option<Json>,
-    pub resume_json: Option<Json>,
-    pub cover_letter_json: Option<Json>,
+    pub restitution: Option<Restitution>,
+    pub resume_json: Option<Resume>,
+    pub cover_letter_json: Option<CoverLetter>,
     pub notes: Json,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,

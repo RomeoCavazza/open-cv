@@ -218,8 +218,20 @@ impl LlmClient for RecordingLlm {
 
         if schema_text.contains("\"resume\"") {
             Ok(json!({
-                "resume": {"updated": true},
-                "cover": {"updated": true},
+                "resume": domain::Resume {
+                    accroche: domain::Accroche {
+                        titre: "updated resume".into(),
+                        ..Default::default()
+                    },
+                    ..Default::default()
+                },
+                "cover": domain::CoverLetter {
+                    objet: domain::Objet {
+                        libelle: "updated cover".into(),
+                        ..Default::default()
+                    },
+                    ..Default::default()
+                },
                 "message": "mise à jour appliquée"
             }))
         } else {
@@ -264,11 +276,15 @@ fn build_test_data() -> (Instance, Profil, Offre) {
     let profil = Profil {
         id: profil_id,
         label: "test-profile".into(),
-        content: json!({
-            "firstname": "Romeo",
-            "lastname": "Cavazza",
-            "title": "Alternance IA"
-        }),
+        content: domain::ProfilContent {
+            profile: domain::ProfileSection {
+                firstname: "Romeo".into(),
+                lastname: "Cavazza".into(),
+                title: "Alternance IA".into(),
+                ..Default::default()
+            },
+            ..Default::default()
+        },
         is_active: true,
         resume_template: Some(json!({"template": "cv"})),
         cover_letter_template: Some(json!({"template": "lettre"})),
@@ -311,9 +327,24 @@ fn build_test_data() -> (Instance, Profil, Offre) {
         offre_id,
         profil_id,
         status: InstanceStatus::Draft,
-        restitution: Some(json!({"summary": "restitution"})),
-        resume_json: Some(json!({"current": "resume"})),
-        cover_letter_json: Some(json!({"current": "cover"})),
+        restitution: Some(domain::Restitution {
+            synthese: "restitution".into(),
+            ..Default::default()
+        }),
+        resume_json: Some(domain::Resume {
+            accroche: domain::Accroche {
+                titre: "resume".into(),
+                ..Default::default()
+            },
+            ..Default::default()
+        }),
+        cover_letter_json: Some(domain::CoverLetter {
+            objet: domain::Objet {
+                libelle: "cover".into(),
+                ..Default::default()
+            },
+            ..Default::default()
+        }),
         notes: json!({}),
         created_at: Utc::now(),
         updated_at: Utc::now(),
@@ -324,28 +355,28 @@ fn build_test_data() -> (Instance, Profil, Offre) {
 }
 
 fn build_usecase(stores: Arc<TestStores>) -> ChatWithApplicationUseCase {
-    ChatWithApplicationUseCase::new(ChatDependencies {
-        offre_repo: Arc::new(TestOffreRepo {
+    ChatWithApplicationUseCase::new(
+        Arc::new(TestOffreRepo {
             stores: stores.clone(),
         }),
-        instance_repo: Arc::new(TestInstanceRepo {
+        Arc::new(TestInstanceRepo {
             stores: stores.clone(),
         }),
-        profil_repo: Arc::new(TestProfilRepo {
+        Arc::new(TestProfilRepo {
             stores: stores.clone(),
         }),
-        annexe_repo: Arc::new(TestAnnexeRepo),
-        chunk_repo: Arc::new(TestChunkRepo),
-        message_repo: Arc::new(TestMessageRepo {
+        Arc::new(TestAnnexeRepo),
+        Arc::new(TestChunkRepo),
+        Arc::new(TestMessageRepo {
             stores: stores.clone(),
         }),
-        embedder: Arc::new(TestEmbedder),
-        llm_registry: std::iter::once((
+        Arc::new(TestEmbedder),
+        std::iter::once((
             "ollama".to_string(),
             Arc::new(RecordingLlm { stores }) as Arc<dyn LlmClient>,
         ))
         .collect(),
-    })
+    )
 }
 
 #[test]
@@ -439,12 +470,12 @@ async fn instance_chat_keeps_read_only_questions_in_message_mode() {
 
     let instance_after = stores.instance.lock().unwrap().clone();
     assert_eq!(
-        instance_after.resume_json,
-        Some(json!({"current": "resume"}))
+        instance_after.resume_json.unwrap().accroche.titre,
+        "resume"
     );
     assert_eq!(
-        instance_after.cover_letter_json,
-        Some(json!({"current": "cover"}))
+        instance_after.cover_letter_json.unwrap().objet.libelle,
+        "cover"
     );
     assert_eq!(stores.messages.lock().unwrap().len(), 2);
 }
@@ -475,10 +506,10 @@ async fn instance_chat_updates_documents_for_explicit_mutations() {
     assert!(schema_text.contains("\"cover\""));
 
     let instance_after = stores.instance.lock().unwrap().clone();
-    assert_eq!(instance_after.resume_json, Some(json!({"updated": true})));
+    assert_eq!(instance_after.resume_json.unwrap().accroche.titre, "updated resume");
     assert_eq!(
-        instance_after.cover_letter_json,
-        Some(json!({"updated": true}))
+        instance_after.cover_letter_json.unwrap().objet.libelle,
+        "updated cover"
     );
     assert_eq!(instance_after.status, InstanceStatus::Ready);
     assert_eq!(stores.messages.lock().unwrap().len(), 2);

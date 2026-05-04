@@ -50,9 +50,9 @@ enum ChatOutputKind {
 #[derive(Debug, Clone, Serialize, Deserialize, schemars::JsonSchema)]
 struct ChatMutationOutput {
     #[serde(default)]
-    resume: Option<serde_json::Value>,
+    resume: Option<domain::Resume>,
     #[serde(default)]
-    cover: Option<serde_json::Value>,
+    cover: Option<domain::CoverLetter>,
     message: String,
 }
 
@@ -210,16 +210,12 @@ impl ChatWithApplicationUseCase {
         };
 
         if let Some(res) = new_data.resume {
-            if !res.is_null() {
-                instance.resume_json = Some(res);
-                instance.status = domain::InstanceStatus::Ready;
-            }
+            instance.resume_json = Some(res);
+            instance.status = domain::InstanceStatus::Ready;
         }
         if let Some(cov) = new_data.cover {
-            if !cov.is_null() {
-                instance.cover_letter_json = Some(cov);
-                instance.status = domain::InstanceStatus::Ready;
-            }
+            instance.cover_letter_json = Some(cov);
+            instance.status = domain::InstanceStatus::Ready;
         }
 
         let assistant_msg = Message::new(instance.id, MessageRole::Assistant, ai_message.clone());
