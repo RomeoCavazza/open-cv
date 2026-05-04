@@ -165,11 +165,11 @@ It is intended as a working overview of the project rather than a polished marke
 
 ## Documentation
 
-- [docs/README.md](docs/README.md): documentation index
-- [docs/instructions.md](docs/instructions.md): setup and common commands
-- [docs/how_it_works.md](docs/how_it_works.md): technical overview
-- [docs/blueprint.md](docs/blueprint.md): architecture and generation pipeline
-- [docs/design.md](docs/design.md): visual direction for the interface
+- **[docs/README.md](docs/README.md)** : Index détaillé de la documentation.
+- **[docs/cleanup_status.md](docs/cleanup_status.md)** : **Pilotage opérationnel**, roadmap et état d'avancement.
+- **[docs/blueprint.md](docs/blueprint.md)** : Spécifications techniques et pipeline IA.
+- **[docs/instructions.md](docs/instructions.md)** : Setup et commandes courantes.
+- **[docs/design.md](docs/design.md)** : Direction visuelle et principes UI.
 
 ---
 
