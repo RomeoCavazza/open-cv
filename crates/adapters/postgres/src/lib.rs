@@ -5,11 +5,15 @@
 
 use async_trait::async_trait;
 use domain::{
-    Annexe, AnnexeId, Instance, InstanceId, InstanceStatus, Message, MessageRole, Offre, OffreId,
-    OffreStructured, ProfilId, Slug,
+    Annexe, AnnexeId, Instance, InstanceId, Message, Offre, OffreId, OffreStructured, ProfilId,
+    Slug,
 };
 use ports::{AnnexeRepo, InstanceRepo, MessageRepo, OffreRepo, RepoError};
 use sqlx::PgPool;
+
+mod helpers;
+
+use helpers::{map_sqlx, parse_status};
 
 pub struct OffreRepoPg {
     pool: PgPool,
@@ -39,24 +43,23 @@ impl OffreRepo for OffreRepoPg {
         .map_err(map_sqlx)?;
 
         row.map(|r| {
-            Ok(Offre {
-                id: OffreId::from_uuid(r.id),
-                slug: Slug::parse(r.slug).map_err(|e| RepoError::Other(e.to_string()))?,
-                source_url: r.source_url,
-                source_host: r.source_host,
-                source_hash: r.source_hash,
-                entreprise: r.entreprise,
-                intitule: r.intitule,
-                localisation: r.localisation,
-                contrat: r.contrat,
-                raw_text: r.raw_text,
-                structured: serde_json::from_value::<OffreStructured>(r.structured)
-                    .map_err(|e| RepoError::Other(e.to_string()))?,
-                scraped_at: r.scraped_at,
-                last_seen_at: r.last_seen_at,
-                closed_at: r.closed_at,
-                categorie: r.categorie,
-            })
+            helpers::build_offre(
+                r.id,
+                r.slug,
+                r.source_url,
+                r.source_host,
+                r.source_hash,
+                r.entreprise,
+                r.intitule,
+                r.localisation,
+                r.contrat,
+                r.raw_text,
+                r.structured,
+                r.scraped_at,
+                r.last_seen_at,
+                r.closed_at,
+                r.categorie,
+            )
         })
         .transpose()
     }
@@ -304,21 +307,20 @@ impl InstanceRepo for InstanceRepoPg {
 
         row.map(|r| {
             use sqlx::Row;
-            Ok(Instance {
-                id: InstanceId::from_uuid(r.get("id")),
-                slug: Slug::parse(r.get::<String, _>("slug"))
-                    .map_err(|e| RepoError::Other(e.to_string()))?,
-                offre_id: domain::OffreId::from_uuid(r.get("offre_id")),
-                profil_id: domain::ProfilId::from_uuid(r.get("profil_id")),
-                status: parse_status(r.get("status"))?,
-                restitution: r.get("restitution"),
-                resume_json: r.get("resume_json"),
-                cover_letter_json: r.get("cover_letter_json"),
-                notes: r.get("notes"),
-                created_at: r.get("created_at"),
-                updated_at: r.get("updated_at"),
-                sent_at: r.get("sent_at"),
-            })
+            helpers::build_instance(
+                r.get("id"),
+                r.get::<String, _>("slug"),
+                r.get("offre_id"),
+                r.get("profil_id"),
+                r.get("status"),
+                r.get("restitution"),
+                r.get("resume_json"),
+                r.get("cover_letter_json"),
+                r.get("notes"),
+                r.get("created_at"),
+                r.get("updated_at"),
+                r.get("sent_at"),
+            )
         })
         .transpose()
     }
@@ -526,14 +528,16 @@ impl AnnexeRepo for AnnexeRepoPg {
         .await
         .map_err(map_sqlx)?;
 
-        Ok(row.map(|r| Annexe {
-            id: AnnexeId::from_uuid(r.id),
-            profil_id: ProfilId::from_uuid(r.profil_id),
-            label: r.label,
-            filename: r.filename,
-            content_type: r.content_type,
-            content: r.content,
-            created_at: r.created_at,
+        Ok(row.map(|r| {
+            helpers::build_annexe(
+                r.id,
+                r.profil_id,
+                r.label,
+                r.filename,
+                r.content_type,
+                r.content,
+                r.created_at,
+            )
         }))
     }
 
@@ -553,14 +557,16 @@ impl AnnexeRepo for AnnexeRepoPg {
 
         Ok(rows
             .into_iter()
-            .map(|r| Annexe {
-                id: AnnexeId::from_uuid(r.id),
-                profil_id: ProfilId::from_uuid(r.profil_id),
-                label: r.label,
-                filename: r.filename,
-                content_type: r.content_type,
-                content: r.content,
-                created_at: r.created_at,
+            .map(|r| {
+                helpers::build_annexe(
+                    r.id,
+                    r.profil_id,
+                    r.label,
+                    r.filename,
+                    r.content_type,
+                    r.content,
+                    r.created_at,
+                )
             })
             .collect())
     }
@@ -634,13 +640,7 @@ impl MessageRepo for MessageRepoPg {
 
         rows.into_iter()
             .map(|r| {
-                Ok(Message {
-                    id: r.id,
-                    instance_id: InstanceId::from_uuid(r.instance_id),
-                    role: parse_role(&r.role)?,
-                    content: r.content,
-                    created_at: r.created_at,
-                })
+                helpers::build_message(r.id, r.instance_id, r.role, r.content, r.created_at)
             })
             .collect()
     }
@@ -662,13 +662,7 @@ impl MessageRepo for MessageRepoPg {
 
         rows.into_iter()
             .map(|r| {
-                Ok(Message {
-                    id: r.id,
-                    instance_id: InstanceId::from_uuid(r.instance_id),
-                    role: parse_role(&r.role)?,
-                    content: r.content,
-                    created_at: r.created_at,
-                })
+                helpers::build_message(r.id, r.instance_id, r.role, r.content, r.created_at)
             })
             .collect()
     }
@@ -732,17 +726,19 @@ impl ports::ProfilRepo for ProfilRepoPg {
         .await
         .map_err(map_sqlx)?;
 
-        Ok(row.map(|r| domain::Profil {
-            id: domain::ProfilId::from_uuid(r.id),
-            label: r.label,
-            content: r.content,
-            is_active: r.is_active,
-            profile_photo: r.profile_photo,
-            calendar_pdf: r.calendar_pdf,
-            resume_template: r.resume_template,
-            cover_letter_template: r.cover_letter_template,
-            notes: r.notes,
-            created_at: r.created_at,
+        Ok(row.map(|r| {
+            helpers::build_profil(
+                r.id,
+                r.label,
+                r.content,
+                r.is_active,
+                r.profile_photo,
+                r.calendar_pdf,
+                r.resume_template,
+                r.cover_letter_template,
+                r.notes,
+                r.created_at,
+            )
         }))
     }
 
@@ -762,17 +758,19 @@ impl ports::ProfilRepo for ProfilRepoPg {
         .await
         .map_err(map_sqlx)?;
 
-        Ok(row.map(|r| domain::Profil {
-            id: domain::ProfilId::from_uuid(r.id),
-            label: r.label,
-            content: r.content,
-            is_active: r.is_active,
-            profile_photo: r.profile_photo,
-            calendar_pdf: r.calendar_pdf,
-            resume_template: r.resume_template,
-            cover_letter_template: r.cover_letter_template,
-            notes: r.notes,
-            created_at: r.created_at,
+        Ok(row.map(|r| {
+            helpers::build_profil(
+                r.id,
+                r.label,
+                r.content,
+                r.is_active,
+                r.profile_photo,
+                r.calendar_pdf,
+                r.resume_template,
+                r.cover_letter_template,
+                r.notes,
+                r.created_at,
+            )
         }))
     }
 
@@ -790,17 +788,19 @@ impl ports::ProfilRepo for ProfilRepoPg {
 
         Ok(rows
             .into_iter()
-            .map(|r| domain::Profil {
-                id: domain::ProfilId::from_uuid(r.id),
-                label: r.label,
-                content: r.content,
-                is_active: r.is_active,
-                profile_photo: r.profile_photo,
-                calendar_pdf: r.calendar_pdf,
-                resume_template: r.resume_template,
-                cover_letter_template: r.cover_letter_template,
-                notes: r.notes,
-                created_at: r.created_at,
+            .map(|r| {
+                helpers::build_profil(
+                    r.id,
+                    r.label,
+                    r.content,
+                    r.is_active,
+                    r.profile_photo,
+                    r.calendar_pdf,
+                    r.resume_template,
+                    r.cover_letter_template,
+                    r.notes,
+                    r.created_at,
+                )
             })
             .collect())
     }
@@ -899,31 +899,17 @@ impl ports::ChunkRepo for ChunkRepoPg {
                 let distance: f64 = r.get("distance");
                 let created_at: chrono::DateTime<chrono::Utc> = r.get("created_at");
 
-                let emb: Vec<f32> = emb_str
-                    .trim_start_matches('[')
-                    .trim_end_matches(']')
-                    .split(',')
-                    .map(|s| s.parse().unwrap_or(0.0))
-                    .collect();
-
-                let chunk = domain::Chunk {
-                    id: domain::ChunkId::from_uuid(id),
-                    profil_id: domain::ProfilId::from_uuid(profil_id),
-                    kind: match kind_str.as_str() {
-                        "experience" => domain::ChunkKind::Experience,
-                        "projet" => domain::ChunkKind::Projet,
-                        "formation" => domain::ChunkKind::Formation,
-                        "competence" => domain::ChunkKind::Competence,
-                        "phrase_lettre" => domain::ChunkKind::PhraseLettre,
-                        _ => domain::ChunkKind::Experience,
-                    },
+                Ok(helpers::build_chunk(
+                    id,
+                    profil_id,
+                    kind_str,
                     titre,
                     content,
                     metadata,
-                    embedding: emb,
+                    emb_str,
                     created_at,
-                };
-                Ok((chunk, distance as f32))
+                    distance,
+                ))
             })
             .collect()
     }
@@ -961,36 +947,6 @@ impl ports::ChunkRepo for ChunkRepoPg {
         .await
         .map_err(map_sqlx)?;
         Ok(())
-    }
-}
-
-fn parse_status(s: &str) -> Result<InstanceStatus, RepoError> {
-    match s {
-        "draft" => Ok(InstanceStatus::Draft),
-        "generating" => Ok(InstanceStatus::Generating),
-        "ready" => Ok(InstanceStatus::Ready),
-        "sent" => Ok(InstanceStatus::Sent),
-        "archived" => Ok(InstanceStatus::Archived),
-        "failed" => Ok(InstanceStatus::Failed),
-        _ => Err(RepoError::Other(format!("statut inconnu : {s}"))),
-    }
-}
-
-fn parse_role(s: &str) -> Result<MessageRole, RepoError> {
-    match s {
-        "user" => Ok(MessageRole::User),
-        "assistant" => Ok(MessageRole::Assistant),
-        "system" => Ok(MessageRole::System),
-        _ => Err(RepoError::Other(format!("rôle inconnu : {s}"))),
-    }
-}
-
-fn map_sqlx(e: sqlx::Error) -> RepoError {
-    match &e {
-        sqlx::Error::Database(db) if db.is_unique_violation() => {
-            RepoError::UniqueViolation(db.message().to_string())
-        }
-        _ => RepoError::Sql(e.to_string()),
     }
 }
 
