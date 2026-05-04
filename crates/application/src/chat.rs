@@ -67,26 +67,28 @@ pub struct ChatWithApplicationUseCase {
     pub llm_registry: std::collections::HashMap<String, Arc<dyn LlmClient>>,
 }
 
+pub struct ChatDependencies {
+    pub offre_repo: Arc<dyn ports::OffreRepo>,
+    pub instance_repo: Arc<dyn InstanceRepo>,
+    pub profil_repo: Arc<dyn ProfilRepo>,
+    pub annexe_repo: Arc<dyn AnnexeRepo>,
+    pub chunk_repo: Arc<dyn ChunkRepo>,
+    pub message_repo: Arc<dyn MessageRepo>,
+    pub embedder: Arc<dyn Embedder>,
+    pub llm_registry: std::collections::HashMap<String, Arc<dyn LlmClient>>,
+}
+
 impl ChatWithApplicationUseCase {
-    pub fn new(
-        offre_repo: Arc<dyn ports::OffreRepo>,
-        instance_repo: Arc<dyn InstanceRepo>,
-        profil_repo: Arc<dyn ProfilRepo>,
-        annexe_repo: Arc<dyn AnnexeRepo>,
-        chunk_repo: Arc<dyn ChunkRepo>,
-        message_repo: Arc<dyn MessageRepo>,
-        embedder: Arc<dyn Embedder>,
-        llm_registry: std::collections::HashMap<String, Arc<dyn LlmClient>>,
-    ) -> Self {
+    pub fn new(deps: ChatDependencies) -> Self {
         Self {
-            offre_repo,
-            instance_repo,
-            profil_repo,
-            annexe_repo,
-            chunk_repo,
-            message_repo,
-            embedder,
-            llm_registry,
+            offre_repo: deps.offre_repo,
+            instance_repo: deps.instance_repo,
+            profil_repo: deps.profil_repo,
+            annexe_repo: deps.annexe_repo,
+            chunk_repo: deps.chunk_repo,
+            message_repo: deps.message_repo,
+            embedder: deps.embedder,
+            llm_registry: deps.llm_registry,
         }
     }
 
@@ -774,28 +776,28 @@ mod tests {
     }
 
     fn build_usecase(stores: Arc<TestStores>) -> ChatWithApplicationUseCase {
-        ChatWithApplicationUseCase::new(
-            Arc::new(TestOffreRepo {
+        ChatWithApplicationUseCase::new(ChatDependencies {
+            offre_repo: Arc::new(TestOffreRepo {
                 stores: stores.clone(),
             }),
-            Arc::new(TestInstanceRepo {
+            instance_repo: Arc::new(TestInstanceRepo {
                 stores: stores.clone(),
             }),
-            Arc::new(TestProfilRepo {
+            profil_repo: Arc::new(TestProfilRepo {
                 stores: stores.clone(),
             }),
-            Arc::new(TestAnnexeRepo),
-            Arc::new(TestChunkRepo),
-            Arc::new(TestMessageRepo {
+            annexe_repo: Arc::new(TestAnnexeRepo),
+            chunk_repo: Arc::new(TestChunkRepo),
+            message_repo: Arc::new(TestMessageRepo {
                 stores: stores.clone(),
             }),
-            Arc::new(TestEmbedder),
-            std::iter::once((
+            embedder: Arc::new(TestEmbedder),
+            llm_registry: std::iter::once((
                 "ollama".to_string(),
                 Arc::new(RecordingLlm { stores }) as Arc<dyn LlmClient>,
             ))
             .collect(),
-        )
+        })
     }
 
     #[test]

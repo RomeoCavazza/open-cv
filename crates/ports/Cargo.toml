@@ -1,8 +1,10 @@
 [package]
+license = "MIT"
 name        = "ports"
 version.workspace      = true
 edition.workspace      = true
 rust-version.workspace = true
+publish = false
 
 [dependencies]
 domain      = { path = "../domain" }

@@ -1,4 +1,5 @@
 [package]
+license = "MIT"
 name        = "adapter-postgres"
 version.workspace      = true
 edition.workspace      = true

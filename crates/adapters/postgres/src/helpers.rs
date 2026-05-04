@@ -52,70 +52,74 @@ pub(super) fn parse_embedding(embedding: &str) -> Vec<f32> {
         .collect()
 }
 
-pub(super) fn build_offre(
-    id: uuid::Uuid,
-    slug: String,
-    source_url: String,
-    source_host: String,
-    source_hash: Vec<u8>,
-    entreprise: String,
-    intitule: String,
-    localisation: Option<String>,
-    contrat: Option<String>,
-    raw_text: String,
-    structured: serde_json::Value,
-    scraped_at: DateTime<Utc>,
-    last_seen_at: DateTime<Utc>,
-    closed_at: Option<DateTime<Utc>>,
-    categorie: Option<String>,
-) -> Result<Offre, RepoError> {
+pub(crate) struct OffreRow {
+    pub id: uuid::Uuid,
+    pub slug: String,
+    pub source_url: String,
+    pub source_host: String,
+    pub source_hash: Vec<u8>,
+    pub entreprise: String,
+    pub intitule: String,
+    pub localisation: Option<String>,
+    pub contrat: Option<String>,
+    pub raw_text: String,
+    pub structured: serde_json::Value,
+    pub scraped_at: DateTime<Utc>,
+    pub last_seen_at: DateTime<Utc>,
+    pub closed_at: Option<DateTime<Utc>>,
+    pub categorie: Option<String>,
+}
+
+pub(super) fn build_offre(row: OffreRow) -> Result<Offre, RepoError> {
     Ok(Offre {
-        id: OffreId::from_uuid(id),
-        slug: Slug::parse(slug).map_err(|e| RepoError::Other(e.to_string()))?,
-        source_url,
-        source_host,
-        source_hash,
-        entreprise,
-        intitule,
-        localisation,
-        contrat,
-        raw_text,
-        structured: serde_json::from_value::<OffreStructured>(structured)
+        id: OffreId::from_uuid(row.id),
+        slug: Slug::parse(row.slug).map_err(|e| RepoError::Other(e.to_string()))?,
+        source_url: row.source_url,
+        source_host: row.source_host,
+        source_hash: row.source_hash,
+        entreprise: row.entreprise,
+        intitule: row.intitule,
+        localisation: row.localisation,
+        contrat: row.contrat,
+        raw_text: row.raw_text,
+        structured: serde_json::from_value::<OffreStructured>(row.structured)
             .map_err(|e| RepoError::Other(e.to_string()))?,
-        scraped_at,
-        last_seen_at,
-        closed_at,
-        categorie,
+        scraped_at: row.scraped_at,
+        last_seen_at: row.last_seen_at,
+        closed_at: row.closed_at,
+        categorie: row.categorie,
     })
 }
 
-pub(super) fn build_instance(
-    id: uuid::Uuid,
-    slug: String,
-    offre_id: uuid::Uuid,
-    profil_id: uuid::Uuid,
-    status: String,
-    restitution: Option<serde_json::Value>,
-    resume_json: Option<serde_json::Value>,
-    cover_letter_json: Option<serde_json::Value>,
-    notes: serde_json::Value,
-    created_at: DateTime<Utc>,
-    updated_at: DateTime<Utc>,
-    sent_at: Option<DateTime<Utc>>,
-) -> Result<Instance, RepoError> {
+pub(crate) struct InstanceRow {
+    pub id: uuid::Uuid,
+    pub slug: String,
+    pub offre_id: uuid::Uuid,
+    pub profil_id: uuid::Uuid,
+    pub status: String,
+    pub restitution: Option<serde_json::Value>,
+    pub resume_json: Option<serde_json::Value>,
+    pub cover_letter_json: Option<serde_json::Value>,
+    pub notes: serde_json::Value,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+    pub sent_at: Option<DateTime<Utc>>,
+}
+
+pub(super) fn build_instance(row: InstanceRow) -> Result<Instance, RepoError> {
     Ok(Instance {
-        id: InstanceId::from_uuid(id),
-        slug: Slug::parse(slug).map_err(|e| RepoError::Other(e.to_string()))?,
-        offre_id: domain::OffreId::from_uuid(offre_id),
-        profil_id: domain::ProfilId::from_uuid(profil_id),
-        status: parse_status(&status)?,
-        restitution,
-        resume_json,
-        cover_letter_json,
-        notes,
-        created_at,
-        updated_at,
-        sent_at,
+        id: InstanceId::from_uuid(row.id),
+        slug: Slug::parse(row.slug).map_err(|e| RepoError::Other(e.to_string()))?,
+        offre_id: domain::OffreId::from_uuid(row.offre_id),
+        profil_id: domain::ProfilId::from_uuid(row.profil_id),
+        status: parse_status(&row.status)?,
+        restitution: row.restitution,
+        resume_json: row.resume_json,
+        cover_letter_json: row.cover_letter_json,
+        notes: row.notes,
+        created_at: row.created_at,
+        updated_at: row.updated_at,
+        sent_at: row.sent_at,
     })
 }
 
@@ -155,55 +159,59 @@ pub(super) fn build_message(
     })
 }
 
-pub(super) fn build_profil(
-    id: uuid::Uuid,
-    label: String,
-    content: serde_json::Value,
-    is_active: bool,
-    profile_photo: Option<Vec<u8>>,
-    calendar_pdf: Option<Vec<u8>>,
-    resume_template: Option<serde_json::Value>,
-    cover_letter_template: Option<serde_json::Value>,
-    notes: serde_json::Value,
-    created_at: DateTime<Utc>,
-) -> Profil {
+pub(crate) struct ProfilRow {
+    pub id: uuid::Uuid,
+    pub label: String,
+    pub content: serde_json::Value,
+    pub is_active: bool,
+    pub profile_photo: Option<Vec<u8>>,
+    pub calendar_pdf: Option<Vec<u8>>,
+    pub resume_template: Option<serde_json::Value>,
+    pub cover_letter_template: Option<serde_json::Value>,
+    pub notes: serde_json::Value,
+    pub created_at: DateTime<Utc>,
+}
+
+pub(super) fn build_profil(row: ProfilRow) -> Profil {
     Profil {
-        id: ProfilId::from_uuid(id),
-        label,
-        content,
-        is_active,
-        profile_photo,
-        calendar_pdf,
-        resume_template,
-        cover_letter_template,
-        notes,
-        created_at,
+        id: ProfilId::from_uuid(row.id),
+        label: row.label,
+        content: row.content,
+        is_active: row.is_active,
+        profile_photo: row.profile_photo,
+        calendar_pdf: row.calendar_pdf,
+        resume_template: row.resume_template,
+        cover_letter_template: row.cover_letter_template,
+        notes: row.notes,
+        created_at: row.created_at,
     }
 }
 
-pub(super) fn build_chunk(
-    id: uuid::Uuid,
-    profil_id: uuid::Uuid,
-    kind: String,
-    titre: String,
-    content: String,
-    metadata: serde_json::Value,
-    embedding: String,
-    created_at: DateTime<Utc>,
-    distance: f64,
-) -> (Chunk, f32) {
+pub(crate) struct ChunkRow {
+    pub id: uuid::Uuid,
+    pub profil_id: uuid::Uuid,
+    pub kind: String,
+    pub titre: String,
+    pub content: String,
+    pub metadata: serde_json::Value,
+    pub embedding: String,
+    pub created_at: DateTime<Utc>,
+    pub distance: f64,
+}
+
+pub(super) fn build_chunk(row: ChunkRow) -> (Chunk, f32) {
     (
         Chunk {
-            id: ChunkId::from_uuid(id),
-            profil_id: ProfilId::from_uuid(profil_id),
-            kind: parse_chunk_kind(&kind),
-            titre,
-            content,
-            metadata,
-            embedding: parse_embedding(&embedding),
-            created_at,
+            id: ChunkId::from_uuid(row.id),
+            profil_id: ProfilId::from_uuid(row.profil_id),
+            kind: parse_chunk_kind(&row.kind),
+            titre: row.titre,
+            content: row.content,
+            metadata: row.metadata,
+            embedding: parse_embedding(&row.embedding),
+            created_at: row.created_at,
         },
-        distance as f32,
+        row.distance as f32,
     )
 }
 
@@ -231,18 +239,18 @@ mod tests {
 
     #[test]
     fn build_profil_keeps_payload() {
-        let profil = build_profil(
-            uuid::Uuid::nil(),
-            "Label".into(),
-            json!({"a": 1}),
-            true,
-            None,
-            None,
-            None,
-            None,
-            json!({}),
-            Utc::now(),
-        );
+        let profil = build_profil(ProfilRow {
+            id: uuid::Uuid::nil(),
+            label: "Label".into(),
+            content: json!({"a": 1}),
+            is_active: true,
+            profile_photo: None,
+            calendar_pdf: None,
+            resume_template: None,
+            cover_letter_template: None,
+            notes: json!({}),
+            created_at: Utc::now(),
+        });
         assert_eq!(profil.label, "Label");
     }
 }

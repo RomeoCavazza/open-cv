@@ -923,7 +923,7 @@ mod tests {
     fn build_slug_uses_offer_slug_and_short_instance_id() {
         let offre = build_test_offre();
         let instance_id = InstanceId::from_uuid(uuid::Uuid::from_u128(
-            0x12345678_90ab_cdef_0000_0000_0000_0000,
+            0x1234_5678_90ab_cdef_0000_0000_0000_0000,
         ));
 
         let slug = build_slug(&offre, instance_id);

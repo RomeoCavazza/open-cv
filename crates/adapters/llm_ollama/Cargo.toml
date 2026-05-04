@@ -1,4 +1,5 @@
 [package]
+license = "MIT"
 name = "adapter-llm-ollama"
 version = "0.1.0"
 edition = "2021"
