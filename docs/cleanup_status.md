@@ -1,73 +1,48 @@
-# RecruitAI Governance & Status
+# RecruitAI Cleanup : Audit & Roadmap
 
-> [!IMPORTANT]
-> ## RÈGLES DE CONDUITE (Post-incident Untangle JS)
-> 
-> 1. **Isolation du Scope** : Tout fichier édité en dehors du scope déclaré de la phase courante = STOP, remontée à l'utilisateur, attente de validation.
-> 
-> 2. **Traitement des Bugs** : Tout bug rencontré pendant une refacto = STOP, remontée, ticket séparé. Jamais de "fix opportuniste" ou silencieux.
-> 
-> 3. **Transparence Factuelle** : Tout résumé de phase doit lister exactement les fichiers édités via une sortie brute (ex: `git diff --stat`), pas une description en prose.
-> 
-> 4. **Vérification Explicite** : Aucune phase n'est "terminée" tant que les vérifs demandées (greps, tests) n'ont pas été affichées en sortie brute dans la console.
+## 1. AUDIT INITIAL & RÉPARATIONS (Session 2026-05-04/05)
+*Ce qui a été identifié et corrigé pour stabiliser le socle.*
+
+- **[FIXED] Fuite de couche (Domain)** : `serde_json::Value` remplacé par des structs typées dans `crates/domain/src/profil.rs`.
+- **[FIXED] Crash API (Claude)** : Sécurisation des headers HTTP (suppression des `unwrap` critiques).
+- **[FIXED] Régression Assets** : Restauration du service statique via `nest_service` et fallback SPA dans `lib.rs`.
+- **[FIXED] Alignement API** : Support du verbe **PUT** sur le profil et correction de la route des annexes (`/api/profile/active/annexes`).
+- **[FIXED] Validation** : Renforcement de la validation JSON en entrée pour éviter les échecs silencieux.
+
+## 2. ÉTAT ACTUEL
+
+- **Backend** : ✅ Stable, modulaire, typé. Tag : `backend-stable-2026-05-05`.
+- **Tests** : ✅ 8 tests d'intégration HTTP validés (Axum + MockRepos).
+- **Contrat API** : ✅ Aligné sur le frontend original.
+- **Frontend** : ⚠️ Toujours monolithique (`dashboard.js`), couplage global élevé via `window.*`.
+
+## 3. ROADMAP DE REMÉDIATION
+
+### Phase 3.5 : Désentrelacement Frontend (Cible prioritaire)
+**Objectif** : Supprimer les couplages globaux avant le découpage physique des fichiers.
+1.  **Bus d'Événements** : Créer `web/assets/js/events.js` (Pattern `EventTarget`).
+2.  **Window Purge** : Supprimer `window.activeJobId`, `window.state`, etc. (un commit par variable).
+3.  **Organisation Interne** : Regrouper les fonctions de `dashboard.js` par blocs logiques (UI, Offres, Profil).
+4.  **Security** : Remplacer les derniers `innerHTML` par du `textContent` ou des templates.
+
+### Phase 4 : Modularisation (Le Split)
+- Extraction de `OfferController.js`, `ProfileController.js`, `ChatController.js`.
+- Communication inter-modules via `events.js` uniquement.
+
+### Phase 5-7 : Durcissement & Production
+- **IA** : Fix bug RAG 500 (profil vide) → passage en 422.
+- **Data** : Tests Postgres réels (Round-trip JSONB).
+- **Polish** : Skeletons, transitions fluides et export PDF final.
+
+## 4. RÈGLES DE GOUVERNANCE (NON-NÉGOCIABLES)
+
+1.  **No Silent Edits** : Toute modification de contrat API ou de logique métier doit être explicitement validée par un test.
+2.  **Atomic Commits** : Un commit par changement logique. Pas de mélanges.
+3.  **Evidence-Based** : Chaque fix doit être prouvé par un log, un curl ou un test d'intégration.
+4.  **Docs First** : Ce fichier est la source de vérité. Mettre à jour après chaque Phase terminée.
 
 ---
-
-## ÉTAT DES LIEUX (au 2026-05-04 23:00)
-
-### Historique des Phases
-*   **Phase 1 (Sécurité)** : [7236338] Remplacement des `unwrap()` par des `Result`. [FAIT]
-*   **Phase 2 (Nettoyage)** : [2a20870] Suppression du code/CSS/deps morts. [FAIT]
-*   **Phase 3 (Domaine)** : [b4ba435] Typage fort du `ProfilContent`. [FAIT]
-*   **Phase 4 (Backend)** : [dc63bdd] Découpage de `intake.rs` en modules. [FAIT]
-*   **Tests d'Intégration** : [b5654f6] 6 tests HTTP validant les contrats API. [FAIT]
-
-### Points Critiques
-*   **JS Untangle** : À REFAIRE. Les globaux ont été restaurés pour repartir sur une base saine.
-*   **Régressions Backend** : Corrigées et verrouillées par tests.
-*   **Dette de Test** : Réduite (6 tests d'intégration HTTP opérationnels).
-
-### Plan de Remédiation (Reste à faire)
-1. **RE-UNTANGLE JS** : Nettoyage réel de `dashboard.js` (Phase 3.5 JS). Supprimer les `window.*`.
-    - *Note* : `events.js` a été supprimé par `git restore`, à recréer — voir l'historique git pour le code minimal (37 LOC, CustomEvent + cleanup pattern).
-2. **SPLIT DASHBOARD** : Découpage de `dashboard.js` en contrôleurs modulaires.
-3. **TESTS POSTGRES** : Tests de round-trip `JSONB` <-> `ProfilContent` dans `crates/adapters/postgres/`.
-4. **SQUASH HISTORIQUE** : Squash du commit `dc63bdd` (cassé) avec `fd729e7` lors d'un nettoyage d'historique.
-5. **TIGHTEN TEST #6** : Renforcer l'assertion du test d'ingestion pour vérifier le code exact (400 vs 422).
-6. **STATIC UNWRAPS** : Nettoyer les `unwrap()` restants dans les initialiseurs `static Lazy` (schemas).
-7. **VALIDE** : Test manuel rigoureux dashboard/backend complet.
-
-### Dette Technique Connue
-*   **Mocks IA** : Les stubs dans les tests d'intégration ne détectent pas les changements de schémas LLM.
-*   **Couplage Frontend** : `window.state` et `dashboard.js` (870 LOC) toujours présents.
-
----
-
-## AUDIT PROMPT — RUST + VANILLA WEB
-
-### RÔLE
-Tu audites un repo. Pas de compliments, pas de "globalement c'est bien". Chaque observation = problème + localisation (fichier:ligne) + fix concret + effort (S/M/L).
-
-### RÈGLES DE SORTIE (NON-NÉGOCIABLES)
-- Format pour CHAQUE finding :
-  `[SEVERITY] path/file.rs:LINE — Problème (1 phrase) — Fix (1 phrase) — Effort: S/M/L`
-- SEVERITY = CRIT (crash / sécu / data loss) | HIGH (bug latent / dette qui scale) | MED (refacto) | LOW (style)
-
-### SEUILS DURS
-- `>300 LOC` (Rust) / `>250 LOC` (JS) = HIGH
-- `>5 imports croisés` entre modules = signal de god module
-- Struct avec >7 champs sans justification = à éclater
-- Fichier nommé `utils.rs`, `helpers.rs`, `common.rs` → renommer ou supprimer
-
-### CHECKS RUST / WEB
-1. **Unwrap** → `Result`.
-2. **`.clone()`** → justifier.
-3. **Fuite de couches** : `sqlx`, `axum` dans `domain` = CRIT.
-4. **`innerHTML`** dynamique = CRIT.
-5. **Globales implicites** (`window.x`) = HIGH.
-
-- [LOW] test_get_annexes_200 vérifie uniquement status 200, pas la structure. À renforcer quand le frontend exploitera cette route.
-- Note: tag déplacé via --force, acceptable solo, à éviter en collaboration.
-
-- [LOW] test_get_annexes_200 vérifie uniquement status 200, pas la structure. À renforcer quand le frontend exploitera cette route.
-- Note: tag déplacé via --force, acceptable solo, à éviter en collaboration.
+### Dette Technique Résiduelle
+- [LOW] `test_get_annexes_200` : Vérifie uniquement le statut, pas la structure du body.
+- [HIGH] `POST /api/ingest` : Échoue en 500 si le profil est vide.
+- [INFO] Tag `backend-stable-2026-05-05` déplacé via `--force`.

@@ -1,16 +1,16 @@
-# Documentation Index
+# RecruitAI Documentation Index
 
-This `/docs` directory contains the working documentation for the `alternance` project.
+Bienvenue dans la documentation technique et opérationnelle de RecruitAI.
 
-Here is how it is organized:
+## 📌 Pilotage du Projet
+- **[cleanup_status.md](cleanup_status.md)** : **Source de vérité unique.** Fusion de l'audit initial, de l'état actuel, de la roadmap (Phases 3.5 à 7) et des règles de gouvernance.
 
-## Usage and Orientation
-- **`instructions.md`**: step-by-step usage guide. It explains how to enter the Nix shell, initialize local PostgreSQL, start the API, and use the `just` commands.
-- **`how_it_works.md`**: architecture overview. It explains how the Rust backend, local PostgreSQL database, and static frontend work together.
+## 🏗️ Références Techniques
+- **[blueprint.md](blueprint.md)** : Spécifications de l'architecture hexagonale, du pipeline RAG et de l'infrastructure de données (Postgres).
+- **[design.md](design.md)** : Guide de style et principes visuels du dashboard.
 
-## Architecture and Design
-- **`blueprint.md`**: main technical architecture document. It describes the Cargo workspace organization, PostgreSQL data model, and generation pipeline.
-- **`design.md`**: visual direction document for the web interface. It serves as a tone and design-system reference, not as the functional source of truth.
+## 📖 Guides Pratiques
+- **[instructions.md](instructions.md)** : Guide de démarrage rapide (Installation, Nix, Justfile, Base de données).
 
-## Roadmaps
-- **`backend_cleanup_plan.md`**: operational plan for cleaning and restructuring the Rust backend.
+---
+*Dernière mise à jour : 2026-05-05 (Backend Stabilized)*
