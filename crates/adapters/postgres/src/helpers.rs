@@ -116,9 +116,15 @@ pub(super) fn build_instance(row: InstanceRow) -> Result<Instance, RepoError> {
         offre_id: domain::OffreId::from_uuid(row.offre_id),
         profil_id: domain::ProfilId::from_uuid(row.profil_id),
         status: parse_status(&row.status)?,
-        restitution: row.restitution,
-        resume_json: row.resume_json,
-        cover_letter_json: row.cover_letter_json,
+        restitution: row
+            .restitution
+            .and_then(|v| serde_json::from_value(v).ok()),
+        resume_json: row
+            .resume_json
+            .and_then(|v| serde_json::from_value(v).ok()),
+        cover_letter_json: row
+            .cover_letter_json
+            .and_then(|v| serde_json::from_value(v).ok()),
         notes: row.notes,
         created_at: row.created_at,
         updated_at: row.updated_at,
@@ -179,7 +185,7 @@ pub(super) fn build_profil(row: ProfilRow) -> Profil {
     Profil {
         id: ProfilId::from_uuid(row.id),
         label: row.label,
-        content: row.content,
+        content: serde_json::from_value(row.content).unwrap_or_default(),
         is_active: row.is_active,
         profile_photo: row.profile_photo,
         calendar_pdf: row.calendar_pdf,

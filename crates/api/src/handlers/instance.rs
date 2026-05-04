@@ -10,19 +10,19 @@ use tracing::{error, info};
 pub async fn get_instance_by_slug(
     State(state): State<AppState>,
     Path(slug): Path<String>,
-) -> Result<Json<serde_json::Value>, ApiError> {
+) -> Result<Json<domain::Instance>, ApiError> {
     let slug = domain::Slug::parse(slug).map_err(|e| ApiError::BadRequest(e.to_string()))?;
 
     let usecase = application::GetInstanceBySlugUseCase::new(state.instance_repo.clone());
     let instance = usecase.execute(&slug).await?;
 
-    Ok(Json(serde_json::to_value(&instance)?))
+    Ok(Json(instance))
 }
 
 pub async fn get_instance_by_offre_slug(
     State(state): State<AppState>,
     Path(slug): Path<String>,
-) -> Result<Json<serde_json::Value>, ApiError> {
+) -> Result<Json<domain::Instance>, ApiError> {
     let slug = domain::Slug::parse(slug).map_err(|e| ApiError::BadRequest(e.to_string()))?;
 
     let offre = state
@@ -39,20 +39,20 @@ pub async fn get_instance_by_offre_slug(
         .map_err(|e| ApiError::Internal(e.to_string()))?
         .ok_or_else(|| ApiError::NotFound(format!("Pas d'instance pour l'offre {}", slug)))?;
 
-    Ok(Json(serde_json::to_value(&instance)?))
+    Ok(Json(instance))
 }
 
 pub async fn get_instance_resume(
     State(state): State<AppState>,
     Path(slug): Path<String>,
-) -> Result<Json<serde_json::Value>, ApiError> {
+) -> Result<Json<domain::Resume>, ApiError> {
     let slug = domain::Slug::parse(slug).map_err(|e| ApiError::BadRequest(e.to_string()))?;
 
     let usecase = application::GetInstanceBySlugUseCase::new(state.instance_repo.clone());
     let instance = usecase.execute(&slug).await?;
 
     match instance.resume_json {
-        Some(json) => Ok(Json(json)),
+        Some(resume) => Ok(Json(resume)),
         None => Err(ApiError::NotFound(format!("Pas de CV pour {}", slug))),
     }
 }
@@ -60,14 +60,14 @@ pub async fn get_instance_resume(
 pub async fn get_instance_cover_letter(
     State(state): State<AppState>,
     Path(slug): Path<String>,
-) -> Result<Json<serde_json::Value>, ApiError> {
+) -> Result<Json<domain::CoverLetter>, ApiError> {
     let slug = domain::Slug::parse(slug).map_err(|e| ApiError::BadRequest(e.to_string()))?;
 
     let usecase = application::GetInstanceBySlugUseCase::new(state.instance_repo.clone());
     let instance = usecase.execute(&slug).await?;
 
     match instance.cover_letter_json {
-        Some(json) => Ok(Json(json)),
+        Some(letter) => Ok(Json(letter)),
         None => Err(ApiError::NotFound(format!("Pas de lettre pour {}", slug))),
     }
 }

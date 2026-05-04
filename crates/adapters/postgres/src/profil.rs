@@ -123,7 +123,7 @@ impl ProfilRepo for ProfilRepoPg {
             "#,
             profil.id.as_uuid(),
             profil.label,
-            profil.content,
+            serde_json::to_value(&profil.content).expect("ProfilContent is always serializable"),
             profil.is_active,
             profil.profile_photo,
             profil.calendar_pdf,

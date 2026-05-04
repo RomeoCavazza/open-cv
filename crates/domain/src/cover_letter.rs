@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::resume::{Contact, Identite};
 
-#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]
 pub struct CoverLetter {
     pub expediteur: Expediteur,
     pub destinataire: Destinataire,
@@ -21,20 +21,20 @@ pub struct CoverLetter {
     pub signature: Signature,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]
 pub struct Expediteur {
     pub identite: Identite,
     pub contact: Contact,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]
 pub struct Destinataire {
     pub entreprise: String,
     /// Format libre : "25 avril 2026". L'extraction LLM la formate en français.
     pub date: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]
 pub struct Objet {
     /// "ALTERNANCE", "STAGE", "CDI"... — la catégorie en MAJ pour le rendu.
     pub categorie: String,
@@ -42,15 +42,16 @@ pub struct Objet {
     pub libelle: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]
 pub struct Paragraphe {
     pub role: ParagrapheRole,
     pub contenu: String,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Default)]
 #[serde(rename_all = "snake_case")]
 pub enum ParagrapheRole {
+    #[default]
     /// "Madame, Monsieur,"
     Salutation,
     /// "Actuellement étudiant en Master IA à EPITECH..."
@@ -65,7 +66,7 @@ pub enum ParagrapheRole {
     Cloture,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]
 pub struct Signature {
     /// "Cordialement,"
     pub formule_politesse: String,
