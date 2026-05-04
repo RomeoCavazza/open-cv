@@ -10,6 +10,7 @@ pub mod chat;
 pub mod events;
 pub mod generate;
 pub mod intake;
+pub mod prompts;
 
 pub use events::{EventBus, GenerationEvent, GenerationStep, StepStatus};
 pub use generate::{GenerateApplicationUseCase, GenerateError, GenerateInput, Livrables};

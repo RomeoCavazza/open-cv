@@ -1,7 +1,20 @@
 import * as state from './state.js';
 import * as api from './api.js';
 import * as ui from './ui.js';
-import { clear, el, svg } from './dom.js';
+import { clear } from './dom.js';
+import * as router from './router.js';
+import * as iframeRender from './render/iframe.js';
+import * as offerRender from './render/offers.js';
+
+// --- Expose State & Utils for legacy scripts (chat.js) ---
+window.state = {
+    get selectedLlmProvider() { return state.selectedLlmProvider; },
+    get activeJobId() { return state.activeJobId; },
+    get activeTab() { return state.activeTab; },
+    setSelectedLlmProvider: state.setSelectedLlmProvider,
+    setActiveTab: state.setActiveTab
+};
+window.updateIframe = updateIframe;
 
 // --- Dashboard Logic ---
 
@@ -13,85 +26,22 @@ const views = {
     profile: document.getElementById('view-profile') 
 };
 
-function switchView(viewName) {
-    Object.values(views).forEach(v => {
-        v.classList.remove('active');
-        v.scrollTop = 0;
-    });
-    views[viewName].classList.add('active');
-    views[viewName].scrollTop = 0;
-    document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-    if (viewName === 'ingest') {
-        document.getElementById('nav-dashboard').classList.add('active');
-        loadOffers();
-    }
-    if (viewName === 'app') {
-        document.getElementById('nav-app').classList.add('active');
-        loadOffers();
-        if (!state.activeJobId) resetIframeToEmptyState();
-    }
-    if (viewName === 'profile') document.getElementById('nav-profile').classList.add('active');
-    updatePath();
-    if (typeof window.loadChatHistory === 'function') window.loadChatHistory();
-}
-
-// Expose for legacy scripts (chat.js)
-window.updateIframe = updateIframe;
-window.state = {
-    get selectedLlmProvider() { return state.selectedLlmProvider; },
-    get activeJobId() { return state.activeJobId; },
-    get activeTab() { return state.activeTab; },
-    setSelectedLlmProvider: state.setSelectedLlmProvider
-};
-
-function updatePath() {
-    let path = '/';
-    if (views.app.classList.contains('active')) {
-        path = '/applications';
-        if (state.activeJobId) {
-            path += `/${state.activeJobId}`;
-            if (state.activeTab) path += `/${state.activeTab}`;
+// Initialize router
+router.initRouter({
+    views,
+    callbacks: {
+        onLoadOffers: () => loadOffers(),
+        onResetIframe: () => iframeRender.resetIframeToEmptyState(),
+        onLoadChatHistory: () => {
+            if (typeof window.loadChatHistory === 'function') window.loadChatHistory();
         }
-    } else if (views.profile.classList.contains('active')) {
-        path = '/profil';
     }
-    if (window.location.pathname !== path) {
-        history.pushState(null, null, path);
-    }
-}
-
-async function handleRouting() {
-    const path = window.location.pathname;
-    if (!path || path === '/') {
-        switchView('ingest');
-        return;
-    }
-
-    const parts = path.split('/').filter(Boolean); // applications, slug, tab
-    if (parts[0] === 'applications') {
-        switchView('app');
-        if (parts[1]) {
-            state.setActiveJobId(parts[1]);
-            if (parts[2]) state.setActiveTab(parts[2]);
-            
-            await loadOffers();
-            
-            if (state.activeTab) {
-                const tab = document.querySelector(`.tab[data-target="${state.activeTab}"]`);
-                if (tab) tab.click();
-            }
-        }
-    } else if (parts[0] === 'profil') {
-        switchView('profile');
-    }
-}
-
-window.addEventListener('popstate', handleRouting);
+});
 
 async function loadProfile() {
     try {
         const profileResponse = await api.fetchProfile();
-        const content = profileResponse.content; // C'est ici que sont les vraies données
+        const content = profileResponse.content; 
         state.setActiveProfilId(profileResponse.id || null);
         
         state.setLoadedProfileExtras(Object.fromEntries(
@@ -101,36 +51,38 @@ async function loadProfile() {
             ].includes(key))
         ));
 
-        document.getElementById('prof-firstname').value = content.profile?.firstname || "";
-        document.getElementById('prof-lastname').value = content.profile?.lastname || "";
-        document.getElementById('prof-title').value = content.profile?.title || "";
-        document.getElementById('prof-offer-type').value = content.profile?.offer_type || "Alternance";
-        document.getElementById('prof-duration').value = content.apprenticeship?.duration || "";
-        document.getElementById('prof-rhythm').value = content.apprenticeship?.rhythm || "";
-        document.getElementById('prof-pitch').value = content.profile?.pitch || "";
-        document.getElementById('prof-location').value = content.profile?.location || "";
-        document.getElementById('prof-phone').value = content.profile?.phone || "";
-        document.getElementById('prof-email').value = content.profile?.email || "";
-        document.getElementById('prof-linkedin').value = content.profile?.linkedin || "";
-        document.getElementById('prof-website').value = content.profile?.website || "";
-        document.getElementById('prof-github').value = content.profile?.github || "";
+        const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ""; };
+        setVal('prof-firstname', content.profile?.firstname);
+        setVal('prof-lastname', content.profile?.lastname);
+        setVal('prof-title', content.profile?.title);
+        setVal('prof-offer-type', content.profile?.offer_type || "Alternance");
+        setVal('prof-duration', content.apprenticeship?.duration);
+        setVal('prof-rhythm', content.apprenticeship?.rhythm);
+        setVal('prof-pitch', content.profile?.pitch);
+        setVal('prof-location', content.profile?.location);
+        setVal('prof-phone', content.profile?.phone);
+        setVal('prof-email', content.profile?.email);
+        setVal('prof-linkedin', content.profile?.linkedin);
+        setVal('prof-website', content.profile?.website);
+        setVal('prof-github', content.profile?.github);
         
-        document.getElementById('prof-resume-template').value = ui.stringifyDocument(content.documents?.resume_template || content.resume_template);
-        document.getElementById('prof-cover-letter-template').value = ui.stringifyDocument(content.documents?.cover_letter_template || content.cover_letter_template);
-        
+        setVal('prof-resume-template', ui.stringifyDocument(content.documents?.resume_template || content.resume_template));
+        setVal('prof-cover-letter-template', ui.stringifyDocument(content.documents?.cover_letter_template || content.cover_letter_template));
         
         state.setLoadedProfileImage(content.profile?.image || "");
-        document.getElementById('prof-image-base64').value = (content.profile?.image === "persisted:bytea") ? "" : state.loadedProfileImage;
+        setVal('prof-image-base64', (content.profile?.image === "persisted:bytea") ? "" : state.loadedProfileImage);
         
-        if (content.profile?.image) {
+        const preview = document.getElementById('prof-image-preview');
+        const placeholder = document.getElementById('preview-placeholder');
+        if (preview && content.profile?.image) {
             const imageUrl = (content.profile.image === "persisted:bytea") 
                 ? `/api/profile/active/photo?t=${Date.now()}` 
                 : content.profile.image;
-            document.getElementById('prof-image-preview').style.backgroundImage = `url(${imageUrl})`;
-            document.getElementById('preview-placeholder').style.display = 'none';
-        } else {
-            document.getElementById('prof-image-preview').style.backgroundImage = '';
-            document.getElementById('preview-placeholder').style.display = 'block';
+            preview.style.backgroundImage = `url(${imageUrl})`;
+            if (placeholder) placeholder.style.display = 'none';
+        } else if (preview) {
+            preview.style.backgroundImage = '';
+            if (placeholder) placeholder.style.display = 'block';
         }
 
         ui.renderList('list-experiences', content.experiences || [], ui.createExpRow);
@@ -139,11 +91,8 @@ async function loadProfile() {
         ui.renderList('list-languages', content.languages || [], ui.createLangRow);
         ui.renderList('list-skills', content.skills || [], ui.createSkillRow);
         
-        // Fetch and render annexes separately
-        console.log("Chargement des annexes depuis l'API...");
         try {
             const annexes = await api.fetchAnnexes();
-            console.log(`${annexes?.length || 0} annexes reçues du serveur`);
             ui.renderList('list-annexes', annexes || [], ui.createAnnexeRow);
         } catch (annexError) {
             console.error("Échec du chargement des annexes", annexError);
@@ -152,7 +101,6 @@ async function loadProfile() {
         ui.updateUIStrings();
     } catch (e) { console.warn("Profile load failed", e); }
 }
-
 
 async function loadOffers() {
     const loadSeq = ++offersLoadSeq;
@@ -166,6 +114,7 @@ async function loadOffers() {
         renderOldOffers(offers);
         
         const list = document.getElementById('offers-list');
+        if (!list) return;
         clear(list);
         const inboxLabel = state.i18n.translations[state.i18n.current].inbox;
         
@@ -180,7 +129,8 @@ async function loadOffers() {
         });
         
         const inboxCount = visibleInboxOffers.length || offers.length;
-        document.getElementById('sidebar-inbox-header').textContent = `${inboxLabel} (${inboxCount})`;
+        const sidebarHeader = document.getElementById('sidebar-inbox-header');
+        if (sidebarHeader) sidebarHeader.textContent = `${inboxLabel} (${inboxCount})`;
         
         const groups = {};
         visibleInboxOffers.forEach(o => {
@@ -200,13 +150,13 @@ async function loadOffers() {
                 const toggle = document.createElement('span');
                 toggle.className = 'offer-group-toggle';
 
-                const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-                svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-                svg.setAttribute('fill', 'none');
-                svg.setAttribute('viewBox', '0 0 24 24');
-                svg.setAttribute('stroke-width', '1.5');
-                svg.setAttribute('stroke', 'currentColor');
-                svg.setAttribute('class', 'size-6');
+                const svgNode = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                svgNode.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+                svgNode.setAttribute('fill', 'none');
+                svgNode.setAttribute('viewBox', '0 0 24 24');
+                svgNode.setAttribute('stroke-width', '1.5');
+                svgNode.setAttribute('stroke', 'currentColor');
+                svgNode.setAttribute('class', 'size-6');
 
                 const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
                 path.setAttribute('stroke-linecap', 'round');
@@ -214,12 +164,12 @@ async function loadOffers() {
                 path.setAttribute('d', isCollapsed
                     ? 'M15 13.5H9m4.06-7.19-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z'
                     : 'M12 10.5v6m3-3H9m4.06-7.19-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z');
-                svg.appendChild(path);
+                svgNode.appendChild(path);
 
                 const label = document.createElement('span');
                 label.textContent = `${cat} (${groups[cat].length})`;
 
-                toggle.appendChild(svg);
+                toggle.appendChild(svgNode);
                 toggle.appendChild(label);
                 catDiv.appendChild(toggle);
                 
@@ -236,7 +186,7 @@ async function loadOffers() {
                 const isLocked = !!flags.locked;
                 const isArchived = !!flags.archived;
                 const hasFlag = isLocked || !!flags.archived;
-                const card = createOfferCard(o, {
+                const card = offerRender.createOfferCard(o, {
                     isActive,
                     isLocked,
                     isArchived,
@@ -280,7 +230,7 @@ async function loadOffers() {
 
             visibleArchivedOffers.forEach((o) => {
                 const isActive = state.activeJobId === o.job_id;
-                const card = createOfferCard(o, {
+                const card = offerRender.createOfferCard(o, {
                     isActive,
                     isLocked: false,
                     isArchived: true,
@@ -313,107 +263,7 @@ async function loadOffers() {
 
     } catch (e) {
         console.error('Impossible de charger les offres', e);
-        alert('Erreur lors du chargement des offres.');
     }
-}
-
-function createOfferCard(offer, { isActive, isLocked, isArchived, hasFlag, archivedView }) {
-    const card = document.createElement('div');
-    card.className = `offer-card ${isActive ? 'active' : ''} ${hasFlag ? 'has-flag' : ''} ${isArchived ? 'is-archived archive-muted' : ''}`;
-    card.style = `padding: 12px 16px; cursor: pointer; border-radius: 8px; margin: 4px 8px; transition: all 0.2s; background: ${isActive ? 'white' : 'transparent'};`;
-
-    const inner = document.createElement('div');
-    inner.className = 'offer-card-inner';
-
-    const text = document.createElement('div');
-    text.className = 'offer-card-text';
-
-    const titleRow = document.createElement('div');
-    titleRow.style.display = 'flex';
-    titleRow.style.alignItems = 'flex-start';
-    titleRow.style.gap = '8px';
-
-    const title = document.createElement('div');
-    title.className = 'offer-title';
-    title.style.flex = '1';
-    title.textContent = offer.title;
-
-    const actionsSlot = document.createElement('div');
-    actionsSlot.className = 'offer-actions-slot';
-
-    if (!archivedView) {
-        const lockAction = createOfferActionButton({
-            active: isLocked,
-            action: 'lock',
-            ariaLabel: "Verrouiller l'offre",
-            iconPath: 'M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z',
-        });
-        const archiveAction = createOfferActionButton({
-            active: isArchived,
-            action: 'archive',
-            ariaLabel: "Archiver l'offre",
-            iconPath: 'm20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z',
-        });
-        actionsSlot.appendChild(lockAction.wrapper);
-        actionsSlot.appendChild(archiveAction.wrapper);
-    } else {
-        const restoreAction = createOfferActionButton({
-            active: true,
-            action: 'restore-inbox',
-            ariaLabel: 'Restaurer dans inbox',
-            iconPath: 'm20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5m8.25 3v6.75m0 0-3-3m3 3 3-3M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z',
-        });
-        const sendOldAction = createOfferActionButton({
-            active: true,
-            action: 'send-old',
-            ariaLabel: 'Retirer de la sidebar',
-            iconPath: 'm20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5m6 4.125 2.25 2.25m0 0 2.25 2.25M12 13.875l2.25-2.25M12 13.875l-2.25 2.25M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z',
-        });
-        actionsSlot.appendChild(restoreAction.wrapper);
-        actionsSlot.appendChild(sendOldAction.wrapper);
-    }
-
-    const company = document.createElement('div');
-    company.className = 'offer-company';
-    company.textContent = offer.entreprise || '';
-
-    titleRow.appendChild(title);
-    titleRow.appendChild(actionsSlot);
-    text.appendChild(titleRow);
-    text.appendChild(company);
-    inner.appendChild(text);
-    card.appendChild(inner);
-
-    return card;
-}
-
-function createOfferActionButton({ active, action, ariaLabel, iconPath }) {
-    const button = el('button', {
-        type: 'button',
-        className: `offer-action-btn ${active ? 'is-active' : ''}`,
-        dataset: { action },
-        attrs: { 'aria-label': ariaLabel },
-    }, [
-        svg('svg', {
-            xmlns: 'http://www.w3.org/2000/svg',
-            fill: 'none',
-            viewBox: '0 0 24 24',
-            'stroke-width': '1.5',
-            stroke: 'currentColor',
-            attrs: { class: 'size-6' },
-        }, [
-            svg('path', {
-                'stroke-linecap': 'round',
-                'stroke-linejoin': 'round',
-                d: iconPath,
-            }),
-        ]),
-    ]);
-    const wrapper = el('span', {
-        className: `offer-action-visibility ${active ? 'is-active' : ''}`,
-    }, [button]);
-
-    return { wrapper, button };
 }
 
 function mutateOfferFlags(jobId, mutate) {
@@ -440,42 +290,10 @@ function toggleOfferCategory(category) {
     loadOffers();
 }
 
-function resetIframeToEmptyState() {
-        const iframe = document.getElementById('iframe-doc');
-        if (!iframe) return;
-
-    iframe.removeAttribute('src');
-        iframe.srcdoc = `<!doctype html>
-<html lang="fr">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <style>
-        html, body { height: 100%; margin: 0; background: #fff; font-family: Inter, system-ui, sans-serif; }
-        .empty-state { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 18vh; text-align: center; }
-        .icon { width: 64px; height: 64px; border-radius: 50%; background: #eff6ff; color: #0052ff; display: flex; align-items: center; justify-content: center; margin-bottom: 24px; }
-        h2 { margin: 0; font-size: 20px; font-weight: 700; color: #1e293b; margin-bottom: 12px; }
-    </style>
-</head>
-<body>
-    <div class="empty-state">
-        <div class="icon">
-            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
-            </svg>
-        </div>
-        <h2>Aucune offre sélectionnée</h2>
-    </div>
-</body>
-</html>`;
-        window.activeInstanceSlug = null;
-        window.activeInstanceData = null;
-        window.activeResolvedOfferSlug = null;
-}
-
 function renderDashboardApplications(offers) {
     const panel = document.getElementById('dashboard-applications-panel');
     const list = document.getElementById('dashboard-applications-list');
+    if (!panel || !list) return;
     const items = offers.filter((offer) => {
         const flags = state.offerFlags[offer.job_id] || {};
         return !flags.archived && !flags.oldCv && !flags.deleted;
@@ -514,7 +332,7 @@ function renderDashboardApplications(offers) {
         const actions = document.createElement('div');
         actions.className = 'old-offer-actions';
 
-        const archiveAction = createOfferActionButton({
+        const archiveAction = offerRender.createOfferActionButton({
             active: isArchived,
             action: 'archive',
             ariaLabel: "Archiver l'offre",
@@ -541,7 +359,7 @@ function renderDashboardApplications(offers) {
         
         item.onclick = () => {
             state.setActiveJobId(offer.job_id);
-            switchView('app');
+            router.switchView('app');
             loadOffers();
             updateIframe();
         };
@@ -552,6 +370,7 @@ function renderDashboardApplications(offers) {
 function renderOldOffers(offers) {
     const panel = document.getElementById('old-offers-panel');
     const list = document.getElementById('old-offers-list');
+    if (!panel || !list) return;
     const oldOffers = offers.filter((offer) => state.offerFlags[offer.job_id]?.oldCv && !state.offerFlags[offer.job_id]?.deleted);
 
     list.innerHTML = '';
@@ -584,7 +403,7 @@ function renderOldOffers(offers) {
         const actions = document.createElement('div');
         actions.className = 'old-offer-actions';
 
-        const restoreAction = createOfferActionButton({
+        const restoreAction = offerRender.createOfferActionButton({
             active: true,
             action: 'restore-archive',
             ariaLabel: 'Restaurer dans archive',
@@ -600,7 +419,7 @@ function renderOldOffers(offers) {
             loadOffers();
         };
 
-        const deleteAction = createOfferActionButton({
+        const deleteAction = offerRender.createOfferActionButton({
             active: true,
             action: 'delete',
             ariaLabel: 'Supprimer définitivement',
@@ -629,6 +448,7 @@ function renderOldOffers(offers) {
 function renderDashboardTreatedOffers(offers) {
     const panel = document.getElementById('dashboard-treated-panel');
     const list = document.getElementById('dashboard-treated-list');
+    if (!panel || !list) return;
     const items = offers.filter((offer) => {
         const flags = state.offerFlags[offer.job_id] || {};
         return flags.archived && !flags.oldCv && !flags.deleted;
@@ -665,7 +485,7 @@ function renderDashboardTreatedOffers(offers) {
         const actions = document.createElement('div');
         actions.className = 'old-offer-actions';
 
-        const restoreAction = createOfferActionButton({
+        const restoreAction = offerRender.createOfferActionButton({
             active: true,
             action: 'restore-inbox',
             ariaLabel: 'Restaurer dans inbox',
@@ -683,7 +503,7 @@ function renderDashboardTreatedOffers(offers) {
             loadOffers();
         };
 
-        const sendOldAction = createOfferActionButton({
+        const sendOldAction = offerRender.createOfferActionButton({
             active: true,
             action: 'send-old',
             ariaLabel: 'Archiver définitivement',
@@ -708,7 +528,7 @@ function renderDashboardTreatedOffers(offers) {
         
         item.onclick = () => {
             state.setActiveJobId(offer.job_id);
-            switchView('app');
+            router.switchView('app');
             loadOffers();
             updateIframe();
         };
@@ -718,7 +538,7 @@ function renderDashboardTreatedOffers(offers) {
 
 async function updateIframe(options = {}) {
     if (!state.activeJobId) {
-        resetIframeToEmptyState();
+        iframeRender.resetIframeToEmptyState();
         return;
     }
     const { syncChatHistory = true } = options;
@@ -767,11 +587,12 @@ async function updateIframe(options = {}) {
     if (syncChatHistory && typeof window.loadChatHistory === 'function') {
         window.loadChatHistory();
     }
-    updatePath();
+    router.updatePath();
 }
 
 function renderAiChatAttachments() {
     const container = document.getElementById('ai-chat-attachments');
+    if (!container) return;
     const t = state.i18n.translations[state.i18n.current];
     clear(container);
 
@@ -782,363 +603,268 @@ function renderAiChatAttachments() {
 
     container.style.display = 'flex';
     state.aiChatAttachments.forEach((file, index) => {
-        const remove = el('button', {
-            type: 'button',
-            className: 'ai-attachment-remove',
-            attrs: { 'aria-label': t.attached_files },
-            text: '×',
-        });
+        const remove = document.createElement('button');
+        remove.type = 'button';
+        remove.className = 'ai-attachment-remove';
+        remove.setAttribute('aria-label', t.attached_files);
+        remove.innerText = '×';
+        
         remove.onclick = () => {
             state.aiChatAttachments.splice(index, 1);
             renderAiChatAttachments();
         };
 
-        container.appendChild(el('div', { className: 'ai-attachment-chip' }, [
-            el('span', {
-                className: 'ai-attachment-name',
-                title: file.name,
-                text: file.name,
-            }),
-            remove,
-        ]));
+        const chip = document.createElement('div');
+        chip.className = 'ai-attachment-chip';
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'ai-attachment-name';
+        nameSpan.title = file.name;
+        nameSpan.innerText = file.name;
+        
+        chip.appendChild(nameSpan);
+        chip.appendChild(remove);
+        container.appendChild(chip);
     });
 }
 
-function syncLlmSelectors(provider) {
-    state.setSelectedLlmProvider(provider);
-    document.querySelectorAll('.llm-pill[data-provider]').forEach(p => {
-        if (p.dataset.provider === provider) p.classList.add('active');
-        else p.classList.remove('active');
-    });
-}
+// --- Init & Listeners ---
 
-// --- Event Listeners ---
+async function init() {
+    // Attach Listeners first so they are ready for programmatic calls (like router.handleRouting)
+    attachEventListeners();
 
-document.querySelectorAll('.lang-toggle').forEach(sel => {
-    sel.onchange = (e) => {
-        state.i18n.current = e.target.value;
-        document.querySelectorAll('.lang-toggle').forEach(s => s.value = state.i18n.current);
-        ui.updateUIStrings();
-        renderAiChatAttachments();
-        loadOffers();
-    };
-});
-
-document.getElementById('nav-dashboard').onclick = () => switchView('ingest');
-document.getElementById('nav-app').onclick = () => switchView('app');
-document.getElementById('nav-profile').onclick = () => switchView('profile');
-
-document.getElementById('btn-save-profile').onclick = async () => {
-    const btn = document.getElementById('btn-save-profile');
-    btn.disabled = true;
-    let resumeTemplate;
-    let coverLetterTemplate;
-    try {
-        resumeTemplate = JSON.parse(document.getElementById('prof-resume-template').value || '{}');
-        coverLetterTemplate = JSON.parse(document.getElementById('prof-cover-letter-template').value || '{}');
-    } catch (error) {
-        console.error("Profile document JSON invalid", error);
-        alert(state.i18n.translations[state.i18n.current].json_invalid);
-        btn.disabled = false;
-        return;
-    }
-
-    try {
-        // 1. Handle Annexes Deletions & Uploads FIRST
-        const annexeRows = Array.from(document.querySelectorAll('.form-row-annexe'));
-        const annexesMeta = [];
-
-        for (const row of annexeRows) {
-            const id = row.dataset.fileId;
-            const isMarkedDeleted = row.dataset.markedForDeletion === "true";
-
-            if (isMarkedDeleted && id) {
-                await api.deleteAnnexe(id);
-                continue;
-            }
-
-            if (!id && row.dataset.fileData) {
-                // New upload
-                const newId = await api.uploadAnnexe({
-                    label: row.querySelector('.annexe-name').value,
-                    filename: row.dataset.fileName,
-                    content_type: row.dataset.fileType,
-                    data_url: row.dataset.fileData
-                });
-                annexesMeta.push({
-                    id: newId,
-                    label: row.querySelector('.annexe-name').value,
-                    filename: row.dataset.fileName,
-                    content_type: row.dataset.fileType
-                });
-            } else if (id && !isMarkedDeleted) {
-                // Already in DB, keep meta
-                annexesMeta.push({
-                    id: id,
-                    label: row.querySelector('.annexe-name').value,
-                    filename: row.dataset.fileName,
-                    content_type: row.dataset.fileType
-                });
-            }
-        }
-
-        // 2. Prepare Profile Content (Lightweight)
-        const content = {
-            ...state.loadedProfileExtras,
-            profile: {
-                firstname: document.getElementById('prof-firstname').value,
-                lastname: document.getElementById('prof-lastname').value,
-                name: document.getElementById('prof-firstname').value + " " + document.getElementById('prof-lastname').value,
-                image: document.getElementById('prof-image-base64').value || state.loadedProfileImage || "",
-                title: document.getElementById('prof-title').value,
-                pitch: document.getElementById('prof-pitch').value,
-                location: document.getElementById('prof-location').value,
-                phone: document.getElementById('prof-phone').value,
-                email: document.getElementById('prof-email').value,
-                linkedin: document.getElementById('prof-linkedin').value,
-                website: document.getElementById('prof-website').value,
-                github: document.getElementById('prof-github').value,
-                offer_type: document.getElementById('prof-offer-type').value
-            },
-            apprenticeship: {
-                duration: document.getElementById('prof-duration').value,
-                rhythm: document.getElementById('prof-rhythm').value,
-                start: "septembre 2026"
-            },
-            experiences: Array.from(document.querySelectorAll('#list-experiences .form-row-exp')).map(row => ({
-                role: row.querySelector('.exp-role').value,
-                company: row.querySelector('.exp-company').value,
-                period: row.querySelector('.exp-period').value,
-                description: row.querySelector('.exp-desc').value.split('\n').filter(l => l.trim())
-            })),
-            projects: Array.from(document.querySelectorAll('#list-projects .form-row-exp')).map(row => ({
-                role: row.querySelector('.exp-role').value,
-                company: row.querySelector('.exp-company').value,
-                period: row.querySelector('.exp-period').value,
-                description: row.querySelector('.exp-desc').value.split('\n').filter(l => l.trim())
-            })),
-            education: Array.from(document.querySelectorAll('.form-row-edu')).map(row => ({
-                school: row.querySelector('.edu-school').value,
-                degree: row.querySelector('.edu-degree').value,
-                period: row.querySelector('.edu-period').value
-            })),
-            languages: Array.from(document.querySelectorAll('.form-row-lang')).map(row => ({
-                name: row.querySelector('.lang-name').value,
-                level: row.querySelector('.lang-level').value
-            })),
-            skills: Array.from(document.querySelectorAll('.skill-cat-row')).map(row => ({
-                category: row.querySelector('.skill-cat-name').value,
-                items: Array.from(row.querySelectorAll('.skills-pills-container .skill-pill')).map(p => {
-                    const textEl = p.querySelector('.skill-text');
-                    return textEl ? textEl.innerText.trim() : p.innerText.replace(' ×', '').trim();
-                })
-            })).filter(group => group.category.trim() || group.items.length > 0),
-            documents: {
-                resume_template: resumeTemplate && Object.keys(resumeTemplate).length > 0 ? resumeTemplate : undefined,
-                cover_letter_template: coverLetterTemplate && Object.keys(coverLetterTemplate).length > 0 ? coverLetterTemplate : undefined,
-                annexes: annexesMeta // Metadata only, binary is in DB
-            },
-            labels: { contact: "CONTACT", skills: "COMPÉTENCES", languages: "LANGUES", experiences: "EXPÉRIENCES", projects: "PROJETS", education: "FORMATIONS", download: "Download PDF (A4)" }
-        };
-
-        // 3. Save profile
-        await api.saveProfile(content);
-        alert(state.i18n.translations[state.i18n.current].profile_saved);
-        await loadProfile();
-    } catch (e) {
-        console.error("Profile save failed", e);
-        alert(state.i18n.translations[state.i18n.current].profile_save_error);
-    } finally { 
-        btn.disabled = false; 
-    }
-};
-
-document.getElementById('prof-image-preview').onclick = () => document.getElementById('prof-image-file').click();
-document.getElementById('ai-chat-attach-btn').onclick = () => document.getElementById('ai-chat-file-input').click();
-
-document.getElementById('prof-image-file').onchange = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    try {
-        const b64 = await fileToOptimizedDataUrl(file);
-        state.setLoadedProfileImage(b64);
-        document.getElementById('prof-image-base64').value = b64;
-        document.getElementById('prof-image-preview').style.backgroundImage = `url(${b64})`;
-        document.getElementById('preview-placeholder').style.display = 'none';
-    } catch (error) {
-        alert("Image trop lourde ou illisible.");
-    }
-};
-
-async function fileToOptimizedDataUrl(file) {
-    const dataUrl = await ui.readFileAsDataUrl(file);
-    const img = await new Promise((resolve, reject) => {
-        const image = new Image();
-        image.onload = () => resolve(image);
-        image.onerror = () => reject(new Error('image-decode-failed'));
-        image.src = dataUrl;
-    });
-
-    const maxSize = 512;
-    const ratio = Math.min(1, maxSize / Math.max(img.width, img.height));
-    const width = Math.max(1, Math.round(img.width * ratio));
-    const height = Math.max(1, Math.round(img.height * ratio));
-
-    const canvas = document.createElement('canvas');
-    canvas.width = width;
-    canvas.height = height;
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(img, 0, 0, width, height);
-
-    return canvas.toDataURL('image/jpeg', 0.82);
-}
-
-document.getElementById('ai-chat-file-input').onchange = (e) => {
-    const files = Array.from(e.target.files || []);
-    files.forEach((file) => {
-        const exists = state.aiChatAttachments.some(a => a.name === file.name && a.size === file.size);
-        if (!exists) state.aiChatAttachments.push(file);
-    });
-    e.target.value = '';
+    await state.loadI18n();
+    await loadProfile();
+    await loadOffers();
+    await router.handleRouting();
     renderAiChatAttachments();
-};
-
-document.getElementById('btn-ingest-run').onclick = async () => {
-    const inputText = document.getElementById('job-input').value.trim();
-    if (!inputText) return;
-    const btn = document.getElementById('btn-ingest-run');
-    btn.disabled = true;
-
-    const delivs = {};
-    document.querySelectorAll('#deliv-selector-ingest .llm-pill').forEach(p => {
-        delivs[p.dataset.deliv] = p.classList.contains('active');
-    });
-
-    const payload = { 
-        input: inputText, 
-        config: { resume: delivs.resume, cover: delivs.cover, analysis: delivs.restitution }, 
-        profil_id: state.activeProfilId, 
-        llm_provider: state.selectedLlmProvider 
-    };
-
-    try {
-        await api.runIngest(payload);
-        state.setActiveJobId(null);
-        await loadOffers();
-        switchView('app');
-    } catch (e) {
-        console.error(e);
-    } finally { 
-        btn.disabled = false; 
-    }
-};
-
-document.querySelectorAll('.tab').forEach(tab => {
-    tab.onclick = () => {
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        tab.classList.add('active');
-        state.setActiveTab(tab.dataset.target);
-        updateIframe();
-    };
-});
-
-document.getElementById('btn-reload-tab').onclick = () => {
-    refreshCurrentTab();
-};
-
-document.getElementById('btn-download-pdf').onclick = () => {
-    const iframe = document.getElementById('iframe-doc');
-    if (iframe.src) window.open(iframe.src, '_blank').print();
-};
-
-document.querySelectorAll('.llm-pill[data-provider]').forEach(pill => {
-    pill.onclick = () => syncLlmSelectors(pill.dataset.provider);
-});
-
-function syncDelivSelectors(config) {
-    document.querySelectorAll('#deliv-selector-ingest .llm-pill').forEach(pill => {
-        const key = pill.dataset.deliv;
-        if (config[key]) pill.classList.add('active');
-        else pill.classList.remove('active');
-    });
-    updateIngestButtonState();
 }
 
-function updateIngestButtonState() {
-    const activeCount = document.querySelectorAll('#deliv-selector-ingest .llm-pill.active').length;
-    const btn = document.getElementById('btn-ingest-run');
-    if (btn) {
-        btn.disabled = (activeCount === 0);
-    }
-}
+function attachEventListeners() {
+    const safeClick = (id, fn) => { const el = document.getElementById(id); if (el) el.onclick = fn; };
 
-document.querySelectorAll('#deliv-selector-ingest .llm-pill').forEach(pill => {
-    pill.onclick = () => {
-        pill.classList.toggle('active');
-        const current = {};
-        document.querySelectorAll('#deliv-selector-ingest .llm-pill').forEach(p => {
-            current[p.dataset.deliv] = p.classList.contains('active');
-        });
-        state.saveDelivConfig(current);
-        updateIngestButtonState();
-    };
-});
+    safeClick('nav-dashboard', (e) => { e.preventDefault(); router.switchView('ingest'); });
+    safeClick('nav-app', (e) => { e.preventDefault(); router.switchView('app'); });
+    safeClick('nav-profile', (e) => { e.preventDefault(); router.switchView('profile'); });
 
-
-async function refreshCurrentTab() {
-    if (!state.activeJobId) {
-        resetIframeToEmptyState();
-        return;
-    }
-
-    if (state.activeTab === 'restitution' && window.activeInstanceSlug) {
+    safeClick('btn-save-profile', async () => {
+        const btn = document.getElementById('btn-save-profile');
+        btn.disabled = true;
+        btn.textContent = '...';
         try {
-            fetch(
-                `/api/instances/${encodeURIComponent(window.activeInstanceSlug)}/generate?restitution=true&resume=false&cover_letter=false&llm_provider=${encodeURIComponent(state.selectedLlmProvider)}`,
-                { method: 'POST' }
-            );
-            await updateIframe();
-            return;
-        } catch (error) {
-            console.warn('Impossible de forcer la régénération', error);
+            const data = {
+                profile: {
+                    firstname: document.getElementById('prof-firstname').value,
+                    lastname: document.getElementById('prof-lastname').value,
+                    title: document.getElementById('prof-title').value,
+                    offer_type: document.getElementById('prof-offer-type').value,
+                    pitch: document.getElementById('prof-pitch').value,
+                    location: document.getElementById('prof-location').value,
+                    phone: document.getElementById('prof-phone').value,
+                    email: document.getElementById('prof-email').value,
+                    linkedin: document.getElementById('prof-linkedin').value,
+                    website: document.getElementById('prof-website').value,
+                    github: document.getElementById('prof-github').value,
+                    image: document.getElementById('prof-image-base64').value || state.loadedProfileImage || "",
+                },
+                apprenticeship: {
+                    duration: document.getElementById('prof-duration').value,
+                    rhythm: document.getElementById('prof-rhythm').value,
+                },
+                experiences: Array.from(document.querySelectorAll('#list-experiences .form-row-exp')).map(r => ({
+                    role: r.querySelector('.exp-role').value,
+                    company: r.querySelector('.exp-company').value,
+                    period: r.querySelector('.exp-period').value,
+                    description: r.querySelector('.exp-desc').value.split('\n').filter(Boolean),
+                })),
+                projects: Array.from(document.querySelectorAll('#list-projects .form-row-exp')).map(r => ({
+                    role: r.querySelector('.exp-role').value,
+                    company: r.querySelector('.exp-company').value,
+                    period: r.querySelector('.exp-period').value,
+                    description: r.querySelector('.exp-desc').value.split('\n').filter(Boolean),
+                })),
+                education: Array.from(document.querySelectorAll('.form-row-edu')).map(r => ({
+                    school: r.querySelector('.edu-school').value,
+                    degree: r.querySelector('.edu-degree').value,
+                    period: r.querySelector('.edu-period').value,
+                })),
+                languages: Array.from(document.querySelectorAll('.form-row-lang')).map(r => ({
+                    name: r.querySelector('.lang-name').value,
+                    level: r.querySelector('.lang-level').value,
+                })),
+                skills: Array.from(document.querySelectorAll('.skill-cat-row')).map(r => ({
+                    category: r.querySelector('.skill-cat-name').value,
+                    items: Array.from(r.querySelectorAll('.skill-text')).map(s => s.textContent),
+                })),
+                documents: {
+                    resume_template: JSON.parse(document.getElementById('prof-resume-template').value || "{}"),
+                    cover_letter_template: JSON.parse(document.getElementById('prof-cover-letter-template').value || "{}"),
+                },
+                ...state.loadedProfileExtras
+            };
+            await api.saveProfile(data);
+            
+            const annexeRows = Array.from(document.querySelectorAll('.form-row-annexe'));
+            for (const row of annexeRows) {
+                if (row.dataset.markedForDeletion === "true") {
+                    await api.deleteAnnexe(row.dataset.fileId);
+                } else if (!row.dataset.fileId && row.dataset.fileData) {
+                    await api.uploadAnnexe({
+                        label: row.querySelector('.annexe-name').value,
+                        filename: row.dataset.fileName,
+                        content_type: row.dataset.fileType,
+                        data_url: row.dataset.fileData
+                    });
+                } else if (row.dataset.fileId) {
+                    await api.updateAnnexe(row.dataset.fileId, {
+                        label: row.querySelector('.annexe-name').value
+                    });
+                }
+            }
+            
+            await loadProfile();
+            alert('Profil sauvegardé !');
+        } catch (e) { alert('Erreur sauvegarde'); console.error(e); }
+        finally { btn.disabled = false; btn.textContent = 'Sauvegarder'; }
+    });
+
+    const profPreview = document.getElementById('prof-image-preview');
+    if (profPreview) profPreview.onclick = () => document.getElementById('prof-image-file').click();
+    const profFile = document.getElementById('prof-image-file');
+    if (profFile) profFile.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const b64 = await ui.readFileAsDataUrl(file);
+        state.setLoadedProfileImage(b64);
+        const b64Input = document.getElementById('prof-image-base64');
+        if (b64Input) b64Input.value = b64;
+        profPreview.style.backgroundImage = `url(${b64})`;
+        const placeholder = document.getElementById('preview-placeholder');
+        if (placeholder) placeholder.style.display = 'none';
+    };
+
+    safeClick('add-exp', () => document.getElementById('list-experiences').appendChild(ui.createExpRow()));
+    safeClick('add-project', () => document.getElementById('list-projects').appendChild(ui.createExpRow()));
+    safeClick('add-edu', () => document.getElementById('list-education').appendChild(ui.createEduRow()));
+    safeClick('add-lang', () => document.getElementById('list-languages').appendChild(ui.createLangRow()));
+    safeClick('add-skill-cat', () => document.getElementById('list-skills').appendChild(ui.createSkillRow()));
+    safeClick('add-annexe', () => document.getElementById('prof-annexe-bulk-file').click());
+    
+    const annexeBulk = document.getElementById('prof-annexe-bulk-file');
+    if (annexeBulk) annexeBulk.onchange = async (e) => {
+        const files = Array.from(e.target.files);
+        for (const file of files) {
+            const data = await ui.readFileAsDataUrl(file);
+            const row = ui.createAnnexeRow();
+            row.dataset.fileData = data;
+            row.dataset.fileName = file.name;
+            row.dataset.fileType = file.type;
+            row.querySelector('.annexe-name').value = file.name;
+            document.getElementById('list-annexes').appendChild(row);
         }
-    }
+        e.target.value = '';
+    };
 
-    await updateIframe();
-}
-document.getElementById('add-exp').onclick = () => {
-    const container = document.getElementById('list-experiences');
-    container.appendChild(ui.createExpRow());
-    ui.initSortableContainer(container);
-};
-document.getElementById('add-project').onclick = () => {
-    const container = document.getElementById('list-projects');
-    container.appendChild(ui.createExpRow());
-    ui.initSortableContainer(container);
-};
-document.getElementById('add-edu').onclick = () => document.getElementById('list-education').appendChild(ui.createEduRow());
-document.getElementById('add-lang').onclick = () => document.getElementById('list-languages').appendChild(ui.createLangRow());
-document.getElementById('add-skill-cat').onclick = () => document.getElementById('list-skills').appendChild(ui.createSkillRow());
-document.getElementById('add-annexe').onclick = () => document.getElementById('prof-annexe-bulk-file').click();
+    document.querySelectorAll('.tab').forEach(btn => {
+        btn.onclick = () => {
+            state.setActiveTab(btn.dataset.target);
+            document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            updateIframe({ syncChatHistory: false });
+        };
+    });
 
-document.getElementById('prof-annexe-bulk-file').onchange = async (e) => {
-    const files = Array.from(e.target.files || []);
-    const container = document.getElementById('list-annexes');
-    for (const file of files) {
+    safeClick('btn-reload-tab', () => updateIframe());
+    safeClick('btn-download-pdf', () => {
+        const iframe = document.getElementById('iframe-doc');
+        if (iframe && iframe.contentWindow) iframe.contentWindow.print();
+    });
+
+    setupSelector('llm-selector-ingest');
+    setupSelector('llm-selector-chat');
+    setupSelector('deliv-selector-ingest');
+
+    safeClick('btn-ingest-run', async () => {
+        const input = document.getElementById('job-input');
+        if (!input) return;
+        const rawText = input.value;
+        if (!rawText) return;
+        
+        const btn = document.getElementById('btn-ingest-run');
+        btn.disabled = true;
+        const oldText = btn.innerHTML;
+        btn.innerHTML = '...';
+
         try {
-            const dataUrl = await ui.readFileAsDataUrl(file);
-            const rawName = file.name.split('.')[0];
-            const capitalized = rawName.charAt(0).toUpperCase() + rawName.slice(1);
-            container.appendChild(ui.createAnnexeRow({ label: capitalized, name: file.name, type: file.type, data_url: dataUrl }));
-        } catch (err) { console.error(err); }
-    }
-    e.target.value = '';
-};
+            const ingestRes = await api.ingestOffer(rawText);
+            if (!ingestRes.job_id) throw new Error("Échec ingestion");
+            state.setActiveJobId(ingestRes.job_id);
+            
+            const delivs = document.getElementById('deliv-selector-ingest');
+            const options = {
+                restitution: delivs?.querySelector('[data-deliv="restitution"]')?.classList.contains('active') ?? true,
+                resume: delivs?.querySelector('[data-deliv="resume"]')?.classList.contains('active') ?? true,
+                cover_letter: delivs?.querySelector('[data-deliv="cover"]')?.classList.contains('active') ?? true,
+            };
 
-// Initial Load
-syncLlmSelectors(state.selectedLlmProvider);
-syncDelivSelectors(state.delivConfig);
-loadProfile();
-loadOffers(); // <--- Added this
-handleRouting();
-ui.updateUIStrings();
+            const genRes = await api.generateApplication(ingestRes.job_id, state.selectedLlmProvider, options);
+            router.switchView('app');
+            loadOffers();
+            if (genRes.slug) updateIframe();
+        } catch (e) { 
+            alert('Erreur: ' + e.message); 
+        } finally { 
+            btn.disabled = false; 
+            btn.innerHTML = oldText;
+        }
+    });
+
+    safeClick('ai-chat-attach-btn', () => document.getElementById('ai-chat-file-input').click());
+    const chatFile = document.getElementById('ai-chat-file-input');
+    if (chatFile) chatFile.onchange = async (e) => {
+        const files = Array.from(e.target.files);
+        for (const file of files) {
+            const data = await ui.readFileAsDataUrl(file);
+            state.aiChatAttachments.push({ name: file.name, content_type: file.type, data });
+        }
+        renderAiChatAttachments();
+        e.target.value = '';
+    };
+}
+
+function setupSelector(containerId) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    // 1. Initial State Sync (DOM -> State or State -> DOM)
+    container.querySelectorAll('.llm-pill').forEach(pill => {
+        const prov = pill.dataset.provider;
+        const deliv = pill.dataset.deliv;
+
+        if (prov) {
+            if (state.selectedLlmProvider === prov) pill.classList.add('active');
+            else pill.classList.remove('active');
+        } else if (deliv) {
+            // Mapping UI "restitution" to internal state "restitution" etc.
+            // Note: cover in UI vs cover_letter in state (wait, state uses cover from localStorage)
+            // Let's check state.js delivConfig keys
+            const val = state.delivConfig[deliv];
+            if (val === true) pill.classList.add('active');
+            else if (val === false) pill.classList.remove('active');
+        }
+
+        // 2. Click Handler
+        pill.onclick = () => {
+            if (prov) {
+                container.querySelectorAll('.llm-pill').forEach(p => p.classList.remove('active'));
+                pill.classList.add('active');
+                state.setSelectedLlmProvider(prov);
+            } else if (deliv) {
+                pill.classList.toggle('active');
+                state.setDelivConfig(deliv, pill.classList.contains('active'));
+            }
+        };
+    });
+}
+
+document.addEventListener('DOMContentLoaded', init);

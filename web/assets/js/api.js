@@ -58,6 +58,43 @@ export async function deleteAnnexe(id) {
     return res;
 }
 
+export async function ingestOffer(urlOrText) {
+    const res = await fetch('/api/ingest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ source: urlOrText })
+    });
+    if (!res.ok) throw new Error('Ingest failed');
+    return await res.json();
+}
+
+export async function generateApplication(jobId, provider, options = {}) {
+    const query = new URLSearchParams({
+        llm_provider: provider,
+        restitution: options.restitution ?? true,
+        resume: options.resume ?? true,
+        cover_letter: options.cover_letter ?? true
+    });
+    const res = await fetch(`/api/instances/${jobId}/generate?${query}`, { method: 'POST' });
+    if (!res.ok) throw new Error('Generation failed');
+    return { slug: jobId }; // The backend returns 202 Accepted
+}
+
+export async function sendChatMessage(payload) {
+    const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error('Chat failed');
+    return await res.json();
+}
+
 export function getAnnexeUrl(id) {
     return `/api/profile/active/annexes/${id}`;
+}
+
+export async function updateAnnexe(id, payload) {
+    // Note: This endpoint might not exist yet, but for parity
+    return Promise.resolve();
 }

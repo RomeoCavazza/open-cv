@@ -2,7 +2,18 @@ use domain::{Chunk, CoverLetter, InstanceId, Offre, Profil, Restitution, Resume,
 
 use super::{CandidaturePlan, GenerateError};
 
-pub(super) fn build_generation_input(
+pub fn build_query_text(offre: &Offre) -> String {
+    format!(
+        "{} chez {}. Stack: {}. Missions: {}. Exigences: {}.",
+        offre.intitule,
+        offre.entreprise,
+        offre.structured.stack.join(", "),
+        offre.structured.missions.join(" ; "),
+        offre.structured.exigences.join(" ; "),
+    )
+}
+
+pub fn build_generation_input(
     offre: &Offre,
     profil: &Profil,
     retained: &[Chunk],
@@ -31,7 +42,7 @@ pub(super) fn build_generation_input(
     )
 }
 
-pub(super) fn build_slug(offre: &Offre, instance_id: InstanceId) -> Slug {
+pub fn build_slug(offre: &Offre, instance_id: InstanceId) -> Slug {
     let short = instance_id.to_string().chars().take(8).collect::<String>();
     let combined = format!("{}__{}", offre.slug.as_str(), short);
     Slug::parse(combined).unwrap_or_else(|_| {
@@ -39,7 +50,7 @@ pub(super) fn build_slug(offre: &Offre, instance_id: InstanceId) -> Slug {
     })
 }
 
-pub(super) fn truncate(s: &str, max_chars: usize) -> String {
+pub fn truncate(s: &str, max_chars: usize) -> String {
     if s.chars().count() <= max_chars {
         s.to_string()
     } else {
@@ -48,7 +59,7 @@ pub(super) fn truncate(s: &str, max_chars: usize) -> String {
     }
 }
 
-pub(super) fn validate_outputs(
+pub fn validate_outputs(
     offre: &Offre,
     restitution: Option<&Restitution>,
     resume: Option<&Resume>,

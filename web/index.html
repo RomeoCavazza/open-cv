@@ -448,68 +448,8 @@
     </div>
     </div>
 
+    <div id="dashboard-shader" class="css-shader"></div>
     <script type="module" src="/assets/js/dashboard.js"></script>
-    <script type="module">
-        import React from "https://esm.sh/react@18.3.1";
-        import { createRoot } from "https://esm.sh/react-dom@18.3.1/client";
-        import { ShaderGradientCanvas, ShaderGradient } from "https://esm.sh/@shadergradient/react?bundle";
-
-        const container = document.getElementById("dashboard-shader");
-
-        if (container) {
-            const root = createRoot(container);
-            root.render(
-                React.createElement(
-                    ShaderGradientCanvas,
-                    {
-                        style: { position: "absolute", inset: 0 },
-                        pixelDensity: 1,
-                        fov: 45,
-                    },
-                    React.createElement(ShaderGradient, {
-                        animate: "on",
-                        axesHelper: "off",
-                        brightness: 1.2,
-                        cAzimuthAngle: 180,
-                        cDistance: 2.91,
-                        cPolarAngle: 120,
-                        cameraZoom: 1,
-                        color1: "#8fbaff",
-                        color2: "#f3f2f8",
-                        color3: "#dbf8ff",
-                        destination: "onCanvas",
-                        embedMode: "off",
-                        envPreset: "city",
-                        format: "gif",
-                        frameRate: 10,
-                        gizmoHelper: "hide",
-                        grain: "off",
-                        lightType: "3d",
-                        pixelDensity: 1,
-                        positionX: 0,
-                        positionY: 1.8,
-                        positionZ: 0,
-                        range: "disabled",
-                        rangeEnd: 40,
-                        rangeStart: 0,
-                        reflection: 0.1,
-                        rotationX: 0,
-                        rotationY: 0,
-                        rotationZ: -90,
-                        shader: "defaults",
-                        type: "waterPlane",
-                        uAmplitude: 0,
-                        uDensity: 1,
-                        uFrequency: 5.5,
-                        uSpeed: 0.3,
-                        uStrength: 3,
-                        uTime: 0.2,
-                        wireframe: false,
-                    }),
-                ),
-            );
-        }
-    </script>
     <script src="/assets/js/chat.js"></script>
 </body>
 

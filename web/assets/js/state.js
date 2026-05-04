@@ -112,6 +112,11 @@ export function saveDelivConfig(config) {
     localStorage.setItem('recruitai_delivs', JSON.stringify(config));
 }
 
+export function setDelivConfig(key, val) {
+    delivConfig[key] = val;
+    saveDelivConfig(delivConfig);
+}
+
 // Setters
 export function setActiveJobId(id) { activeJobId = id; }
 export function setActiveTab(tab) { activeTab = tab; }
@@ -122,6 +127,12 @@ export function setLoadedProfileExtras(extras) { loadedProfileExtras = extras; }
 export function setSelectedLlmProvider(provider) { 
     selectedLlmProvider = provider; 
     localStorage.setItem('recruitai_llm', provider);
+}
+
+export async function loadI18n() {
+    // Current implementation uses hardcoded translations in state.js
+    // We could load from external JSON here if needed.
+    return Promise.resolve();
 }
 
 export function saveOfferFlags() {

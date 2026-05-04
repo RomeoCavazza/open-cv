@@ -1,37 +1,33 @@
 //! Binaire serveur Axum.
-//!
-//! Phase 0 :
-//!   GET /health           → 200 OK
-//!   GET /api/offres       → liste des offres récentes (DB)
-//!   GET /api/instances/:slug → instance par slug
-//!   GET /                 → sert web/
 
 use std::sync::Arc;
 
 use anyhow::Context;
 use axum::{
-    extract::{Path, Query, State},
+    extract::State,
     http::StatusCode,
-    response::{IntoResponse, Json},
+    response::IntoResponse,
     routing::{get, post},
     Router,
 };
 use ports::{InstanceRepo, OffreRepo};
-use serde::Deserialize;
 use tower_http::{services::ServeDir, trace::TraceLayer};
-use tracing::{error, info};
+use tracing::info;
 
 mod errors;
 mod state;
 
-use crate::errors::ApiError;
 use crate::state::AppState;
 
-mod handlers {
-    pub mod ingest;
-    pub mod profile;
-}
+mod handlers;
+
+use handlers::chat::chat_handler;
 use handlers::ingest::ingest_handler;
+use handlers::instance::{
+    generate_instance, get_instance_by_offre_slug, get_instance_by_slug, get_instance_cover_letter,
+    get_instance_resume,
+};
+use handlers::offre::{get_offre_by_slug, list_offres};
 use handlers::profile::{
     delete_annexe_handler, download_annexe_handler,
     get_active_profile_cover_letter_template_handler, get_active_profile_handler,
@@ -227,7 +223,7 @@ async fn main() -> anyhow::Result<()> {
         )
         .route(
             "/api/instances/:slug/generate",
-            axum::routing::post(generate_instance),
+            post(generate_instance),
         )
         .route("/", get(get_index))
         .route("/applications", get(get_index))
@@ -247,58 +243,6 @@ async fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
-async fn generate_instance(
-    State(state): State<AppState>,
-    Path(slug_str): Path<String>,
-    Query(params): Query<std::collections::HashMap<String, String>>,
-) -> Result<StatusCode, ApiError> {
-    let slug =
-        domain::Slug::parse(slug_str.clone()).map_err(|e| ApiError::BadRequest(e.to_string()))?;
-
-    let llm_provider = params
-        .get("llm_provider")
-        .and_then(|p| state.llm_registry.get(p))
-        .cloned();
-
-    let instance = state
-        .instance_repo
-        .get_by_slug(&slug)
-        .await
-        .map_err(|e| ApiError::Internal(e.to_string()))?
-        .ok_or_else(|| ApiError::NotFound(format!("Instance {} inconnue", slug_str)))?;
-
-    let restitution = params
-        .get("restitution")
-        .map(|v| v == "true")
-        .unwrap_or(true);
-    let resume = params.get("resume").map(|v| v == "true").unwrap_or(true);
-    let cover_letter = params
-        .get("cover_letter")
-        .map(|v| v == "true")
-        .unwrap_or(true);
-
-    let input = application::generate::GenerateInput {
-        offre_id: instance.offre_id,
-        profil_id: instance.profil_id,
-        existing_instance: Some(instance),
-        livrables: application::generate::Livrables {
-            restitution,
-            resume,
-            cover_letter,
-        },
-    };
-
-    tokio::spawn(async move {
-        match state.generate_uc.execute(input, llm_provider).await {
-            Ok(_) => info!(slug = %slug_str, "génération terminée avec succès"),
-            Err(e) => {
-                error!(slug = %slug_str, error = %e, "échec de la génération en arrière-plan")
-            }
-        }
-    });
-
-    Ok(StatusCode::ACCEPTED)
-}
 fn init_tracing() {
     use tracing_subscriber::{fmt, prelude::*, EnvFilter};
 
@@ -309,205 +253,13 @@ fn init_tracing() {
 }
 
 // ─────────────────────────────────────────────────────────────────
-// Handlers
+// Static Handlers
 // ─────────────────────────────────────────────────────────────────
 
 async fn health() -> impl IntoResponse {
     (StatusCode::OK, "ok")
 }
 
-#[derive(Debug, Deserialize)]
-struct ListOffresQuery {
-    #[serde(default = "default_limit")]
-    limit: u32,
-}
-
-fn default_limit() -> u32 {
-    50
-}
-
-fn infer_business_category(slug: &str, title: &str) -> &'static str {
-    let haystack = format!("{} {}", slug.to_lowercase(), title.to_lowercase());
-
-    if [
-        "data",
-        " ai",
-        "ia",
-        "intelligence artificielle",
-        "llm",
-        "langchain",
-        "gallica",
-        "automation",
-        "scientist",
-        "machine learning",
-    ]
-    .iter()
-    .any(|needle| haystack.contains(needle))
-    {
-        return "Data Engineering & Data Science";
-    }
-
-    if [
-        "developpeur",
-        "développeur",
-        "software",
-        "java",
-        "api",
-        "logiciel",
-        "full stack",
-        "full-stack",
-        "embarqu",
-        "engineering",
-    ]
-    .iter()
-    .any(|needle| haystack.contains(needle))
-    {
-        return "Ingénierie Logicielle Spécialisée (Embarqué, C++, Simulations, Systèmes)";
-    }
-
-    if [
-        "pilotage",
-        "projet",
-        "transformation",
-        "strategie",
-        "stratégie",
-    ]
-    .iter()
-    .any(|needle| haystack.contains(needle))
-    {
-        return "Pilotage de Projet, Stratégie IT & Transformation Numérique";
-    }
-
-    "Autres"
-}
-
-fn public_offer_category(slug: &str, title: &str, raw: Option<&str>) -> String {
-    let category = raw.unwrap_or("").trim();
-    if category.is_empty()
-        || category.eq_ignore_ascii_case("inbox")
-        || category.eq_ignore_ascii_case("legacy restored")
-    {
-        infer_business_category(slug, title).to_string()
-    } else {
-        category.to_string()
-    }
-}
-
-async fn list_offres(
-    State(state): State<AppState>,
-    Query(q): Query<ListOffresQuery>,
-) -> Result<Json<serde_json::Value>, ApiError> {
-    let rows = sqlx::query!(
-        r#"
-        SELECT o.id, o.slug, o.intitule, o.source_url, o.entreprise, o.categorie,
-               EXISTS(SELECT 1 FROM instances i WHERE i.offre_id = o.id) as "has_instance!"
-        FROM offres o
-        ORDER BY o.scraped_at DESC
-        LIMIT $1
-        "#,
-        q.limit as i64
-    )
-    .fetch_all(&state.pool)
-    .await
-    .map_err(|e| ApiError::Internal(e.to_string()))?;
-
-    let entries: Vec<serde_json::Value> = rows
-        .iter()
-        .map(|r| {
-            serde_json::json!({
-                "title": r.intitule,
-                "url": r.source_url,
-                "job_id": r.slug,
-                "entreprise": r.entreprise,
-                "category": public_offer_category(&r.slug, &r.intitule, r.categorie.as_deref()),
-                "status": if r.has_instance { "ready" } else { "draft" },
-            })
-        })
-        .collect();
-
-    Ok(Json(serde_json::json!({
-        "entries": entries,
-    })))
-}
-
-async fn get_offre_by_slug(
-    State(state): State<AppState>,
-    Path(slug): Path<String>,
-) -> Result<Json<domain::Offre>, ApiError> {
-    let slug = domain::Slug::parse(slug).map_err(|e| ApiError::BadRequest(e.to_string()))?;
-
-    let usecase = application::GetOffreBySlugUseCase::new(state.offre_repo.clone());
-    let offre = usecase.execute(&slug).await?;
-
-    Ok(Json(offre))
-}
-
-async fn get_instance_by_slug(
-    State(state): State<AppState>,
-    Path(slug): Path<String>,
-) -> Result<Json<serde_json::Value>, ApiError> {
-    let slug = domain::Slug::parse(slug).map_err(|e| ApiError::BadRequest(e.to_string()))?;
-
-    let usecase = application::GetInstanceBySlugUseCase::new(state.instance_repo.clone());
-    let instance = usecase.execute(&slug).await?;
-
-    Ok(Json(serde_json::to_value(&instance)?))
-}
-
-async fn get_instance_by_offre_slug(
-    State(state): State<AppState>,
-    Path(slug): Path<String>,
-) -> Result<Json<serde_json::Value>, ApiError> {
-    let slug = domain::Slug::parse(slug).map_err(|e| ApiError::BadRequest(e.to_string()))?;
-
-    // 1. Trouver l'offre
-    let offre = state
-        .offre_repo
-        .get_by_slug(&slug)
-        .await
-        .map_err(|e| ApiError::Internal(e.to_string()))?
-        .ok_or_else(|| ApiError::NotFound(format!("Offre {} inconnue", slug)))?;
-
-    // 2. Trouver l'instance via le repo
-    let instance = state
-        .instance_repo
-        .get_by_offre_id(offre.id)
-        .await
-        .map_err(|e| ApiError::Internal(e.to_string()))?
-        .ok_or_else(|| ApiError::NotFound(format!("Pas d'instance pour l'offre {}", slug)))?;
-
-    Ok(Json(serde_json::to_value(&instance)?))
-}
-
-async fn get_instance_resume(
-    State(state): State<AppState>,
-    Path(slug): Path<String>,
-) -> Result<Json<serde_json::Value>, ApiError> {
-    let slug = domain::Slug::parse(slug).map_err(|e| ApiError::BadRequest(e.to_string()))?;
-
-    let usecase = application::GetInstanceBySlugUseCase::new(state.instance_repo.clone());
-    let instance = usecase.execute(&slug).await?;
-
-    match instance.resume_json {
-        Some(json) => Ok(Json(json)),
-        None => Err(ApiError::NotFound(format!("Pas de CV pour {}", slug))),
-    }
-}
-
-async fn get_instance_cover_letter(
-    State(state): State<AppState>,
-    Path(slug): Path<String>,
-) -> Result<Json<serde_json::Value>, ApiError> {
-    let slug = domain::Slug::parse(slug).map_err(|e| ApiError::BadRequest(e.to_string()))?;
-
-    let usecase = application::GetInstanceBySlugUseCase::new(state.instance_repo.clone());
-    let instance = usecase.execute(&slug).await?;
-
-    match instance.cover_letter_json {
-        Some(json) => Ok(Json(json)),
-        None => Err(ApiError::NotFound(format!("Pas de lettre pour {}", slug))),
-    }
-}
 async fn get_index() -> impl IntoResponse {
     let web_dir = std::env::var("WEB_DIR").unwrap_or_else(|_| "web".to_string());
     match tokio::fs::read_to_string(format!("{}/index.html", web_dir)).await {
@@ -516,30 +268,6 @@ async fn get_index() -> impl IntoResponse {
     }
 }
 
-async fn chat_handler(
-    State(state): State<AppState>,
-    Json(req): Json<application::chat::ChatRequest>,
-) -> Result<Json<application::chat::ChatResponse>, ApiError> {
-    let usecase = application::chat::ChatWithApplicationUseCase::new(
-        application::chat::ChatDependencies {
-            offre_repo: state.offre_repo.clone(),
-            instance_repo: state.instance_repo.clone(),
-            profil_repo: state.profil_repo.clone(),
-            annexe_repo: state.annexe_repo.clone(),
-            chunk_repo: state.chunk_repo.clone(),
-            message_repo: state.message_repo.clone(),
-            embedder: state.embedder.clone(),
-            llm_registry: state.llm_registry.as_ref().clone(),
-        },
-    );
-
-    let res = usecase
-        .execute(req)
-        .await
-        .map_err(|e| ApiError::Internal(e.to_string()))?;
-
-    Ok(Json(res))
-}
 async fn get_active_profile_calendar_handler(
     State(state): State<AppState>,
 ) -> impl axum::response::IntoResponse {
