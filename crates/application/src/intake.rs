@@ -8,6 +8,7 @@
 //!   5. Création d'une instance brouillon associée
 
 use std::sync::Arc;
+use once_cell::sync::Lazy;
 
 use chrono::Utc;
 use domain::{Instance, InstanceId, InstanceStatus, Offre, OffreId, OffreStructured, Slug};
@@ -74,6 +75,9 @@ pub struct OffreExtraction {
     /// Mots-clés à intégrer dans le CV/lettre.
     mots_cles: Vec<String>,
 }
+
+static EXTRACTION_SCHEMA: Lazy<serde_json::Value> =
+    Lazy::new(|| serde_json::to_value(schemars::schema_for!(OffreExtraction)).unwrap());
 
 impl OffreExtraction {
     fn into_parts(
@@ -320,7 +324,7 @@ impl IntakeOffreUseCase {
             input: vec![ports::MessageContent::Text(raw_text.to_string())],
             schema_name: "OffreExtraction".into(),
             schema_description: "Métadonnées structurées extraites d'une offre d'emploi".into(),
-            json_schema: serde_json::to_value(schemars::schema_for!(OffreExtraction)).unwrap(),
+            json_schema: EXTRACTION_SCHEMA.clone(),
             model: None,
             max_tokens: Some(4000),
         };
@@ -526,8 +530,7 @@ fn build_offre_slug(entreprise: &str, intitule: &str) -> Slug {
     };
 
     Slug::parse(&slug_str).unwrap_or_else(|_| {
-        let fallback = format!("offre_{}", &uuid::Uuid::new_v4().to_string()[..8]);
-        Slug::parse(fallback).expect("fallback slug is always valid")
+        Slug::new_v4()
     })
 }
 

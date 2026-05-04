@@ -158,7 +158,7 @@ impl LlmClient for OllamaClient {
         let instruction = format!(
             "{}\n\nTu DOIS répondre UNIQUEMENT avec un objet JSON valide respectant ce schéma :\n{}",
             req.instruction,
-            serde_json::to_string_pretty(&req.json_schema).unwrap()
+            serde_json::to_string_pretty(&req.json_schema).expect("schema is always serializable")
         );
 
         let mut text_input = instruction;

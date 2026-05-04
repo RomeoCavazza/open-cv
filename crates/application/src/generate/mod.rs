@@ -289,13 +289,13 @@ impl GenerateApplicationUseCase {
                 .ok_or_else(|| AppError::Other("Instance introuvable après génération".into()))?;
 
             if let Some(r) = restitution {
-                instance.restitution = Some(serde_json::to_value(r).unwrap());
+                instance.restitution = Some(serde_json::to_value(r).expect("Restitution is always serializable"));
             }
             if let Some(r) = resume {
-                instance.resume_json = Some(serde_json::to_value(r).unwrap());
+                instance.resume_json = Some(serde_json::to_value(r).expect("Resume is always serializable"));
             }
             if let Some(cl) = cover_letter {
-                instance.cover_letter_json = Some(serde_json::to_value(cl).unwrap());
+                instance.cover_letter_json = Some(serde_json::to_value(cl).expect("CoverLetter is always serializable"));
             }
             instance.status = domain::InstanceStatus::Ready;
             instance.updated_at = Utc::now();

@@ -82,6 +82,10 @@ impl Slug {
     pub fn as_str(&self) -> &str {
         &self.0
     }
+
+    pub fn new_v4() -> Self {
+        Self(format!("slug_{}", uuid::Uuid::new_v4().to_string().replace('-', "_")))
+    }
 }
 
 impl std::fmt::Display for Slug {

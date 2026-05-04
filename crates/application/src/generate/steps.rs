@@ -7,8 +7,20 @@ use crate::prompts;
 use crate::AppError;
 use domain::{Chunk, CoverLetter, InstanceId, Offre, ProfilId, Restitution, Resume};
 use ports::{EmbedMode, ExtractionRequest, LlmClient};
+use once_cell::sync::Lazy;
 use std::sync::Arc;
 use tracing::warn;
+
+static RERANK_SCHEMA: Lazy<serde_json::Value> =
+    Lazy::new(|| serde_json::to_value(schemars::schema_for!(RerankResponse)).unwrap());
+static PLAN_SCHEMA: Lazy<serde_json::Value> =
+    Lazy::new(|| serde_json::to_value(schemars::schema_for!(CandidaturePlan)).unwrap());
+static RESTITUTION_SCHEMA: Lazy<serde_json::Value> =
+    Lazy::new(|| serde_json::to_value(schemars::schema_for!(Restitution)).unwrap());
+static RESUME_SCHEMA: Lazy<serde_json::Value> =
+    Lazy::new(|| serde_json::to_value(schemars::schema_for!(Resume)).unwrap());
+static COVER_LETTER_SCHEMA: Lazy<serde_json::Value> =
+    Lazy::new(|| serde_json::to_value(schemars::schema_for!(CoverLetter)).unwrap());
 
 pub async fn retrieve_chunks(
     this: &GenerateApplicationUseCase,
@@ -71,7 +83,7 @@ pub async fn rerank(
         ))],
         schema_name: "RerankResponse".into(),
         schema_description: "Sélection des chunks pertinents avec justification".into(),
-        json_schema: serde_json::to_value(schemars::schema_for!(RerankResponse)).unwrap(),
+        json_schema: RERANK_SCHEMA.clone(),
         model: None,
         max_tokens: Some(1024),
     };
@@ -127,7 +139,7 @@ pub async fn plan(
         ))],
         schema_name: "CandidaturePlan".into(),
         schema_description: "Stratégie de la candidature".into(),
-        json_schema: serde_json::to_value(schemars::schema_for!(CandidaturePlan)).unwrap(),
+        json_schema: PLAN_SCHEMA.clone(),
         model: None,
         max_tokens: Some(1024),
     };
@@ -167,7 +179,7 @@ pub async fn maybe_generate_restitution(
         ))],
         schema_name: "Restitution".into(),
         schema_description: "Fiche d'analyse haute-fidélité d'une offre".into(),
-        json_schema: serde_json::to_value(schemars::schema_for!(Restitution)).unwrap(),
+        json_schema: RESTITUTION_SCHEMA.clone(),
         model: None,
         max_tokens: Some(4000),
     };
@@ -212,7 +224,7 @@ pub async fn maybe_generate_resume(
         ))],
         schema_name: "Resume".into(),
         schema_description: "CV structuré, contenu adapté à l'offre".into(),
-        json_schema: serde_json::to_value(schemars::schema_for!(Resume)).unwrap(),
+        json_schema: RESUME_SCHEMA.clone(),
         model: None,
         max_tokens: Some(3000),
     };
@@ -257,7 +269,7 @@ pub async fn maybe_generate_cover_letter(
         ))],
         schema_name: "CoverLetter".into(),
         schema_description: "Lettre structurée par paragraphes typés".into(),
-        json_schema: serde_json::to_value(schemars::schema_for!(CoverLetter)).unwrap(),
+        json_schema: COVER_LETTER_SCHEMA.clone(),
         model: None,
         max_tokens: Some(2500),
     };

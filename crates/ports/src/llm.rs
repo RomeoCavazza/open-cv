@@ -107,6 +107,9 @@ pub enum LlmError {
     #[error("désérialisation JSON impossible : {0}")]
     Json(String),
 
+    #[error("erreur de configuration : {0}")]
+    Config(String),
+
     #[error("autre : {0}")]
     Other(String),
 }

@@ -30,18 +30,19 @@ impl OpenAiClient {
         self
     }
 
-    fn headers(&self) -> reqwest::header::HeaderMap {
+    fn headers(&self) -> Result<reqwest::header::HeaderMap, LlmError> {
         use reqwest::header::{HeaderMap, HeaderValue};
         let mut h = HeaderMap::new();
         h.insert(
             reqwest::header::AUTHORIZATION,
-            HeaderValue::from_str(&format!("Bearer {}", self.api_key)).unwrap(),
+            HeaderValue::from_str(&format!("Bearer {}", self.api_key))
+                .map_err(|e| LlmError::Config(e.to_string()))?,
         );
         h.insert(
             reqwest::header::CONTENT_TYPE,
             HeaderValue::from_static("application/json"),
         );
-        h
+        Ok(h)
     }
 }
 
@@ -194,7 +195,7 @@ impl LlmClient for OpenAiClient {
         let resp = self
             .http
             .post(OPENAI_API_URL)
-            .headers(self.headers())
+            .headers(self.headers()?)
             .json(&body)
             .send()
             .await
@@ -306,7 +307,7 @@ impl LlmClient for OpenAiClient {
         let resp = self
             .http
             .post(OPENAI_API_URL)
-            .headers(self.headers())
+            .headers(self.headers()?)
             .json(&body)
             .send()
             .await

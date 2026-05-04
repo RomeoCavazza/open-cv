@@ -37,10 +37,13 @@ impl ClaudeClient {
         self
     }
 
-    fn headers(&self) -> reqwest::header::HeaderMap {
+    fn headers(&self) -> Result<reqwest::header::HeaderMap, LlmError> {
         use reqwest::header::{HeaderMap, HeaderValue};
         let mut h = HeaderMap::new();
-        h.insert("x-api-key", HeaderValue::from_str(&self.api_key).unwrap());
+        h.insert(
+            "x-api-key",
+            HeaderValue::from_str(&self.api_key).map_err(|e| LlmError::Config(e.to_string()))?,
+        );
         h.insert(
             "anthropic-version",
             HeaderValue::from_static(ANTHROPIC_VERSION),
@@ -49,7 +52,7 @@ impl ClaudeClient {
             reqwest::header::CONTENT_TYPE,
             HeaderValue::from_static("application/json"),
         );
-        h
+        Ok(h)
     }
 }
 
@@ -190,7 +193,7 @@ impl LlmClient for ClaudeClient {
         let resp = self
             .http
             .post(ANTHROPIC_API_URL)
-            .headers(self.headers())
+            .headers(self.headers()?)
             .json(&body)
             .send()
             .await
@@ -309,7 +312,7 @@ impl LlmClient for ClaudeClient {
         let resp = self
             .http
             .post(ANTHROPIC_API_URL)
-            .headers(self.headers())
+            .headers(self.headers()?)
             .json(&body)
             .send()
             .await

@@ -149,6 +149,7 @@ dependencies = [
  "base64",
  "chrono",
  "domain",
+ "once_cell",
  "ports",
  "schemars",
  "serde",
