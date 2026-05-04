@@ -5,15 +5,14 @@
 
 use async_trait::async_trait;
 use domain::{
-    Annexe, AnnexeId, Instance, InstanceId, Message, Offre, OffreId, OffreStructured, ProfilId,
-    Slug,
+    Annexe, AnnexeId, Instance, InstanceId, Message, Offre, OffreId, ProfilId, Slug,
 };
 use ports::{AnnexeRepo, InstanceRepo, MessageRepo, OffreRepo, RepoError};
 use sqlx::PgPool;
 
 mod helpers;
 
-use helpers::{map_sqlx, parse_status};
+use helpers::map_sqlx;
 
 pub struct OffreRepoPg {
     pool: PgPool,
@@ -80,24 +79,23 @@ impl OffreRepo for OffreRepoPg {
         .map_err(map_sqlx)?;
 
         row.map(|r| {
-            Ok(Offre {
-                id: OffreId::from_uuid(r.id),
-                slug: Slug::parse(r.slug).map_err(|e| RepoError::Other(e.to_string()))?,
-                source_url: r.source_url,
-                source_host: r.source_host,
-                source_hash: r.source_hash,
-                entreprise: r.entreprise,
-                intitule: r.intitule,
-                localisation: r.localisation,
-                contrat: r.contrat,
-                raw_text: r.raw_text,
-                structured: serde_json::from_value::<OffreStructured>(r.structured)
-                    .map_err(|e| RepoError::Other(e.to_string()))?,
-                scraped_at: r.scraped_at,
-                last_seen_at: r.last_seen_at,
-                closed_at: r.closed_at,
-                categorie: r.categorie,
-            })
+            helpers::build_offre(
+                r.id,
+                r.slug,
+                r.source_url,
+                r.source_host,
+                r.source_hash,
+                r.entreprise,
+                r.intitule,
+                r.localisation,
+                r.contrat,
+                r.raw_text,
+                r.structured,
+                r.scraped_at,
+                r.last_seen_at,
+                r.closed_at,
+                r.categorie,
+            )
         })
         .transpose()
     }
@@ -118,24 +116,23 @@ impl OffreRepo for OffreRepoPg {
 
         rows.into_iter()
             .map(|r| {
-                Ok(Offre {
-                    id: OffreId::from_uuid(r.id),
-                    slug: Slug::parse(r.slug).map_err(|e| RepoError::Other(e.to_string()))?,
-                    source_url: r.source_url,
-                    source_host: r.source_host,
-                    source_hash: r.source_hash,
-                    entreprise: r.entreprise,
-                    intitule: r.intitule,
-                    localisation: r.localisation,
-                    contrat: r.contrat,
-                    raw_text: r.raw_text,
-                    structured: serde_json::from_value::<OffreStructured>(r.structured)
-                        .map_err(|e| RepoError::Other(e.to_string()))?,
-                    scraped_at: r.scraped_at,
-                    last_seen_at: r.last_seen_at,
-                    closed_at: r.closed_at,
-                    categorie: r.categorie,
-                })
+                helpers::build_offre(
+                    r.id,
+                    r.slug,
+                    r.source_url,
+                    r.source_host,
+                    r.source_hash,
+                    r.entreprise,
+                    r.intitule,
+                    r.localisation,
+                    r.contrat,
+                    r.raw_text,
+                    r.structured,
+                    r.scraped_at,
+                    r.last_seen_at,
+                    r.closed_at,
+                    r.categorie,
+                )
             })
             .collect()
     }
@@ -158,24 +155,23 @@ impl OffreRepo for OffreRepoPg {
 
         rows.into_iter()
             .map(|r| {
-                Ok(Offre {
-                    id: OffreId::from_uuid(r.id),
-                    slug: Slug::parse(r.slug).map_err(|e| RepoError::Other(e.to_string()))?,
-                    source_url: r.source_url,
-                    source_host: r.source_host,
-                    source_hash: r.source_hash,
-                    entreprise: r.entreprise,
-                    intitule: r.intitule,
-                    localisation: r.localisation,
-                    contrat: r.contrat,
-                    raw_text: r.raw_text,
-                    structured: serde_json::from_value::<OffreStructured>(r.structured)
-                        .map_err(|e| RepoError::Other(e.to_string()))?,
-                    scraped_at: r.scraped_at,
-                    last_seen_at: r.last_seen_at,
-                    closed_at: r.closed_at,
-                    categorie: r.categorie,
-                })
+                helpers::build_offre(
+                    r.id,
+                    r.slug,
+                    r.source_url,
+                    r.source_host,
+                    r.source_hash,
+                    r.entreprise,
+                    r.intitule,
+                    r.localisation,
+                    r.contrat,
+                    r.raw_text,
+                    r.structured,
+                    r.scraped_at,
+                    r.last_seen_at,
+                    r.closed_at,
+                    r.categorie,
+                )
             })
             .collect()
     }
@@ -251,24 +247,23 @@ impl OffreRepo for OffreRepoPg {
         .map_err(map_sqlx)?;
 
         row.map(|r| {
-            Ok(Offre {
-                id: OffreId::from_uuid(r.id),
-                slug: Slug::parse(r.slug).map_err(|e| RepoError::Other(e.to_string()))?,
-                source_url: r.source_url,
-                source_host: r.source_host,
-                source_hash: r.source_hash,
-                entreprise: r.entreprise,
-                intitule: r.intitule,
-                localisation: r.localisation,
-                contrat: r.contrat,
-                raw_text: r.raw_text,
-                structured: serde_json::from_value::<OffreStructured>(r.structured)
-                    .map_err(|e| RepoError::Other(e.to_string()))?,
-                scraped_at: r.scraped_at,
-                last_seen_at: r.last_seen_at,
-                closed_at: r.closed_at,
-                categorie: r.categorie,
-            })
+            helpers::build_offre(
+                r.id,
+                r.slug,
+                r.source_url,
+                r.source_host,
+                r.source_hash,
+                r.entreprise,
+                r.intitule,
+                r.localisation,
+                r.contrat,
+                r.raw_text,
+                r.structured,
+                r.scraped_at,
+                r.last_seen_at,
+                r.closed_at,
+                r.categorie,
+            )
         })
         .transpose()
     }
@@ -342,21 +337,20 @@ impl InstanceRepo for InstanceRepoPg {
 
         row.map(|r| {
             use sqlx::Row;
-            Ok(Instance {
-                id: InstanceId::from_uuid(r.get("id")),
-                slug: Slug::parse(r.get::<String, _>("slug"))
-                    .map_err(|e| RepoError::Other(e.to_string()))?,
-                offre_id: domain::OffreId::from_uuid(r.get("offre_id")),
-                profil_id: domain::ProfilId::from_uuid(r.get("profil_id")),
-                status: parse_status(r.get("status"))?,
-                restitution: r.get("restitution"),
-                resume_json: r.get("resume_json"),
-                cover_letter_json: r.get("cover_letter_json"),
-                notes: r.get("notes"),
-                created_at: r.get("created_at"),
-                updated_at: r.get("updated_at"),
-                sent_at: r.get("sent_at"),
-            })
+            helpers::build_instance(
+                r.get("id"),
+                r.get::<String, _>("slug"),
+                r.get("offre_id"),
+                r.get("profil_id"),
+                r.get("status"),
+                r.get("restitution"),
+                r.get("resume_json"),
+                r.get("cover_letter_json"),
+                r.get("notes"),
+                r.get("created_at"),
+                r.get("updated_at"),
+                r.get("sent_at"),
+            )
         })
         .transpose()
     }
@@ -380,21 +374,20 @@ impl InstanceRepo for InstanceRepoPg {
         rows.into_iter()
             .map(|r| {
                 use sqlx::Row;
-                Ok(Instance {
-                    id: InstanceId::from_uuid(r.get("id")),
-                    slug: Slug::parse(r.get::<String, _>("slug"))
-                        .map_err(|e| RepoError::Other(e.to_string()))?,
-                    offre_id: domain::OffreId::from_uuid(r.get("offre_id")),
-                    profil_id: domain::ProfilId::from_uuid(r.get("profil_id")),
-                    status: parse_status(r.get("status"))?,
-                    restitution: r.get("restitution"),
-                    resume_json: r.get("resume_json"),
-                    cover_letter_json: r.get("cover_letter_json"),
-                    notes: r.get("notes"),
-                    created_at: r.get("created_at"),
-                    updated_at: r.get("updated_at"),
-                    sent_at: r.get("sent_at"),
-                })
+                helpers::build_instance(
+                    r.get("id"),
+                    r.get::<String, _>("slug"),
+                    r.get("offre_id"),
+                    r.get("profil_id"),
+                    r.get("status"),
+                    r.get("restitution"),
+                    r.get("resume_json"),
+                    r.get("cover_letter_json"),
+                    r.get("notes"),
+                    r.get("created_at"),
+                    r.get("updated_at"),
+                    r.get("sent_at"),
+                )
             })
             .collect()
     }
@@ -479,21 +472,20 @@ impl InstanceRepo for InstanceRepoPg {
 
         row.map(|r| {
             use sqlx::Row;
-            Ok(Instance {
-                id: InstanceId::from_uuid(r.get("id")),
-                slug: Slug::parse(r.get::<String, _>("slug"))
-                    .map_err(|e| RepoError::Other(e.to_string()))?,
-                offre_id: domain::OffreId::from_uuid(r.get("offre_id")),
-                profil_id: domain::ProfilId::from_uuid(r.get("profil_id")),
-                status: parse_status(r.get("status"))?,
-                restitution: r.get("restitution"),
-                resume_json: r.get("resume_json"),
-                cover_letter_json: r.get("cover_letter_json"),
-                notes: r.get("notes"),
-                created_at: r.get("created_at"),
-                updated_at: r.get("updated_at"),
-                sent_at: r.get("sent_at"),
-            })
+            helpers::build_instance(
+                r.get("id"),
+                r.get::<String, _>("slug"),
+                r.get("offre_id"),
+                r.get("profil_id"),
+                r.get("status"),
+                r.get("restitution"),
+                r.get("resume_json"),
+                r.get("cover_letter_json"),
+                r.get("notes"),
+                r.get("created_at"),
+                r.get("updated_at"),
+                r.get("sent_at"),
+            )
         })
         .transpose()
     }
