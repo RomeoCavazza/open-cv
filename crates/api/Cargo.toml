@@ -32,3 +32,7 @@ tracing-subscriber = { workspace = true }
 dotenvy            = { workspace = true }
 anyhow.workspace   = true
 base64             = { workspace = true }
+async-trait.workspace = true
+
+[dev-dependencies]
+axum-test = "15.6.0"

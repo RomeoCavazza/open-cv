@@ -9,7 +9,7 @@ use tower_http::cors::CorsLayer;
 use tower_http::trace::TraceLayer;
 
 pub mod errors;
-pub mod handlers;
+pub(crate) mod handlers;
 pub mod state;
 
 use crate::state::AppState;
