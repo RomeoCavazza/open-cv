@@ -1,10 +1,47 @@
-use base64::{engine::general_purpose, Engine as _};
-use axum::http::header::{CONTENT_DISPOSITION, CONTENT_TYPE};
-use domain::{Annexe, AnnexeId, Profil, ProfilId};
-use serde_json::Value as JsonValue;
+use crate::errors::ApiError;
 use crate::handlers::profile::AnnexeMetadata;
+use axum::http::header::{CONTENT_DISPOSITION, CONTENT_TYPE};
+use base64::{engine::general_purpose, Engine as _};
+use domain::{Annexe, AnnexeId, Profil, ProfilId};
+use ports::ProfilRepo;
+use serde_json::Value as JsonValue;
 
 use super::UploadAnnexeRequest;
+
+pub(super) async fn resolve_active_profile(
+    profil_repo: &dyn ProfilRepo,
+) -> Result<Profil, ApiError> {
+    profil_repo
+        .get_active()
+        .await
+        .map_err(|e| ApiError::Internal(e.to_string()))?
+        .ok_or_else(|| ApiError::NotFound("Aucun profil actif trouvé".to_string()))
+}
+
+pub(super) fn active_profile_content(profil: Profil) -> JsonValue {
+    profil.content
+}
+
+pub(super) fn active_profile_resume_template_or_content(profil: Profil) -> JsonValue {
+    if let Some(template) = profil
+        .content
+        .get("documents")
+        .and_then(|docs| docs.get("resume_template"))
+    {
+        return template.clone();
+    }
+
+    profil.content
+}
+
+pub(super) fn active_profile_cover_letter_template(profil: Profil) -> Result<JsonValue, ApiError> {
+    profil
+        .content
+        .get("documents")
+        .and_then(|docs| docs.get("cover_letter_template"))
+        .cloned()
+        .ok_or_else(|| ApiError::NotFound("Aucun modèle de lettre trouvé".to_string()))
+}
 
 pub(super) fn apply_persisted_markers(profil: &mut Profil) {
     if profil.profile_photo.is_some() {
@@ -152,16 +189,22 @@ fn extract_calendar_pdf(profil: &mut Profil) {
 mod tests {
     use super::*;
     use chrono::Utc;
-    use domain::{Annexe, AnnexeId, ProfilId};
+    use domain::{Annexe, AnnexeId, Profil, ProfilId};
     use serde_json::json;
 
-    fn build_profile() -> Profil {
+    fn build_profile(with_resume_template: bool) -> Profil {
+        let documents = if with_resume_template {
+            json!({"resume_template": {"foo": "bar"}})
+        } else {
+            json!({})
+        };
+
         Profil {
             id: ProfilId::new(),
             label: "Test".into(),
             content: json!({
                 "profile": {},
-                "documents": {"resume_template": {"foo": "bar"}},
+                "documents": documents,
                 "title": "Original"
             }),
             is_active: true,
@@ -181,8 +224,42 @@ mod tests {
     }
 
     #[test]
+    fn active_profile_content_returns_raw_content() {
+        let profil = build_profile(true);
+        assert_eq!(active_profile_content(profil)["title"], json!("Original"));
+    }
+
+    #[test]
+    fn active_profile_resume_template_prefers_template() {
+        let profil = build_profile(true);
+        assert_eq!(active_profile_resume_template_or_content(profil), json!({"foo": "bar"}));
+    }
+
+    #[test]
+    fn active_profile_resume_template_falls_back_to_content() {
+        let profil = build_profile(false);
+        assert_eq!(
+            active_profile_resume_template_or_content(profil),
+            json!({
+                "profile": {},
+                "documents": {},
+                "title": "Original"
+            })
+        );
+    }
+
+    #[test]
+    fn active_profile_cover_letter_template_errors_when_missing() {
+        let mut profil = build_profile(true);
+        profil.content["documents"] = json!({});
+
+        let error = active_profile_cover_letter_template(profil).expect_err("missing template");
+        assert!(matches!(error, ApiError::NotFound(_)));
+    }
+
+    #[test]
     fn apply_persisted_markers_marks_binary_fields() {
-        let mut profil = build_profile();
+        let mut profil = build_profile(true);
         profil.profile_photo = Some(vec![1, 2, 3]);
         profil.calendar_pdf = Some(vec![4, 5, 6]);
 
@@ -197,7 +274,7 @@ mod tests {
 
     #[test]
     fn apply_profile_update_merges_and_extracts_media() {
-        let mut profil = build_profile();
+        let mut profil = build_profile(true);
         let new_content = json!({
             "profile": {
                 "image": "data:image/png;base64,aGVsbG8="

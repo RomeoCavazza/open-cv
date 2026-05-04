@@ -12,20 +12,15 @@ use serde_json::Value as JsonValue;
 mod helpers;
 
 use helpers::{
-    apply_profile_update, apply_persisted_markers, build_annexe_from_request,
-    build_download_response, build_annexe_metadata,
+    active_profile_cover_letter_template, active_profile_content,
+    active_profile_resume_template_or_content, apply_profile_update, apply_persisted_markers,
+    build_annexe_from_request, build_annexe_metadata, build_download_response, resolve_active_profile,
 };
 
 pub async fn get_active_profile_handler(
     State(state): State<AppState>,
 ) -> Result<Json<Profil>, ApiError> {
-    let mut profil = state
-        .generate_uc
-        .profils
-        .get_active()
-        .await
-        .map_err(|e| ApiError::Internal(e.to_string()))?
-        .ok_or_else(|| ApiError::NotFound("Aucun profil actif trouvé".to_string()))?;
+    let mut profil = resolve_active_profile(state.generate_uc.profils.as_ref()).await?;
 
     apply_persisted_markers(&mut profil);
 
@@ -48,58 +43,25 @@ pub async fn list_profiles_handler(
 pub async fn get_active_profile_resume_handler(
     State(state): State<AppState>,
 ) -> Result<Json<JsonValue>, ApiError> {
-    let profil = state
-        .generate_uc
-        .profils
-        .get_active()
-        .await
-        .map_err(|e| ApiError::Internal(e.to_string()))?
-        .ok_or_else(|| ApiError::NotFound("Aucun profil actif trouvé".to_string()))?;
+    let profil = resolve_active_profile(state.generate_uc.profils.as_ref()).await?;
 
-    Ok(Json(profil.content))
+    Ok(Json(active_profile_content(profil)))
 }
 
 pub async fn get_active_profile_resume_template_handler(
     State(state): State<AppState>,
 ) -> Result<Json<JsonValue>, ApiError> {
-    let profil = state
-        .generate_uc
-        .profils
-        .get_active()
-        .await
-        .map_err(|e| ApiError::Internal(e.to_string()))?
-        .ok_or_else(|| ApiError::NotFound("Aucun profil actif trouvé".to_string()))?;
+    let profil = resolve_active_profile(state.generate_uc.profils.as_ref()).await?;
 
-    if let Some(template) = profil
-        .content
-        .get("documents")
-        .and_then(|docs| docs.get("resume_template"))
-    {
-        return Ok(Json(template.clone()));
-    }
-
-    Ok(Json(profil.content))
+    Ok(Json(active_profile_resume_template_or_content(profil)))
 }
 
 pub async fn get_active_profile_cover_letter_template_handler(
     State(state): State<AppState>,
 ) -> Result<Json<JsonValue>, ApiError> {
-    let profil = state
-        .generate_uc
-        .profils
-        .get_active()
-        .await
-        .map_err(|e| ApiError::Internal(e.to_string()))?
-        .ok_or_else(|| ApiError::NotFound("Aucun profil actif trouvé".to_string()))?;
+    let profil = resolve_active_profile(state.generate_uc.profils.as_ref()).await?;
 
-    let template = profil
-        .content
-        .get("documents")
-        .and_then(|docs| docs.get("cover_letter_template"))
-        .cloned()
-        .ok_or_else(|| ApiError::NotFound("Aucun modèle de lettre trouvé".to_string()))?;
-
-    Ok(Json(template))
+    Ok(Json(active_profile_cover_letter_template(profil)?))
 }
 
 pub async fn update_active_profile_handler(
@@ -107,13 +69,7 @@ pub async fn update_active_profile_handler(
     Json(new_content): Json<JsonValue>,
 ) -> Result<(), ApiError> {
     tracing::info!("Début de la mise à jour du profil actif");
-    let mut profil = state
-        .generate_uc
-        .profils
-        .get_active()
-        .await
-        .map_err(|e| ApiError::Internal(e.to_string()))?
-        .ok_or_else(|| ApiError::NotFound("Aucun profil actif trouvé".to_string()))?;
+    let mut profil = resolve_active_profile(state.generate_uc.profils.as_ref()).await?;
 
     apply_profile_update(&mut profil, new_content);
 
@@ -138,12 +94,7 @@ pub struct AnnexeMetadata {
 pub async fn list_annexes_handler(
     State(state): State<AppState>,
 ) -> Result<Json<Vec<AnnexeMetadata>>, ApiError> {
-    let profil = state
-        .profil_repo
-        .get_active()
-        .await
-        .map_err(|e| ApiError::Internal(e.to_string()))?
-        .ok_or_else(|| ApiError::NotFound("Profil actif introuvable".to_string()))?;
+    let profil = resolve_active_profile(state.profil_repo.as_ref()).await?;
 
     let annexes = state
         .annexe_repo
@@ -180,12 +131,7 @@ pub async fn upload_annexe_handler(
         req.filename
     );
     tracing::debug!("Taille de la data URL : {} chars", req.data_url.len());
-    let profil = state
-        .profil_repo
-        .get_active()
-        .await
-        .map_err(|e| ApiError::Internal(e.to_string()))?
-        .ok_or_else(|| ApiError::NotFound("Profil actif introuvable".to_string()))?;
+    let profil = resolve_active_profile(state.profil_repo.as_ref()).await?;
 
     let annexe = build_annexe_from_request(profil.id, req)
         .map_err(ApiError::BadRequest)?;
