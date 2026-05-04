@@ -1,6 +1,10 @@
 use base64::{engine::general_purpose, Engine as _};
-use domain::Profil;
+use axum::http::header::{CONTENT_DISPOSITION, CONTENT_TYPE};
+use domain::{Annexe, AnnexeId, Profil, ProfilId};
 use serde_json::Value as JsonValue;
+use crate::handlers::profile::AnnexeMetadata;
+
+use super::UploadAnnexeRequest;
 
 pub(super) fn apply_persisted_markers(profil: &mut Profil) {
     if profil.profile_photo.is_some() {
@@ -41,6 +45,50 @@ pub(super) fn decode_data_url(payload: &str) -> Result<Vec<u8>, String> {
     general_purpose::STANDARD
         .decode(payload)
         .map_err(|e| e.to_string())
+}
+
+pub(super) fn build_annexe_metadata(annexe: Annexe) -> AnnexeMetadata {
+    AnnexeMetadata {
+        id: annexe.id,
+        label: annexe.label,
+        filename: annexe.filename,
+        content_type: annexe.content_type,
+    }
+}
+
+pub(super) fn build_annexe_from_request(
+    profil_id: ProfilId,
+    req: UploadAnnexeRequest,
+) -> Result<Annexe, String> {
+    let b64_data = req
+        .data_url
+        .split(',')
+        .nth(1)
+        .ok_or_else(|| "Format de donnée invalide".to_string())?;
+
+    let content = decode_data_url(b64_data).map_err(|e| format!("Base64 invalide : {}", e))?;
+
+    Ok(Annexe {
+        id: AnnexeId::new(),
+        profil_id,
+        label: req.label,
+        filename: req.filename,
+        content_type: req.content_type,
+        content,
+        created_at: chrono::Utc::now(),
+    })
+}
+
+pub(super) fn build_download_response(annexe: Annexe) -> ([(&'static str, String); 2], Vec<u8>) {
+    let headers = [
+        (CONTENT_TYPE.as_str(), annexe.content_type),
+        (
+            CONTENT_DISPOSITION.as_str(),
+            format!("inline; filename=\"{}\"", annexe.filename),
+        ),
+    ];
+
+    (headers, annexe.content)
 }
 
 fn merge_profile_content(existing: &mut JsonValue, new_content: JsonValue) {
@@ -104,7 +152,7 @@ fn extract_calendar_pdf(profil: &mut Profil) {
 mod tests {
     use super::*;
     use chrono::Utc;
-    use domain::ProfilId;
+    use domain::{Annexe, AnnexeId, ProfilId};
     use serde_json::json;
 
     fn build_profile() -> Profil {
@@ -170,5 +218,42 @@ mod tests {
         assert_eq!(profil.content["documents"]["apprenticeship_calendar"], json!("persisted:bytea"));
         assert_eq!(profil.profile_photo, Some(b"hello".to_vec()));
         assert_eq!(profil.calendar_pdf, Some(b"world".to_vec()));
+    }
+
+    #[test]
+    fn build_annexe_from_request_decodes_payload() {
+        let req = UploadAnnexeRequest {
+            label: "CV".into(),
+            filename: "cv.pdf".into(),
+            content_type: "application/pdf".into(),
+            data_url: "data:application/pdf;base64,aGVsbG8=".into(),
+        };
+
+        let annexe = build_annexe_from_request(ProfilId::new(), req).expect("annexe should build");
+
+        assert_eq!(annexe.content, b"hello");
+        assert_eq!(annexe.filename, "cv.pdf");
+        assert_eq!(annexe.label, "CV");
+    }
+
+    #[test]
+    fn build_download_response_sets_inline_headers() {
+        let annexe = Annexe {
+            id: AnnexeId::new(),
+            profil_id: ProfilId::new(),
+            label: "CV".into(),
+            filename: "cv.pdf".into(),
+            content_type: "application/pdf".into(),
+            content: b"hello".to_vec(),
+            created_at: Utc::now(),
+        };
+
+        let (headers, body) = build_download_response(annexe);
+
+        assert_eq!(headers[0].0, CONTENT_TYPE.as_str());
+        assert_eq!(headers[0].1, "application/pdf");
+        assert_eq!(headers[1].0, CONTENT_DISPOSITION.as_str());
+        assert!(headers[1].1.contains("cv.pdf"));
+        assert_eq!(body, b"hello");
     }
 }

@@ -1,18 +1,20 @@
 use crate::errors::ApiError;
 use crate::state::AppState;
-use axum::http::header::{CONTENT_DISPOSITION, CONTENT_TYPE};
 use axum::{
     extract::{Path, State},
     response::IntoResponse,
     Json,
 };
-use domain::{Annexe, AnnexeId, Profil};
+use domain::{AnnexeId, Profil};
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
 
 mod helpers;
 
-use helpers::{apply_profile_update, apply_persisted_markers, decode_data_url};
+use helpers::{
+    apply_profile_update, apply_persisted_markers, build_annexe_from_request,
+    build_download_response, build_annexe_metadata,
+};
 
 pub async fn get_active_profile_handler(
     State(state): State<AppState>,
@@ -155,15 +157,7 @@ pub async fn list_annexes_handler(
         profil.id
     );
 
-    let metadata = annexes
-        .into_iter()
-        .map(|a| AnnexeMetadata {
-            id: a.id,
-            label: a.label,
-            filename: a.filename,
-            content_type: a.content_type,
-        })
-        .collect();
+    let metadata = annexes.into_iter().map(build_annexe_metadata).collect();
 
     Ok(Json(metadata))
 }
@@ -193,24 +187,8 @@ pub async fn upload_annexe_handler(
         .map_err(|e| ApiError::Internal(e.to_string()))?
         .ok_or_else(|| ApiError::NotFound("Profil actif introuvable".to_string()))?;
 
-    let b64_data = req
-        .data_url
-        .split(',')
-        .nth(1)
-        .ok_or_else(|| ApiError::BadRequest("Format de donnée invalide".to_string()))?;
-
-    let content = decode_data_url(b64_data)
-        .map_err(|e| ApiError::BadRequest(format!("Base64 invalide : {}", e)))?;
-
-    let annexe = Annexe {
-        id: AnnexeId::new(),
-        profil_id: profil.id,
-        label: req.label,
-        filename: req.filename,
-        content_type: req.content_type,
-        content,
-        created_at: chrono::Utc::now(),
-    };
+    let annexe = build_annexe_from_request(profil.id, req)
+        .map_err(ApiError::BadRequest)?;
 
     state
         .annexe_repo
@@ -233,15 +211,7 @@ pub async fn download_annexe_handler(
         .map_err(|e| ApiError::Internal(e.to_string()))?
         .ok_or_else(|| ApiError::NotFound("Annexe introuvable".to_string()))?;
 
-    let headers = [
-        (CONTENT_TYPE, annexe.content_type),
-        (
-            CONTENT_DISPOSITION,
-            format!("inline; filename=\"{}\"", annexe.filename),
-        ),
-    ];
-
-    Ok((headers, annexe.content))
+    Ok(build_download_response(annexe))
 }
 
 pub async fn delete_annexe_handler(
