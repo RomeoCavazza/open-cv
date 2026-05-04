@@ -168,6 +168,7 @@ It is intended as a working overview of the project rather than a polished marke
 - **[docs/README.md](docs/README.md)** : Index détaillé de la documentation.
 - **[docs/cleanup_status.md](docs/cleanup_status.md)** : **Pilotage opérationnel**, roadmap et état d'avancement.
 - **[docs/blueprint.md](docs/blueprint.md)** : Spécifications techniques et pipeline IA.
+- **[docs/project_map.md](docs/project_map.md)** : Cartographie détaillée de l arborescence et rôle des fichiers.
 - **[docs/instructions.md](docs/instructions.md)** : Setup et commandes courantes.
 - **[docs/design.md](docs/design.md)** : Direction visuelle et principes UI.
 
