@@ -50,13 +50,19 @@ pub(super) fn apply_persisted_markers(profil: &mut Profil) {
     }
 }
 
-pub(super) fn apply_profile_update(profil: &mut Profil, new_content: JsonValue) {
-    if let Ok(content) = serde_json::from_value::<domain::ProfilContent>(new_content) {
-        profil.content = content;
-        extract_profile_photo(profil);
-        extract_calendar_pdf(profil);
-        apply_persisted_markers(profil);
-    }
+pub(super) fn apply_profile_update(
+    profil: &mut Profil,
+    new_content: JsonValue,
+) -> Result<(), ApiError> {
+    let content = serde_json::from_value::<domain::ProfilContent>(new_content)
+        .map_err(|e| ApiError::BadRequest(format!("Invalid profile payload: {e}")))?;
+
+    profil.content = content;
+    extract_profile_photo(profil);
+    extract_calendar_pdf(profil);
+    apply_persisted_markers(profil);
+
+    Ok(())
 }
 
 pub(super) fn decode_data_url(payload: &str) -> Result<Vec<u8>, String> {
