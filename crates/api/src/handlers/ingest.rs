@@ -14,7 +14,7 @@ use logic::{build_generate_input, parse_input_items, resolve_ingest_profile, sho
 pub struct IngestConfig {
     pub resume: bool,
     pub cover: bool,
-    pub analysis: bool,
+    pub restitution: bool,
 }
 
 #[derive(Deserialize)]

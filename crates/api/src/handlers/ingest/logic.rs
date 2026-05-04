@@ -48,7 +48,7 @@ pub(super) fn parse_input_items(input: &str) -> Vec<String> {
 
 pub(super) fn should_generate(config: Option<&IngestConfig>) -> bool {
     config
-        .map(|c| c.analysis || c.resume || c.cover)
+        .map(|c| c.restitution || c.resume || c.cover)
         .unwrap_or(false)
 }
 
@@ -62,7 +62,7 @@ pub(super) fn build_generate_input(
         profil_id,
         existing_instance: Some(instance),
         livrables: Livrables {
-            analysis: config.analysis,
+            restitution: config.restitution,
             resume: config.resume,
             cover_letter: config.cover,
         },
@@ -113,7 +113,7 @@ mod tests {
         assert!(should_generate(Some(&IngestConfig {
             resume: true,
             cover: false,
-            analysis: false,
+            restitution: false,
         })));
     }
 }

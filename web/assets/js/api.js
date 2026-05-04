@@ -62,7 +62,7 @@ export async function ingestOffer(urlOrText) {
     const res = await fetch('/api/ingest', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ source: urlOrText })
+        body: JSON.stringify({ input: urlOrText })
     });
     if (!res.ok) throw new Error('Ingest failed');
     return await res.json();
