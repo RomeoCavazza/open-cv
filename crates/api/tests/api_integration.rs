@@ -96,7 +96,7 @@ async fn test_get_profile_200_when_seeded() {
 }
 
 #[tokio::test]
-async fn test_post_profile_200_updates_content() {
+async fn test_put_profile_200_updates_content() {
     let (server, repos) = setup_test_server().await;
     
     let id = ProfilId::new();
@@ -122,7 +122,7 @@ async fn test_post_profile_200_updates_content() {
         ..Default::default()
     };
 
-    let response = server.post("/api/profile/active").json(&new_content).await;
+    let response = server.put("/api/profile/active").json(&new_content).await;
     response.assert_status_success();
 
     // Verify in mock repo
@@ -131,7 +131,7 @@ async fn test_post_profile_200_updates_content() {
 }
 
 #[tokio::test]
-async fn test_post_profile_400_on_malformed_payload() {
+async fn test_put_profile_400_on_malformed_payload() {
     let (server, repos) = setup_test_server().await;
     
     let profil = Profil {
@@ -155,11 +155,18 @@ async fn test_post_profile_400_on_malformed_payload() {
         }
     });
 
-    let response = server.post("/api/profile/active").json(&malformed).await;
+    let response = server.put("/api/profile/active").json(&malformed).await;
     response.assert_status_bad_request();
     
     let text = response.text();
     assert!(text.contains("Invalid profile payload"));
+}
+
+#[tokio::test]
+async fn test_post_profile_active_405() {
+    let (server, _) = setup_test_server().await;
+    let response = server.post("/api/profile/active").json(&serde_json::json!({})).await;
+    response.assert_status(axum::http::StatusCode::METHOD_NOT_ALLOWED);
 }
 
 #[tokio::test]

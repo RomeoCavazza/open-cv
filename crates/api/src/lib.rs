@@ -1,6 +1,6 @@
 use axum::{
     extract::State,
-    routing::{get, post},
+    routing::{get, post, put},
     Router,
 };
 use axum::response::IntoResponse;
@@ -35,7 +35,7 @@ pub fn create_app(state: AppState) -> Router {
         .route("/api/offres/:slug/instance", get(get_instance_by_offre_slug))
         .route("/api/instances/:slug", get(get_instance_by_slug))
         .route("/api/profile/active", get(get_active_profile_handler))
-        .route("/api/profile/active", post(update_active_profile_handler))
+        .route("/api/profile/active", put(update_active_profile_handler))
         .route("/api/profile/active/resume", get(get_active_profile_resume_handler))
         .route("/api/profile/active/resume/template", get(get_active_profile_resume_template_handler))
         .route("/api/profile/active/cover-letter/template", get(get_active_profile_cover_letter_template_handler))
