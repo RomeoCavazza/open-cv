@@ -65,3 +65,9 @@ Tu audites un repo. Pas de compliments, pas de "globalement c'est bien". Chaque 
 3. **Fuite de couches** : `sqlx`, `axum` dans `domain` = CRIT.
 4. **`innerHTML`** dynamique = CRIT.
 5. **Globales implicites** (`window.x`) = HIGH.
+
+- [LOW] test_get_annexes_200 vérifie uniquement status 200, pas la structure. À renforcer quand le frontend exploitera cette route.
+- Note: tag déplacé via --force, acceptable solo, à éviter en collaboration.
+
+- [LOW] test_get_annexes_200 vérifie uniquement status 200, pas la structure. À renforcer quand le frontend exploitera cette route.
+- Note: tag déplacé via --force, acceptable solo, à éviter en collaboration.
