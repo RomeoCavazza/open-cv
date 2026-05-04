@@ -216,3 +216,26 @@ async fn test_post_ingest_400_with_legacy_analysis_field() {
     let response = server.post("/api/ingest").json(&payload).await;
     assert!(response.status_code() == 400 || response.status_code() == 422);
 }
+
+#[tokio::test]
+async fn test_get_annexes_200() {
+    let (server, repos) = setup_test_server().await;
+    
+    // Seed active profile
+    let profil = Profil {
+        id: ProfilId::new(),
+        label: "Test".to_string(),
+        is_active: true,
+        content: ProfilContent::default(),
+        created_at: chrono::Utc::now(),
+        profile_photo: None,
+        calendar_pdf: None,
+        resume_template: None,
+        cover_letter_template: None,
+        notes: serde_json::json!({}),
+    };
+    repos.profils.lock().unwrap().insert(profil.id.clone(), profil);
+
+    let response = server.get("/api/profile/active/annexes").await;
+    response.assert_status_success();
+}

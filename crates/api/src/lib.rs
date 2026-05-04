@@ -42,7 +42,7 @@ pub fn create_app(state: AppState) -> Router {
         .route("/api/profile/active/calendar", get(get_active_profile_calendar_handler))
         .route("/api/profile/active/photo", get(get_active_profile_photo_handler))
         .route("/api/profiles", get(list_profiles_handler))
-        .route("/api/annexes", get(list_annexes_handler))
+        .route("/api/profile/active/annexes", get(list_annexes_handler))
         .route("/api/chat", post(chat_handler))
         .route("/api/ingest", post(ingest_handler))
         .nest_service("/assets", tower_http::services::ServeDir::new(format!("{}/assets", web_dir)))
