@@ -193,8 +193,16 @@ async function sendChatMessage() {
                 window.activeResolvedOfferSlug = offerSlug || window.activeResolvedOfferSlug;
             }
 
-            const persistedHistory = result.updated_instance?.notes?.chat_history 
-                || (await fetch('/api/profile/active').then(r => r.json())).notes?.chat_history;
+            let persistedHistory = result.updated_instance?.notes?.chat_history;
+            if (!Array.isArray(persistedHistory) || persistedHistory.length === 0) {
+                const profileResponse = await fetch('/api/profile/active');
+                if (profileResponse.ok) {
+                    const profile = await profileResponse.json();
+                    persistedHistory = profile?.notes?.chat_history;
+                } else {
+                    console.warn("[Chat] Failed to reload profile history:", profileResponse.status);
+                }
+            }
             if (Array.isArray(persistedHistory) && persistedHistory.length > 0) {
                 console.log("[Chat] Rendering persisted history:", persistedHistory.length, "entries");
                 pendingAttachments = [];

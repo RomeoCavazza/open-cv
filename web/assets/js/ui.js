@@ -1,4 +1,5 @@
 import { i18n } from './state.js';
+import { clear, el, svg } from './dom.js';
 
 export function updateUIStrings() {
     const t = i18n.translations[i18n.current];
@@ -25,24 +26,45 @@ export function updateUIStrings() {
 }
 
 export function dragHandleMarkup() {
-    return `
-        <button
-            type="button"
-            class="drag-handle"
-            data-i18n-title="ph_drag_reorder"
-            data-i18n-aria-label="ph_drag_reorder"
-            style="display:flex; align-items:center; justify-content:center; width:34px; height:34px; border:none; background:transparent; cursor:grab; color:var(--muted-strong); border-radius:8px; padding:0;"
-        >
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
-                <circle cx="5" cy="3" r="1.4"></circle>
-                <circle cx="11" cy="3" r="1.4"></circle>
-                <circle cx="5" cy="8" r="1.4"></circle>
-                <circle cx="11" cy="8" r="1.4"></circle>
-                <circle cx="5" cy="13" r="1.4"></circle>
-                <circle cx="11" cy="13" r="1.4"></circle>
-            </svg>
-        </button>
-    `;
+    return el('button', {
+        type: 'button',
+        className: 'drag-handle',
+        dataset: {
+            i18nTitle: 'ph_drag_reorder',
+            i18nAriaLabel: 'ph_drag_reorder',
+        },
+        style: 'display:flex; align-items:center; justify-content:center; width:34px; height:34px; border:none; background:transparent; cursor:grab; color:var(--muted-strong); border-radius:8px; padding:0;',
+    }, [
+        svg('svg', {
+            width: '16',
+            height: '16',
+            viewBox: '0 0 16 16',
+            fill: 'currentColor',
+            attrs: { 'aria-hidden': 'true' },
+        }, [
+            [5, 3], [11, 3], [5, 8], [11, 8], [5, 13], [11, 13],
+        ].map(([cx, cy]) => svg('circle', { cx, cy, r: '1.4' }))),
+    ]);
+}
+
+function makeInput(tagName, className, placeholderKey, placeholder, value, extra = {}) {
+    return el(tagName, {
+        type: tagName === 'textarea' ? undefined : 'text',
+        className,
+        dataset: { i18nPlaceholder: placeholderKey },
+        placeholder,
+        value,
+        style: extra.style || 'padding:8px; border:1px solid var(--hairline); border-radius:6px; font-size:13px;',
+    });
+}
+
+function makeRemoveButton(onclick) {
+    return el('button', {
+        type: 'button',
+        className: 'muted-remove-btn',
+        text: '×',
+        onclick,
+    });
 }
 
 export function stringifyDocument(value) {
@@ -140,47 +162,41 @@ export function setupSortableRow(row) {
 }
 
 export function createExpRow(item = {}) {
-    const div = document.createElement('div');
-    div.className = 'form-row-exp';
+    const div = el('div', { className: 'form-row-exp' });
     div.dataset.rowId = `row-${Math.random().toString(36).slice(2, 10)}`;
     div.dataset.dragReady = 'false';
     div.style = "display:grid; grid-template-columns: 34px 1fr 1fr 1fr 40px; gap:10px; margin-bottom:10px; padding:10px; border:1px solid var(--hairline); border-radius:8px; background: var(--canvas); align-items:start;";
-    div.innerHTML = `
-        ${dragHandleMarkup()}
-        <input type="text" data-i18n-placeholder="ph_role" placeholder="Titre" class="exp-role" value="${item.role || ""}" style="padding:8px; border:1px solid var(--hairline); border-radius:6px; font-size:13px;">
-        <input type="text" data-i18n-placeholder="ph_link" placeholder="Lien" class="exp-company" value="${item.company || ""}" style="padding:8px; border:1px solid var(--hairline); border-radius:6px; font-size:13px;">
-        <input type="text" data-i18n-placeholder="ph_period" placeholder="Période" class="exp-period" value="${item.period || ""}" style="padding:8px; border:1px solid var(--hairline); border-radius:6px; font-size:13px;">
-        <button onclick="this.parentElement.remove()" class="muted-remove-btn">×</button>
-        <textarea data-i18n-placeholder="ph_desc" placeholder="Description" class="exp-desc" style="grid-column: 1 / -1; height:60px; padding:8px; border:1px solid var(--hairline); border-radius:6px; resize:none; font-size:13px;">${(item.description || []).join('\n')}</textarea>
-    `;
+    div.appendChild(dragHandleMarkup());
+
+    div.appendChild(makeInput('input', 'exp-role', 'ph_role', 'Titre', item.role || ''));
+    div.appendChild(makeInput('input', 'exp-company', 'ph_link', 'Lien', item.company || ''));
+    div.appendChild(makeInput('input', 'exp-period', 'ph_period', 'Période', item.period || ''));
+    div.appendChild(makeRemoveButton(() => div.remove()));
+    div.appendChild(makeInput('textarea', 'exp-desc', 'ph_desc', 'Description', (item.description || []).join('\n'), {
+        style: 'grid-column:1 / -1; height:60px; padding:8px; border:1px solid var(--hairline); border-radius:6px; resize:none; font-size:13px;',
+    }));
     setupSortableRow(div);
     updateUIStrings();
     return div;
 }
 
 export function createEduRow(item = {}) {
-    const div = document.createElement('div');
-    div.className = 'form-row-edu';
+    const div = el('div', { className: 'form-row-edu' });
     div.style = "display:grid; grid-template-columns: 1fr 1fr 1fr 40px; gap:10px; margin-bottom:10px;";
-    div.innerHTML = `
-        <input type="text" data-i18n-placeholder="ph_school" placeholder="École" class="edu-school" value="${item.school || ""}" style="padding:8px; border:1px solid var(--hairline); border-radius:6px; font-size:13px;">
-        <input type="text" data-i18n-placeholder="ph_degree" placeholder="Diplôme" class="edu-degree" value="${item.degree || ""}" style="padding:8px; border:1px solid var(--hairline); border-radius:6px; font-size:13px;">
-        <input type="text" data-i18n-placeholder="ph_period" placeholder="Période" class="edu-period" value="${item.period || ""}" style="padding:8px; border:1px solid var(--hairline); border-radius:6px; font-size:13px;">
-        <button onclick="this.parentElement.remove()" class="muted-remove-btn">×</button>
-    `;
+    div.appendChild(makeInput('input', 'edu-school', 'ph_school', 'École', item.school || ''));
+    div.appendChild(makeInput('input', 'edu-degree', 'ph_degree', 'Diplôme', item.degree || ''));
+    div.appendChild(makeInput('input', 'edu-period', 'ph_period', 'Période', item.period || ''));
+    div.appendChild(makeRemoveButton(() => div.remove()));
     updateUIStrings();
     return div;
 }
 
 export function createLangRow(item = {}) {
-    const div = document.createElement('div');
-    div.className = 'form-row-lang';
+    const div = el('div', { className: 'form-row-lang' });
     div.style = "display:grid; grid-template-columns: 1fr 1fr 40px; gap:10px; margin-bottom:10px;";
-    div.innerHTML = `
-        <input type="text" data-i18n-placeholder="ph_lang" placeholder="Langue" class="lang-name" value="${item.name || ""}" style="padding:8px; border:1px solid var(--hairline); border-radius:8px; font-size:13px;">
-        <input type="text" data-i18n-placeholder="ph_level" placeholder="Niveau" class="lang-level" value="${item.level || ""}" style="padding:8px; border:1px solid var(--hairline); border-radius:8px; font-size:13px;">
-        <button onclick="this.parentElement.remove()" class="muted-remove-btn">×</button>
-    `;
+    div.appendChild(makeInput('input', 'lang-name', 'ph_lang', 'Langue', item.name || ''));
+    div.appendChild(makeInput('input', 'lang-level', 'ph_level', 'Niveau', item.level || ''));
+    div.appendChild(makeRemoveButton(() => div.remove()));
     updateUIStrings();
     return div;
 }
@@ -204,24 +220,57 @@ export function createSkillRow(item = { category: "", items: [] }) {
     const div = document.createElement('div');
     div.className = 'skill-cat-row';
     div.style = "padding:16px; border:1px solid var(--hairline); border-radius:10px; margin-bottom:12px; background: var(--canvas);";
-    div.innerHTML = `
-        <div style="display:flex; justify-content:space-between; margin-bottom:12px; align-items:center;">
-            <input type="text" class="skill-cat-name skill-category-name" data-i18n-placeholder="ph_cat_name" placeholder="Nom de catégorie" value="${item.category}">
-            <button onclick="this.parentElement.parentElement.remove()" class="muted-remove-btn">×</button>
-        </div>
-        <div class="skills-pills-container" style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px;"></div>
-        <input type="text" class="skill-input" data-i18n-placeholder="ph_skill_input" placeholder="Ajouter une compétence..." style="width:100%; padding:8px; border:1px solid var(--hairline); border-radius:6px; font-size:12px;">
-    `;
-    const pillsContainer = div.querySelector('.skills-pills-container');
-    const input = div.querySelector('.skill-input');
+    const header = document.createElement('div');
+    header.style.cssText = 'display:flex; justify-content:space-between; margin-bottom:12px; align-items:center;';
+
+    const categoryInput = document.createElement('input');
+    categoryInput.type = 'text';
+    categoryInput.className = 'skill-cat-name skill-category-name';
+    categoryInput.dataset.i18nPlaceholder = 'ph_cat_name';
+    categoryInput.placeholder = 'Nom de catégorie';
+    categoryInput.value = item.category;
+
+    const removeButton = document.createElement('button');
+    removeButton.type = 'button';
+    removeButton.className = 'muted-remove-btn';
+    removeButton.textContent = '×';
+    removeButton.onclick = () => div.remove();
+
+    header.appendChild(categoryInput);
+    header.appendChild(removeButton);
+
+    const pillsContainer = document.createElement('div');
+    pillsContainer.className = 'skills-pills-container';
+    pillsContainer.style.cssText = 'display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px;';
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'skill-input';
+    input.dataset.i18nPlaceholder = 'ph_skill_input';
+    input.placeholder = 'Ajouter une compétence...';
+    input.style.cssText = 'width:100%; padding:8px; border:1px solid var(--hairline); border-radius:6px; font-size:12px;';
+
+    div.appendChild(header);
+    div.appendChild(pillsContainer);
+    div.appendChild(input);
+
     const renderPills = () => {
-        pillsContainer.innerHTML = '';
+        pillsContainer.replaceChildren();
         item.items.forEach((skill, idx) => {
             const pill = document.createElement('div');
             pill.className = 'skill-pill';
             pill.style = "background:var(--soft-blue); color:var(--primary); padding:4px 12px; border-radius:20px; font-size:11px; font-weight:600; display:flex; align-items:center; gap:6px;";
-            pill.innerHTML = `<span class="skill-text">${skill}</span> <span class="skill-pill-remove">×</span>`;
-            pill.querySelector('.skill-pill-remove').onclick = () => { item.items.splice(idx, 1); renderPills(); };
+            const skillText = document.createElement('span');
+            skillText.className = 'skill-text';
+            skillText.textContent = skill;
+
+            const remove = document.createElement('span');
+            remove.className = 'skill-pill-remove';
+            remove.textContent = '×';
+            remove.onclick = () => { item.items.splice(idx, 1); renderPills(); };
+
+            pill.appendChild(skillText);
+            pill.appendChild(remove);
             pillsContainer.appendChild(pill);
         });
     };
@@ -241,9 +290,24 @@ export function createAnnexeRow(item = {}) {
     const div = document.createElement('div');
     div.className = 'form-row-annexe';
     div.style = "display:flex; flex-direction:column; gap:0; margin-bottom:12px; border:1px solid var(--hairline); border-radius:10px; background:var(--canvas); overflow:hidden; transition: all 0.2s ease;";
-    
-    const eyeSvg = `<svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg>`;
-    const eyeSlashSvg = `<svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" /></svg>`;
+
+    function createIconSvg(pathDefs, width = '17', height = '17') {
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('width', width);
+        svg.setAttribute('height', height);
+        svg.setAttribute('fill', 'none');
+        svg.setAttribute('viewBox', '0 0 24 24');
+        svg.setAttribute('stroke-width', '1.5');
+        svg.setAttribute('stroke', 'currentColor');
+        pathDefs.forEach((def) => {
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            path.setAttribute('stroke-linecap', 'round');
+            path.setAttribute('stroke-linejoin', 'round');
+            path.setAttribute('d', def);
+            svg.appendChild(path);
+        });
+        return svg;
+    }
 
     // Mapping des données (supporte le format API et le format local)
     const id = item.id || "";
@@ -260,37 +324,90 @@ export function createAnnexeRow(item = {}) {
     const hasFile = !!(id || dataUrl);
     const downloadUrl = id ? `/api/profile/active/annexes/${id}` : dataUrl;
 
-    div.innerHTML = `
-        <div class="annexe-header" style="display:flex; align-items:center; justify-content:space-between; padding:10px 16px; cursor:default;">
-            <div style="display:flex; align-items:center; gap:12px; flex:1;">
-                <div class="annexe-icon" style="color:var(--primary); display:flex; align-items:center; opacity: 0.5;">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                </div>
-                <input type="text" class="annexe-name" value="${label}" placeholder="Nom du document" style="background:transparent; border:none; font-size:14px; font-weight:600; color:var(--heading); width:100%; outline:none; padding: 4px 0;">
-            </div>
-            <div style="display:flex; gap:6px; align-items:center;">
-                <button type="button" class="annexe-view-btn" style="background:transparent; border:none; color:var(--muted-strong); cursor:pointer; padding:6px; border-radius:50%; display:${hasFile ? 'flex' : 'none'}; align-items:center; justify-content:center; transition: all 0.2s;" title="Aperçu">
-                    ${eyeSvg}
-                </button>
-                <button type="button" class="annexe-upload-btn" style="background:transparent; border:1px dashed var(--hairline); color:var(--muted-strong); cursor:pointer; padding:4px 10px; border-radius:6px; font-size:11px; display:${hasFile ? 'none' : 'block'}; transition: all 0.2s;">
-                    Joindre
-                </button>
-                <button type="button" class="annexe-remove-btn" style="background:transparent; border:none; color:var(--muted-strong); cursor:pointer; padding:6px; border-radius:50%; font-size:18px; line-height:1; display:flex; align-items:center; justify-content:center; transition: all 0.2s;">×</button>
-            </div>
-        </div>
-        <div class="annexe-preview-container" style="display:none; border-top:1px solid var(--hairline); background:white;">
-            <iframe class="annexe-preview" style="width:100%; height:500px; border:none; display:block;"></iframe>
-        </div>
-        <input type="file" class="annexe-file-input" style="display:none;">
-    `;
-    
-    const fileInput = div.querySelector('.annexe-file-input');
-    const nameInput = div.querySelector('.annexe-name');
-    const preview = div.querySelector('.annexe-preview');
-    const previewContainer = div.querySelector('.annexe-preview-container');
-    const viewBtn = div.querySelector('.annexe-view-btn');
-    const uploadBtn = div.querySelector('.annexe-upload-btn');
-    const removeBtn = div.querySelector('.annexe-remove-btn');
+    const header = document.createElement('div');
+    header.className = 'annexe-header';
+    header.style.cssText = 'display:flex; align-items:center; justify-content:space-between; padding:10px 16px; cursor:default;';
+
+    const left = document.createElement('div');
+    left.style.cssText = 'display:flex; align-items:center; gap:12px; flex:1;';
+
+    const iconWrap = document.createElement('div');
+    iconWrap.className = 'annexe-icon';
+    iconWrap.style.cssText = 'color:var(--primary); display:flex; align-items:center; opacity: 0.5;';
+    const fileIcon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    fileIcon.setAttribute('width', '18');
+    fileIcon.setAttribute('height', '18');
+    fileIcon.setAttribute('viewBox', '0 0 24 24');
+    fileIcon.setAttribute('fill', 'none');
+    fileIcon.setAttribute('stroke', 'currentColor');
+    fileIcon.setAttribute('stroke-width', '2');
+    fileIcon.setAttribute('stroke-linecap', 'round');
+    fileIcon.setAttribute('stroke-linejoin', 'round');
+    [
+        ['path', { d: 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z' }],
+        ['polyline', { points: '14 2 14 8 20 8' }],
+        ['line', { x1: '16', y1: '13', x2: '8', y2: '13' }],
+        ['line', { x1: '16', y1: '17', x2: '8', y2: '17' }],
+        ['polyline', { points: '10 9 9 9 8 9' }],
+    ].forEach(([tag, attrs]) => {
+        const node = document.createElementNS('http://www.w3.org/2000/svg', tag);
+        Object.entries(attrs).forEach(([key, value]) => node.setAttribute(key, value));
+        fileIcon.appendChild(node);
+    });
+    iconWrap.appendChild(fileIcon);
+
+    const nameInput = document.createElement('input');
+    nameInput.type = 'text';
+    nameInput.className = 'annexe-name';
+    nameInput.value = label;
+    nameInput.placeholder = 'Nom du document';
+    nameInput.style.cssText = 'background:transparent; border:none; font-size:14px; font-weight:600; color:var(--heading); width:100%; outline:none; padding: 4px 0;';
+
+    const right = document.createElement('div');
+    right.style.cssText = 'display:flex; gap:6px; align-items:center;';
+
+    const viewBtn = document.createElement('button');
+    viewBtn.type = 'button';
+    viewBtn.className = 'annexe-view-btn';
+    viewBtn.title = 'Aperçu';
+    viewBtn.style.cssText = `background:transparent; border:none; color:var(--muted-strong); cursor:pointer; padding:6px; border-radius:50%; display:${hasFile ? 'flex' : 'none'}; align-items:center; justify-content:center; transition: all 0.2s;`;
+
+    const uploadBtn = document.createElement('button');
+    uploadBtn.type = 'button';
+    uploadBtn.className = 'annexe-upload-btn';
+    uploadBtn.textContent = 'Joindre';
+    uploadBtn.style.cssText = `background:transparent; border:1px dashed var(--hairline); color:var(--muted-strong); cursor:pointer; padding:4px 10px; border-radius:6px; font-size:11px; display:${hasFile ? 'none' : 'block'}; transition: all 0.2s;`;
+
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.className = 'annexe-remove-btn';
+    removeBtn.textContent = '×';
+    removeBtn.style.cssText = 'background:transparent; border:none; color:var(--muted-strong); cursor:pointer; padding:6px; border-radius:50%; font-size:18px; line-height:1; display:flex; align-items:center; justify-content:center; transition: all 0.2s;';
+
+    const previewContainer = document.createElement('div');
+    previewContainer.className = 'annexe-preview-container';
+    previewContainer.style.cssText = 'display:none; border-top:1px solid var(--hairline); background:white;';
+
+    const preview = document.createElement('iframe');
+    preview.className = 'annexe-preview';
+    preview.style.cssText = 'width:100%; height:500px; border:none; display:block;';
+
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.className = 'annexe-file-input';
+    fileInput.style.display = 'none';
+
+    left.appendChild(iconWrap);
+    left.appendChild(nameInput);
+    right.appendChild(viewBtn);
+    right.appendChild(uploadBtn);
+    right.appendChild(removeBtn);
+    header.appendChild(left);
+    header.appendChild(right);
+    previewContainer.appendChild(preview);
+    div.appendChild(header);
+    div.appendChild(previewContainer);
+    div.appendChild(fileInput);
 
     // Hover effects discrets
     [viewBtn, removeBtn].forEach(btn => {
@@ -321,7 +438,13 @@ export function createAnnexeRow(item = {}) {
         e.stopPropagation();
         const isHidden = previewContainer.style.display === 'none';
         previewContainer.style.display = isHidden ? 'block' : 'none';
-        viewBtn.innerHTML = isHidden ? eyeSlashSvg : eyeSvg;
+        viewBtn.replaceChildren(isHidden ? createIconSvg([
+            'M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774',
+            'M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88'
+        ]) : createIconSvg([
+            'M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z',
+            'M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z'
+        ]));
         viewBtn.style.color = isHidden ? 'var(--primary)' : 'var(--muted-strong)';
         
         // Lazy load for remote files
@@ -363,7 +486,10 @@ export function createAnnexeRow(item = {}) {
             uploadBtn.style.display = 'none';
             
             previewContainer.style.display = 'block';
-            viewBtn.innerHTML = eyeSlashSvg;
+            viewBtn.replaceChildren(createIconSvg([
+                'M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774',
+                'M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88'
+            ]));
             viewBtn.style.color = 'var(--primary)';
         } catch (err) {
             console.error("Annexe load failed", err);
@@ -377,7 +503,7 @@ export function createAnnexeRow(item = {}) {
 export function renderList(containerId, items, rowCreator) {
     const container = document.getElementById(containerId);
     if (!container) return;
-    container.innerHTML = '';
+    clear(container);
     items.forEach(item => container.appendChild(rowCreator(item)));
     if (containerId === 'list-experiences' || containerId === 'list-projects') {
         initSortableContainer(container);

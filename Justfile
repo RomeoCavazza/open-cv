@@ -56,9 +56,24 @@ lint:
 fmt:
     cargo fmt --all
 
+# audit frontend
+audit-frontend:
+    find web -name '*.js' -print0 | while IFS= read -r -d '' file; do node --input-type=module --check < "$file"; done
+    ! rg -n "innerHTML\s*=\s*[^'\"[:space:]]|document.write|eval\(" web
+    tokei web
+
+# audit complet
+audit:
+    cargo fmt --all --check
+    cargo clippy --workspace --all-targets -- -D warnings
+    cargo deny check
+    cargo udeps --workspace --all-targets
+    cargo bloat --release -p api --crates
+    tokei .
+
 # prépare le cache sqlx pour la CI (mode offline)
 sqlx-prepare:
     cargo sqlx prepare --workspace
 
 # tout (CI-like)
-ci: fmt lint check test
+ci: audit test

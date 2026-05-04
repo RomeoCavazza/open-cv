@@ -11,3 +11,6 @@ Here is how it is organized:
 ## Architecture and Design
 - **`blueprint.md`**: main technical architecture document. It describes the Cargo workspace organization, PostgreSQL data model, and generation pipeline.
 - **`design.md`**: visual direction document for the web interface. It serves as a tone and design-system reference, not as the functional source of truth.
+
+## Roadmaps
+- **`backend_cleanup_plan.md`**: operational plan for cleaning and restructuring the Rust backend.

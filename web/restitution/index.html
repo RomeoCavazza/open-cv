@@ -260,10 +260,23 @@
                 const offre = await resOffre.json();
                 document.getElementById('offre-titre').innerText = offre.intitule;
                 const metaEl = document.getElementById('offre-meta');
-                const parts = [offre.entreprise || ''];
-                if (offre.localisation) parts.push(offre.localisation);
-                if (offre.source_url) parts.push(`<a href="${offre.source_url}" target="_blank">Visiter l'offre</a>`);
-                metaEl.innerHTML = parts.join(' · ');
+                metaEl.replaceChildren();
+                const metaParts = [];
+                if (offre.entreprise) metaParts.push(offre.entreprise);
+                if (offre.localisation) metaParts.push(offre.localisation);
+                metaParts.forEach((part, index) => {
+                    if (index > 0) metaEl.appendChild(document.createTextNode(' · '));
+                    metaEl.appendChild(document.createTextNode(part));
+                });
+                if (offre.source_url) {
+                    if (metaParts.length) metaEl.appendChild(document.createTextNode(' · '));
+                    const link = document.createElement('a');
+                    link.href = offre.source_url;
+                    link.target = '_blank';
+                    link.rel = 'noreferrer';
+                    link.textContent = "Visiter l'offre";
+                    metaEl.appendChild(link);
+                }
 
                 if (resInstance.ok) {
                     const instance = await resInstance.json();

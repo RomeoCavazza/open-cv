@@ -8,13 +8,14 @@ on:
       - '.github/workflows/frontend.yml'
 
 jobs:
-  check:
-    name: Web Sanity Check
+  audit:
+    name: Web Audit
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Verify files
-        run: |
-          ls web/index.html
-          ls web/resume/index.html
-          ls web/cover-letter/index.html
+      - uses: cachix/install-nix-action@v30
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+      - name: Run frontend audit
+        run: nix develop --command just audit-frontend

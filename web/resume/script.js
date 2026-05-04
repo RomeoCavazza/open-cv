@@ -1,3 +1,5 @@
+import { clear, el, svg, text } from '../assets/js/dom.js';
+
 async function loadCV() {
     try {
         const urlParams = new URLSearchParams(window.location.search);
@@ -26,28 +28,35 @@ function renderEmptyResumeState(jobId) {
     if (!stage) return;
 
     const hasGenerateAction = !!jobId;
-    stage.innerHTML = `
-        <div style="display: flex; flex-direction: column; align-items: center; justify-content: flex-start; height: 100vh; width: 100%; padding-top: 18vh; padding-left: 40px; padding-right: 40px; text-align: center; color: #64748b; background: #fff;">
-            <div style="width: 64px; height: 64px; background: #eff6ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 24px; color: #0052ff;">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 32px; height: 32px;">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
-                </svg>
-            </div>
-            <h2 style="font-size: 20px; font-weight: 700; color: #1e293b; margin-bottom: 12px;">CV non disponible</h2>
-            ${hasGenerateAction ? `<button id="btn-generate-cv" style="
-                background: #0052ff;
-                color: white;
-                border: none;
-                padding: 14px 32px;
-                border-radius: 12px;
-                font-weight: 600;
-                cursor: pointer;
-                font-size: 15px;
-                box-shadow: 0 4px 12px rgba(0,82,255,0.2);
-                transition: all 0.2s;
-            ">Générer le CV</button>` : ''}
-        </div>
-    `;
+    clear(stage).appendChild(el('div', {
+        style: 'display:flex; flex-direction:column; align-items:center; justify-content:flex-start; height:100vh; width:100%; padding-top:18vh; padding-left:40px; padding-right:40px; text-align:center; color:#64748b; background:#fff;'
+    }, [
+        el('div', {
+            style: 'width:64px; height:64px; background:#eff6ff; border-radius:50%; display:flex; align-items:center; justify-content:center; margin-bottom:24px; color:#0052ff;'
+        }, [
+            svg('svg', {
+                xmlns: 'http://www.w3.org/2000/svg',
+                fill: 'none',
+                viewBox: '0 0 24 24',
+                'stroke-width': '1.5',
+                stroke: 'currentColor',
+                style: 'width:32px; height:32px;'
+            }, [svg('path', {
+                'stroke-linecap': 'round',
+                'stroke-linejoin': 'round',
+                d: 'M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z'
+            })])
+        ]),
+        el('h2', {
+            style: 'font-size:20px; font-weight:700; color:#1e293b; margin-bottom:12px;',
+            text: 'CV non disponible'
+        }),
+        hasGenerateAction ? el('button', {
+            id: 'btn-generate-cv',
+            style: 'background:#0052ff; color:white; border:none; padding:14px 32px; border-radius:12px; font-weight:600; cursor:pointer; font-size:15px; box-shadow:0 4px 12px rgba(0,82,255,0.2); transition:all 0.2s;',
+            text: 'Générer le CV'
+        }) : null
+    ]));
     if (window.lucide) lucide.createIcons();
     // No applyPreviewScale here as we want full-width/height
 
@@ -57,11 +66,10 @@ function renderEmptyResumeState(jobId) {
             btn.disabled = true;
             btn.innerText = 'Génération...';
             try {
-                const res = await fetch(`/api/instances/${jobId}/generate`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ deliverables: { resume: true, restitution: false, cover: false } })
-                });
+                const res = await fetch(
+                    `/api/instances/${jobId}/generate?resume=true&restitution=false&cover_letter=false`,
+                    { method: 'POST' }
+                );
                 if (res.ok) window.location.reload();
                 else btn.disabled = false;
             } catch (e) {
@@ -129,71 +137,90 @@ function renderTemplateResume(data) {
 
     // Skills
     const skillsContainer = document.getElementById('skills-container');
-    skillsContainer.innerHTML = '';
-    data.skills.forEach(cat => {
-        const div = document.createElement('div');
-        div.className = 'skill-category';
-        div.innerHTML = `<h4>${cat.category}</h4><div class="skill-items">${cat.items.join(', ')}</div>`;
-        skillsContainer.appendChild(div);
+    clear(skillsContainer);
+    (data.skills || []).forEach((cat) => {
+        skillsContainer.appendChild(el('div', { className: 'skill-category' }, [
+            el('h4', { text: cat.category }),
+            el('div', { className: 'skill-items', text: (cat.items || []).join(', ') }),
+        ]));
     });
 
     // Languages
     const langContainer = document.getElementById('languages-container');
-    langContainer.innerHTML = '';
-    data.languages.forEach(lang => {
-        const div = document.createElement('div');
-        div.className = 'contact-item';
-        div.innerHTML = `<strong>${lang.name} :</strong> ${lang.level}`;
-        langContainer.appendChild(div);
+    clear(langContainer);
+    (data.languages || []).forEach((lang) => {
+        langContainer.appendChild(el('div', { className: 'contact-item' }, [
+            el('strong', { text: `${lang.name} :` }),
+            text(` ${lang.level}`),
+        ]));
     });
 
     // Experiences
     const expContainer = document.getElementById('experiences-container');
-    expContainer.innerHTML = '';
+    clear(expContainer);
     (data.experiences || []).forEach(exp => {
-        const div = document.createElement('div');
-        div.className = 'exp-item';
         const title = exp.role || exp.company;
         const sub = exp.role ? exp.company : "";
-        div.innerHTML = `
-                <h4>${title}</h4>
-                ${sub ? `<div class="company">${sub}</div>` : ''}
-                <div class="period" style="margin-top: 1px; margin-bottom: 3px;">${exp.period}</div>
-                <ul>${exp.description.map(line => `<li>${line}</li>`).join('')}</ul>
-            `;
-        expContainer.appendChild(div);
+        expContainer.appendChild(createExperienceBlock({
+            title,
+            sub,
+            period: exp.period,
+            description: exp.description || [],
+        }));
     });
 
     // Projects
     const projContainer = document.getElementById('projects-container');
     if (projContainer) {
-        projContainer.innerHTML = '';
+        clear(projContainer);
         (data.projects || []).forEach(proj => {
-            const div = document.createElement('div');
-            div.className = 'exp-item';
             const title = proj.role || proj.company;
             const sub = proj.role ? proj.company : "";
-            div.innerHTML = `<h4>${title}<span style="font-style: italic; font-weight: normal; font-size: 0.75rem; color: var(--cv-muted); margin-left: 6px; display: inline-block;"> (${proj.period})</span></h4>` +
-                (sub ? `<div class="company">${sub}</div>` : '') +
-                `<ul>${proj.description.map(line => `<li>${line}</li>`).join('')}</ul>`;
-            projContainer.appendChild(div);
+            projContainer.appendChild(createExperienceBlock({
+                title,
+                sub,
+                period: proj.period,
+                description: proj.description || [],
+                project: true,
+            }));
         });
     }
 
     // Education
     const eduContainer = document.getElementById('education-container');
-    eduContainer.innerHTML = '';
+    clear(eduContainer);
     data.education.forEach(edu => {
-        const div = document.createElement('div');
-        div.className = 'edu-item';
-        div.innerHTML = `
-                <strong>${edu.school}</strong> ${edu.period ? `<span class="period">(${edu.period})</span>` : ''}
-                <span class="degree">${edu.degree}</span>
-            `;
-        eduContainer.appendChild(div);
+        eduContainer.appendChild(createEducationBlock(edu));
     });
 
     lucide.createIcons();
+}
+
+function createExperienceBlock({ title, sub, period, description, project = false }) {
+    const titleRow = project
+        ? el('h4', {}, [
+            text(title),
+            el('span', {
+                style: 'font-style:italic; font-weight:normal; font-size:0.75rem; color:var(--cv-muted); margin-left:6px; display:inline-block;',
+                text: ` (${period})`,
+            }),
+        ])
+        : el('h4', { text: title });
+
+    return el('div', { className: 'exp-item' }, [
+        titleRow,
+        sub ? el('div', { className: 'company', text: sub }) : null,
+        !project ? el('div', { className: 'period', style: 'margin-top:1px; margin-bottom:3px;', text: period }) : null,
+        el('ul', {}, description.map((line) => el('li', { text: line }))),
+    ]);
+}
+
+function createEducationBlock(edu) {
+    return el('div', { className: 'edu-item' }, [
+        el('strong', { text: edu.school }),
+        edu.period ? text(` (${edu.period})`) : null,
+        el('span', { className: 'degree', text: edu.degree }),
+    ]);
 }
 
 function safeSetHref(id, url) {

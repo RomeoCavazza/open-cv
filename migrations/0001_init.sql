@@ -232,7 +232,3 @@ CREATE TABLE IF NOT EXISTS annexes (
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS annexes_profil ON annexes(profil_id);
-
-
-
-

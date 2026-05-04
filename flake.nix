@@ -37,6 +37,7 @@
 
             # Headless browser support (for chromiumoxide later)
             chromium
+            nodejs
 
             # Build deps for some crates
             pkg-config
@@ -46,15 +47,21 @@
             cargo-watch
             cargo-edit
             cargo-nextest
+            cargo-bloat
+            cargo-deny
+            cargo-udeps
+            tokei
             jq
             just
           ];
 
           shellHook = ''
-            export DATABASE_URL="postgres://alternance:alternance@localhost:5432/alternance"
-            export PGDATA="$PWD/.pg"
-            export PGHOST="$PWD/.pg"
-            export PGPORT=5432
+            export OPENSSL_DIR="${pkgs.openssl.dev}"
+            export PKG_CONFIG_PATH="${pkgs.openssl.dev}/lib/pkgconfig:${pkgs.openssl.dev}/share/pkgconfig"
+            export DATABASE_URL="''${DATABASE_URL:-postgres://alternance:alternance@localhost:5432/alternance}"
+            export PGDATA="''${PGDATA:-$PWD/.pg}"
+            export PGHOST="''${PGHOST:-$PWD/.pg}"
+            export PGPORT="''${PGPORT:-5432}"
             export RUST_LOG="''${RUST_LOG:-info,sqlx=warn,hyper=warn}"
 
             echo ""

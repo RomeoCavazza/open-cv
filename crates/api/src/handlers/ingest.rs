@@ -92,10 +92,13 @@ pub async fn ingest_handler(
                             };
 
                             // On lance la génération de manière synchrone
-                            let _ = state
+                            state
                                 .generate_uc
                                 .execute(gen_input, llm_provider.clone())
-                                .await;
+                                .await
+                                .map_err(|e| {
+                                    ApiError::Internal(format!("Erreur de génération : {}", e))
+                                })?;
                         }
                     }
                 }

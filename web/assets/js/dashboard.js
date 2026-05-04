@@ -1,6 +1,7 @@
 import * as state from './state.js';
 import * as api from './api.js';
 import * as ui from './ui.js';
+import { clear, el, svg } from './dom.js';
 
 // --- Dashboard Logic ---
 
@@ -165,7 +166,7 @@ async function loadOffers() {
         renderOldOffers(offers);
         
         const list = document.getElementById('offers-list');
-        list.innerHTML = '';
+        clear(list);
         const inboxLabel = state.i18n.translations[state.i18n.current].inbox;
         
         const visibleInboxOffers = offers.filter((offer) => {
@@ -196,21 +197,33 @@ async function loadOffers() {
             if (!isDefault) {
                 const catDiv = document.createElement('div');
                 catDiv.className = `offer-group-header${isCollapsed ? ' collapsed' : ''}`;
-                catDiv.innerHTML = `<span class="offer-group-toggle">${
-                    isCollapsed
-                        ? `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="M15 13.5H9m4.06-7.19-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z" /></svg>`
-                        : `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10.5v6m3-3H9m4.06-7.19-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z" /></svg>`
-                }</span><span>${cat} (${groups[cat].length})</span>`;
+                const toggle = document.createElement('span');
+                toggle.className = 'offer-group-toggle';
+
+                const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+                svg.setAttribute('fill', 'none');
+                svg.setAttribute('viewBox', '0 0 24 24');
+                svg.setAttribute('stroke-width', '1.5');
+                svg.setAttribute('stroke', 'currentColor');
+                svg.setAttribute('class', 'size-6');
+
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                path.setAttribute('stroke-linecap', 'round');
+                path.setAttribute('stroke-linejoin', 'round');
+                path.setAttribute('d', isCollapsed
+                    ? 'M15 13.5H9m4.06-7.19-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z'
+                    : 'M12 10.5v6m3-3H9m4.06-7.19-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z');
+                svg.appendChild(path);
+
+                const label = document.createElement('span');
+                label.textContent = `${cat} (${groups[cat].length})`;
+
+                toggle.appendChild(svg);
+                toggle.appendChild(label);
+                catDiv.appendChild(toggle);
                 
-                catDiv.onclick = () => {
-                    if (state.collapsedOfferCategories.includes(cat)) {
-                        state.collapsedOfferCategories.splice(state.collapsedOfferCategories.indexOf(cat), 1);
-                    } else {
-                        state.collapsedOfferCategories.push(cat);
-                    }
-                    state.saveCollapsedCategories();
-                    loadOffers();
-                };
+                catDiv.onclick = () => toggleOfferCategory(cat);
                 list.appendChild(catDiv);
                 groupContainer = document.createElement('div');
                 groupContainer.style.display = isCollapsed ? 'none' : 'block';
@@ -218,47 +231,38 @@ async function loadOffers() {
             }
             
             groups[cat].forEach(o => {
-                const card = document.createElement('div');
                 const isActive = state.activeJobId === o.job_id;
                 const flags = state.offerFlags[o.job_id] || {};
                 const isLocked = !!flags.locked;
                 const isArchived = !!flags.archived;
                 const hasFlag = isLocked || !!flags.archived;
-                
-                card.className = `offer-card ${isActive ? 'active' : ''} ${hasFlag ? 'has-flag' : ''} ${isArchived ? 'is-archived' : ''}`;
-                card.style = `padding: 12px 16px; cursor: pointer; border-radius: 8px; margin: 4px 8px; transition: all 0.2s; background: ${isActive ? 'white' : 'transparent'};`;
-                card.innerHTML = `<div class="offer-card-inner"><div class="offer-card-text"><div style="display:flex; align-items:flex-start; gap:8px;"><div class="offer-title" style="flex:1;">${o.title}</div><div class="offer-actions-slot"><span class="offer-action-visibility ${isLocked ? 'is-active' : ''}"><button type="button" class="offer-action-btn ${isLocked ? 'is-active' : ''}" data-action="lock" aria-label="Verrouiller l'offre"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" /></svg></button></span><span class="offer-action-visibility ${isArchived ? 'is-active' : ''}"><button type="button" class="offer-action-btn ${isArchived ? 'is-active' : ''}" data-action="archive" aria-label="Archiver l'offre"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z" /></svg></button></span></div></div><div class="offer-company">${o.entreprise || ""}</div></div></div>`;
-                
+                const card = createOfferCard(o, {
+                    isActive,
+                    isLocked,
+                    isArchived,
+                    hasFlag,
+                    archivedView: false,
+                });
+
                 card.querySelector('[data-action="lock"]').onclick = (event) => {
                     event.stopPropagation();
-                    const nextFlags = { ...(state.offerFlags[o.job_id] || {}) };
-                    nextFlags.locked = !nextFlags.locked;
-                    if (!nextFlags.locked && !nextFlags.archived && !nextFlags.oldCv && !nextFlags.deleted) delete state.offerFlags[o.job_id];
-                    else state.offerFlags[o.job_id] = nextFlags;
-                    state.saveOfferFlags();
-                    loadOffers();
+                    mutateOfferFlags(o.job_id, (nextFlags) => {
+                        nextFlags.locked = !nextFlags.locked;
+                    });
                 };
                 
                 card.querySelector('[data-action="archive"]').onclick = (event) => {
                     event.stopPropagation();
-                    const nextFlags = { ...(state.offerFlags[o.job_id] || {}) };
-                    nextFlags.archived = !nextFlags.archived;
-                    if (nextFlags.archived) {
-                        nextFlags.oldCv = false;
-                        nextFlags.deleted = false;
-                    }
-                    if (!nextFlags.locked && !nextFlags.archived && !nextFlags.oldCv && !nextFlags.deleted) delete state.offerFlags[o.job_id];
-                    else state.offerFlags[o.job_id] = nextFlags;
-                    state.saveOfferFlags();
-                    loadOffers();
+                    mutateOfferFlags(o.job_id, (nextFlags) => {
+                        nextFlags.archived = !nextFlags.archived;
+                        if (nextFlags.archived) {
+                            nextFlags.oldCv = false;
+                            nextFlags.deleted = false;
+                        }
+                    });
                 };
                 
-                card.onclick = () => { 
-                    state.setActiveJobId(o.job_id); 
-                    loadOffers(); 
-                    updateIframe(); 
-                    if (typeof window.loadChatHistory === 'function') window.loadChatHistory();
-                };
+                card.onclick = () => selectOffer(o.job_id);
                 groupContainer.appendChild(card);
             });
         });
@@ -269,50 +273,171 @@ async function loadOffers() {
             archiveHeader.style.padding = '24px 24px 12px';
             archiveHeader.style.marginTop = '16px';
             archiveHeader.style.borderBottom = 'none';
-            archiveHeader.innerHTML = `<h2>${state.i18n.translations[state.i18n.current].archive} (${visibleArchivedOffers.length})</h2>`;
+            const archiveTitle = document.createElement('h2');
+            archiveTitle.textContent = `${state.i18n.translations[state.i18n.current].archive} (${visibleArchivedOffers.length})`;
+            archiveHeader.appendChild(archiveTitle);
             list.appendChild(archiveHeader);
 
             visibleArchivedOffers.forEach((o) => {
-                const card = document.createElement('div');
                 const isActive = state.activeJobId === o.job_id;
-                card.className = `offer-card ${isActive ? 'active' : ''} is-archived archive-muted`;
-                card.style = `padding: 12px 16px; cursor: pointer; border-radius: 8px; margin: 4px 8px; transition: all 0.2s; background: ${isActive ? 'white' : 'transparent'};`;
-                card.innerHTML = `<div class="offer-card-inner"><div class="offer-card-text"><div style="display:flex; align-items:flex-start; gap:8px;"><div class="offer-title" style="flex:1;">${o.title}</div><div class="offer-actions-slot"><span class="offer-action-visibility is-active"><button type="button" class="offer-action-btn" data-action="restore-inbox" aria-label="Restaurer dans inbox"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5m8.25 3v6.75m0 0-3-3m3 3 3-3M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z" /></svg></button></span><span class="offer-action-visibility is-active"><button type="button" class="offer-action-btn" data-action="send-old" aria-label="Retirer de la sidebar"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5m6 4.125 2.25 2.25m0 0 2.25 2.25M12 13.875l2.25-2.25M12 13.875l-2.25 2.25M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z" /></svg></button></span></div></div><div class="offer-company">${o.entreprise || ''}</div></div></div>`;
+                const card = createOfferCard(o, {
+                    isActive,
+                    isLocked: false,
+                    isArchived: true,
+                    hasFlag: true,
+                    archivedView: true,
+                });
                 
                 card.querySelector('[data-action="restore-inbox"]').onclick = (event) => {
                     event.stopPropagation();
-                    const nextFlags = { ...(state.offerFlags[o.job_id] || {}) };
-                    nextFlags.archived = false;
-                    nextFlags.oldCv = false;
-                    nextFlags.deleted = false;
-                    if (!nextFlags.locked && !nextFlags.archived && !nextFlags.oldCv && !nextFlags.deleted) delete state.offerFlags[o.job_id];
-                    else state.offerFlags[o.job_id] = nextFlags;
-                    state.saveOfferFlags();
-                    loadOffers();
+                    mutateOfferFlags(o.job_id, (nextFlags) => {
+                        nextFlags.archived = false;
+                        nextFlags.oldCv = false;
+                        nextFlags.deleted = false;
+                    });
                 };
                 
                 card.querySelector('[data-action="send-old"]').onclick = (event) => {
                     event.stopPropagation();
-                    const nextFlags = { ...(state.offerFlags[o.job_id] || {}) };
-                    nextFlags.oldCv = true;
-                    nextFlags.archived = false;
-                    nextFlags.deleted = false;
-                    state.offerFlags[o.job_id] = nextFlags;
-                    state.saveOfferFlags();
-                    loadOffers();
+                    mutateOfferFlags(o.job_id, (nextFlags) => {
+                        nextFlags.oldCv = true;
+                        nextFlags.archived = false;
+                        nextFlags.deleted = false;
+                    });
                 };
                 
-                card.onclick = () => { 
-                    state.setActiveJobId(o.job_id); 
-                    loadOffers(); 
-                    updateIframe(); 
-                    if (typeof window.loadChatHistory === 'function') window.loadChatHistory();
-                };
+                card.onclick = () => selectOffer(o.job_id);
                 list.appendChild(card);
             });
         }
 
-    } catch (e) {}
+    } catch (e) {
+        console.error('Impossible de charger les offres', e);
+        alert('Erreur lors du chargement des offres.');
+    }
+}
+
+function createOfferCard(offer, { isActive, isLocked, isArchived, hasFlag, archivedView }) {
+    const card = document.createElement('div');
+    card.className = `offer-card ${isActive ? 'active' : ''} ${hasFlag ? 'has-flag' : ''} ${isArchived ? 'is-archived archive-muted' : ''}`;
+    card.style = `padding: 12px 16px; cursor: pointer; border-radius: 8px; margin: 4px 8px; transition: all 0.2s; background: ${isActive ? 'white' : 'transparent'};`;
+
+    const inner = document.createElement('div');
+    inner.className = 'offer-card-inner';
+
+    const text = document.createElement('div');
+    text.className = 'offer-card-text';
+
+    const titleRow = document.createElement('div');
+    titleRow.style.display = 'flex';
+    titleRow.style.alignItems = 'flex-start';
+    titleRow.style.gap = '8px';
+
+    const title = document.createElement('div');
+    title.className = 'offer-title';
+    title.style.flex = '1';
+    title.textContent = offer.title;
+
+    const actionsSlot = document.createElement('div');
+    actionsSlot.className = 'offer-actions-slot';
+
+    if (!archivedView) {
+        const lockAction = createOfferActionButton({
+            active: isLocked,
+            action: 'lock',
+            ariaLabel: "Verrouiller l'offre",
+            iconPath: 'M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z',
+        });
+        const archiveAction = createOfferActionButton({
+            active: isArchived,
+            action: 'archive',
+            ariaLabel: "Archiver l'offre",
+            iconPath: 'm20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z',
+        });
+        actionsSlot.appendChild(lockAction.wrapper);
+        actionsSlot.appendChild(archiveAction.wrapper);
+    } else {
+        const restoreAction = createOfferActionButton({
+            active: true,
+            action: 'restore-inbox',
+            ariaLabel: 'Restaurer dans inbox',
+            iconPath: 'm20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5m8.25 3v6.75m0 0-3-3m3 3 3-3M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z',
+        });
+        const sendOldAction = createOfferActionButton({
+            active: true,
+            action: 'send-old',
+            ariaLabel: 'Retirer de la sidebar',
+            iconPath: 'm20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5m6 4.125 2.25 2.25m0 0 2.25 2.25M12 13.875l2.25-2.25M12 13.875l-2.25 2.25M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z',
+        });
+        actionsSlot.appendChild(restoreAction.wrapper);
+        actionsSlot.appendChild(sendOldAction.wrapper);
+    }
+
+    const company = document.createElement('div');
+    company.className = 'offer-company';
+    company.textContent = offer.entreprise || '';
+
+    titleRow.appendChild(title);
+    titleRow.appendChild(actionsSlot);
+    text.appendChild(titleRow);
+    text.appendChild(company);
+    inner.appendChild(text);
+    card.appendChild(inner);
+
+    return card;
+}
+
+function createOfferActionButton({ active, action, ariaLabel, iconPath }) {
+    const button = el('button', {
+        type: 'button',
+        className: `offer-action-btn ${active ? 'is-active' : ''}`,
+        dataset: { action },
+        attrs: { 'aria-label': ariaLabel },
+    }, [
+        svg('svg', {
+            xmlns: 'http://www.w3.org/2000/svg',
+            fill: 'none',
+            viewBox: '0 0 24 24',
+            'stroke-width': '1.5',
+            stroke: 'currentColor',
+            attrs: { class: 'size-6' },
+        }, [
+            svg('path', {
+                'stroke-linecap': 'round',
+                'stroke-linejoin': 'round',
+                d: iconPath,
+            }),
+        ]),
+    ]);
+    const wrapper = el('span', {
+        className: `offer-action-visibility ${active ? 'is-active' : ''}`,
+    }, [button]);
+
+    return { wrapper, button };
+}
+
+function mutateOfferFlags(jobId, mutate) {
+    const nextFlags = { ...(state.offerFlags[jobId] || {}) };
+    mutate(nextFlags);
+    if (!nextFlags.locked && !nextFlags.archived && !nextFlags.oldCv && !nextFlags.deleted) delete state.offerFlags[jobId];
+    else state.offerFlags[jobId] = nextFlags;
+    state.saveOfferFlags();
+    loadOffers();
+}
+
+function selectOffer(jobId) {
+    state.setActiveJobId(jobId);
+    loadOffers();
+    updateIframe();
+    if (typeof window.loadChatHistory === 'function') window.loadChatHistory();
+}
+
+function toggleOfferCategory(category) {
+    const index = state.collapsedOfferCategories.indexOf(category);
+    if (index >= 0) state.collapsedOfferCategories.splice(index, 1);
+    else state.collapsedOfferCategories.push(category);
+    state.saveCollapsedCategories();
+    loadOffers();
 }
 
 function resetIframeToEmptyState() {
@@ -369,22 +494,33 @@ function renderDashboardApplications(offers) {
         const item = document.createElement('div');
         item.className = 'old-offer-item';
         item.style.cursor = 'pointer';
-        item.innerHTML = `<div class="old-offer-row">
-            <div class="old-offer-text">
-                <div class="old-offer-title">${offer.title}</div>
-                <div class="old-offer-company">${offer.entreprise || ''}</div>
-            </div>
-            <div class="old-offer-actions">
-                <span class="offer-action-visibility ${isArchived ? 'is-active' : ''}">
-                    <button type="button" class="offer-action-btn ${isArchived ? 'is-active' : ''}" data-action="archive" aria-label="Archiver l'offre">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z" /></svg>
-                    </button>
-                </span>
-            </div>
-        </div>`;
-        
-        
-        item.querySelector('[data-action="archive"]').onclick = (event) => {
+        const row = document.createElement('div');
+        row.className = 'old-offer-row';
+
+        const text = document.createElement('div');
+        text.className = 'old-offer-text';
+
+        const title = document.createElement('div');
+        title.className = 'old-offer-title';
+        title.textContent = offer.title;
+
+        const company = document.createElement('div');
+        company.className = 'old-offer-company';
+        company.textContent = offer.entreprise || '';
+
+        text.appendChild(title);
+        text.appendChild(company);
+
+        const actions = document.createElement('div');
+        actions.className = 'old-offer-actions';
+
+        const archiveAction = createOfferActionButton({
+            active: isArchived,
+            action: 'archive',
+            ariaLabel: "Archiver l'offre",
+            iconPath: 'm20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z',
+        });
+        archiveAction.button.onclick = (event) => {
             event.stopPropagation();
             const nextFlags = { ...(state.offerFlags[offer.job_id] || {}) };
             nextFlags.archived = !nextFlags.archived;
@@ -397,6 +533,11 @@ function renderDashboardApplications(offers) {
             state.saveOfferFlags();
             loadOffers();
         };
+
+        actions.appendChild(archiveAction.wrapper);
+        row.appendChild(text);
+        row.appendChild(actions);
+        item.appendChild(row);
         
         item.onclick = () => {
             state.setActiveJobId(offer.job_id);
@@ -423,9 +564,33 @@ function renderOldOffers(offers) {
     oldOffers.forEach((offer) => {
         const item = document.createElement('div');
         item.className = 'old-offer-item';
-        item.innerHTML = `<div class="old-offer-row"><div class="old-offer-text"><div class="old-offer-title">${offer.title}</div><div class="old-offer-company">${offer.entreprise || ''}</div></div><div class="old-offer-actions"><button type="button" class="offer-action-btn" data-action="restore-archive" aria-label="Restaurer dans archive"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5m8.25 3v6.75m0 0-3-3m3 3 3-3M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z" /></svg></button><button type="button" class="offer-action-btn" data-action="delete" aria-label="Supprimer définitivement"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.11 0 0 0-7.5 0" /></svg></button></div></div>`;
-        
-        item.querySelector('[data-action="restore-archive"]').onclick = () => {
+        const row = document.createElement('div');
+        row.className = 'old-offer-row';
+
+        const text = document.createElement('div');
+        text.className = 'old-offer-text';
+
+        const title = document.createElement('div');
+        title.className = 'old-offer-title';
+        title.textContent = offer.title;
+
+        const company = document.createElement('div');
+        company.className = 'old-offer-company';
+        company.textContent = offer.entreprise || '';
+
+        text.appendChild(title);
+        text.appendChild(company);
+
+        const actions = document.createElement('div');
+        actions.className = 'old-offer-actions';
+
+        const restoreAction = createOfferActionButton({
+            active: true,
+            action: 'restore-archive',
+            ariaLabel: 'Restaurer dans archive',
+            iconPath: 'm20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5m8.25 3v6.75m0 0-3-3m3 3 3-3M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z',
+        });
+        restoreAction.button.onclick = () => {
             const nextFlags = { ...(state.offerFlags[offer.job_id] || {}) };
             nextFlags.archived = true;
             nextFlags.oldCv = false;
@@ -434,8 +599,14 @@ function renderOldOffers(offers) {
             state.saveOfferFlags();
             loadOffers();
         };
-        
-        item.querySelector('[data-action="delete"]').onclick = () => {
+
+        const deleteAction = createOfferActionButton({
+            active: true,
+            action: 'delete',
+            ariaLabel: 'Supprimer définitivement',
+            iconPath: 'm14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.11 0 0 0-7.5 0',
+        });
+        deleteAction.button.onclick = () => {
             const nextFlags = { ...(state.offerFlags[offer.job_id] || {}) };
             nextFlags.deleted = true;
             nextFlags.oldCv = false;
@@ -445,6 +616,12 @@ function renderOldOffers(offers) {
             if (state.activeJobId === offer.job_id) state.setActiveJobId(null);
             loadOffers();
         };
+
+        actions.appendChild(restoreAction.wrapper);
+        actions.appendChild(deleteAction.wrapper);
+        row.appendChild(text);
+        row.appendChild(actions);
+        item.appendChild(row);
         list.appendChild(item);
     });
 }
@@ -468,9 +645,33 @@ function renderDashboardTreatedOffers(offers) {
         const item = document.createElement('div');
         item.className = 'old-offer-item';
         item.style.cursor = 'pointer';
-        item.innerHTML = `<div class="old-offer-row"><div class="old-offer-text"><div class="old-offer-title">${offer.title}</div><div class="old-offer-company">${offer.entreprise || ''}</div></div><div class="old-offer-actions"><button type="button" class="offer-action-btn" data-action="restore-inbox" aria-label="Restaurer dans inbox"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5m8.25 3v6.75m0 0-3-3m3 3 3-3M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z" /></svg></button><button type="button" class="offer-action-btn" data-action="send-old" aria-label="Archiver définitivement"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5m6 4.125 2.25 2.25m0 0 2.25 2.25M12 13.875l2.25-2.25M12 13.875l-2.25 2.25M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z" /></svg></button></div></div>`;
-        
-        item.querySelector('[data-action="restore-inbox"]').onclick = (event) => {
+        const row = document.createElement('div');
+        row.className = 'old-offer-row';
+
+        const text = document.createElement('div');
+        text.className = 'old-offer-text';
+
+        const title = document.createElement('div');
+        title.className = 'old-offer-title';
+        title.textContent = offer.title;
+
+        const company = document.createElement('div');
+        company.className = 'old-offer-company';
+        company.textContent = offer.entreprise || '';
+
+        text.appendChild(title);
+        text.appendChild(company);
+
+        const actions = document.createElement('div');
+        actions.className = 'old-offer-actions';
+
+        const restoreAction = createOfferActionButton({
+            active: true,
+            action: 'restore-inbox',
+            ariaLabel: 'Restaurer dans inbox',
+            iconPath: 'm20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5m8.25 3v6.75m0 0-3-3m3 3 3-3M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z',
+        });
+        restoreAction.button.onclick = (event) => {
             event.stopPropagation();
             const nextFlags = { ...(state.offerFlags[offer.job_id] || {}) };
             nextFlags.archived = false;
@@ -481,8 +682,14 @@ function renderDashboardTreatedOffers(offers) {
             state.saveOfferFlags();
             loadOffers();
         };
-        
-        item.querySelector('[data-action="send-old"]').onclick = (event) => {
+
+        const sendOldAction = createOfferActionButton({
+            active: true,
+            action: 'send-old',
+            ariaLabel: 'Archiver définitivement',
+            iconPath: 'm20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5m6 4.125 2.25 2.25m0 0 2.25 2.25M12 13.875l2.25-2.25M12 13.875l-2.25 2.25M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z',
+        });
+        sendOldAction.button.onclick = (event) => {
             event.stopPropagation();
             const nextFlags = { ...(state.offerFlags[offer.job_id] || {}) };
             nextFlags.oldCv = true;
@@ -492,6 +699,12 @@ function renderDashboardTreatedOffers(offers) {
             state.saveOfferFlags();
             loadOffers();
         };
+
+        actions.appendChild(restoreAction.wrapper);
+        actions.appendChild(sendOldAction.wrapper);
+        row.appendChild(text);
+        row.appendChild(actions);
+        item.appendChild(row);
         
         item.onclick = () => {
             state.setActiveJobId(offer.job_id);
@@ -560,7 +773,7 @@ async function updateIframe(options = {}) {
 function renderAiChatAttachments() {
     const container = document.getElementById('ai-chat-attachments');
     const t = state.i18n.translations[state.i18n.current];
-    container.innerHTML = '';
+    clear(container);
 
     if (!state.aiChatAttachments.length) {
         container.style.display = 'none';
@@ -569,17 +782,25 @@ function renderAiChatAttachments() {
 
     container.style.display = 'flex';
     state.aiChatAttachments.forEach((file, index) => {
-        const chip = document.createElement('div');
-        chip.className = 'ai-attachment-chip';
-        chip.innerHTML = `
-            <span class="ai-attachment-name" title="${file.name}">${file.name}</span>
-            <button type="button" class="ai-attachment-remove" aria-label="${t.attached_files}">×</button>
-        `;
-        chip.querySelector('.ai-attachment-remove').onclick = () => {
+        const remove = el('button', {
+            type: 'button',
+            className: 'ai-attachment-remove',
+            attrs: { 'aria-label': t.attached_files },
+            text: '×',
+        });
+        remove.onclick = () => {
             state.aiChatAttachments.splice(index, 1);
             renderAiChatAttachments();
         };
-        container.appendChild(chip);
+
+        container.appendChild(el('div', { className: 'ai-attachment-chip' }, [
+            el('span', {
+                className: 'ai-attachment-name',
+                title: file.name,
+                text: file.name,
+            }),
+            remove,
+        ]));
     });
 }
 

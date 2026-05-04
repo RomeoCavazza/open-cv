@@ -411,7 +411,7 @@ impl ChatWithApplicationUseCase {
             schema_name: "ChatResponse".into(),
             schema_description: "Réponse du chat".into(),
             json_schema: if matches!(kind, ChatOutputKind::Mutation) {
-                serde_json::to_value(schemars::schema_for!(ChatMutationOutput)).unwrap()
+                serde_json::to_value(schemars::schema_for!(ChatMutationOutput))?
             } else {
                 serde_json::json!({
                     "type": "object",
@@ -585,14 +585,20 @@ impl ChatWithApplicationUseCase {
             *notes = serde_json::json!({});
         }
 
-        let obj = notes.as_object_mut().unwrap();
+        let Some(obj) = notes.as_object_mut() else {
+            return;
+        };
 
         // Récupérer ou créer l'array chat_history
-        let history = obj
+        let history_value = obj
             .entry("chat_history")
-            .or_insert_with(|| serde_json::json!([]))
-            .as_array_mut()
-            .expect("chat_history should be an array");
+            .or_insert_with(|| serde_json::json!([]));
+        if !history_value.is_array() {
+            *history_value = serde_json::json!([]);
+        }
+        let Some(history) = history_value.as_array_mut() else {
+            return;
+        };
 
         history.push(serde_json::json!({
             "role": role,
@@ -987,6 +993,57 @@ mod tests {
         assert!(ChatWithApplicationUseCase::wants_mutation(
             "ajoute une expérience dans la lettre"
         ));
+    }
+
+    #[test]
+    fn detects_identity_requests() {
+        assert!(ChatWithApplicationUseCase::wants_identity(
+            "tu sais comment je m'appelle ?"
+        ));
+        assert!(ChatWithApplicationUseCase::wants_identity(
+            "c'est quoi mon nom exactement ?"
+        ));
+        assert!(!ChatWithApplicationUseCase::wants_identity(
+            "tu peux résumer l'offre ?"
+        ));
+    }
+
+    #[test]
+    fn push_chat_history_trims_old_entries() {
+        let mut notes = json!({});
+
+        for idx in 0..=MAX_CHAT_HISTORY_ENTRIES {
+            ChatWithApplicationUseCase::push_chat_history(
+                &mut notes,
+                "user",
+                &format!("message-{idx}"),
+            );
+        }
+
+        let history = notes
+            .get("chat_history")
+            .and_then(|value| value.as_array())
+            .expect("chat history should exist");
+
+        assert_eq!(history.len(), MAX_CHAT_HISTORY_ENTRIES);
+        assert_eq!(history.first().and_then(|entry| entry.get("content")), Some(&json!("message-1")));
+        assert_eq!(history.last().and_then(|entry| entry.get("content")), Some(&json!(format!("message-{}", MAX_CHAT_HISTORY_ENTRIES))));
+    }
+
+    #[test]
+    fn render_chat_history_for_prompt_keeps_last_twelve_entries_in_order() {
+        let instance_id = InstanceId::new();
+        let history: Vec<Message> = (0..13)
+            .map(|idx| Message::new(instance_id, MessageRole::User, format!("message-{idx}")))
+            .collect();
+
+        let rendered = ChatWithApplicationUseCase::render_chat_history_for_prompt(&history);
+
+        assert!(rendered.starts_with("UTILISATEUR: message-1"));
+        assert!(rendered.contains("UTILISATEUR: message-12"));
+        assert!(!rendered.contains("message-0"));
+        assert!(!rendered.contains("message-13"));
+        assert_eq!(rendered.lines().count(), 12);
     }
 
     #[tokio::test]
