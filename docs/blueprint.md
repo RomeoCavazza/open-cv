@@ -49,6 +49,8 @@ The database stores the full application context. Local JSON and Markdown files 
 - **`profils`**: stores candidate profiles, with a single active profile at a time in the current setup.
 - **`chunks`**: stores profile pieces (experiences, skills) with `embedding (1024)` vectors for RAG.
 - **`instances`**: links a profile to an offer; stores generated analysis, resume, and cover letter.
+- **`messages`**: persistent chat history for each instance, stored in a structured relational table (replaces legacy JSONB notes).
+- **`annexes`**: binary assets (PDF, images) attached to a profile.
 - **`llm_calls`**: observability table for AI costs, latency, and token usage.
 
 ## 4. AI Generation Pipeline

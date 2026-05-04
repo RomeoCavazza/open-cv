@@ -14,6 +14,7 @@ pub struct AppState {
     pub intake_uc: Arc<IntakeOffreUseCase>,
     pub chunk_repo: Arc<dyn ports::ChunkRepo>,
     pub annexe_repo: Arc<dyn ports::AnnexeRepo>,
+    pub message_repo: Arc<dyn ports::MessageRepo>,
     pub embedder: Arc<dyn ports::Embedder>,
     pub llm_registry: Arc<HashMap<String, Arc<dyn LlmClient>>>,
 }

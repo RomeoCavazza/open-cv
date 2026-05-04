@@ -64,6 +64,20 @@ pub trait InstanceRepo: Send + Sync {
     ) -> Result<Option<Instance>, RepoError>;
 }
 
+#[async_trait]
+pub trait MessageRepo: Send + Sync {
+    async fn list_by_instance_id(
+        &self,
+        instance_id: InstanceId,
+    ) -> Result<Vec<domain::Message>, RepoError>;
+    async fn list_by_profil_id(
+        &self,
+        profil_id: ProfilId,
+    ) -> Result<Vec<domain::Message>, RepoError>;
+    async fn push(&self, message: &domain::Message) -> Result<(), RepoError>;
+    async fn delete_all_for_instance(&self, instance_id: InstanceId) -> Result<(), RepoError>;
+}
+
 #[derive(Debug, Error)]
 pub enum RepoError {
     #[error("erreur SQL : {0}")]

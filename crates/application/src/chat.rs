@@ -1,7 +1,8 @@
 use base64::Engine;
-use domain::Instance;
+use domain::{Instance, Message, MessageRole};
 use ports::{
-    ChunkRepo, EmbedMode, Embedder, ExtractionRequest, InstanceRepo, LlmClient, ProfilRepo,
+    AnnexeRepo, ChunkRepo, EmbedMode, Embedder, ExtractionRequest, InstanceRepo, LlmClient,
+    MessageRepo, ProfilRepo,
 };
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
@@ -37,11 +38,7 @@ enum ChatOutputKind {
     Mutation,
 }
 
-#[derive(Debug, Clone)]
-struct ChatHistoryEntry {
-    role: String,
-    content: String,
-}
+// ChatHistoryEntry removed in favor of domain::Message
 
 #[derive(Debug, Clone, Serialize, Deserialize, schemars::JsonSchema)]
 struct ChatMutationOutput {
@@ -56,8 +53,9 @@ pub struct ChatWithApplicationUseCase {
     pub offre_repo: Arc<dyn ports::OffreRepo>,
     pub instance_repo: Arc<dyn InstanceRepo>,
     pub profil_repo: Arc<dyn ProfilRepo>,
-    pub annexe_repo: Arc<dyn ports::AnnexeRepo>,
+    pub annexe_repo: Arc<dyn AnnexeRepo>,
     pub chunk_repo: Arc<dyn ChunkRepo>,
+    pub message_repo: Arc<dyn MessageRepo>,
     pub embedder: Arc<dyn Embedder>,
     pub llm_registry: std::collections::HashMap<String, Arc<dyn LlmClient>>,
 }
@@ -67,8 +65,9 @@ impl ChatWithApplicationUseCase {
         offre_repo: Arc<dyn ports::OffreRepo>,
         instance_repo: Arc<dyn InstanceRepo>,
         profil_repo: Arc<dyn ProfilRepo>,
-        annexe_repo: Arc<dyn ports::AnnexeRepo>,
+        annexe_repo: Arc<dyn AnnexeRepo>,
         chunk_repo: Arc<dyn ChunkRepo>,
+        message_repo: Arc<dyn MessageRepo>,
         embedder: Arc<dyn Embedder>,
         llm_registry: std::collections::HashMap<String, Arc<dyn LlmClient>>,
     ) -> Self {
@@ -78,6 +77,7 @@ impl ChatWithApplicationUseCase {
             profil_repo,
             annexe_repo,
             chunk_repo,
+            message_repo,
             embedder,
             llm_registry,
         }
@@ -122,14 +122,18 @@ impl ChatWithApplicationUseCase {
         let wants_mutation = Self::wants_mutation(&req.message);
         let wants_identity = Self::wants_identity(&req.message);
 
-        let chat_history = Self::extract_chat_history(&instance.notes);
+        // 1b. Charger l'historique depuis la table messages
+        let history = self.message_repo.list_by_instance_id(instance.id).await?;
+
         info!(
-            "Chat (Instance): Historique extrait ({} entrées)",
-            chat_history.len()
+            "Chat (Instance): Historique extrait ({} messages)",
+            history.len()
         );
 
         // 1c. SAUVEGARDER LE MESSAGE UTILISATEUR IMMÉDIATEMENT
-        Self::push_chat_history(&mut instance.notes, "user", &req.message);
+        let user_msg = Message::new(instance.id, MessageRole::User, req.message.clone());
+        self.message_repo.push(&user_msg).await?;
+
         instance.updated_at = chrono::Utc::now();
         self.instance_repo.upsert(&instance).await?;
 
@@ -174,7 +178,7 @@ impl ChatWithApplicationUseCase {
             TU DOIS RÉPONDRE EXCLUSIVEMENT PAR UN OBJET JSON avec une seule clé 'message'."
         };
 
-        let history_prompt = Self::render_chat_history_for_prompt(&chat_history);
+        let history_prompt = Self::render_chat_history_for_prompt(&history);
 
         let mut user_input = vec![ports::MessageContent::Text(format!(
             "IDENTITÉ DE L'UTILISATEUR (Profil complet):\n{}\n\n\
@@ -247,8 +251,10 @@ impl ChatWithApplicationUseCase {
             }
         }
 
-        // 7. Sauvegarder l'historique et persister
-        Self::push_chat_history(&mut instance.notes, "assistant", &ai_message);
+        // 7. Sauvegarder le message assistant et persister
+        let assistant_msg = Message::new(instance.id, MessageRole::Assistant, ai_message.clone());
+        self.message_repo.push(&assistant_msg).await?;
+
         instance.updated_at = chrono::Utc::now();
         self.instance_repo.upsert(&instance).await?;
 
@@ -265,6 +271,13 @@ impl ChatWithApplicationUseCase {
             .get_active()
             .await?
             .ok_or_else(|| anyhow::anyhow!("Aucun profil actif trouvé"))?;
+
+        // En mode global, on peut encore utiliser profil.notes pour le chat éphémère
+        // ou alors on crée une instance fantôme.
+        // Pour l'instant, l'audit recommande de sortir de 'notes'.
+        // Mais 'messages' demande une instance_id.
+        // TODO: Créer une table global_messages ou autoriser instance_id NULL.
+        // En attendant, on garde profil.notes pour le GLOBAL mais on nettoie INSTANCE.
 
         let chat_history = Self::extract_chat_history(&profil.notes);
         info!(
@@ -511,7 +524,7 @@ impl ChatWithApplicationUseCase {
             .any(|marker| lowered.contains(marker))
     }
 
-    fn extract_chat_history(notes: &serde_json::Value) -> Vec<ChatHistoryEntry> {
+    fn extract_chat_history(notes: &serde_json::Value) -> Vec<Message> {
         notes
             .get("chat_history")
             .and_then(|v| v.as_array())
@@ -519,16 +532,28 @@ impl ChatWithApplicationUseCase {
                 entries
                     .iter()
                     .filter_map(|entry| {
-                        let role = entry.get("role")?.as_str()?.to_string();
+                        let role_str = entry.get("role")?.as_str()?;
+                        let role = match role_str {
+                            "user" => MessageRole::User,
+                            "assistant" => MessageRole::Assistant,
+                            _ => MessageRole::System,
+                        };
                         let content = entry.get("content")?.as_str()?.to_string();
-                        Some(ChatHistoryEntry { role, content })
+                        // Pour l'historique extrait de JSON, on génère un ID temporaire
+                        Some(Message {
+                            id: uuid::Uuid::new_v4(),
+                            instance_id: domain::InstanceId::new(),
+                            role,
+                            content,
+                            created_at: chrono::Utc::now(),
+                        })
                     })
                     .collect()
             })
             .unwrap_or_default()
     }
 
-    fn render_chat_history_for_prompt(history: &[ChatHistoryEntry]) -> String {
+    fn render_chat_history_for_prompt(history: &[Message]) -> String {
         if history.is_empty() {
             return "Aucun historique".to_string();
         }
@@ -540,13 +565,13 @@ impl ChatWithApplicationUseCase {
             .collect::<Vec<_>>()
             .into_iter()
             .rev()
-            .map(|entry| {
-                let label = if entry.role == "assistant" {
-                    "IA"
-                } else {
-                    "UTILISATEUR"
+            .map(|m| {
+                let label = match m.role {
+                    MessageRole::Assistant => "IA",
+                    MessageRole::User => "UTILISATEUR",
+                    MessageRole::System => "SYSTEME",
                 };
-                format!("{label}: {}", entry.content)
+                format!("{label}: {}", m.content)
             })
             .collect::<Vec<_>>()
             .join("\n")
@@ -605,6 +630,7 @@ mod tests {
         instance: Mutex<Instance>,
         profil: Mutex<Profil>,
         offre: Mutex<Offre>,
+        messages: Mutex<Vec<Message>>,
         requests: Mutex<Vec<ExtractionRequest>>,
     }
 
@@ -614,6 +640,7 @@ mod tests {
                 instance: Mutex::new(instance),
                 profil: Mutex::new(profil),
                 offre: Mutex::new(offre),
+                messages: Mutex::new(Vec::new()),
                 requests: Mutex::new(Vec::new()),
             }
         }
@@ -730,10 +757,16 @@ mod tests {
 
     #[async_trait]
     impl ports::AnnexeRepo for TestAnnexeRepo {
-        async fn get_by_id(&self, _id: domain::AnnexeId) -> Result<Option<domain::Annexe>, RepoError> {
+        async fn get_by_id(
+            &self,
+            _id: domain::AnnexeId,
+        ) -> Result<Option<domain::Annexe>, RepoError> {
             Ok(None)
         }
-        async fn list_by_profil_id(&self, _profil_id: domain::ProfilId) -> Result<Vec<domain::Annexe>, RepoError> {
+        async fn list_by_profil_id(
+            &self,
+            _profil_id: domain::ProfilId,
+        ) -> Result<Vec<domain::Annexe>, RepoError> {
             Ok(vec![])
         }
         async fn upsert(&self, _annexe: &domain::Annexe) -> Result<(), RepoError> {
@@ -822,6 +855,28 @@ mod tests {
         }
     }
 
+    struct TestMessageRepo {
+        stores: Arc<TestStores>,
+    }
+
+    #[async_trait]
+    impl MessageRepo for TestMessageRepo {
+        async fn list_by_instance_id(&self, _id: InstanceId) -> Result<Vec<Message>, RepoError> {
+            Ok(self.stores.messages.lock().unwrap().clone())
+        }
+        async fn list_by_profil_id(&self, _id: ProfilId) -> Result<Vec<Message>, RepoError> {
+            Ok(self.stores.messages.lock().unwrap().clone())
+        }
+        async fn push(&self, message: &Message) -> Result<(), RepoError> {
+            self.stores.messages.lock().unwrap().push(message.clone());
+            Ok(())
+        }
+        async fn delete_all_for_instance(&self, _id: InstanceId) -> Result<(), RepoError> {
+            self.stores.messages.lock().unwrap().clear();
+            Ok(())
+        }
+    }
+
     fn build_test_data() -> (Instance, Profil, Offre) {
         let profil_id = ProfilId::new();
         let offre_id = OffreId::new();
@@ -902,6 +957,9 @@ mod tests {
             }),
             Arc::new(TestAnnexeRepo),
             Arc::new(TestChunkRepo),
+            Arc::new(TestMessageRepo {
+                stores: stores.clone(),
+            }),
             Arc::new(TestEmbedder),
             std::iter::once((
                 "ollama".to_string(),
@@ -966,12 +1024,7 @@ mod tests {
             instance_after.cover_letter_json,
             Some(json!({"current": "cover"}))
         );
-        assert_eq!(
-            instance_after.notes["chat_history"]
-                .as_array()
-                .map(|v| v.len()),
-            Some(2)
-        );
+        assert_eq!(stores.messages.lock().unwrap().len(), 2);
     }
 
     #[tokio::test]
@@ -1006,5 +1059,6 @@ mod tests {
             Some(json!({"updated": true}))
         );
         assert_eq!(instance_after.status, InstanceStatus::Ready);
+        assert_eq!(stores.messages.lock().unwrap().len(), 2);
     }
 }

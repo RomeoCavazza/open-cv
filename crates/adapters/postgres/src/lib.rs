@@ -5,10 +5,10 @@
 
 use async_trait::async_trait;
 use domain::{
-    Annexe, AnnexeId, Instance, InstanceId, InstanceStatus, Offre, OffreId, OffreStructured,
-    ProfilId, Slug,
+    Annexe, AnnexeId, Instance, InstanceId, InstanceStatus, Message, MessageRole, Offre, OffreId,
+    OffreStructured, ProfilId, Slug,
 };
-use ports::{AnnexeRepo, InstanceRepo, OffreRepo, RepoError};
+use ports::{AnnexeRepo, InstanceRepo, MessageRepo, OffreRepo, RepoError};
 use sqlx::PgPool;
 
 pub struct OffreRepoPg {
@@ -600,6 +600,110 @@ impl AnnexeRepo for AnnexeRepoPg {
 }
 
 // ─────────────────────────────────────────────────────────────────
+// MessageRepoPg — Pour le chat V1
+// ─────────────────────────────────────────────────────────────────
+
+pub struct MessageRepoPg {
+    pool: PgPool,
+}
+
+impl MessageRepoPg {
+    pub fn new(pool: PgPool) -> Self {
+        Self { pool }
+    }
+}
+
+#[async_trait]
+impl MessageRepo for MessageRepoPg {
+    async fn list_by_instance_id(
+        &self,
+        instance_id: InstanceId,
+    ) -> Result<Vec<Message>, RepoError> {
+        let rows = sqlx::query!(
+            r#"
+            SELECT id, instance_id, role::text as "role!", content, created_at
+            FROM messages
+            WHERE instance_id = $1
+            ORDER BY created_at ASC
+            "#,
+            instance_id.as_uuid()
+        )
+        .fetch_all(&self.pool)
+        .await
+        .map_err(map_sqlx)?;
+
+        rows.into_iter()
+            .map(|r| {
+                Ok(Message {
+                    id: r.id,
+                    instance_id: InstanceId::from_uuid(r.instance_id),
+                    role: parse_role(&r.role)?,
+                    content: r.content,
+                    created_at: r.created_at,
+                })
+            })
+            .collect()
+    }
+
+    async fn list_by_profil_id(&self, profil_id: ProfilId) -> Result<Vec<Message>, RepoError> {
+        let rows = sqlx::query!(
+            r#"
+            SELECT m.id, m.instance_id, m.role::text as "role!", m.content, m.created_at
+            FROM messages m
+            JOIN instances i ON m.instance_id = i.id
+            WHERE i.profil_id = $1
+            ORDER BY m.created_at ASC
+            "#,
+            profil_id.as_uuid()
+        )
+        .fetch_all(&self.pool)
+        .await
+        .map_err(map_sqlx)?;
+
+        rows.into_iter()
+            .map(|r| {
+                Ok(Message {
+                    id: r.id,
+                    instance_id: InstanceId::from_uuid(r.instance_id),
+                    role: parse_role(&r.role)?,
+                    content: r.content,
+                    created_at: r.created_at,
+                })
+            })
+            .collect()
+    }
+
+    async fn push(&self, message: &Message) -> Result<(), RepoError> {
+        sqlx::query(
+            r#"
+            INSERT INTO messages (id, instance_id, role, content, created_at)
+            VALUES ($1, $2, $3::message_role, $4, $5)
+            "#,
+        )
+        .bind(message.id)
+        .bind(message.instance_id.as_uuid())
+        .bind(message.role.as_str())
+        .bind(&message.content)
+        .bind(message.created_at)
+        .execute(&self.pool)
+        .await
+        .map_err(map_sqlx)?;
+        Ok(())
+    }
+
+    async fn delete_all_for_instance(&self, instance_id: InstanceId) -> Result<(), RepoError> {
+        sqlx::query!(
+            "DELETE FROM messages WHERE instance_id = $1",
+            instance_id.as_uuid()
+        )
+        .execute(&self.pool)
+        .await
+        .map_err(map_sqlx)?;
+        Ok(())
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────
 // ProfilRepo
 // ─────────────────────────────────────────────────────────────────
 
@@ -869,6 +973,15 @@ fn parse_status(s: &str) -> Result<InstanceStatus, RepoError> {
         "archived" => Ok(InstanceStatus::Archived),
         "failed" => Ok(InstanceStatus::Failed),
         _ => Err(RepoError::Other(format!("statut inconnu : {s}"))),
+    }
+}
+
+fn parse_role(s: &str) -> Result<MessageRole, RepoError> {
+    match s {
+        "user" => Ok(MessageRole::User),
+        "assistant" => Ok(MessageRole::Assistant),
+        "system" => Ok(MessageRole::System),
+        _ => Err(RepoError::Other(format!("rôle inconnu : {s}"))),
     }
 }
 

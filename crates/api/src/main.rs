@@ -70,6 +70,8 @@ async fn main() -> anyhow::Result<()> {
         Arc::new(adapter_postgres::ChunkRepoPg::new(pool.clone()));
     let annexe_repo: Arc<dyn ports::AnnexeRepo> =
         Arc::new(adapter_postgres::AnnexeRepoPg::new(pool.clone()));
+    let message_repo: Arc<dyn ports::MessageRepo> =
+        Arc::new(adapter_postgres::MessageRepoPg::new(pool.clone()));
 
     // LLM Registry (Multiple providers)
     let mut llm_map: std::collections::HashMap<String, Arc<dyn ports::LlmClient>> =
@@ -166,7 +168,8 @@ async fn main() -> anyhow::Result<()> {
         generate_uc,
         intake_uc,
         chunk_repo: chunk_repo.clone(),
-        annexe_repo,
+        annexe_repo: annexe_repo.clone(),
+        message_repo: message_repo.clone(),
         embedder: embedder.clone(),
         llm_registry,
     };
@@ -523,6 +526,7 @@ async fn chat_handler(
         state.profil_repo.clone(),
         state.annexe_repo.clone(),
         state.chunk_repo.clone(),
+        state.message_repo.clone(),
         state.embedder.clone(),
         state.llm_registry.as_ref().clone(),
     );
