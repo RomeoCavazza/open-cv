@@ -26,6 +26,8 @@ use crate::handlers::{
 };
 
 pub fn create_app(state: AppState) -> Router {
+    let web_dir = std::env::var("WEB_DIR").unwrap_or_else(|_| "web".to_string());
+    
     Router::new()
         .route("/health", get(health))
         .route("/api/offres", get(list_offres))
@@ -43,6 +45,7 @@ pub fn create_app(state: AppState) -> Router {
         .route("/api/annexes", get(list_annexes_handler))
         .route("/api/chat", post(chat_handler))
         .route("/api/ingest", post(ingest_handler))
+        .nest_service("/assets", tower_http::services::ServeDir::new(format!("{}/assets", web_dir)))
         .fallback(get(get_index))
         .with_state(state)
         .layer(TraceLayer::new_for_http())
