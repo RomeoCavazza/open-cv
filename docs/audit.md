@@ -1,3 +1,6 @@
+> **STATUS 2026-05-05** : Backend RED LIST traitée + tests d'intégration HTTP. 
+> Frontend RED LIST en attente. Voir [docs/cleanup_status.md](file:///home/tco/Bureau/alternance/docs/cleanup_status.md) pour le détail.
+
 Listed directory alternance
 Listed directory crates
 Listed directory js
