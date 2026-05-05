@@ -41,6 +41,10 @@ Le backend suit une architecture hexagonale découpée en **crates**.
 - `main.rs` : Initialisation du serveur, de la base de données et des logs.
 - `lib.rs` : Configuration du routeur, des middlewares et du service de fichiers statiques.
 - `handlers/` : Contrôleurs HTTP qui font le pont entre les requêtes et les Use Cases.
+- `bin/` : Scripts utilitaires (Seeding).
+  - `seed_profile.rs` : Importation du profil réel.
+  - `seed_blank.rs` : Création d'un état vierge.
+  - `seed_offers_instances.rs` : Importation de données de test.
 - `tests/api_integration.rs` : Tests de bout en bout validant les contrats API.
 
 ---
@@ -70,3 +74,6 @@ Le frontend est situé dans `/web` et fonctionne sans build-pipeline.
 - **`flake.nix`** : Configuration de l'environnement de développement (Rust, Postgres, Just).
 - **`Justfile`** : Recettes d'automatisation (`just dev`, `just migrate`, `just test`).
 - **`docs/`** : Documentation technique et opérationnelle.
+  - `design.md` : Standards UI/UX (Monochrome + Blue).
+  - `data_management.md` : Guide de réinitialisation et seeding.
+  - `project_map.md` : Ce document.

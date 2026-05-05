@@ -124,22 +124,20 @@ spacing:
 
 ## Brand & Style
 
-The design system is rooted in "Institutional Minimalism"—a style that balances high-utility financial tools with a sophisticated editorial aesthetic. It is designed to evoke a sense of calm authority, prioritizing clarity and ease of use to build long-term trust. 
+The design system follows a **Monochrome & Blue Accent** philosophy—a "Quiet Luxury" aesthetic that balances professional sobriety with high-visibility functional anchors. It is designed to evoke a sense of calm authority, prioritizing data clarity while providing unmistakable targets for interaction.
 
-The visual narrative is driven by an expansive use of whitespace, a rigorous adherence to a grid, and a focus on high-quality typography. By stripping away unnecessary ornamentation and relying on hairline borders and tonal shifts, the design system achieves a professional, "quiet luxury" feel appropriate for the global financial sector.
+The visual narrative is driven by tonal shifts in grey and a rigorous adherence to a grid. By stripping away unnecessary ornamentation and relying on flat surfaces and high-contrast typography, the design system achieves a premium, distraction-free interface.
 
-Note: this file is a visual direction reference. It is intentionally aspirational and may be stricter than the current implementation in `web/`.
+Note: this file is the canonical source of truth for UI standards in this repository.
 
 ## Colors
 
 The color palette is intentionally restrained to maximize the impact of primary actions. 
 
-- **Canvas**: The primary background is a pure white (#ffffff), providing a clean, high-contrast foundation.
-- **Primary Action**: "Coinbase Blue" (#0052ff) is used for all primary buttons, progress indicators, and active states. 
-- **Typography & Ink**: Headlines and heavy-weight text utilize Ink Black (#0a0b0d) to ensure maximum legibility and an authoritative presence.
-- **Surface Elevation**: A soft gray (#f7f7f7) is used for structural bands, separating content sections without the need for heavy borders.
-
-For the dark editorial hero sections, the palette inverts, using Ink Black as the canvas and White for primary typography, while retaining the "Coinbase Blue" for focal points.
+- **Canvas**: The primary structural background is a clean, neutral white or very light grey.
+- **Monochrome Structure**: Structural elements (sidebar, headers, static text) use a dark-grey to medium-grey palette (`#1a1c1c` to `#9ca3af`).
+- **Blue Accents**: A vibrant "Primary Blue" (`#0052ff`) is reserved exclusively for interactive or active elements (active tabs, active pills, hover states on action buttons).
+- **Interactive Feedback**: Action elements (buttons, "Add" links) are grey by default and turn blue only upon user interaction (hover).
 
 ## Typography
 

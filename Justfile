@@ -41,6 +41,10 @@ psql:
 dev:
     cargo run -p api
 
+# crée un profil vierge
+seed-blank:
+    cargo run -p api --bin seed_blank
+
 # remplit le profil actif depuis data/user
 seed-profile:
     cargo run -p api --bin seed_profile
