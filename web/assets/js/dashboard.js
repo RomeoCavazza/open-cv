@@ -5,15 +5,21 @@ import { clear } from './dom.js';
 import * as router from './router.js';
 import * as iframeRender from './render/iframe.js';
 import * as offerRender from './render/offers.js';
+import { EVENTS, emit } from './modules/events.js';
 
 // --- Expose State & Utils for legacy scripts (chat.js) ---
 window.state = {
     get selectedLlmProvider() { return state.selectedLlmProvider; },
-    get activeJobId() { return state.activeJobId; },
     get activeTab() { return state.activeTab; },
     setSelectedLlmProvider: state.setSelectedLlmProvider,
     setActiveTab: state.setActiveTab
 };
+
+// --- Event Subscriptions ---
+window.AppEvents.on(EVENTS.OFFER_SELECTED, () => {
+    loadOffers();
+    updateIframe();
+});
 window.updateIframe = updateIframe;
 
 // --- Dashboard Logic ---
@@ -287,9 +293,7 @@ function mutateOfferFlags(jobId, mutate) {
 
 function selectOffer(jobId) {
     state.setActiveJobId(jobId);
-    loadOffers();
-    updateIframe();
-    if (typeof window.loadChatHistory === 'function') window.loadChatHistory();
+    emit(EVENTS.OFFER_SELECTED, { jobId });
 }
 
 function toggleOfferCategory(category) {

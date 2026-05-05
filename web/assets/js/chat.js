@@ -2,6 +2,7 @@
 import { EVENTS, on } from './modules/events.js';
 
 let pendingAttachments = [];
+let currentActiveJobId = null;
 
 function updateAttachmentsUI() {
     const container = document.getElementById('ai-chat-attachments');
@@ -83,7 +84,7 @@ function setSendButtonBusy(isBusy) {
 function getActiveOfferSlug() {
     const isAppView = document.getElementById('view-app')?.classList.contains('active');
     if (!isAppView) return null;
-    return window.activeJobId || window.state?.activeJobId || null;
+    return currentActiveJobId;
 }
 
 async function resolveActiveInstance() {
@@ -296,7 +297,8 @@ if (document.readyState === 'loading') {
 }
 
 // Subscribe to events
-on(EVENTS.OFFER_SELECTED, () => {
+on(EVENTS.OFFER_SELECTED, (data) => {
+    currentActiveJobId = data.jobId;
     loadChatHistory();
 });
 
