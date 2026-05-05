@@ -585,8 +585,6 @@ async function updateIframe(options = {}) {
         iframeRender.resetIframeToEmptyState();
         return;
     }
-    const { syncChatHistory = true } = options;
-
     const offerSlug = state.activeJobId;
     const activeTab = state.activeTab;
     const iframe = document.getElementById('iframe-doc');
@@ -596,48 +594,30 @@ async function updateIframe(options = {}) {
         ? '/restitution/index.html'
         : (activeTab === 'resume' ? '/resume/index.html' : '/cover-letter/index.html');
 
-    let instanceSlug = window.activeInstanceSlug || offerSlug;
-
     if (!offerSlug || offerSlug === 'null') return;
 
-    if (window.activeResolvedOfferSlug !== offerSlug || !window.activeInstanceSlug) {
-        try {
-            const res = await fetch(`/api/offres/${offerSlug}/instance`);
-            if (res.ok) {
-                const instance = await res.json();
-                if (instance && instance.slug) {
-                    instanceSlug = instance.slug;
-                    window.activeInstanceData = instance;
-                }
-            } else if (res.status === 404) {
-                // Instance non générée, c'est normal pour une nouvelle offre
-                instanceSlug = null;
-                window.activeInstanceData = null;
+    try {
+        const res = await fetch(`/api/offres/${offerSlug}/instance`);
+        let instanceSlug = offerSlug;
+        if (res.ok) {
+            const instance = await res.json();
+            if (instance && instance.slug) {
+                instanceSlug = instance.slug;
             }
-        } catch (error) {
-            // Erreur réseau uniquement
         }
-    }
 
-    if (state.activeJobId !== offerSlug || state.activeTab !== activeTab) return;
+        if (state.activeJobId !== offerSlug || state.activeTab !== activeTab) return;
 
-    window.activeResolvedOfferSlug = offerSlug;
-    window.activeInstanceSlug = instanceSlug;
-    if (!window.activeInstanceData?.slug || window.activeInstanceData.slug !== instanceSlug) {
-        window.activeInstanceData = window.activeInstanceData && window.activeInstanceData.slug === instanceSlug
-            ? window.activeInstanceData
-            : { id: instanceSlug, slug: instanceSlug };
+        const query = activeTab === 'restitution'
+            ? `offer=${encodeURIComponent(offerSlug)}&instance=${encodeURIComponent(instanceSlug)}`
+            : `id=${encodeURIComponent(instanceSlug)}&offer=${encodeURIComponent(offerSlug)}`;
+            
+        iframe.removeAttribute('srcdoc');
+        iframe.src = `${path}?${query}&v=${Date.now()}`;
+        router.updatePath();
+    } catch (error) {
+        console.warn("[Dashboard] Failed to update iframe", error);
     }
-    const query = activeTab === 'restitution'
-        ? `offer=${encodeURIComponent(offerSlug)}&instance=${encodeURIComponent(instanceSlug)}`
-        : `id=${encodeURIComponent(instanceSlug)}&offer=${encodeURIComponent(offerSlug)}`;
-    iframe.removeAttribute('srcdoc');
-    iframe.src = `${path}?${query}&v=${Date.now()}`;
-    window.activeJobId = offerSlug; // Expose for chat.js
-    if (syncChatHistory && typeof window.loadChatHistory === 'function') {
-        window.loadChatHistory();
-    }
-    router.updatePath();
 }
 
 function renderAiChatAttachments() {

@@ -92,27 +92,10 @@ async function resolveActiveInstance() {
     const offerSlug = getActiveOfferSlug();
     if (!offerSlug) return null;
 
-    if (window.activeResolvedOfferSlug === offerSlug && window.activeInstanceSlug) {
-        if (window.activeInstanceData?.id) {
-            return window.activeInstanceData;
-        }
-        const resInstance = await fetch(`/api/instances/${window.activeInstanceSlug}`);
-        if (resInstance.ok) {
-            const instanceData = await resInstance.json();
-            window.activeInstanceData = instanceData;
-            return instanceData;
-        }
-        return { id: window.activeInstanceSlug, slug: window.activeInstanceSlug };
-    }
-
     const resInstance = await fetch(`/api/offres/${offerSlug}/instance`);
     if (!resInstance.ok) return null;
 
-    const instanceData = await resInstance.json();
-    window.activeResolvedOfferSlug = offerSlug;
-    window.activeInstanceSlug = instanceData?.slug || null;
-    window.activeInstanceData = instanceData;
-    return instanceData;
+    return await resInstance.json();
 }
 
 async function loadChatHistory() {
@@ -177,20 +160,6 @@ async function sendChatMessage() {
 
         if (resChat.ok) {
             const result = await resChat.json();
-
-            if (result.updated_instance?.slug) {
-                window.activeInstanceSlug = result.updated_instance.slug;
-                // Defensive: ensure notes is an object if it arrived as a string
-                if (typeof result.updated_instance.notes === 'string') {
-                    try {
-                        result.updated_instance.notes = JSON.parse(result.updated_instance.notes);
-                    } catch (e) {
-                        console.warn("[Chat] Failed to parse notes string", e);
-                    }
-                }
-                window.activeInstanceData = result.updated_instance;
-                window.activeResolvedOfferSlug = offerSlug || window.activeResolvedOfferSlug;
-            }
 
             let persistedHistory = result.updated_instance?.notes?.chat_history;
             if (!Array.isArray(persistedHistory) || persistedHistory.length === 0) {
