@@ -1,6 +1,9 @@
 use async_trait::async_trait;
 use base64::Engine;
-use ports::{CompletionRequest, CompletionResponse, ExtractionRequest, LlmClient, LlmError, Role};
+use futures::{StreamExt, TryStreamExt};
+use ports::{
+    BoxStream, CompletionRequest, CompletionResponse, ExtractionRequest, LlmClient, LlmError, Role,
+};
 use serde::{Deserialize, Serialize};
 use tracing::instrument;
 
@@ -46,7 +49,11 @@ struct OllamaMessage {
 
 #[derive(Deserialize)]
 struct OllamaChatResponse {
-    message: OllamaMessage,
+    message: Option<OllamaMessage>, // Optionnel dans le cas du streaming
+    #[serde(default)]
+    content: Option<String>, // Parfois présent directement selon la version d'Ollama
+    #[allow(dead_code)]
+    done: bool,
     prompt_eval_count: Option<u32>,
     eval_count: Option<u32>,
     #[allow(dead_code)]
@@ -136,7 +143,11 @@ impl LlmClient for OllamaClient {
             serde_json::from_str(&raw).map_err(|e| LlmError::Json(e.to_string()))?;
 
         Ok(CompletionResponse {
-            text: parsed.message.content,
+            text: parsed
+                .message
+                .map(|m| m.content)
+                .or(parsed.content)
+                .unwrap_or_default(),
             model: self.model.clone(),
             tokens_in: parsed.prompt_eval_count.unwrap_or(0),
             tokens_out: parsed.eval_count.unwrap_or(0),
@@ -258,7 +269,12 @@ impl LlmClient for OllamaClient {
 
         let parsed: OllamaChatResponse =
             serde_json::from_str(&raw).map_err(|e| LlmError::Json(e.to_string()))?;
-        let content = parsed.message.content.trim();
+        let content = parsed
+            .message
+            .map(|m| m.content)
+            .or(parsed.content)
+            .unwrap_or_default();
+        let content = content.trim();
         let cleaned = if content.starts_with("```") {
             content
                 .trim_start_matches('`')
@@ -280,9 +296,101 @@ impl LlmClient for OllamaClient {
 
         Ok(json)
     }
-
     fn name(&self) -> &'static str {
         "ollama"
+    }
+
+    async fn stream(
+        &self,
+        req: CompletionRequest,
+    ) -> Result<BoxStream<'static, Result<String, LlmError>>, LlmError> {
+        let mut messages = Vec::new();
+        if let Some(sys) = req.system {
+            messages.push(OllamaMessage {
+                role: "system".into(),
+                content: sys,
+                images: None,
+            });
+        }
+        for m in req.messages {
+            let mut text_content = String::new();
+            let mut images = Vec::new();
+            for content in m.content {
+                match content {
+                    ports::MessageContent::Text(t) => text_content.push_str(&t),
+                    ports::MessageContent::Image { data, .. } => {
+                        images.push(base64::engine::general_purpose::STANDARD.encode(data));
+                    }
+                }
+            }
+            messages.push(OllamaMessage {
+                role: match m.role {
+                    Role::User => "user".into(),
+                    Role::Assistant => "assistant".into(),
+                },
+                content: text_content,
+                images: if images.is_empty() {
+                    None
+                } else {
+                    Some(images)
+                },
+            });
+        }
+
+        let body = OllamaChatRequest {
+            model: req.model.unwrap_or_else(|| self.model.clone()),
+            messages,
+            stream: true,
+            format: None,
+            options: req
+                .temperature
+                .map(|t| serde_json::json!({ "temperature": t, "num_ctx": 16384 }))
+                .or_else(|| Some(serde_json::json!({ "num_ctx": 16384 }))),
+        };
+
+        let url = format!("{}/api/chat", self.base_url);
+        let resp = self
+            .http
+            .post(&url)
+            .json(&body)
+            .send()
+            .await
+            .map_err(|e| LlmError::Http(e.to_string()))?;
+
+        if resp.status() != 200 {
+            let status = resp.status().as_u16();
+            let body = resp.text().await.unwrap_or_default();
+            return Err(LlmError::ProviderStatus { status, body });
+        }
+
+        let bytes_stream = resp.bytes_stream();
+        let mut buffer = String::new();
+
+        let token_stream = bytes_stream
+            .map(move |res| {
+                let bytes = res.map_err(|e| LlmError::Http(e.to_string()))?;
+                let chunk = String::from_utf8_lossy(&bytes);
+                buffer.push_str(&chunk);
+
+                let mut tokens = Vec::new();
+                while let Some(pos) = buffer.find('\n') {
+                    let line = buffer.drain(..=pos).collect::<String>();
+                    if line.trim().is_empty() {
+                        continue;
+                    }
+                    if let Ok(parsed) = serde_json::from_str::<OllamaChatResponse>(&line) {
+                        if let Some(msg) = parsed.message {
+                            tokens.push(Ok(msg.content));
+                        } else if let Some(content) = parsed.content {
+                            tokens.push(Ok(content));
+                        }
+                    }
+                }
+                Ok(futures::stream::iter(tokens))
+            })
+            .try_flatten();
+
+        Ok(Box::pin(token_stream))
     }
 }
 

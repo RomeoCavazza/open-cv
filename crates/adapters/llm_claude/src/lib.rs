@@ -372,4 +372,13 @@ impl LlmClient for ClaudeClient {
     fn name(&self) -> &'static str {
         "anthropic"
     }
+
+    async fn stream(
+        &self,
+        _req: CompletionRequest,
+    ) -> Result<ports::BoxStream<'static, Result<String, LlmError>>, LlmError> {
+        Err(LlmError::Other(
+            "Streaming non implémenté pour Claude".into(),
+        ))
+    }
 }

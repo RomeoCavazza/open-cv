@@ -39,16 +39,45 @@ function updateAttachmentsUI() {
         container.appendChild(chip);
     });
 }
-function appendMessage(role, text) {
+function appendMessage(role, text, isStreaming = false) {
     const sidebarBody = document.querySelector('.ai-sidebar-body');
-    if (!sidebarBody) return;
+    if (!sidebarBody) return null;
+
+    if (isStreaming && role === 'ai') {
+        const lastMsg = sidebarBody.lastElementChild;
+        if (lastMsg && lastMsg.classList.contains('ai-message') && lastMsg.dataset.streaming === 'true') {
+            lastMsg.updateContent(text);
+            sidebarBody.scrollTop = sidebarBody.scrollHeight;
+            return lastMsg;
+        }
+    }
 
     const msgDiv = document.createElement('div');
     msgDiv.className = `chat-message ${role}-message`;
-    msgDiv.style.cssText = `margin-bottom:16px;padding:12px 16px;border-radius:12px;font-size:14px;line-height:1.5;max-width:85%;${role === 'user' ? 'background:#0052ff;color:white;margin-left:auto;' : 'background:#f1f5f9;color:#1e293b;border:1px solid #e2e8f0;'}`;
-    msgDiv.textContent = text;
+    
+    if (role === 'user') {
+        msgDiv.style.cssText = `margin-bottom:16px;padding:10px 14px;border-radius:12px;font-size:13.5px;line-height:1.5;max-width:85%;background:#0052ff;color:white;margin-left:auto;box-shadow: 0 2px 4px rgba(0,0,0,0.05);`;
+        msgDiv.textContent = text;
+    } else {
+        msgDiv.className += ' ai-message';
+        msgDiv.style.cssText = `margin-bottom:24px;padding:4px 0;font-size:14px;line-height:1.6;color:#1e293b;`;
+        if (isStreaming) msgDiv.dataset.streaming = 'true';
+        
+        const label = document.createElement('div');
+        label.textContent = 'RecruitAI';
+        label.style.cssText = 'font-size:10px; font-weight:800; color:#94a3b8; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:4px;';
+        msgDiv.appendChild(label);
+        
+        const content = document.createElement('div');
+        content.textContent = text;
+        msgDiv.appendChild(content);
+        
+        msgDiv.updateContent = (t) => { content.textContent += t; };
+    }
+
     sidebarBody.appendChild(msgDiv);
     sidebarBody.scrollTop = sidebarBody.scrollHeight;
+    return msgDiv;
 }
 
 function renderChatHistory(history) {
@@ -57,18 +86,10 @@ function renderChatHistory(history) {
     sidebarBody.innerHTML = '';
 
     const entries = Array.isArray(history) ? history : [];
-    if (entries.length === 0) {
-    }
-
     entries.forEach((entry) => {
         if (!entry || !entry.role) return;
         const role = entry.role === 'assistant' ? 'ai' : 'user';
-        const text = entry.content || '';
-        const msgDiv = document.createElement('div');
-        msgDiv.className = `chat-message ${role}-message`;
-        msgDiv.style.cssText = `margin-bottom:16px;padding:12px 16px;border-radius:12px;font-size:14px;line-height:1.5;max-width:85%;${role === 'user' ? 'background:#0052ff;color:white;margin-left:auto;' : 'background:#f1f5f9;color:#1e293b;border:1px solid #e2e8f0;'}`;
-        msgDiv.textContent = text;
-        sidebarBody.appendChild(msgDiv);
+        appendMessage(role, entry.content || '');
     });
 
     sidebarBody.scrollTop = sidebarBody.scrollHeight;
@@ -133,7 +154,6 @@ async function sendChatMessage() {
     if (!message) return;
 
     const offerSlug = getActiveOfferSlug();
-
     appendMessage('user', message);
     input.value = '';
 
@@ -143,7 +163,7 @@ async function sendChatMessage() {
     setSendButtonBusy(true);
 
     try {
-        const resChat = await fetch('/api/chat', {
+        const response = await fetch('/api/chat/stream', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -158,50 +178,38 @@ async function sendChatMessage() {
             })
         });
 
-        if (resChat.ok) {
-            const result = await resChat.json();
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
 
-            let persistedHistory = result.updated_instance?.notes?.chat_history;
-            if (!Array.isArray(persistedHistory) || persistedHistory.length === 0) {
-                const profileResponse = await fetch('/api/profile/active');
-                if (profileResponse.ok) {
-                    const profile = await profileResponse.json();
-                    persistedHistory = profile?.notes?.chat_history;
-                } else {
-                    console.warn("[Chat] Failed to reload profile history:", profileResponse.status);
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let aiMsgElement = null;
+
+        while (true) {
+            const { value, done } = await reader.read();
+            if (done) break;
+
+            const chunk = decoder.decode(value, { stream: true });
+            const lines = chunk.split('\n');
+            for (const line of lines) {
+                if (line.startsWith('data: ')) {
+                    const token = line.slice(6);
+                    if (!aiMsgElement) {
+                        aiMsgElement = appendMessage('ai', token, true);
+                    } else {
+                        aiMsgElement.updateContent(token);
+                    }
                 }
             }
-            if (Array.isArray(persistedHistory) && persistedHistory.length > 0) {
-                pendingAttachments = [];
-                updateAttachmentsUI();
-                renderChatHistory(persistedHistory);
-            } else {
-                console.warn("[Chat] No persisted history found in response, falling back to local simulation");
-                renderChatHistory([
-                    { role: 'user', content: message },
-                    { role: 'assistant', content: result.message || "J'ai traité ta demande, mais l'historique de session n'est pas encore synchronisé." },
-                ]);
-            }
-        } else {
-            const sidebarBody = document.querySelector('.ai-sidebar-body');
-            if (sidebarBody) {
-                const errorMessage = await readChatErrorMessage(resChat);
-                const msgDiv = document.createElement('div');
-                msgDiv.className = 'chat-message ai-message';
-                msgDiv.style.cssText = 'margin-bottom:16px;padding:12px 16px;border-radius:12px;font-size:14px;line-height:1.5;max-width:85%;background:#f1f5f9;color:#1e293b;border:1px solid #e2e8f0;';
-                msgDiv.textContent = `L'IA a rencontré une erreur : ${errorMessage}`;
-                sidebarBody.appendChild(msgDiv);
-            }
         }
+        
+        pendingAttachments = [];
+        updateAttachmentsUI();
+
     } catch (e) {
-        const sidebarBody = document.querySelector('.ai-sidebar-body');
-        if (sidebarBody) {
-            const msgDiv = document.createElement('div');
-            msgDiv.className = 'chat-message ai-message';
-            msgDiv.style.cssText = 'margin-bottom:16px;padding:12px 16px;border-radius:12px;font-size:14px;line-height:1.5;max-width:85%;background:#f1f5f9;color:#1e293b;border:1px solid #e2e8f0;';
-            msgDiv.textContent = `Erreur de connexion : ${e?.message || 'réseau indisponible'}`;
-            sidebarBody.appendChild(msgDiv);
-        }
+        console.error("[Chat] Streaming error:", e);
+        appendMessage('ai', `Désolé, une erreur est survenue : ${e.message}`);
     } finally {
         setSendButtonBusy(false);
     }

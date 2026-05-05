@@ -67,6 +67,7 @@ pub struct ChatWithApplicationUseCase {
     pub llm_registry: std::collections::HashMap<String, Arc<dyn LlmClient>>,
 }
 impl ChatWithApplicationUseCase {
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         offre_repo: Arc<dyn ports::OffreRepo>,
         instance_repo: Arc<dyn InstanceRepo>,
@@ -97,6 +98,19 @@ impl ChatWithApplicationUseCase {
             }
         }
         self.execute_global_chat(req).await
+    }
+
+    pub async fn execute_stream(
+        &self,
+        req: ChatRequest,
+    ) -> anyhow::Result<ports::BoxStream<'static, anyhow::Result<String>>> {
+        let instance_id = req.instance_id.clone();
+        if let Some(id) = instance_id {
+            if !id.is_empty() {
+                return self.execute_instance_chat_stream(&id, req).await;
+            }
+        }
+        self.execute_global_chat_stream(req).await
     }
 
     async fn execute_instance_chat(
@@ -372,6 +386,195 @@ impl ChatWithApplicationUseCase {
         llm.extract(extraction_req)
             .await
             .map_err(|e| anyhow::anyhow!(e))
+    }
+
+    async fn execute_global_chat_stream(
+        &self,
+        req: ChatRequest,
+    ) -> anyhow::Result<ports::BoxStream<'static, anyhow::Result<String>>> {
+        let mut profil = self
+            .profil_repo
+            .get_active()
+            .await?
+            .ok_or_else(|| anyhow::anyhow!("Aucun profil actif trouvé"))?;
+
+        let chat_history = extract_chat_history(&profil.notes);
+        push_chat_history(&mut profil.notes, "user", &req.message);
+        self.profil_repo.upsert(&profil).await?;
+
+        let llm = self.get_llm(&req.llm_provider)?;
+        let rag_context = self.get_rag_context(profil.id, &req.message).await?;
+        let offres = self.offre_repo.list_all().await?;
+        let system_prompt = prompts::chat::GLOBAL_CHAT_SYSTEM;
+        let history_prompt = render_chat_history_for_prompt(&chat_history);
+
+        let user_input = format!(
+            "IDENTITÉ DE L'UTILISATEUR (Profil complet):\n{}\n\n\
+            ANNEXES DISPONIBLES (en DB):\n{}\n\n\
+            OFFRES DISPONIBLES EN BASE ({} offres):\n{}\n\n\
+            DÉTAILS DU PARCOURS (RAG):\n{}\n\n\
+            HISTORIQUE RÉCENT DU CHAT:\n{}\n\n\
+            DEMANDE DE L'UTILISATEUR: {}",
+            serde_json::to_string_pretty(&build_profile_prompt_context(&profil))?,
+            serde_json::to_string_pretty(&self.annexe_repo.list_by_profil_id(profil.id).await?)?,
+            offres.len(),
+            serde_json::to_string_pretty(
+                &offres
+                    .iter()
+                    .map(|o| (o.slug.to_string(), o.intitule.clone(), o.entreprise.clone()))
+                    .collect::<Vec<_>>()
+            )?,
+            rag_context,
+            history_prompt,
+            req.message
+        );
+
+        let completion_req = ports::CompletionRequest {
+            system: Some(system_prompt.to_string()),
+            messages: vec![ports::Message::user(user_input)],
+            model: None,
+            max_tokens: Some(4000),
+            temperature: None,
+        };
+
+        let stream = llm.stream(completion_req).await?;
+
+        // On crée un stream qui va aussi accumuler pour sauvegarder à la fin
+        let profil_repo = self.profil_repo.clone();
+        let full_response = String::new();
+
+        let mapped_stream = futures::stream::unfold(
+            (stream, profil, full_response, profil_repo),
+            |(mut stream, mut profil, mut full_response, profil_repo)| async move {
+                use futures::StreamExt;
+                match stream.next().await {
+                    Some(Ok(token)) => {
+                        full_response.push_str(&token);
+                        Some((Ok(token), (stream, profil, full_response, profil_repo)))
+                    }
+                    Some(Err(e)) => Some((
+                        Err(anyhow::anyhow!(e)),
+                        (stream, profil, full_response, profil_repo),
+                    )),
+                    None => {
+                        // Fin du stream, on sauvegarde
+                        if !full_response.is_empty() {
+                            push_chat_history(&mut profil.notes, "assistant", &full_response);
+                            let _ = profil_repo.upsert(&profil).await;
+                        }
+                        None
+                    }
+                }
+            },
+        );
+
+        Ok(Box::pin(mapped_stream))
+    }
+
+    async fn execute_instance_chat_stream(
+        &self,
+        instance_id: &str,
+        req: ChatRequest,
+    ) -> anyhow::Result<ports::BoxStream<'static, anyhow::Result<String>>> {
+        let instance_uuid = uuid::Uuid::parse_str(instance_id)?;
+        let instance = self
+            .instance_repo
+            .get_by_id(domain::InstanceId::from_uuid(instance_uuid))
+            .await?
+            .ok_or_else(|| anyhow::anyhow!("Instance non trouvée"))?;
+
+        let profil = self
+            .profil_repo
+            .get_by_id(instance.profil_id)
+            .await?
+            .ok_or_else(|| anyhow::anyhow!("Profil non trouvé"))?;
+
+        let offre = self
+            .offre_repo
+            .get_by_id(instance.offre_id)
+            .await?
+            .ok_or_else(|| anyhow::anyhow!("Offre non trouvée"))?;
+
+        let history = self.message_repo.list_by_instance_id(instance.id).await?;
+        let user_msg =
+            domain::Message::new(instance.id, domain::MessageRole::User, req.message.clone());
+        self.message_repo.push(&user_msg).await?;
+
+        let llm = self.get_llm(&req.llm_provider)?;
+        let rag_context = self
+            .get_rag_context(instance.profil_id, &req.message)
+            .await?;
+        let history_prompt = render_chat_history_for_prompt(&history);
+
+        let user_input = format!(
+            "IDENTITÉ DE L'UTILISATEUR (Profil complet):\n{}\n\n\
+            ANNEXES DISPONIBLES (en DB):\n{}\n\n\
+            OFFRE CIBLÉE (fiche brute et structurée):\n{}\n\n\
+            ANALYSE DE L'OFFRE CIBLÉE (Restitution):\n{}\n\n\
+            FRAGMENTS DE PARCOURS (RAG):\n{}\n\n\
+            HISTORIQUE RÉCENT DU CHAT:\n{}\n\n\
+            DEMANDE DE L'UTILISATEUR: {}\n\n\
+            JSON ACTUEL DU CV: {}\n\n\
+            JSON ACTUEL DE LA LETTRE: {}",
+            serde_json::to_string_pretty(&build_profile_prompt_context(&profil))?,
+            serde_json::to_string_pretty(&self.annexe_repo.list_by_profil_id(profil.id).await?)?,
+            serde_json::to_string_pretty(&build_offer_prompt_context(&offre))?,
+            serde_json::to_string_pretty(&instance.restitution)?,
+            rag_context,
+            history_prompt,
+            req.message,
+            serde_json::to_string_pretty(&instance.resume_json)?,
+            serde_json::to_string_pretty(&instance.cover_letter_json)?
+        );
+
+        let completion_req = ports::CompletionRequest {
+            system: Some(prompts::chat::INSTANCE_DEFAULT_SYSTEM.to_string()),
+            messages: vec![ports::Message::user(user_input)],
+            model: None,
+            max_tokens: Some(4000),
+            temperature: None,
+        };
+
+        let stream = llm.stream(completion_req).await?;
+
+        let message_repo = self.message_repo.clone();
+        let instance_repo = self.instance_repo.clone();
+        let full_response = String::new();
+
+        let mapped_stream = futures::stream::unfold(
+            (stream, instance, full_response, message_repo, instance_repo),
+            |(mut stream, mut instance, mut full_response, message_repo, instance_repo)| async move {
+                use futures::StreamExt;
+                match stream.next().await {
+                    Some(Ok(token)) => {
+                        full_response.push_str(&token);
+                        Some((
+                            Ok(token),
+                            (stream, instance, full_response, message_repo, instance_repo),
+                        ))
+                    }
+                    Some(Err(e)) => Some((
+                        Err(anyhow::anyhow!(e)),
+                        (stream, instance, full_response, message_repo, instance_repo),
+                    )),
+                    None => {
+                        if !full_response.is_empty() {
+                            let assistant_msg = domain::Message::new(
+                                instance.id,
+                                domain::MessageRole::Assistant,
+                                full_response.clone(),
+                            );
+                            let _ = message_repo.push(&assistant_msg).await;
+                            instance.updated_at = chrono::Utc::now();
+                            let _ = instance_repo.upsert(&instance).await;
+                        }
+                        None
+                    }
+                }
+            },
+        );
+
+        Ok(Box::pin(mapped_stream))
     }
 }
 

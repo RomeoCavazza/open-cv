@@ -201,6 +201,7 @@ pub async fn maybe_generate_restitution(
     Ok(Some(restitution))
 }
 
+#[allow(clippy::too_many_arguments)]
 pub async fn maybe_generate_resume(
     this: &GenerateApplicationUseCase,
     livrables: Livrables,
@@ -245,6 +246,7 @@ pub async fn maybe_generate_resume(
     Ok(Some(resume))
 }
 
+#[allow(clippy::too_many_arguments)]
 pub async fn maybe_generate_cover_letter(
     this: &GenerateApplicationUseCase,
     livrables: Livrables,

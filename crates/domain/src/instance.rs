@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value as Json;
 
 use crate::ids::{InstanceId, OffreId, ProfilId, Slug};
-use crate::{Restitution, Resume, CoverLetter};
+use crate::{CoverLetter, Restitution, Resume};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]

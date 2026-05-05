@@ -116,12 +116,8 @@ pub(super) fn build_instance(row: InstanceRow) -> Result<Instance, RepoError> {
         offre_id: domain::OffreId::from_uuid(row.offre_id),
         profil_id: domain::ProfilId::from_uuid(row.profil_id),
         status: parse_status(&row.status)?,
-        restitution: row
-            .restitution
-            .and_then(|v| serde_json::from_value(v).ok()),
-        resume_json: row
-            .resume_json
-            .and_then(|v| serde_json::from_value(v).ok()),
+        restitution: row.restitution.and_then(|v| serde_json::from_value(v).ok()),
+        resume_json: row.resume_json.and_then(|v| serde_json::from_value(v).ok()),
         cover_letter_json: row
             .cover_letter_json
             .and_then(|v| serde_json::from_value(v).ok()),

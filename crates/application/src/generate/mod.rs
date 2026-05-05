@@ -356,6 +356,7 @@ impl GenerateApplicationUseCase {
         steps::maybe_generate_restitution(self, livrables, offre, instance_id, llm).await
     }
 
+    #[allow(clippy::too_many_arguments)]
     async fn maybe_generate_resume(
         &self,
         livrables: Livrables,
@@ -379,6 +380,7 @@ impl GenerateApplicationUseCase {
         .await
     }
 
+    #[allow(clippy::too_many_arguments)]
     async fn maybe_generate_cover_letter(
         &self,
         livrables: Livrables,

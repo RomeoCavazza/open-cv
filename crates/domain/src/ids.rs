@@ -84,7 +84,10 @@ impl Slug {
     }
 
     pub fn new_v4() -> Self {
-        Self(format!("slug_{}", uuid::Uuid::new_v4().to_string().replace('-', "_")))
+        Self(format!(
+            "slug_{}",
+            uuid::Uuid::new_v4().to_string().replace('-', "_")
+        ))
     }
 }
 

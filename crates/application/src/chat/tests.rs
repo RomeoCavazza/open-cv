@@ -241,6 +241,14 @@ impl LlmClient for RecordingLlm {
         }
     }
 
+    async fn stream(
+        &self,
+        _req: ports::CompletionRequest,
+    ) -> Result<ports::BoxStream<'static, Result<String, LlmError>>, LlmError> {
+        let stream = futures::stream::iter(vec![Ok("token1".into()), Ok("token2".into())]);
+        Ok(Box::pin(stream))
+    }
+
     fn name(&self) -> &'static str {
         "recording-llm"
     }

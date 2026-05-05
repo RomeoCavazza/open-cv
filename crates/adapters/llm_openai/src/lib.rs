@@ -347,4 +347,13 @@ impl LlmClient for OpenAiClient {
     fn name(&self) -> &'static str {
         "openai"
     }
+
+    async fn stream(
+        &self,
+        _req: CompletionRequest,
+    ) -> Result<ports::BoxStream<'static, Result<String, LlmError>>, LlmError> {
+        Err(LlmError::Other(
+            "Streaming non implémenté pour OpenAI".into(),
+        ))
+    }
 }

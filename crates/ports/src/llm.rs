@@ -6,6 +6,7 @@
 //! - `adapters/embed_voyage` : embeddings via Voyage AI
 
 use async_trait::async_trait;
+pub use futures::stream::BoxStream;
 use thiserror::Error;
 
 #[derive(Debug, Clone)]
@@ -85,6 +86,12 @@ pub trait LlmClient: Send + Sync {
 
     /// Génération structurée. On précise un schéma JSON, on récupère un JSON.
     async fn extract(&self, req: ExtractionRequest) -> Result<serde_json::Value, LlmError>;
+
+    /// Génération texte libre avec streaming.
+    async fn stream(
+        &self,
+        req: CompletionRequest,
+    ) -> Result<BoxStream<'static, Result<String, LlmError>>, LlmError>;
 
     /// Identifiant du provider, utilisé dans `llm_calls.provider`.
     fn name(&self) -> &'static str;
