@@ -1,5 +1,20 @@
 console.log("[Dashboard] Module Loading...");
-import * as state from './state.js';
+import { 
+    activeTab, 
+    setSelectedLlmProvider, 
+    setActiveTab, 
+    loadI18n, 
+    selectedLlmProvider, 
+    delivConfig, 
+    setDelivConfig,
+    offerFlags,
+    saveOfferFlags,
+    collapsedOfferCategories,
+    saveCollapsedCategories,
+    setLoadedProfileImage,
+    loadedProfileImage,
+    i18n
+} from './state.js';
 import * as api from './api.js';
 import * as ui from './ui.js';
 import { clear } from './dom.js';
@@ -10,9 +25,9 @@ import { EVENTS, emit, on } from './modules/events.js';
 
 // --- Expose State & Utils for legacy scripts (chat.js) ---
 window.state = {
-    get activeTab() { return state.activeTab; },
-    setSelectedLlmProvider: state.setSelectedLlmProvider,
-    setActiveTab: state.setActiveTab
+    get activeTab() { return activeTab; },
+    setSelectedLlmProvider,
+    setActiveTab
 };
 
 // --- Event Subscriptions ---
@@ -666,7 +681,7 @@ async function init() {
     attachEventListeners();
 
     try {
-        await state.loadI18n();
+        await loadI18n();
         await loadProfile();
         await loadOffers();
         await router.handleRouting();
@@ -826,8 +841,8 @@ function attachEventListeners() {
         const btn = document.getElementById('btn-ingest-run');
         if (btn) {
             btn.disabled = true;
-            btn._oldHTML = btn.innerHTML;
-            btn.innerHTML = '<span class="loader"></span>';
+            btn._oldText = btn.textContent;
+            btn.textContent = '...'; // Simple text loader to avoid innerHTML
         }
     });
 
@@ -835,7 +850,7 @@ function attachEventListeners() {
         const btn = document.getElementById('btn-ingest-run');
         if (btn) {
             btn.disabled = false;
-            btn.innerHTML = btn._oldHTML || 'Generate Application';
+            btn.textContent = btn._oldText || 'Generate Application';
         }
         router.switchView('app');
         loadOffers();
@@ -846,9 +861,9 @@ function attachEventListeners() {
         const btn = document.getElementById('btn-ingest-run');
         if (btn) {
             btn.disabled = false;
-            btn.innerHTML = btn._oldHTML || 'Generate Application';
+            btn.textContent = btn._oldText || 'Generate Application';
         }
-        alert('Erreur: ' + data.message);
+        alert('Erreur: ' + (data.message || 'Inconnue'));
     });
 
     safeClick('btn-ingest-run', async () => {
@@ -904,25 +919,23 @@ function setupSelector(containerId) {
         const deliv = pill.dataset.deliv;
 
         if (prov) {
-            if (state.selectedLlmProvider === prov) pill.classList.add('active');
+            if (selectedLlmProvider === prov) pill.classList.add('active');
             else pill.classList.remove('active');
         } else if (deliv) {
-            // Mapping UI "restitution" to internal state "restitution" etc.
-            // Note: cover in UI vs cover_letter in state (wait, state uses cover from localStorage)
-            // Let's check state.js delivConfig keys
-            const val = state.delivConfig[deliv];
+            const val = delivConfig[deliv];
             if (val === true) pill.classList.add('active');
             else if (val === false) pill.classList.remove('active');
         }
 
         // 2. Click Handler
-        pill.onclick = () => {
+        pill.onclick = (e) => {
+            e.preventDefault();
             if (prov) {
-                state.setSelectedLlmProvider(prov);
+                setSelectedLlmProvider(prov);
                 emit(EVENTS.LLM_PROVIDER_CHANGED, { provider: prov });
             } else if (deliv) {
                 pill.classList.toggle('active');
-                state.setDelivConfig(deliv, pill.classList.contains('active'));
+                setDelivConfig(deliv, pill.classList.contains('active'));
             }
         };
     });
