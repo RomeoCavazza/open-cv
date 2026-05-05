@@ -23,6 +23,9 @@ async fn main() -> Result<()> {
         .await?
         .context("Aucun profil actif trouvé")?;
 
+    println!("Vidage de la table chunks...");
+    sqlx::query("TRUNCATE TABLE chunks").execute(&pool).await?;
+
     println!("Chunking du profil: {}", profil.label);
 
     // 2. Initialiser l'Embedder (Ollama)

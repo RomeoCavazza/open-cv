@@ -12,9 +12,10 @@
 ## 2. ÉTAT ACTUEL
 
 - **Backend** : ✅ Stable, modulaire, typé. Tag : `backend-stable-2026-05-05`.
-- **Tests** : ✅ 8 tests d'intégration HTTP validés (Axum + MockRepos).
-- **Contrat API** : ✅ Aligné sur le frontend original.
-- **Frontend** : ⚠️ Toujours monolithique (`dashboard.js`), couplage global élevé via `window.*`.
+- **Tests** : ✅ 63 tests validés (Workspace total). Suite d'intégration HTTP résiliente.
+- **Base de Données** : ✅ Pipeline de reset/seed canonique validé (Justfile).
+- **RAG/Indexation** : ✅ Fonctionnel via `seed_chunks`.
+- **Frontend** : ⚠️ Toujours monolithique (`dashboard.js`), couplage global élevé.
 
 ## 3. ROADMAP DE REMÉDIATION
 
@@ -55,7 +56,23 @@
 2. **Backend**: Implement automated indexer for the `chunks` table.
 3. **Frontend**: Physically split `dashboard.js` into modules (Phase 4).
 
-## 4. RÈGLES DE GOUVERNANCE (NON-NÉGOCIABLES)
+## 4. AUDIT DE STABILITÉ ET INTÉGRITÉ (2026-05-06)
+*Diagnostic exhaustif du comportement du pipeline post-reset DB.*
+
+### RED LIST (CRIT)
+- **[CRIT] crates/domain/src/lib.rs** : Fuite de couche. `serde_json` utilisé directement dans le domaine. Nécessite des types métier purs.
+- **[CRIT] web/assets/js/dashboard.js** : God Module (959 LOC). Mélange UI, API et État. Découpage urgent (Phase 4).
+- **[CRIT] crates/application/src/chat/mod.rs** : God Module (582 LOC). Logique de stream et persistence entremêlées.
+- **[CRIT] crates/adapters/postgres/src/profil.rs:205** : Hardcoded UUID avec `unwrap()`. Risque de crash au démarrage si incohérence DB.
+
+### KILL LIST (Cleanup immédiat)
+- **crates/api/src/bin/seed_blank.rs** : Supprimé car redondant avec `seed_profile`.
+- **Cargo.toml:once_cell** : À remplacer par `std::sync::OnceLock`.
+- **Commentaires paraphrases** : Nettoyage du bruit visuel dans `intake/mod.rs`.
+
+---
+
+## 5. RÈGLES DE GOUVERNANCE (NON-NÉGOCIABLES)
 
 1.  **No Silent Edits** : Toute modification de contrat API ou de logique métier doit être explicitement validée par un test.
 2.  **Atomic Commits** : Un commit par changement logique. Pas de mélanges.
@@ -64,9 +81,9 @@
 
 ---
 ### Dette Technique Résiduelle (Confirmée)
-- [LOW] `test_get_annexes_200` : Vérifie uniquement le statut, pas la structure du body.
-- [HIGH] **Indexeur de profil absent** : La table `chunks` reste vide après reset/seed. RAG inopérant par défaut.
+- [FIXED] **Indexeur de profil** : Résolu via `seed_chunks`. Intégré au pipeline canonique.
 - [HIGH] **Couplage Restitution/RAG** : L'étape de recherche vectorielle (`generate/mod.rs:220`) bloque la Restitution même sans besoin de profil.
+- [HIGH] **Modularité Frontend** : `dashboard.js` et `ui.js` dépassent les seuils de maintenabilité (>250 LOC).
 - [MED] **Scraper limité** : Échec sur SPA/Anti-bot (WTTJ, Siemens). Bypass texte brut nécessaire.
 - [LOW] **Templates contaminés** : Contenu MBDA hardcodé dans `data/templates/*.json` polluant les sorties LLM.
 
