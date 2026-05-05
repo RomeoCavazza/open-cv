@@ -610,6 +610,7 @@ async function updateIframe(options = {}) {
         iframeRender.resetIframeToEmptyState();
         return;
     }
+    const initialTab = activeTab;
     const offerSlug = activeJobId;
     
     const iframe = document.getElementById('iframe-doc');
@@ -631,7 +632,7 @@ async function updateIframe(options = {}) {
             }
         }
 
-        if (activeJobId !== offerSlug || activeTab !== activeTab) return;
+        if (activeJobId !== offerSlug || activeTab !== initialTab) return;
 
         const query = activeTab === 'restitution'
             ? `offer=${encodeURIComponent(offerSlug)}&instance=${encodeURIComponent(instanceSlug)}`
@@ -690,15 +691,10 @@ async function init() {
     attachEventListeners();
 
     try {
-        console.log("[Dashboard] Loading i18n...");
         await loadI18n();
-        console.log("[Dashboard] Loading profile...");
         await loadProfile();
-        console.log("[Dashboard] Loading offers...");
         await loadOffers();
-        console.log("[Dashboard] Handling routing...");
         await router.handleRouting();
-        console.log("[Dashboard] Rendering attachments...");
         renderAiChatAttachments();
         console.log("[Dashboard] Initialization Complete.");
     } catch (e) {
@@ -944,18 +940,12 @@ function setupSelector(containerId) {
         // 2. Click Handler
         pill.onclick = (e) => {
             e.preventDefault();
-            console.log("[DEBUG] LLM Pill clicked", { prov, deliv });
-            try {
-                if (prov) {
-                    setSelectedLlmProvider(prov);
-                    emit(EVENTS.LLM_PROVIDER_CHANGED, { provider: prov });
-                } else if (deliv) {
-                    pill.classList.toggle('active');
-                    setDelivConfig(deliv, pill.classList.contains('active'));
-                }
-            } catch (err) {
-                console.error("[DEBUG] Click Handler Error:", err);
-                alert("[DEBUG] Click Handler Error: " + err.message);
+            if (prov) {
+                setSelectedLlmProvider(prov);
+                emit(EVENTS.LLM_PROVIDER_CHANGED, { provider: prov });
+            } else if (deliv) {
+                pill.classList.toggle('active');
+                setDelivConfig(deliv, pill.classList.contains('active'));
             }
         };
     });
