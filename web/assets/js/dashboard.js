@@ -27,7 +27,30 @@ window.AppEvents.on(EVENTS.LLM_PROVIDER_CHANGED, (data) => {
         else pill.classList.remove('active');
     });
 });
-window.updateIframe = updateIframe;
+
+window.AppEvents.on(EVENTS.NOTIFICATION, (data) => {
+    showToast(data.message, data.type || 'info');
+});
+
+// --- Toast System ---
+function showToast(message, type = 'info') {
+    let container = document.getElementById('toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        document.body.appendChild(container);
+    }
+
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+    container.appendChild(toast);
+
+    setTimeout(() => {
+        toast.classList.add('fade-out');
+        setTimeout(() => toast.remove(), 300);
+    }, 4000);
+}
 
 // --- Dashboard Logic ---
 
@@ -863,9 +886,11 @@ function attachEventListeners() {
 
             await api.generateApplication(ingestRes.job_id, state.selectedLlmProvider, options);
             emit(EVENTS.GEN_COMPLETED, { jobId: ingestRes.job_id });
+            emit(EVENTS.NOTIFICATION, { message: 'Application générée avec succès !', type: 'success' });
             
         } catch (e) {
             emit(EVENTS.GEN_FAILED, { message: e.message });
+            emit(EVENTS.NOTIFICATION, { message: 'Erreur: ' + e.message, type: 'error' });
         }
     });
 
