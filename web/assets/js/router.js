@@ -21,12 +21,16 @@ export function switchView(viewName) {
     if (!views[viewName]) return;
 
     Object.values(views).forEach(v => {
-        v.classList.remove('active');
-        v.scrollTop = 0;
+        if (v) {
+            v.classList.remove('active');
+            v.scrollTop = 0;
+        }
     });
 
-    views[viewName].classList.add('active');
-    views[viewName].scrollTop = 0;
+    if (views[viewName]) {
+        views[viewName].classList.add('active');
+        views[viewName].scrollTop = 0;
+    }
 
     document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
     

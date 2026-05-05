@@ -1,3 +1,4 @@
+console.log("[EventBus] Module Loading...");
 /**
  * RecruitAI - Unified Event Bus
  * Centralizes application events to decouple frontend modules.

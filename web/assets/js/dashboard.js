@@ -1,3 +1,4 @@
+console.log("[Dashboard] Module Loading...");
 import * as state from './state.js';
 import * as api from './api.js';
 import * as ui from './ui.js';
@@ -5,7 +6,7 @@ import { clear } from './dom.js';
 import * as router from './router.js';
 import * as iframeRender from './render/iframe.js';
 import * as offerRender from './render/offers.js';
-import { EVENTS, emit } from './modules/events.js';
+import { EVENTS, emit, on } from './modules/events.js';
 
 // --- Expose State & Utils for legacy scripts (chat.js) ---
 window.state = {
@@ -15,12 +16,12 @@ window.state = {
 };
 
 // --- Event Subscriptions ---
-window.AppEvents.on(EVENTS.OFFER_SELECTED, () => {
+on(EVENTS.OFFER_SELECTED, () => {
     loadOffers();
     updateIframe();
 });
 
-window.AppEvents.on(EVENTS.LLM_PROVIDER_CHANGED, (data) => {
+on(EVENTS.LLM_PROVIDER_CHANGED, (data) => {
     // Sync all LLM selectors in the DOM
     document.querySelectorAll('.llm-pill[data-provider]').forEach(pill => {
         if (pill.dataset.provider === data.provider) pill.classList.add('active');
@@ -28,7 +29,7 @@ window.AppEvents.on(EVENTS.LLM_PROVIDER_CHANGED, (data) => {
     });
 });
 
-window.AppEvents.on(EVENTS.NOTIFICATION, (data) => {
+on(EVENTS.NOTIFICATION, (data) => {
     showToast(data.message, data.type || 'info');
 });
 
@@ -660,14 +661,20 @@ function renderAiChatAttachments() {
 // --- Init & Listeners ---
 
 async function init() {
+    console.log("[Dashboard] Initializing...");
     // Attach Listeners first so they are ready for programmatic calls (like router.handleRouting)
     attachEventListeners();
 
-    await state.loadI18n();
-    await loadProfile();
-    await loadOffers();
-    await router.handleRouting();
-    renderAiChatAttachments();
+    try {
+        await state.loadI18n();
+        await loadProfile();
+        await loadOffers();
+        await router.handleRouting();
+        renderAiChatAttachments();
+        console.log("[Dashboard] Initialization Complete.");
+    } catch (e) {
+        console.error("[Dashboard] Initialization Failed", e);
+    }
 }
 
 function attachEventListeners() {
@@ -815,7 +822,7 @@ function attachEventListeners() {
     setupSelector('deliv-selector-ingest');
 
     // Listeners for Generation UI
-    window.AppEvents.on(EVENTS.GEN_STARTED, () => {
+    on(EVENTS.GEN_STARTED, () => {
         const btn = document.getElementById('btn-ingest-run');
         if (btn) {
             btn.disabled = true;
@@ -824,7 +831,7 @@ function attachEventListeners() {
         }
     });
 
-    window.AppEvents.on(EVENTS.GEN_COMPLETED, () => {
+    on(EVENTS.GEN_COMPLETED, () => {
         const btn = document.getElementById('btn-ingest-run');
         if (btn) {
             btn.disabled = false;
@@ -835,7 +842,7 @@ function attachEventListeners() {
         updateIframe();
     });
 
-    window.AppEvents.on(EVENTS.GEN_FAILED, (data) => {
+    on(EVENTS.GEN_FAILED, (data) => {
         const btn = document.getElementById('btn-ingest-run');
         if (btn) {
             btn.disabled = false;
