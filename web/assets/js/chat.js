@@ -3,6 +3,7 @@ import { EVENTS, on } from './modules/events.js';
 
 let pendingAttachments = [];
 let currentActiveJobId = null;
+let currentLlmProvider = localStorage.getItem('recruitai_llm') || 'ollama';
 
 function updateAttachmentsUI() {
     const container = document.getElementById('ai-chat-attachments');
@@ -165,7 +166,7 @@ async function sendChatMessage() {
             body: JSON.stringify({
                 message,
                 instance_id,
-                llm_provider: window.state?.selectedLlmProvider || localStorage.getItem('recruitai_llm') || 'ollama',
+                llm_provider: currentLlmProvider,
                 attachments: pendingAttachments.map(a => ({
                     name: a.name,
                     content_type: a.type,
@@ -300,6 +301,10 @@ if (document.readyState === 'loading') {
 on(EVENTS.OFFER_SELECTED, (data) => {
     currentActiveJobId = data.jobId;
     loadChatHistory();
+});
+
+on(EVENTS.LLM_PROVIDER_CHANGED, (data) => {
+    currentLlmProvider = data.provider;
 });
 
 on(EVENTS.INGEST_COMPLETED, () => {

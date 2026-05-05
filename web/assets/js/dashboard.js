@@ -9,7 +9,6 @@ import { EVENTS, emit } from './modules/events.js';
 
 // --- Expose State & Utils for legacy scripts (chat.js) ---
 window.state = {
-    get selectedLlmProvider() { return state.selectedLlmProvider; },
     get activeTab() { return state.activeTab; },
     setSelectedLlmProvider: state.setSelectedLlmProvider,
     setActiveTab: state.setActiveTab
@@ -19,6 +18,14 @@ window.state = {
 window.AppEvents.on(EVENTS.OFFER_SELECTED, () => {
     loadOffers();
     updateIframe();
+});
+
+window.AppEvents.on(EVENTS.LLM_PROVIDER_CHANGED, (data) => {
+    // Sync all LLM selectors in the DOM
+    document.querySelectorAll('.llm-pill[data-provider]').forEach(pill => {
+        if (pill.dataset.provider === data.provider) pill.classList.add('active');
+        else pill.classList.remove('active');
+    });
 });
 window.updateIframe = updateIframe;
 
@@ -899,9 +906,8 @@ function setupSelector(containerId) {
         // 2. Click Handler
         pill.onclick = () => {
             if (prov) {
-                container.querySelectorAll('.llm-pill').forEach(p => p.classList.remove('active'));
-                pill.classList.add('active');
                 state.setSelectedLlmProvider(prov);
+                emit(EVENTS.LLM_PROVIDER_CHANGED, { provider: prov });
             } else if (deliv) {
                 pill.classList.toggle('active');
                 state.setDelivConfig(deliv, pill.classList.contains('active'));
