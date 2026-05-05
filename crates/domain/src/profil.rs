@@ -45,57 +45,85 @@ pub struct ProfilContent {
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]
 pub struct ProfileSection {
+    #[serde(default)]
     pub firstname: String,
+    #[serde(default)]
     pub lastname: String,
+    #[serde(default)]
     pub title: String,
+    #[serde(default)]
     pub offer_type: String,
+    #[serde(default)]
     pub pitch: String,
+    #[serde(default)]
     pub location: String,
+    #[serde(default)]
     pub phone: String,
+    #[serde(default)]
     pub email: String,
+    #[serde(default)]
     pub linkedin: String,
+    #[serde(default)]
     pub website: String,
+    #[serde(default)]
     pub github: String,
+    #[serde(default)]
     pub image: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]
 pub struct ApprenticeshipSection {
+    #[serde(default)]
     pub duration: String,
+    #[serde(default)]
     pub rhythm: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]
 pub struct ExperienceEntry {
+    #[serde(default)]
     pub role: String,
+    #[serde(default)]
     pub company: String,
+    #[serde(default)]
     pub period: String,
+    #[serde(default)]
     pub description: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]
 pub struct EducationEntry {
+    #[serde(default)]
     pub school: String,
+    #[serde(default)]
     pub degree: String,
+    #[serde(default)]
     pub period: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]
 pub struct SkillCategoryEntry {
+    #[serde(default)]
     pub category: String,
+    #[serde(default)]
     pub items: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]
 pub struct LanguageEntry {
+    #[serde(default)]
     pub name: String,
+    #[serde(default)]
     pub level: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]
 pub struct DocumentSection {
+    #[serde(default)]
     pub resume_template: Option<Json>,
+    #[serde(default)]
     pub cover_letter_template: Option<Json>,
+    #[serde(default)]
     pub apprenticeship_calendar: Option<Json>,
 }
 

@@ -365,31 +365,11 @@ export function createAnnexeRow(item = {}) {
     const right = document.createElement('div');
     right.style.cssText = 'display:flex; gap:6px; align-items:center;';
 
-    const viewBtn = document.createElement('button');
-    viewBtn.type = 'button';
-    viewBtn.className = 'annexe-view-btn';
-    viewBtn.title = 'Aperçu';
-    viewBtn.style.cssText = `background:transparent; border:none; color:var(--muted-strong); cursor:pointer; padding:6px; border-radius:50%; display:${hasFile ? 'flex' : 'none'}; align-items:center; justify-content:center; transition: all 0.2s;`;
-
-    const uploadBtn = document.createElement('button');
-    uploadBtn.type = 'button';
-    uploadBtn.className = 'annexe-upload-btn';
-    uploadBtn.textContent = 'Joindre';
-    uploadBtn.style.cssText = `background:transparent; border:1px dashed var(--hairline); color:var(--muted-strong); cursor:pointer; padding:4px 10px; border-radius:6px; font-size:11px; display:${hasFile ? 'none' : 'block'}; transition: all 0.2s;`;
-
     const removeBtn = document.createElement('button');
     removeBtn.type = 'button';
     removeBtn.className = 'annexe-remove-btn';
     removeBtn.textContent = '×';
     removeBtn.style.cssText = 'background:transparent; border:none; color:var(--muted-strong); cursor:pointer; padding:6px; border-radius:50%; font-size:18px; line-height:1; display:flex; align-items:center; justify-content:center; transition: all 0.2s;';
-
-    const previewContainer = document.createElement('div');
-    previewContainer.className = 'annexe-preview-container';
-    previewContainer.style.cssText = 'display:none; border-top:1px solid var(--hairline); background:white;';
-
-    const preview = document.createElement('iframe');
-    preview.className = 'annexe-preview';
-    preview.style.cssText = 'width:100%; height:500px; border:none; display:block;';
 
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
@@ -398,61 +378,55 @@ export function createAnnexeRow(item = {}) {
 
     left.appendChild(iconWrap);
     left.appendChild(nameInput);
-    right.appendChild(viewBtn);
-    right.appendChild(uploadBtn);
     right.appendChild(removeBtn);
     header.appendChild(left);
     header.appendChild(right);
-    previewContainer.appendChild(preview);
     div.appendChild(header);
-    div.appendChild(previewContainer);
     div.appendChild(fileInput);
 
-    // Hover effects discrets
-    [viewBtn, removeBtn].forEach(btn => {
-        btn.onmouseover = () => { 
-            btn.style.color = 'var(--primary)';
-        };
-        btn.onmouseout = () => { 
-            btn.style.color = 'var(--muted-strong)';
-        };
-    });
-    
-    uploadBtn.onmouseover = () => {
-        uploadBtn.style.background = 'rgba(0,0,0,0.04)';
-        uploadBtn.style.borderColor = 'var(--primary)';
-        uploadBtn.style.color = 'var(--primary)';
+    iconWrap.style.cursor = 'pointer';
+    iconWrap.onclick = () => fileInput.click();
+    iconWrap.title = 'Changer le fichier';
+    iconWrap.onmouseover = () => { iconWrap.style.color = 'var(--primary)'; };
+    iconWrap.onmouseout = () => { 
+        iconWrap.style.color = hasFile ? 'var(--primary)' : 'var(--muted-strong)'; 
     };
-    uploadBtn.onmouseout = () => {
-        uploadBtn.style.background = 'transparent';
-        uploadBtn.style.borderColor = 'var(--hairline)';
-        uploadBtn.style.color = 'var(--muted-strong)';
-    };
-    
-    if (downloadUrl) {
-        preview.src = downloadUrl;
+
+    // Action d'upload sur l'icône si pas de fichier
+    if (!hasFile) {
+        iconWrap.style.opacity = '0.5';
     }
-    
-    viewBtn.onclick = (e) => {
-        e.stopPropagation();
-        const isHidden = previewContainer.style.display === 'none';
-        previewContainer.style.display = isHidden ? 'block' : 'none';
-        viewBtn.replaceChildren(isHidden ? createIconSvg([
-            'M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774',
-            'M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88'
-        ]) : createIconSvg([
-            'M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z',
-            'M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z'
-        ]));
-        viewBtn.style.color = isHidden ? 'var(--primary)' : 'var(--muted-strong)';
-        
-        // Lazy load for remote files
-        if (isHidden && div.dataset.fileId && !preview.src.includes('/api/')) {
-            preview.src = `/api/profile/active/annexes/${div.dataset.fileId}`;
+
+    // Hover effect sur removeBtn
+    removeBtn.onmouseover = () => { removeBtn.style.color = 'var(--primary)'; };
+    removeBtn.onmouseout = () => { removeBtn.style.color = 'var(--muted-strong)'; };
+    const openPreview = (e) => {
+        if (e) e.stopPropagation();
+        if (!hasFile && !div.dataset.fileData) {
+            fileInput.click();
+            return;
+        }
+        const modal = document.getElementById('preview-modal');
+        const iframe = document.getElementById('preview-modal-iframe');
+        const title = document.getElementById('preview-modal-title');
+        if (modal && iframe) {
+            const url = id ? `/api/profile/active/annexes/${id}` : div.dataset.fileData;
+            iframe.src = url;
+            if (title) title.innerText = nameInput.value || label;
+            modal.style.display = 'flex';
+        }
+    };
+
+    iconWrap.onclick = openPreview;
+    nameInput.style.cursor = 'pointer';
+    nameInput.onmouseover = () => { nameInput.style.color = 'var(--primary)'; };
+    nameInput.onmouseout = () => { nameInput.style.color = 'var(--heading)'; };
+    nameInput.onclick = (e) => {
+        if (hasFile || div.dataset.fileData) {
+            openPreview(e);
         }
     };
     
-    uploadBtn.onclick = () => fileInput.click();
     
     removeBtn.onclick = async () => {
         if (div.dataset.fileId) {
@@ -480,15 +454,7 @@ export function createAnnexeRow(item = {}) {
                 nameInput.value = rawName.charAt(0).toUpperCase() + rawName.slice(1);
             }
             
-            preview.src = dataUrl;
             viewBtn.style.display = 'flex';
-            uploadBtn.style.display = 'none';
-            
-            previewContainer.style.display = 'block';
-            viewBtn.replaceChildren(createIconSvg([
-                'M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774',
-                'M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88'
-            ]));
             viewBtn.style.color = 'var(--primary)';
         } catch (err) {
             console.error("Annexe load failed", err);

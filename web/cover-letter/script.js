@@ -80,80 +80,49 @@ function renderEmptyCoverLetterState(jobId) {
 }
 
 function renderTemplateCoverLetter(data) {
-  const { profile, letter } = data;
+  setText("author-name", data.expediteur.identite.nom_complet);
+  setText("author-address", data.expediteur.contact.localisation);
+  setText("author-phone", data.expediteur.contact.telephone);
+  setText("author-email", data.expediteur.contact.email);
 
-  setText("author-name", profile.name);
-  setText("author-address", profile.address);
-  setText("author-phone", profile.phone);
-  setText("author-email", profile.email);
+  setLink("author-linkedin", data.expediteur.contact.linkedin);
+  setLink("author-github", data.expediteur.contact.github);
+  setLink("author-website", data.expediteur.contact.site_web);
 
-  setLink("author-linkedin", profile.links?.linkedin);
-  setLink("author-github", profile.links?.github);
-  setLink("author-website", profile.links?.website);
+  setText("letter-company", data.destinataire.entreprise);
+  setText("letter-date", data.destinataire.date);
 
-  // Set Labels
-  if (letter.labels) {
-    setText("author-linkedin", letter.labels.linkedin);
-    setText("author-github", letter.labels.github);
-    setText("author-website", letter.labels.website);
-
-    const downloadBtn = document.getElementById("download-pdf");
-    if (downloadBtn) {
-      const span = downloadBtn.querySelector("span") || downloadBtn;
-      // If we want to preserve icons, we should be careful. 
-      // But index.html current structure doesn't have a span.
-      // Let's just update the text and preserve icon if we find it.
-      const icon = downloadBtn.querySelector("i");
-      downloadBtn.textContent = "";
-      if (icon) downloadBtn.appendChild(icon);
-      downloadBtn.appendChild(document.createTextNode(" " + letter.labels.download));
-    }
-  }
-
-  setText("letter-company", letter.company);
-  setText("letter-date", letter.date);
-
-  // Bold only the specific keyword part of the subject
-  const boldKeyword = letter.boldKeyword || "ALTERNANCE";
-  const subjectRegex = new RegExp(`^\\s*(${boldKeyword})`, 'i');
-  const subjectMatch = letter.subject.match(subjectRegex);
   const subjectEl = document.getElementById("letter-subject");
   if (subjectEl) {
     subjectEl.replaceChildren();
-    if (subjectMatch) {
-      const strong = document.createElement('strong');
-      strong.textContent = subjectMatch[1];
-      subjectEl.appendChild(strong);
-      subjectEl.appendChild(document.createTextNode(letter.subject.slice(subjectMatch[0].length)));
-    } else {
-      subjectEl.textContent = letter.subject;
-    }
+    const strong = document.createElement('strong');
+    strong.textContent = data.objet.categorie + " — ";
+    subjectEl.appendChild(strong);
+    subjectEl.appendChild(document.createTextNode(data.objet.libelle));
   }
 
-  setText("letter-greeting", letter.greeting);
-  setPitchBlock(letter);
+  const salutationPara = data.paragraphes.find(p => p.role === 'salutation');
+  setText("letter-greeting", salutationPara ? salutationPara.contenu : "");
 
   const paragraphsContainer = document.getElementById("letter-paragraphs");
   if (paragraphsContainer) {
     clear(paragraphsContainer);
-    (letter.paragraphs || []).forEach((text) => {
-      paragraphsContainer.appendChild(el('p', { className: 'paragraph', text }));
-    });
+    data.paragraphes
+      .filter(p => !['salutation', 'cloture'].includes(p.role))
+      .forEach((p) => {
+        paragraphsContainer.appendChild(el('p', { className: 'paragraph', text: p.contenu }));
+      });
   }
 
-  setText("letter-closing", letter.closing);
+  const cloturePara = data.paragraphes.find(p => p.role === 'cloture');
+  setText("letter-closing", cloturePara ? cloturePara.contenu : "");
 
   const signatureEl = document.getElementById("letter-signature");
-  if (signatureEl && letter.signature) {
+  if (signatureEl) {
     signatureEl.replaceChildren();
-    letter.signature
-      .split("\n")
-      .map((line) => line.trim())
-      .filter(Boolean)
-      .forEach((line, index) => {
-        if (index > 0) signatureEl.appendChild(document.createElement('br'));
-        signatureEl.appendChild(document.createTextNode(line));
-      });
+    signatureEl.appendChild(document.createTextNode(data.signature.formule_politesse));
+    signatureEl.appendChild(document.createElement('br'));
+    signatureEl.appendChild(document.createTextNode(data.signature.nom));
   }
 
   if (window.lucide?.createIcons) {
@@ -239,20 +208,24 @@ function applyPreviewScale() {
   page.style.top = "0px";
 
   requestAnimationFrame(() => {
-    const availableWidth = window.innerWidth - 32;
-    const availableHeight = window.innerHeight - 32;
+    const availableWidth = window.innerWidth - 40;
+    const availableHeight = window.innerHeight - 40;
     const pageWidth = page.offsetWidth;
     const pageHeight = page.offsetHeight;
+    
+    // Calcul identique pour un rendu uniforme
     const scale = Math.min(1, availableWidth / pageWidth, availableHeight / pageHeight);
     const scaledWidth = pageWidth * scale;
     const scaledHeight = pageHeight * scale;
-    const offsetX = Math.max(0, (availableWidth - scaledWidth) / 2);
-    const offsetY = 16;
+    
+    const offsetX = Math.max(0, (availableWidth - scaledWidth) / 2) + 20;
+    const offsetY = 20;
 
+    page.style.transformOrigin = "top left";
     page.style.transform = `scale(${scale})`;
     page.style.left = `${offsetX}px`;
     page.style.top = `${offsetY}px`;
-    stage.style.height = `${window.innerHeight}px`;
+    if (stage) stage.style.height = `${window.innerHeight}px`;
   });
 }
 

@@ -80,107 +80,84 @@ function renderEmptyResumeState(jobId) {
 }
 
 function renderTemplateResume(data) {
-
-    // Profile Basic
-    document.getElementById('name').textContent = data.profile.name;
-    document.getElementById('title').textContent = data.profile.title;
-    document.getElementById('pitch').textContent = data.profile.pitch;
-    document.getElementById('profile-img').src = data.profile.image;
-
-    // Sidebar Contact
-    document.getElementById('location').textContent = data.profile.location;
-    document.getElementById('contact-title').textContent = data.labels.contact;
-    document.getElementById('skills-title').textContent = data.labels.skills;
-    document.getElementById('languages-title').textContent = data.labels.languages;
-    document.getElementById('experiences-title').textContent = data.labels.experiences;
-    if (document.getElementById('projects-title')) document.getElementById('projects-title').textContent = data.labels.projects || "PROJETS";
-    document.getElementById('education-title').textContent = data.labels.education;
-    document.getElementById('email').textContent = data.profile.email;
-    document.getElementById('phone').textContent = data.profile.phone;
-
-    // Links (Data only for href)
-    safeSetHref('website-link', "https://" + data.profile.website);
-    safeSetHref('linkedin-link', "https://www.linkedin.com/" + data.profile.linkedin);
-    safeSetHref('github-link', "https://" + data.profile.github);
-
-    // Labels Overwrite
-    if (data.labels) {
-        const labelMap = {
-            'duration-label': 'duration',
-            'rhythm-label': 'rhythm',
-            'contact-title': 'contact',
-            'skills-title': 'skills',
-            'languages-title': 'languages',
-            'experiences-title': 'experiences',
-            'education-title': 'education',
-            'website': 'website',
-            'linkedin': 'linkedin',
-            'github': 'github'
-        };
-        Object.entries(labelMap).forEach(([id, key]) => {
-            const el = document.getElementById(id);
-            if (el) el.textContent = data.labels[key];
-        });
-
-        const downloadBtn = document.getElementById('download-pdf');
-        if (downloadBtn && data.labels.download) {
-            const icon = downloadBtn.querySelector('i');
-            downloadBtn.textContent = '';
-            if (icon) downloadBtn.appendChild(icon);
-            downloadBtn.appendChild(document.createTextNode(' ' + data.labels.download));
-        }
+    if (!data || !data.identite) {
+        console.error("Données de CV invalides ou incomplètes", data);
+        return;
     }
 
+    // Profile Basic
+    document.getElementById('name').textContent = data.identite.nom_complet || "";
+    document.getElementById('title').textContent = data.accroche.titre || "";
+    document.getElementById('pitch').textContent = data.accroche.paragraphe || "";
+    
+    const profileImg = document.getElementById('profile-img');
+    if (profileImg) {
+        profileImg.src = data.identite.photo_url || 'assets/profile-picture.jpg';
+    }
+
+    // Sidebar Contact
+    const setT = (id, val) => { const e = document.getElementById(id); if(e) e.textContent = val || ""; };
+    setT('location', data.contact.localisation);
+    setT('email', data.contact.email);
+    setT('phone', data.contact.telephone);
+
+    // Links
+    safeSetHref('website-link', data.contact.site_web ? "https://" + data.contact.site_web : "#");
+    safeSetHref('linkedin-link', data.contact.linkedin ? "https://www.linkedin.com/in/" + data.contact.linkedin : "#");
+    safeSetHref('github-link', data.contact.github ? "https://github.com/" + data.contact.github : "#");
+
     // Header Meta
-    document.getElementById('duration').textContent = data.apprenticeship.duration + ' — à partir de ' + data.apprenticeship.start;
-    document.getElementById('rhythm').textContent = data.apprenticeship.rhythm;
+    setT('duration', data.accroche.duree);
+    setT('rhythm', data.accroche.rythme);
 
     // Skills
     const skillsContainer = document.getElementById('skills-container');
-    clear(skillsContainer);
-    (data.skills || []).forEach((cat) => {
-        skillsContainer.appendChild(el('div', { className: 'skill-category' }, [
-            el('h4', { text: cat.category }),
-            el('div', { className: 'skill-items', text: (cat.items || []).join(', ') }),
-        ]));
-    });
+    if (skillsContainer) {
+        clear(skillsContainer);
+        (data.competences || []).forEach((cat) => {
+            skillsContainer.appendChild(el('div', { className: 'skill-category' }, [
+                el('h4', { text: cat.categorie }),
+                el('div', { className: 'skill-items', text: (cat.items || []).join(', ') }),
+            ]));
+        });
+    }
 
     // Languages
     const langContainer = document.getElementById('languages-container');
-    clear(langContainer);
-    (data.languages || []).forEach((lang) => {
-        langContainer.appendChild(el('div', { className: 'contact-item' }, [
-            el('strong', { text: `${lang.name} :` }),
-            text(` ${lang.level}`),
-        ]));
-    });
+    if (langContainer) {
+        clear(langContainer);
+        (data.langues || []).forEach((lang) => {
+            langContainer.appendChild(el('div', { className: 'contact-item' }, [
+                el('strong', { text: `${lang.langue} :` }),
+                text(` ${lang.niveau}`),
+            ]));
+        });
+    }
 
     // Experiences
     const expContainer = document.getElementById('experiences-container');
-    clear(expContainer);
-    (data.experiences || []).forEach(exp => {
-        const title = exp.role || exp.company;
-        const sub = exp.role ? exp.company : "";
-        expContainer.appendChild(createExperienceBlock({
-            title,
-            sub,
-            period: exp.period,
-            description: exp.description || [],
-        }));
-    });
+    if (expContainer) {
+        clear(expContainer);
+        (data.experiences || []).forEach(exp => {
+            expContainer.appendChild(createExperienceBlock({
+                title: exp.poste,
+                sub: exp.entreprise,
+                period: exp.periode,
+                description: exp.bullets || [],
+            }));
+        });
+    }
 
     // Projects
     const projContainer = document.getElementById('projects-container');
     if (projContainer) {
         clear(projContainer);
-        (data.projects || []).forEach(proj => {
-            const title = proj.role || proj.company;
-            const sub = proj.role ? proj.company : "";
+        (data.projets || []).forEach(proj => {
             projContainer.appendChild(createExperienceBlock({
-                title,
-                sub,
-                period: proj.period,
-                description: proj.description || [],
+                title: proj.nom,
+                sub: "",
+                period: proj.periode,
+                description: proj.bullets || [],
                 project: true,
             }));
         });
@@ -188,12 +165,18 @@ function renderTemplateResume(data) {
 
     // Education
     const eduContainer = document.getElementById('education-container');
-    clear(eduContainer);
-    data.education.forEach(edu => {
-        eduContainer.appendChild(createEducationBlock(edu));
-    });
+    if (eduContainer) {
+        clear(eduContainer);
+        (data.formations || []).forEach(edu => {
+            eduContainer.appendChild(el('div', { className: 'edu-item' }, [
+                el('strong', { text: edu.etablissement }),
+                edu.periode ? text(` (${edu.periode})`) : null,
+                el('span', { className: 'degree', text: edu.diplome }),
+            ]));
+        });
+    }
 
-    lucide.createIcons();
+    if (window.lucide) lucide.createIcons();
 }
 
 function createExperienceBlock({ title, sub, period, description, project = false }) {
@@ -240,24 +223,28 @@ function applyPreviewScale() {
     page.style.top = '0px';
 
     requestAnimationFrame(() => {
-        const availableWidth = window.innerWidth - 32;
-        const availableHeight = window.innerHeight - 32;
+        const availableWidth = window.innerWidth - 40;
+        const availableHeight = window.innerHeight - 40;
         const pageWidth = page.offsetWidth;
         const pageHeight = page.offsetHeight;
+        
+        // Calcul identique pour un rendu uniforme
         const scale = Math.min(1, availableWidth / pageWidth, availableHeight / pageHeight);
         const scaledWidth = pageWidth * scale;
         const scaledHeight = pageHeight * scale;
-        const offsetX = Math.max(0, (availableWidth - scaledWidth) / 2);
-        const offsetY = 16;
+        
+        const offsetX = Math.max(0, (availableWidth - scaledWidth) / 2) + 20;
+        const offsetY = 20;
 
+        page.style.transformOrigin = "top left";
         page.style.transform = `scale(${scale})`;
         page.style.left = `${offsetX}px`;
         page.style.top = `${offsetY}px`;
-        stage.style.height = `${window.innerHeight}px`;
+        if (stage) stage.style.height = `${window.innerHeight}px`;
     });
 }
 
-document.getElementById('download-pdf').addEventListener('click', () => window.print());
+// document.getElementById('download-pdf').addEventListener('click', () => window.print());
 window.addEventListener('DOMContentLoaded', () => {
     if (window.self !== window.top) {
         document.body.classList.add('is-framed');

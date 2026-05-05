@@ -1,15 +1,15 @@
 :root {
     --primary: #0052ff;
     --primary-active: #003ecc;
-    --ink: #0a0b0d;
-    --body: #5b616e;
-    --muted: #7c828a;
+    --ink: #1f2937;
+    --body: #6b7280;
+    --muted: #9ca3af;
     --muted-strong: #6b7280;
     --canvas: #ffffff;
-    --surface-soft: #f8fafd;
-    --surface-strong: #eef4fb;
-    --hairline: #d9e3f0;
-    --heading: #1e293b;
+    --surface-soft: #f9fafb;
+    --surface-strong: #f3f4f6;
+    --hairline: #e5e7eb;
+    --heading: #4b5563;
     --soft-blue: #eff6ff;
     --mono: 'JetBrains Mono', ui-monospace, monospace;
     
@@ -102,7 +102,7 @@ body {
 }
 .nav-link svg { width: 18px; height: 18px; stroke-width: 1.5; }
 .nav-link:hover { color: var(--ink); }
-.nav-link.active { color: var(--primary); border-bottom-color: var(--primary); }
+.nav-link.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: 700; }
 .lang-toggle {
     padding: 4px 8px;
     border: none;
@@ -154,17 +154,18 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
+    transition: color 0.2s;
 }
-.muted-remove-btn:hover { color: var(--ink); }
+.muted-remove-btn:hover { color: var(--primary); }
 
 .llm-pill {
-    padding: 4px 10px;
-    font-size: 11px;
+    padding: 6px 12px;
+    font-size: 11.5px;
     font-weight: 600;
     border: none;
     background: transparent;
     color: var(--muted);
-    border-radius: 6px;
+    border-radius: 8px;
     cursor: pointer;
     transition: all 0.2s;
 }
@@ -173,8 +174,9 @@ body {
 }
 .llm-pill.active {
     color: var(--primary);
-    font-weight: 700;
+    font-weight: 800;
     background: transparent;
+    border: none;
     box-shadow: none;
 }
 .selector-container {
@@ -218,6 +220,10 @@ body {
     align-items: center;
     gap: 8px;
 }
+.profile-section-title svg {
+    color: var(--primary);
+    flex-shrink: 0;
+}
 .profile-field-label {
     display: block;
     font-size: 13px;
@@ -229,7 +235,7 @@ body {
 .profile-inline-add {
     padding: 4px 8px;
     font-size: 13px;
-    color: var(--primary);
+    color: var(--muted-strong); /* Grey by default */
     border: none;
     background: none;
     font-weight: 600;
@@ -238,13 +244,14 @@ body {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    transition: background 0.2s;
+    transition: all 0.2s;
 }
 .profile-inline-add:hover {
-    background: var(--soft-blue);
+    color: var(--primary);
+    background: transparent;
 }
 .profile-inline-add.text-only {
-    color: var(--ink);
+    color: var(--muted-strong);
     background: transparent;
     padding: 0;
     border-radius: 0;
@@ -269,11 +276,11 @@ body {
 }
 .doc-section-title {
     font-size: 11px;
-    font-weight: 700;
+    font-weight: 800;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--muted);
-    margin: 0 0 6px;
+    letter-spacing: 0.1em;
+    color: var(--muted-strong);
+    margin: 0 0 10px;
 }
 .doc-section-help {
     font-size: 12px;
@@ -308,10 +315,27 @@ body {
     outline: none;
     background: transparent;
 }
+.skill-pill {
+    background: var(--soft-blue);
+    color: var(--primary);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border: none;
+}
 .skill-pill-remove {
     cursor: pointer;
-    opacity: 0.6;
+    opacity: 0.7;
     color: var(--muted-strong);
+    transition: all 0.2s;
+}
+.skill-pill-remove:hover {
+    opacity: 1;
+    color: var(--primary);
 }
 
 /* --- INGESTION --- */
@@ -327,108 +351,182 @@ textarea:focus { border-color: var(--primary); }
 .option-item span { font-size: 0.875rem; font-weight: 500; color: var(--body); }
 
 /* --- APPLICATIONS --- */
-.sidebar-left { width: var(--sidebar-width); border-right: 1px solid var(--hairline); display: flex; flex-direction: column; background: var(--canvas); }
-.sidebar-header { padding: 24px 24px 12px; border-bottom: none; }
-.sidebar-header h2 { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin: 0; }
-.offers-list { flex: 1; overflow-y: auto; padding: 12px; }
-.offer-card { padding: 16px; border-radius: var(--rounded-lg); cursor: pointer; transition: all 0.2s; border: 1px solid transparent; margin-bottom: 4px; box-shadow: none !important; color: var(--muted-strong); }
-.offer-card:hover { background: var(--surface-soft); }
-.offer-card.active { background: white !important; border: 1px solid transparent !important; box-shadow: none !important; color: var(--ink); }
-.offer-card.archive-muted { color: var(--muted); opacity: 0.72; }
-.offer-card h4 { margin: 0 0 4px; font-size: 0.9375rem; font-weight: 600; }
-.offer-card p { margin: 0; font-size: 0.8125rem; color: inherit; }
-.offer-card-inner {
+/* --- APPLICATIONS SIDEBAR --- */
+.sidebar-left { 
+    width: var(--sidebar-width); 
+    border-right: 1px solid var(--hairline); 
+    display: flex; 
+    flex-direction: column; 
+    background: var(--canvas); 
+}
+
+/* Section Headers (Unifying Inbox, Categories, Archive) */
+.sidebar-section-header {
     display: flex;
-    align-items: flex-start;
-    gap: 10px;
-}
-.offer-actions-slot {
-    display: inline-flex;
     align-items: center;
-    gap: 8px;
-    flex: 0 0 auto;
+    padding: 12px 24px 8px; /* Reduced vertical padding */
+    margin: 16px 0 0; /* Reduced top margin */
+    user-select: none;
+    border-top: 1px solid transparent;
 }
-.offer-action-visibility {
-    opacity: 0;
-    transition: opacity 0.15s ease;
+.sidebar-section-header.with-border {
+    border-top-color: var(--hairline);
+    margin-top: 24px;
 }
-.offer-card:hover .offer-action-visibility,
-.old-offer-item:hover .offer-action-visibility,
-.offer-action-visibility.is-active {
-    opacity: 1;
+.sidebar-section-title {
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted-strong); /* Lighter grey */
+    line-height: 1.4;
 }
-.offer-action-btn {
-    border: none;
-    background: transparent;
-    padding: 0;
+.sidebar-section-badge {
+    font-size: 9px;
+    font-weight: 600;
+    background: var(--surface-soft);
     color: var(--muted);
+    padding: 2px 6px;
+    border-radius: 10px;
+    margin-left: 8px;
+}
+
+/* Category Toggle Headers */
+.offer-group-header {
     cursor: pointer;
-    display: inline-flex;
+    transition: background 0.2s, border-radius 0.2s;
+    border-radius: 12px;
+}
+.offer-group-header:hover {
+    background: var(--surface-soft);
+}
+.offer-group-toggle {
+    display: flex;
     align-items: center;
-    justify-content: center;
+    width: 100%;
 }
-.offer-action-btn:hover {
-    color: var(--ink);
+
+/* Offer Cards (Minimalist Style) */
+.offers-list { flex: 1; overflow-y: auto; padding: 12px 0; }
+
+.offer-card {
+    padding: 10px 24px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    background: transparent;
+    border: none;
+    margin: 0;
+    color: var(--body);
+    position: relative;
 }
-.offer-action-btn svg {
-    width: 14px;
-    height: 14px;
+
+.offer-card.active {
+    background: var(--surface-strong) !important; /* Slightly more visible with the lighter theme */
+    border: none !important;
+    box-shadow: none !important;
 }
-.offer-action-btn.is-active {
-    color: var(--ink);
-}
-.offer-card.is-archived .offer-card-text {
-    color: var(--muted);
-    text-decoration: line-through;
-}
-.offer-card-text {
-    min-width: 0;
-    flex: 1;
-}
+
 .offer-title {
     font-weight: 600;
-    font-size: 12px;
-    color: var(--muted-strong);
+    font-size: 13.5px;
+    color: var(--body); /* Lighter grey */
+    line-height: 1.4;
     transition: color 0.15s ease;
 }
+
+/* Hover effect: Only title color changes */
+.offer-card:hover .offer-title {
+    color: var(--ink); /* Even darker grey on hover */
+}
+
+.offer-card.active .offer-title {
+    color: var(--ink);
+    font-weight: 700;
+}
+
 .offer-company {
     font-size: 11px;
     color: var(--muted);
-    margin-top: 2px;
-    transition: color 0.15s ease;
+    margin-top: 1px;
 }
-.offer-card:hover .offer-title,
-.offer-card.active .offer-title {
-    color: var(--primary);
+
+/* Card Actions (Muted) */
+.offer-actions-slot {
+    display: flex;
+    gap: 6px;
+    margin-left: auto;
 }
-.offer-card.active .offer-company {
-    color: var(--body);
-}
-.old-offer-item {
-    padding: 8px 0;
+
+.offer-action-btn {
     border: none;
-    border-radius: 0;
     background: transparent;
-    text-align: left;
+    padding: 2px;
     color: var(--muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    opacity: 0; /* Hidden by default */
+    transition: opacity 0.2s, color 0.2s;
 }
-.old-offer-item:hover .old-offer-title {
-    color: var(--primary);
+
+/* Show all icons on hover */
+.offer-card:hover .offer-action-btn {
+    opacity: 1;
+}
+
+/* Exception: Locked icon is always visible when active */
+.offer-action-btn.is-active[data-action="lock"] {
+    opacity: 1 !important;
+    color: var(--heading);
+}
+
+/* Keep archived icon visible too if it's the 'active' one? 
+   User specifically said "cadena actif", so I'll stick to lock. */
+
+.offer-action-btn:hover {
+    color: var(--heading);
+}
+.offer-action-icon {
+    width: 14px;
+    height: 14px;
+}
+.offer-action-icon.is-active {
+    stroke-width: 2.5;
+}
+
+/* Dashboard List Items (Used in the 'Home' view) */
+.old-offer-item {
+    padding: 12px 16px;
+    border-radius: 12px;
+    transition: background 0.2s;
+    cursor: pointer;
+}
+.old-offer-item:hover {
+    background: var(--surface-soft);
 }
 .old-offer-row {
     display: flex;
+    justify-content: space-between;
     align-items: flex-start;
-    gap: 10px;
+    gap: 12px;
 }
 .old-offer-text {
-    min-width: 0;
     flex: 1;
+    min-width: 0;
 }
 .old-offer-title {
-    font-size: 12px;
+    font-size: 13.5px;
     font-weight: 600;
     color: var(--heading);
-    transition: color 0.15s ease;
+    transition: color 0.15s;
+}
+.old-offer-item:hover .old-offer-title {
+    color: var(--ink);
 }
 .old-offer-company {
     font-size: 11px;
@@ -436,63 +534,27 @@ textarea:focus { border-color: var(--primary); }
     margin-top: 2px;
 }
 .old-offer-actions {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+}
+.offer-action-visibility {
     display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    flex: 0 0 auto;
+}
+/* Hover logic for icons in dashboard items */
+.old-offer-item .offer-action-btn {
     opacity: 0;
-    transition: opacity 0.15s ease;
+    transition: opacity 0.2s, color 0.2s;
 }
-.old-offer-item:hover .old-offer-actions {
+.old-offer-item:hover .offer-action-btn {
     opacity: 1;
-}
-.old-offer-header {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 11px;
-    font-weight: 800;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 12px;
-}
-.old-offer-header svg {
-    width: 16px;
-    height: 16px;
-}
-.offer-group-header {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 16px 16px 8px;
-    margin-top: 8px;
-    font-size: 10px;
-    font-weight: 800;
-    color: var(--muted-strong);
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    cursor: pointer;
-    user-select: none;
-}
-.offer-group-toggle {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 16px;
-    height: 16px;
-    color: var(--muted);
-}
-.offer-group-toggle svg {
-    width: 16px;
-    height: 16px;
 }
 
 .content-main { flex: 1; background: #ffffff; display: flex; flex-direction: column; }
 .tabs-bar { height: 64px; background: var(--canvas); border-bottom: 1px solid var(--hairline); display: flex; justify-content: space-between; padding: 0 24px 0 32px; }
 .tabs-links { display: flex; gap: 32px; height: 100%; }
 .tab { height: 100%; display: flex; align-items: center; font-size: 0.875rem; font-weight: 500; color: var(--body); cursor: pointer; border-bottom: 2px solid transparent; }
-.tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+.tab.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: 700; }
 .sidebar-right {
     width: var(--sidebar-width);
     border-left: 1px solid var(--hairline);
@@ -641,7 +703,7 @@ textarea:focus { border-color: var(--primary); }
     box-shadow: none;
 }
 .ai-send-btn:disabled {
-    opacity: 1;
+    opacity: 1 !important;
 }
 
 @media (max-width: 1280px) {

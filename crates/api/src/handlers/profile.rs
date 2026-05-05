@@ -173,3 +173,29 @@ pub async fn delete_annexe_handler(
 
     Ok(())
 }
+
+pub async fn get_active_profile_photo_handler(
+    State(state): State<AppState>,
+) -> Result<impl IntoResponse, ApiError> {
+    let profil = resolve_active_profile(state.profil_repo.as_ref()).await?;
+    match profil.profile_photo {
+        Some(photo) => Ok((
+            [("content-type", "image/jpeg")], // On assume JPEG pour le seed
+            photo,
+        )),
+        None => Err(ApiError::NotFound("Photo non disponible".to_string())),
+    }
+}
+
+pub async fn get_active_profile_calendar_handler(
+    State(state): State<AppState>,
+) -> Result<impl IntoResponse, ApiError> {
+    let profil = resolve_active_profile(state.profil_repo.as_ref()).await?;
+    match profil.calendar_pdf {
+        Some(pdf) => Ok((
+            [("content-type", "application/pdf")],
+            pdf,
+        )),
+        None => Err(ApiError::NotFound("Calendrier non disponible".to_string())),
+    }
+}

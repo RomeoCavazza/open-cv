@@ -20,6 +20,11 @@ db-init:
 db-up:
     pg_ctl -D .pg -l .pg/postgres.log start
 
+# vide les tables applicatives locales
+db-reset:
+    pg_ctl -D .pg status >/dev/null 2>&1 || just db-up
+    psql -h localhost -U alternance -d alternance -c "TRUNCATE TABLE annexes, messages, llm_calls, instances, chunks, profils, offres RESTART IDENTITY CASCADE;"
+
 # arrête Postgres
 db-down:
     pg_ctl -D .pg stop
@@ -35,6 +40,17 @@ psql:
 # lance l'api en mode développement
 dev:
     cargo run -p api
+
+# remplit le profil actif depuis data/user
+seed-profile:
+    cargo run -p api --bin seed_profile
+
+# remplit les offres et instances depuis data/offres et data/instances
+seed-data:
+    cargo run -p api --bin seed_offers_instances
+
+# remplit le profil puis les offres/instances
+seed-all: seed-profile seed-data
 
 # version avec auto-rebuild (nécessite: cargo install cargo-watch)
 watch:

@@ -14,9 +14,9 @@ export function createOfferActionButton({ active, action, ariaLabel, iconPath })
             xmlns: 'http://www.w3.org/2000/svg',
             fill: 'none',
             viewBox: '0 0 24 24',
-            'stroke-width': '1.5',
+            'stroke-width': '2',
             stroke: 'currentColor',
-            attrs: { class: 'size-6' },
+            attrs: { class: 'offer-action-icon', style: 'width: 14px; height: 14px;' },
         }, [
             svg('path', {
                 'stroke-linecap': 'round',
@@ -38,62 +38,125 @@ export function createOfferActionButton({ active, action, ariaLabel, iconPath })
 export function createOfferCard(offer, { isActive, isLocked, isArchived, hasFlag, archivedView }) {
     const card = document.createElement('div');
     card.className = `offer-card ${isActive ? 'active' : ''} ${hasFlag ? 'has-flag' : ''} ${isArchived ? 'is-archived archive-muted' : ''}`;
-    card.style = `padding: 12px 16px; cursor: pointer; border-radius: 8px; margin: 4px 8px; transition: all 0.2s; background: ${isActive ? 'white' : 'transparent'};`;
+    card.style = `cursor: pointer; transition: all 0.2s;`; // Rely on CSS for padding/background
 
     const inner = document.createElement('div');
     inner.className = 'offer-card-inner';
+    inner.style.width = '100%';
 
     const text = document.createElement('div');
     text.className = 'offer-card-text';
+    text.style.flex = '1';
+    text.style.minWidth = '0';
 
     const titleRow = document.createElement('div');
     titleRow.style.display = 'flex';
+    titleRow.style.width = '100%'; // Important pour pousser à droite
+    titleRow.style.justifyContent = 'space-between';
     titleRow.style.alignItems = 'flex-start';
-    titleRow.style.gap = '8px';
+    titleRow.style.gap = '12px';
+
+    // --- HEURISTIQUES DE NETTOYAGE AVANCÉES ---
+    let displayTitle = offer.title || "Sans titre";
+    let displayCompany = offer.entreprise || "";
+
+    // 1. Suppression du bruit Web et redondances
+    const noise = ["GESTION DES COOKIES", "SITE WEB", "CAREERS MARKETPLACE", "JOB DETAIL", "ACCUEIL"];
+    noise.forEach(n => {
+        if (displayTitle.toUpperCase().includes(n)) displayTitle = "Sans titre";
+        if (displayCompany.toUpperCase().includes(n)) displayCompany = "";
+    });
+
+    // 2. Nettoyage des titres (Parenthèses, F/H, Lieux, Pipes)
+    // On retire les (Lieu), (H/F), (F/H), etc.
+    displayTitle = displayTitle.replace(/\((.*?)\)/g, "").replace(/\sF\/H/gi, "").replace(/\sH\/F/gi, "").replace(/\sF\s\/\sH/gi, "").trim();
+    
+    if (displayTitle.includes(" | ")) {
+        displayTitle = displayTitle.split(" | ").pop();
+    }
+    if (displayTitle.includes(" - ") && displayTitle.length > 35) {
+        const parts = displayTitle.split(" - ");
+        displayTitle = parts[parts.length - 1];
+    }
+    displayTitle = displayTitle.trim();
+
+    // 3. Détection des inversions
+    const contractTypes = ["ALTERNANCE", "APPRENTISSAGE", "STAGE", "INTERNSHIP", "APPRENTICESHIP", "ALTERNANT", "APPRENTI"];
+    const isContractOnly = (s) => contractTypes.some(type => s.toUpperCase() === type || s.toUpperCase().includes(type));
+    
+    if ((displayTitle === "Sans titre" || displayTitle === "") && displayCompany !== "") {
+        if (!isContractOnly(displayCompany)) {
+            displayTitle = displayCompany;
+            displayCompany = "";
+        }
+    }
+
+    // 4. Nettoyage final entreprise
+    if (isContractOnly(displayCompany)) displayCompany = "";
+    displayCompany = displayCompany.replace(/\sF\/H/gi, "").replace(/\sH\/F/gi, "").trim();
 
     const title = document.createElement('div');
     title.className = 'offer-title';
-    title.style.flex = '1';
-    title.textContent = offer.title;
+    title.textContent = displayTitle || "Sans titre";
 
     const actionsSlot = document.createElement('div');
     actionsSlot.className = 'offer-actions-slot';
+    if (isLocked || isArchived) actionsSlot.classList.add('has-active'); // Garde le slot visible
+
+    const createActionIcon = (path, active, action, label) => {
+        const btn = document.createElement('button');
+        btn.dataset.action = action;
+        btn.setAttribute('aria-label', label);
+        btn.className = 'offer-action-btn'; // Use class instead of inline style
+        
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('viewBox', '0 0 24 24');
+        svg.setAttribute('fill', 'none');
+        svg.setAttribute('stroke', 'currentColor');
+        svg.setAttribute('stroke-width', '2');
+        svg.classList.add('offer-action-icon');
+        if (active) {
+            btn.classList.add('is-active');
+            svg.classList.add('is-active');
+        }
+        
+        const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        p.setAttribute('stroke-linecap', 'round');
+        p.setAttribute('stroke-linejoin', 'round');
+        p.setAttribute('d', path);
+        
+        svg.appendChild(p);
+        btn.appendChild(svg);
+        return { wrapper: btn };
+    };
 
     if (!archivedView) {
-        const lockAction = createOfferActionButton({
-            active: isLocked,
-            action: 'lock',
-            ariaLabel: "Verrouiller l'offre",
-            iconPath: 'M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z',
-        });
-        const archiveAction = createOfferActionButton({
-            active: isArchived,
-            action: 'archive',
-            ariaLabel: "Archiver l'offre",
-            iconPath: 'm20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z',
-        });
+        const lockAction = createActionIcon(
+            'M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z',
+            isLocked, 'lock', "Verrouiller"
+        );
+        const archiveAction = createActionIcon(
+            'm20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z',
+            isArchived, 'archive', "Archiver"
+        );
         actionsSlot.appendChild(lockAction.wrapper);
         actionsSlot.appendChild(archiveAction.wrapper);
     } else {
-        const restoreAction = createOfferActionButton({
-            active: true,
-            action: 'restore-inbox',
-            ariaLabel: 'Restaurer dans inbox',
-            iconPath: 'm20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5m8.25 3v6.75m0 0-3-3m3 3 3-3M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z',
-        });
-        const sendOldAction = createOfferActionButton({
-            active: true,
-            action: 'send-old',
-            ariaLabel: 'Retirer de la sidebar',
-            iconPath: 'm20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5m6 4.125 2.25 2.25m0 0 2.25 2.25M12 13.875l2.25-2.25M12 13.875l-2.25 2.25M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z',
-        });
+        const restoreAction = createActionIcon(
+            'm20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5m8.25 3v6.75m0 0-3-3m3 3 3-3M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z',
+            false, 'restore-inbox', "Restaurer"
+        );
+        const deleteAction = createActionIcon(
+            'm20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5m6 4.125 2.25 2.25m0 0 2.25 2.25M12 13.875l2.25-2.25M12 13.875l-2.25 2.25M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z',
+            false, 'send-old', "Supprimer"
+        );
         actionsSlot.appendChild(restoreAction.wrapper);
-        actionsSlot.appendChild(sendOldAction.wrapper);
+        actionsSlot.appendChild(deleteAction.wrapper);
     }
 
     const company = document.createElement('div');
     company.className = 'offer-company';
-    company.textContent = offer.entreprise || '';
+    company.textContent = displayCompany;
 
     titleRow.appendChild(title);
     titleRow.appendChild(actionsSlot);

@@ -15,18 +15,6 @@
 </head>
 
 <body>
-    <div class="no-print actions">
-        <div id="generation-banner"
-            style="display: none; background: #ffffff; border: 1px solid var(--hairline); padding: 12px 20px; border-radius: 12px; margin-bottom: 20px; align-items: center; justify-content: space-between;">
-            <span style="color: var(--body); font-size: 14px;">Cette lettre est un modèle générique.</span>
-            <button id="btn-generate-cover"
-                style="background: var(--primary); color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 13px;">Générer
-                la lettre</button>
-        </div>
-        <button id="download-pdf" class="btn">
-            <i data-lucide="download"></i> Télécharger en PDF (A4)
-        </button>
-    </div>
 
     <div class="page-stage">
         <main id="cl" class="a4-page">
@@ -62,7 +50,7 @@
         </main>
     </div>
 
-    <script type="module" src="script.js"></script>
+    <script type="module" src="script.js?v=2"></script>
     <script>
         if (window.lucide) {
             window.lucide.createIcons();

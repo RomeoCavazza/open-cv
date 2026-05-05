@@ -20,10 +20,10 @@ window.updateIframe = updateIframe;
 
 let offersLoadSeq = 0;
 
-const views = { 
-    ingest: document.getElementById('view-ingest'), 
-    app: document.getElementById('view-app'), 
-    profile: document.getElementById('view-profile') 
+const views = {
+    ingest: document.getElementById('view-ingest'),
+    app: document.getElementById('view-app'),
+    profile: document.getElementById('view-profile')
 };
 
 // Initialize router
@@ -41,12 +41,12 @@ router.initRouter({
 async function loadProfile() {
     try {
         const profileResponse = await api.fetchProfile();
-        const content = profileResponse.content; 
+        const content = profileResponse.content;
         state.setActiveProfilId(profileResponse.id || null);
-        
+
         state.setLoadedProfileExtras(Object.fromEntries(
             Object.entries(content).filter(([key]) => ![
-                'profile', 'apprenticeship', 'experiences', 'projects', 
+                'profile', 'apprenticeship', 'experiences', 'projects',
                 'education', 'languages', 'skills', 'labels'
             ].includes(key))
         ));
@@ -65,18 +65,18 @@ async function loadProfile() {
         setVal('prof-linkedin', content.profile?.linkedin);
         setVal('prof-website', content.profile?.website);
         setVal('prof-github', content.profile?.github);
-        
+
         setVal('prof-resume-template', ui.stringifyDocument(content.documents?.resume_template || content.resume_template));
         setVal('prof-cover-letter-template', ui.stringifyDocument(content.documents?.cover_letter_template || content.cover_letter_template));
-        
+
         state.setLoadedProfileImage(content.profile?.image || "");
         setVal('prof-image-base64', (content.profile?.image === "persisted:bytea") ? "" : state.loadedProfileImage);
-        
+
         const preview = document.getElementById('prof-image-preview');
         const placeholder = document.getElementById('preview-placeholder');
         if (preview && content.profile?.image) {
-            const imageUrl = (content.profile.image === "persisted:bytea") 
-                ? `/api/profile/active/photo?t=${Date.now()}` 
+            const imageUrl = (content.profile.image === "persisted:bytea")
+                ? `/api/profile/active/photo?t=${Date.now()}`
                 : content.profile.image;
             preview.style.backgroundImage = `url(${imageUrl})`;
             if (placeholder) placeholder.style.display = 'none';
@@ -90,14 +90,14 @@ async function loadProfile() {
         ui.renderList('list-education', content.education || [], ui.createEduRow);
         ui.renderList('list-languages', content.languages || [], ui.createLangRow);
         ui.renderList('list-skills', content.skills || [], ui.createSkillRow);
-        
+
         try {
             const annexes = await api.fetchAnnexes();
             ui.renderList('list-annexes', annexes || [], ui.createAnnexeRow);
         } catch (annexError) {
             console.error("Échec du chargement des annexes", annexError);
         }
-        
+
         ui.updateUIStrings();
     } catch (e) { console.warn("Profile load failed", e); }
 }
@@ -108,30 +108,44 @@ async function loadOffers() {
         const data = await api.fetchOffers();
         const offers = data.entries || [];
         if (loadSeq !== offersLoadSeq) return;
-        
+
         renderDashboardApplications(offers);
         renderDashboardTreatedOffers(offers);
         renderOldOffers(offers);
-        
+
         const list = document.getElementById('offers-list');
         if (!list) return;
         clear(list);
         const inboxLabel = state.i18n.translations[state.i18n.current].inbox;
-        
+
         const visibleInboxOffers = offers.filter((offer) => {
             const flags = state.offerFlags[offer.job_id] || {};
             return !flags.archived && !flags.oldCv && !flags.deleted;
         });
-        
+
         const visibleArchivedOffers = offers.filter((offer) => {
             const flags = state.offerFlags[offer.job_id] || {};
             return flags.archived && !flags.oldCv && !flags.deleted;
         });
-        
+
         const inboxCount = visibleInboxOffers.length || offers.length;
-        const sidebarHeader = document.getElementById('sidebar-inbox-header');
-        if (sidebarHeader) sidebarHeader.textContent = `${inboxLabel} (${inboxCount})`;
-        
+        const inboxHeader = document.getElementById('sidebar-inbox-header');
+        if (inboxHeader) {
+            inboxHeader.className = 'sidebar-section-header';
+            inboxHeader.innerHTML = '';
+
+            const titleSpan = document.createElement('span');
+            titleSpan.className = 'sidebar-section-title';
+            titleSpan.textContent = inboxLabel;
+
+            const badge = document.createElement('span');
+            badge.className = 'sidebar-section-badge';
+            badge.textContent = inboxCount;
+
+            inboxHeader.appendChild(titleSpan);
+            inboxHeader.appendChild(badge);
+        }
+
         const groups = {};
         visibleInboxOffers.forEach(o => {
             const cat = o.category || state.i18n.translations[state.i18n.current].others;
@@ -143,43 +157,34 @@ async function loadOffers() {
             const isDefault = cat === state.i18n.translations[state.i18n.current].others || cat.toUpperCase().includes("INBOX");
             const isCollapsed = state.collapsedOfferCategories.includes(cat);
             let groupContainer = list;
-            
+
             if (!isDefault) {
                 const catDiv = document.createElement('div');
-                catDiv.className = `offer-group-header${isCollapsed ? ' collapsed' : ''}`;
-                const toggle = document.createElement('span');
+                catDiv.className = `sidebar-section-header offer-group-header${isCollapsed ? ' collapsed' : ''}`;
+
+                const toggle = document.createElement('div');
                 toggle.className = 'offer-group-toggle';
 
-                const svgNode = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-                svgNode.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-                svgNode.setAttribute('fill', 'none');
-                svgNode.setAttribute('viewBox', '0 0 24 24');
-                svgNode.setAttribute('stroke-width', '1.5');
-                svgNode.setAttribute('stroke', 'currentColor');
-                svgNode.setAttribute('class', 'size-6');
-
-                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-                path.setAttribute('stroke-linecap', 'round');
-                path.setAttribute('stroke-linejoin', 'round');
-                path.setAttribute('d', isCollapsed
-                    ? 'M15 13.5H9m4.06-7.19-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z'
-                    : 'M12 10.5v6m3-3H9m4.06-7.19-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z');
-                svgNode.appendChild(path);
-
                 const label = document.createElement('span');
-                label.textContent = `${cat} (${groups[cat].length})`;
+                const translatedCat = state.i18n.translations[state.i18n.current][cat.toLowerCase()] || cat;
+                label.className = 'sidebar-section-title';
+                label.textContent = translatedCat;
 
-                toggle.appendChild(svgNode);
+                const count = document.createElement('span');
+                count.className = 'sidebar-section-badge';
+                count.textContent = groups[cat].length;
+
                 toggle.appendChild(label);
+                toggle.appendChild(count);
                 catDiv.appendChild(toggle);
-                
+
                 catDiv.onclick = () => toggleOfferCategory(cat);
                 list.appendChild(catDiv);
                 groupContainer = document.createElement('div');
                 groupContainer.style.display = isCollapsed ? 'none' : 'block';
                 list.appendChild(groupContainer);
             }
-            
+
             groups[cat].forEach(o => {
                 const isActive = state.activeJobId === o.job_id;
                 const flags = state.offerFlags[o.job_id] || {};
@@ -200,7 +205,7 @@ async function loadOffers() {
                         nextFlags.locked = !nextFlags.locked;
                     });
                 };
-                
+
                 card.querySelector('[data-action="archive"]').onclick = (event) => {
                     event.stopPropagation();
                     mutateOfferFlags(o.job_id, (nextFlags) => {
@@ -211,7 +216,7 @@ async function loadOffers() {
                         }
                     });
                 };
-                
+
                 card.onclick = () => selectOffer(o.job_id);
                 groupContainer.appendChild(card);
             });
@@ -219,13 +224,18 @@ async function loadOffers() {
 
         if (visibleArchivedOffers.length) {
             const archiveHeader = document.createElement('div');
-            archiveHeader.className = 'sidebar-header';
-            archiveHeader.style.padding = '24px 24px 12px';
-            archiveHeader.style.marginTop = '16px';
-            archiveHeader.style.borderBottom = 'none';
-            const archiveTitle = document.createElement('h2');
-            archiveTitle.textContent = `${state.i18n.translations[state.i18n.current].archive} (${visibleArchivedOffers.length})`;
+            archiveHeader.className = 'sidebar-section-header with-border';
+
+            const archiveTitle = document.createElement('span');
+            archiveTitle.className = 'sidebar-section-title';
+            archiveTitle.textContent = state.i18n.translations[state.i18n.current].archive;
+
+            const badge = document.createElement('span');
+            badge.className = 'sidebar-section-badge';
+            badge.textContent = visibleArchivedOffers.length;
+
             archiveHeader.appendChild(archiveTitle);
+            archiveHeader.appendChild(badge);
             list.appendChild(archiveHeader);
 
             visibleArchivedOffers.forEach((o) => {
@@ -237,7 +247,7 @@ async function loadOffers() {
                     hasFlag: true,
                     archivedView: true,
                 });
-                
+
                 card.querySelector('[data-action="restore-inbox"]').onclick = (event) => {
                     event.stopPropagation();
                     mutateOfferFlags(o.job_id, (nextFlags) => {
@@ -246,7 +256,7 @@ async function loadOffers() {
                         nextFlags.deleted = false;
                     });
                 };
-                
+
                 card.querySelector('[data-action="send-old"]').onclick = (event) => {
                     event.stopPropagation();
                     mutateOfferFlags(o.job_id, (nextFlags) => {
@@ -255,7 +265,7 @@ async function loadOffers() {
                         nextFlags.deleted = false;
                     });
                 };
-                
+
                 card.onclick = () => selectOffer(o.job_id);
                 list.appendChild(card);
             });
@@ -356,7 +366,7 @@ function renderDashboardApplications(offers) {
         row.appendChild(text);
         row.appendChild(actions);
         item.appendChild(row);
-        
+
         item.onclick = () => {
             state.setActiveJobId(offer.job_id);
             router.switchView('app');
@@ -525,7 +535,7 @@ function renderDashboardTreatedOffers(offers) {
         row.appendChild(text);
         row.appendChild(actions);
         item.appendChild(row);
-        
+
         item.onclick = () => {
             state.setActiveJobId(offer.job_id);
             router.switchView('app');
@@ -554,6 +564,8 @@ async function updateIframe(options = {}) {
 
     let instanceSlug = window.activeInstanceSlug || offerSlug;
 
+    if (!offerSlug || offerSlug === 'null') return;
+
     if (window.activeResolvedOfferSlug !== offerSlug || !window.activeInstanceSlug) {
         try {
             const res = await fetch(`/api/offres/${offerSlug}/instance`);
@@ -563,9 +575,13 @@ async function updateIframe(options = {}) {
                     instanceSlug = instance.slug;
                     window.activeInstanceData = instance;
                 }
+            } else if (res.status === 404) {
+                // Instance non générée, c'est normal pour une nouvelle offre
+                instanceSlug = null;
+                window.activeInstanceData = null;
             }
         } catch (error) {
-            console.warn('Impossible de résoudre le slug de l\'instance', error);
+            // Erreur réseau uniquement
         }
     }
 
@@ -608,7 +624,7 @@ function renderAiChatAttachments() {
         remove.className = 'ai-attachment-remove';
         remove.setAttribute('aria-label', t.attached_files);
         remove.innerText = '×';
-        
+
         remove.onclick = () => {
             state.aiChatAttachments.splice(index, 1);
             renderAiChatAttachments();
@@ -620,7 +636,7 @@ function renderAiChatAttachments() {
         nameSpan.className = 'ai-attachment-name';
         nameSpan.title = file.name;
         nameSpan.innerText = file.name;
-        
+
         chip.appendChild(nameSpan);
         chip.appendChild(remove);
         container.appendChild(chip);
@@ -703,7 +719,7 @@ function attachEventListeners() {
                 ...state.loadedProfileExtras
             };
             await api.saveProfile(data);
-            
+
             const annexeRows = Array.from(document.querySelectorAll('.form-row-annexe'));
             for (const row of annexeRows) {
                 if (row.dataset.markedForDeletion === "true") {
@@ -721,7 +737,7 @@ function attachEventListeners() {
                     });
                 }
             }
-            
+
             await loadProfile();
             alert('Profil sauvegardé !');
         } catch (e) { alert('Erreur sauvegarde'); console.error(e); }
@@ -749,7 +765,7 @@ function attachEventListeners() {
     safeClick('add-lang', () => document.getElementById('list-languages').appendChild(ui.createLangRow()));
     safeClick('add-skill-cat', () => document.getElementById('list-skills').appendChild(ui.createSkillRow()));
     safeClick('add-annexe', () => document.getElementById('prof-annexe-bulk-file').click());
-    
+
     const annexeBulk = document.getElementById('prof-annexe-bulk-file');
     if (annexeBulk) annexeBulk.onchange = async (e) => {
         const files = Array.from(e.target.files);
@@ -789,7 +805,7 @@ function attachEventListeners() {
         if (!input) return;
         const rawText = input.value;
         if (!rawText) return;
-        
+
         const btn = document.getElementById('btn-ingest-run');
         btn.disabled = true;
         const oldText = btn.innerHTML;
@@ -799,7 +815,7 @@ function attachEventListeners() {
             const ingestRes = await api.ingestOffer(rawText);
             if (!ingestRes.job_id) throw new Error("Échec ingestion");
             state.setActiveJobId(ingestRes.job_id);
-            
+
             const delivs = document.getElementById('deliv-selector-ingest');
             const options = {
                 restitution: delivs?.querySelector('[data-deliv="restitution"]')?.classList.contains('active') ?? true,
@@ -811,10 +827,10 @@ function attachEventListeners() {
             router.switchView('app');
             loadOffers();
             if (genRes.slug) updateIframe();
-        } catch (e) { 
-            alert('Erreur: ' + e.message); 
-        } finally { 
-            btn.disabled = false; 
+        } catch (e) {
+            alert('Erreur: ' + e.message);
+        } finally {
+            btn.disabled = false;
             btn.innerHTML = oldText;
         }
     });

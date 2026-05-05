@@ -32,11 +32,14 @@ function applyProps(node, props = {}) {
             node.textContent = String(value);
             return;
         }
+        const isSvg = node instanceof SVGElement;
+        
         if (key.startsWith('on') && typeof value === 'function') {
             node[key] = value;
             return;
         }
-        if (key in node && key !== 'class') {
+
+        if (!isSvg && key in node && key !== 'class') {
             node[key] = value;
             return;
         }
