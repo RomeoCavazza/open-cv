@@ -226,7 +226,9 @@ impl GenerateApplicationUseCase {
             );
 
             if candidates.is_empty() {
-                return Err(GenerateError::AucunChunkPertinent);
+                info!(
+                    "RAG : aucun chunk trouvé, la génération continuera sans contexte granulaire"
+                );
             }
 
             // Étape 2 : RERANK

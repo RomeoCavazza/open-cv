@@ -39,7 +39,7 @@ psql:
 
 # lance l'api en mode développement
 dev:
-    cargo run -p api
+    cargo run -p api --bin api
 
 # crée un profil vierge
 seed-blank:

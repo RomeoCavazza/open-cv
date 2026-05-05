@@ -121,7 +121,9 @@ async fn main() -> anyhow::Result<()> {
 
     let app = create_app(state);
 
-    let listener = tokio::net::TcpListener::bind("127.0.0.1:8000").await?;
+    let port = std::env::var("AXUM_PORT").unwrap_or_else(|_| "8000".to_string());
+    let addr = format!("127.0.0.1:{}", port);
+    let listener = tokio::net::TcpListener::bind(&addr).await?;
     tracing::info!("écoute sur http://{}", listener.local_addr()?);
     axum::serve(listener, app).await?;
 
