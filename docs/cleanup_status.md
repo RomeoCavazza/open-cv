@@ -42,7 +42,17 @@
 4.  **Docs First** : Ce fichier est la source de vérité. Mettre à jour après chaque Phase terminée.
 
 ---
-### Dette Technique Résiduelle
+### Dette Technique Résiduelle (Confirmée)
 - [LOW] `test_get_annexes_200` : Vérifie uniquement le statut, pas la structure du body.
-- [HIGH] `POST /api/ingest` : Échoue en 500 si le profil est vide.
-- [INFO] Tag `backend-stable-2026-05-05` déplacé via `--force`.
+- [HIGH] **Indexeur de profil absent** : La table `chunks` reste vide après reset/seed. RAG inopérant par défaut.
+- [HIGH] **Couplage Restitution/RAG** : L'étape de recherche vectorielle (`generate/mod.rs:220`) bloque la Restitution même sans besoin de profil.
+- [MED] **Scraper limité** : Échec sur SPA/Anti-bot (WTTJ, Siemens). Bypass texte brut nécessaire.
+- [LOW] **Templates contaminés** : Contenu MBDA hardcodé dans `data/templates/*.json` polluant les sorties LLM.
+
+### Tests Indéterminés (À refaire quand Quotas Claude OK)
+- **[INFO] Chat Injection Contexte (1.3)** : Non prouvé sur Ollama (confusion template/offre).
+- **[INFO] Chat Mutation JSON (1.4)** : Non testé (échec de formatage sur Ollama).
+
+---
+### Q&A BASELINE SESSION (2026-05-05)
+*Diagnostic exhaustif du comportement du pipeline post-reset DB validé par preuves brutes (psql, logs, grep).*
