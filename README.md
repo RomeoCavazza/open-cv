@@ -51,6 +51,7 @@ The workflow is driven by the Rust backend and can be summarized in five main st
 3. **Context selection**: the active profile and its chunks are loaded from PostgreSQL.
 4. **Generation**: the application produces a structured analysis, a tailored resume, and a targeted cover letter.
 5. **Rendering**: the static frontend loads the JSON payloads and displays them through printable HTML renderers.
+6. **Interaction**: a built-in real-time chat (Server-Sent Events) allows refining the documents with instant token streaming.
 
 ### Installation
 
@@ -74,6 +75,25 @@ just dev
 The application is then available at `http://localhost:8000`.
 
 ---
+
+## Quality & Performance
+
+The project includes a robust audit and performance suite:
+
+```bash
+# Global audit (clippy, deny, fmt, udeps, frontend lint)
+just audit
+
+# Performance benchmarking (Criterion.rs)
+just bench
+
+# Code coverage report (Tarpaulin)
+just coverage
+
+# Architecture visualization
+just viz-modules  # Generate modules graph
+just viz-deps     # Generate dependency graph
+```
 
 ## Technical Stack
 

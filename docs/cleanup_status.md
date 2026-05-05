@@ -42,11 +42,18 @@
 - **Premium UI**: Added CSS loaders and an event-driven Toast notification system.
 - **Debt remaining**: Physical splitting of `dashboard.js` into smaller controllers (Phase 4) is pending but unblocked.
 
-### 4. Remaining Debt & Next Steps
+### 5. Chat Streaming & Advanced Tooling (Phase 8) - [2026-05-05]
+**Status: SUCCESS ✅**
+- **SSE Streaming**: Implemented full token streaming from backend to frontend (Server-Sent Events).
+- **Assistant UI**: Modernized chat interface (plain text, no bubbles, distraction-free).
+- **Quality Audit**: Integrated `cargo-deny`, `tarpaulin`, `clippy` (workspace wide), `eslint`, and `stylelint`.
+- **Performance**: Added `Criterion.rs` for micro-benchmarking and `flamegraph` support.
+- **Organization**: Cleaned up project root by moving configs to `tooling/`.
+
+### 6. Remaining Debt & Next Steps
 1. **Backend**: Decouple Restitution from RAG (`generate/mod.rs`).
 2. **Backend**: Implement automated indexer for the `chunks` table.
 3. **Frontend**: Physically split `dashboard.js` into modules (Phase 4).
-4. **Validation**: Re-run Test 1.3/1.4 once LLM quotas/models are upgraded.
 
 ## 4. RÈGLES DE GOUVERNANCE (NON-NÉGOCIABLES)
 
