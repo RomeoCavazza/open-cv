@@ -271,7 +271,11 @@
                 if (offre.source_url) {
                     if (metaParts.length) metaEl.appendChild(document.createTextNode(' · '));
                     const link = document.createElement('a');
-                    link.href = offre.source_url;
+                    // Nettoyage robuste : on cherche la dernière URL valide dans la chaîne
+                    const rawUrl = offre.source_url;
+                    const matches = rawUrl.match(/https?:\/\/[^\s\]\)]+/g);
+                    const cleanUrl = matches ? matches[matches.length - 1] : rawUrl;
+                    link.href = cleanUrl;
                     link.target = '_blank';
                     link.rel = 'noreferrer';
                     link.textContent = "Visiter l'offre";

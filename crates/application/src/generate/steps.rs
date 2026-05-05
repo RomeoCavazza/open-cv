@@ -41,7 +41,7 @@ pub async fn retrieve_chunks(
 
     let candidates = this
         .chunks
-        .top_k_by_embedding(profil_id, &query_embedding, 12)
+        .top_k_by_embedding(profil_id, &query_embedding, 8)
         .await
         .map_err(AppError::Repo)?;
 

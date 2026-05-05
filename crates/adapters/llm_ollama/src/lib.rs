@@ -107,8 +107,8 @@ impl LlmClient for OllamaClient {
             },
             options: req
                 .temperature
-                .map(|t| serde_json::json!({ "temperature": t, "num_ctx": 8192 }))
-                .or_else(|| Some(serde_json::json!({ "num_ctx": 8192 }))),
+                .map(|t| serde_json::json!({ "temperature": t, "num_ctx": 16384 }))
+                .or_else(|| Some(serde_json::json!({ "num_ctx": 16384 }))),
         };
 
         let start = std::time::Instant::now();
@@ -213,7 +213,7 @@ impl LlmClient for OllamaClient {
             } else {
                 Some(serde_json::json!("json"))
             },
-            options: Some(serde_json::json!({ "num_ctx": 8192 })),
+            options: Some(serde_json::json!({ "num_ctx": 16384 })),
         };
 
         let url = format!("{}/api/chat", self.base_url);
