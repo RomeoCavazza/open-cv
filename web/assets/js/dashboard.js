@@ -1,18 +1,24 @@
-console.log("[Dashboard] Module Loading...");
 import { 
+    activeJobId,
     activeTab, 
-    setSelectedLlmProvider, 
-    setActiveTab, 
-    loadI18n, 
-    selectedLlmProvider, 
-    delivConfig, 
-    setDelivConfig,
-    offerFlags,
-    saveOfferFlags,
-    collapsedOfferCategories,
-    saveCollapsedCategories,
-    setLoadedProfileImage,
+    activeProfilId,
+    aiChatAttachments,
+    loadedProfileExtras,
     loadedProfileImage,
+    selectedLlmProvider, 
+    collapsedOfferCategories,
+    offerFlags,
+    delivConfig,
+    setActiveJobId,
+    setActiveTab,
+    setActiveProfilId,
+    setLoadedProfileImage,
+    setLoadedProfileExtras,
+    setSelectedLlmProvider,
+    loadI18n,
+    saveOfferFlags,
+    saveCollapsedCategories,
+    setDelivConfig,
     i18n
 } from './state.js';
 import * as api from './api.js';
@@ -26,8 +32,11 @@ import { EVENTS, emit, on } from './modules/events.js';
 // --- Expose State & Utils for legacy scripts (chat.js) ---
 window.state = {
     get activeTab() { return activeTab; },
+    get activeJobId() { return activeJobId; },
+    get aiChatAttachments() { return aiChatAttachments; },
     setSelectedLlmProvider,
-    setActiveTab
+    setActiveTab,
+    setActiveJobId
 };
 
 // --- Event Subscriptions ---
@@ -94,9 +103,9 @@ async function loadProfile() {
     try {
         const profileResponse = await api.fetchProfile();
         const content = profileResponse.content;
-        state.setActiveProfilId(profileResponse.id || null);
+        setActiveProfilId(profileResponse.id || null);
 
-        state.setLoadedProfileExtras(Object.fromEntries(
+        setLoadedProfileExtras(Object.fromEntries(
             Object.entries(content).filter(([key]) => ![
                 'profile', 'apprenticeship', 'experiences', 'projects',
                 'education', 'languages', 'skills', 'labels'
@@ -121,8 +130,8 @@ async function loadProfile() {
         setVal('prof-resume-template', ui.stringifyDocument(content.documents?.resume_template || content.resume_template));
         setVal('prof-cover-letter-template', ui.stringifyDocument(content.documents?.cover_letter_template || content.cover_letter_template));
 
-        state.setLoadedProfileImage(content.profile?.image || "");
-        setVal('prof-image-base64', (content.profile?.image === "persisted:bytea") ? "" : state.loadedProfileImage);
+        setLoadedProfileImage(content.profile?.image || "");
+        setVal('prof-image-base64', (content.profile?.image === "persisted:bytea") ? "" : loadedProfileImage);
 
         const preview = document.getElementById('prof-image-preview');
         const placeholder = document.getElementById('preview-placeholder');
@@ -168,15 +177,15 @@ async function loadOffers() {
         const list = document.getElementById('offers-list');
         if (!list) return;
         clear(list);
-        const inboxLabel = state.i18n.translations[state.i18n.current].inbox;
+        const inboxLabel = i18n.translations[i18n.current].inbox;
 
         const visibleInboxOffers = offers.filter((offer) => {
-            const flags = state.offerFlags[offer.job_id] || {};
+            const flags = offerFlags[offer.job_id] || {};
             return !flags.archived && !flags.oldCv && !flags.deleted;
         });
 
         const visibleArchivedOffers = offers.filter((offer) => {
-            const flags = state.offerFlags[offer.job_id] || {};
+            const flags = offerFlags[offer.job_id] || {};
             return flags.archived && !flags.oldCv && !flags.deleted;
         });
 
@@ -200,14 +209,14 @@ async function loadOffers() {
 
         const groups = {};
         visibleInboxOffers.forEach(o => {
-            const cat = o.category || state.i18n.translations[state.i18n.current].others;
+            const cat = o.category || i18n.translations[i18n.current].others;
             if (!groups[cat]) groups[cat] = [];
             groups[cat].push(o);
         });
 
         Object.keys(groups).sort().forEach(cat => {
-            const isDefault = cat === state.i18n.translations[state.i18n.current].others || cat.toUpperCase().includes("INBOX");
-            const isCollapsed = state.collapsedOfferCategories.includes(cat);
+            const isDefault = cat === i18n.translations[i18n.current].others || cat.toUpperCase().includes("INBOX");
+            const isCollapsed = collapsedOfferCategories.includes(cat);
             let groupContainer = list;
 
             if (!isDefault) {
@@ -218,7 +227,7 @@ async function loadOffers() {
                 toggle.className = 'offer-group-toggle';
 
                 const label = document.createElement('span');
-                const translatedCat = state.i18n.translations[state.i18n.current][cat.toLowerCase()] || cat;
+                const translatedCat = i18n.translations[i18n.current][cat.toLowerCase()] || cat;
                 label.className = 'sidebar-section-title';
                 label.textContent = translatedCat;
 
@@ -238,8 +247,8 @@ async function loadOffers() {
             }
 
             groups[cat].forEach(o => {
-                const isActive = state.activeJobId === o.job_id;
-                const flags = state.offerFlags[o.job_id] || {};
+                const isActive = activeJobId === o.job_id;
+                const flags = offerFlags[o.job_id] || {};
                 const isLocked = !!flags.locked;
                 const isArchived = !!flags.archived;
                 const hasFlag = isLocked || !!flags.archived;
@@ -280,7 +289,7 @@ async function loadOffers() {
 
             const archiveTitle = document.createElement('span');
             archiveTitle.className = 'sidebar-section-title';
-            archiveTitle.textContent = state.i18n.translations[state.i18n.current].archive;
+            archiveTitle.textContent = i18n.translations[i18n.current].archive;
 
             const badge = document.createElement('span');
             badge.className = 'sidebar-section-badge';
@@ -291,7 +300,7 @@ async function loadOffers() {
             list.appendChild(archiveHeader);
 
             visibleArchivedOffers.forEach((o) => {
-                const isActive = state.activeJobId === o.job_id;
+                const isActive = activeJobId === o.job_id;
                 const card = offerRender.createOfferCard(o, {
                     isActive,
                     isLocked: false,
@@ -329,24 +338,24 @@ async function loadOffers() {
 }
 
 function mutateOfferFlags(jobId, mutate) {
-    const nextFlags = { ...(state.offerFlags[jobId] || {}) };
+    const nextFlags = { ...(offerFlags[jobId] || {}) };
     mutate(nextFlags);
-    if (!nextFlags.locked && !nextFlags.archived && !nextFlags.oldCv && !nextFlags.deleted) delete state.offerFlags[jobId];
-    else state.offerFlags[jobId] = nextFlags;
-    state.saveOfferFlags();
+    if (!nextFlags.locked && !nextFlags.archived && !nextFlags.oldCv && !nextFlags.deleted) delete offerFlags[jobId];
+    else offerFlags[jobId] = nextFlags;
+    saveOfferFlags();
     loadOffers();
 }
 
 function selectOffer(jobId) {
-    state.setActiveJobId(jobId);
+    setActiveJobId(jobId);
     emit(EVENTS.OFFER_SELECTED, { jobId });
 }
 
 function toggleOfferCategory(category) {
-    const index = state.collapsedOfferCategories.indexOf(category);
-    if (index >= 0) state.collapsedOfferCategories.splice(index, 1);
-    else state.collapsedOfferCategories.push(category);
-    state.saveCollapsedCategories();
+    const index = collapsedOfferCategories.indexOf(category);
+    if (index >= 0) collapsedOfferCategories.splice(index, 1);
+    else collapsedOfferCategories.push(category);
+    saveCollapsedCategories();
     loadOffers();
 }
 
@@ -355,7 +364,7 @@ function renderDashboardApplications(offers) {
     const list = document.getElementById('dashboard-applications-list');
     if (!panel || !list) return;
     const items = offers.filter((offer) => {
-        const flags = state.offerFlags[offer.job_id] || {};
+        const flags = offerFlags[offer.job_id] || {};
         return !flags.archived && !flags.oldCv && !flags.deleted;
     });
 
@@ -367,7 +376,7 @@ function renderDashboardApplications(offers) {
 
     panel.style.display = 'block';
     items.forEach((offer) => {
-        const flags = state.offerFlags[offer.job_id] || {};
+        const flags = offerFlags[offer.job_id] || {};
         const isArchived = !!flags.archived;
         const item = document.createElement('div');
         item.className = 'old-offer-item';
@@ -400,15 +409,15 @@ function renderDashboardApplications(offers) {
         });
         archiveAction.button.onclick = (event) => {
             event.stopPropagation();
-            const nextFlags = { ...(state.offerFlags[offer.job_id] || {}) };
+            const nextFlags = { ...(offerFlags[offer.job_id] || {}) };
             nextFlags.archived = !nextFlags.archived;
             if (nextFlags.archived) {
                 nextFlags.oldCv = false;
                 nextFlags.deleted = false;
             }
-            if (!nextFlags.locked && !nextFlags.archived && !nextFlags.oldCv && !nextFlags.deleted) delete state.offerFlags[offer.job_id];
-            else state.offerFlags[offer.job_id] = nextFlags;
-            state.saveOfferFlags();
+            if (!nextFlags.locked && !nextFlags.archived && !nextFlags.oldCv && !nextFlags.deleted) delete offerFlags[offer.job_id];
+            else offerFlags[offer.job_id] = nextFlags;
+            saveOfferFlags();
             loadOffers();
         };
 
@@ -418,7 +427,7 @@ function renderDashboardApplications(offers) {
         item.appendChild(row);
 
         item.onclick = () => {
-            state.setActiveJobId(offer.job_id);
+            setActiveJobId(offer.job_id);
             router.switchView('app');
             loadOffers();
             updateIframe();
@@ -431,7 +440,7 @@ function renderOldOffers(offers) {
     const panel = document.getElementById('old-offers-panel');
     const list = document.getElementById('old-offers-list');
     if (!panel || !list) return;
-    const oldOffers = offers.filter((offer) => state.offerFlags[offer.job_id]?.oldCv && !state.offerFlags[offer.job_id]?.deleted);
+    const oldOffers = offers.filter((offer) => offerFlags[offer.job_id]?.oldCv && !offerFlags[offer.job_id]?.deleted);
 
     list.innerHTML = '';
     if (!oldOffers.length) {
@@ -470,12 +479,12 @@ function renderOldOffers(offers) {
             iconPath: 'm20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5m8.25 3v6.75m0 0-3-3m3 3 3-3M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z',
         });
         restoreAction.button.onclick = () => {
-            const nextFlags = { ...(state.offerFlags[offer.job_id] || {}) };
+            const nextFlags = { ...(offerFlags[offer.job_id] || {}) };
             nextFlags.archived = true;
             nextFlags.oldCv = false;
             nextFlags.deleted = false;
-            state.offerFlags[offer.job_id] = nextFlags;
-            state.saveOfferFlags();
+            offerFlags[offer.job_id] = nextFlags;
+            saveOfferFlags();
             loadOffers();
         };
 
@@ -486,13 +495,13 @@ function renderOldOffers(offers) {
             iconPath: 'm14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.11 0 0 0-7.5 0',
         });
         deleteAction.button.onclick = () => {
-            const nextFlags = { ...(state.offerFlags[offer.job_id] || {}) };
+            const nextFlags = { ...(offerFlags[offer.job_id] || {}) };
             nextFlags.deleted = true;
             nextFlags.oldCv = false;
             nextFlags.archived = false;
-            state.offerFlags[offer.job_id] = nextFlags;
-            state.saveOfferFlags();
-            if (state.activeJobId === offer.job_id) state.setActiveJobId(null);
+            offerFlags[offer.job_id] = nextFlags;
+            saveOfferFlags();
+            if (activeJobId === offer.job_id) setActiveJobId(null);
             loadOffers();
         };
 
@@ -510,7 +519,7 @@ function renderDashboardTreatedOffers(offers) {
     const list = document.getElementById('dashboard-treated-list');
     if (!panel || !list) return;
     const items = offers.filter((offer) => {
-        const flags = state.offerFlags[offer.job_id] || {};
+        const flags = offerFlags[offer.job_id] || {};
         return flags.archived && !flags.oldCv && !flags.deleted;
     });
 
@@ -553,13 +562,13 @@ function renderDashboardTreatedOffers(offers) {
         });
         restoreAction.button.onclick = (event) => {
             event.stopPropagation();
-            const nextFlags = { ...(state.offerFlags[offer.job_id] || {}) };
+            const nextFlags = { ...(offerFlags[offer.job_id] || {}) };
             nextFlags.archived = false;
             nextFlags.oldCv = false;
             nextFlags.deleted = false;
-            if (!nextFlags.locked && !nextFlags.archived && !nextFlags.oldCv && !nextFlags.deleted) delete state.offerFlags[offer.job_id];
-            else state.offerFlags[offer.job_id] = nextFlags;
-            state.saveOfferFlags();
+            if (!nextFlags.locked && !nextFlags.archived && !nextFlags.oldCv && !nextFlags.deleted) delete offerFlags[offer.job_id];
+            else offerFlags[offer.job_id] = nextFlags;
+            saveOfferFlags();
             loadOffers();
         };
 
@@ -571,12 +580,12 @@ function renderDashboardTreatedOffers(offers) {
         });
         sendOldAction.button.onclick = (event) => {
             event.stopPropagation();
-            const nextFlags = { ...(state.offerFlags[offer.job_id] || {}) };
+            const nextFlags = { ...(offerFlags[offer.job_id] || {}) };
             nextFlags.oldCv = true;
             nextFlags.archived = false;
             nextFlags.deleted = false;
-            state.offerFlags[offer.job_id] = nextFlags;
-            state.saveOfferFlags();
+            offerFlags[offer.job_id] = nextFlags;
+            saveOfferFlags();
             loadOffers();
         };
 
@@ -587,7 +596,7 @@ function renderDashboardTreatedOffers(offers) {
         item.appendChild(row);
 
         item.onclick = () => {
-            state.setActiveJobId(offer.job_id);
+            setActiveJobId(offer.job_id);
             router.switchView('app');
             loadOffers();
             updateIframe();
@@ -597,12 +606,12 @@ function renderDashboardTreatedOffers(offers) {
 }
 
 async function updateIframe(options = {}) {
-    if (!state.activeJobId) {
+    if (!activeJobId) {
         iframeRender.resetIframeToEmptyState();
         return;
     }
-    const offerSlug = state.activeJobId;
-    const activeTab = state.activeTab;
+    const offerSlug = activeJobId;
+    
     const iframe = document.getElementById('iframe-doc');
     if (!iframe) return;
 
@@ -622,7 +631,7 @@ async function updateIframe(options = {}) {
             }
         }
 
-        if (state.activeJobId !== offerSlug || state.activeTab !== activeTab) return;
+        if (activeJobId !== offerSlug || activeTab !== activeTab) return;
 
         const query = activeTab === 'restitution'
             ? `offer=${encodeURIComponent(offerSlug)}&instance=${encodeURIComponent(instanceSlug)}`
@@ -639,16 +648,16 @@ async function updateIframe(options = {}) {
 function renderAiChatAttachments() {
     const container = document.getElementById('ai-chat-attachments');
     if (!container) return;
-    const t = state.i18n.translations[state.i18n.current];
+    const t = i18n.translations[i18n.current];
     clear(container);
 
-    if (!state.aiChatAttachments.length) {
+    if (!aiChatAttachments.length) {
         container.style.display = 'none';
         return;
     }
 
     container.style.display = 'flex';
-    state.aiChatAttachments.forEach((file, index) => {
+    aiChatAttachments.forEach((file, index) => {
         const remove = document.createElement('button');
         remove.type = 'button';
         remove.className = 'ai-attachment-remove';
@@ -656,7 +665,7 @@ function renderAiChatAttachments() {
         remove.innerText = '×';
 
         remove.onclick = () => {
-            state.aiChatAttachments.splice(index, 1);
+            aiChatAttachments.splice(index, 1);
             renderAiChatAttachments();
         };
 
@@ -681,10 +690,15 @@ async function init() {
     attachEventListeners();
 
     try {
+        console.log("[Dashboard] Loading i18n...");
         await loadI18n();
+        console.log("[Dashboard] Loading profile...");
         await loadProfile();
+        console.log("[Dashboard] Loading offers...");
         await loadOffers();
+        console.log("[Dashboard] Handling routing...");
         await router.handleRouting();
+        console.log("[Dashboard] Rendering attachments...");
         renderAiChatAttachments();
         console.log("[Dashboard] Initialization Complete.");
     } catch (e) {
@@ -717,7 +731,7 @@ function attachEventListeners() {
                     linkedin: document.getElementById('prof-linkedin').value,
                     website: document.getElementById('prof-website').value,
                     github: document.getElementById('prof-github').value,
-                    image: document.getElementById('prof-image-base64').value || state.loadedProfileImage || "",
+                    image: document.getElementById('prof-image-base64').value || loadedProfileImage || "",
                 },
                 apprenticeship: {
                     duration: document.getElementById('prof-duration').value,
@@ -752,7 +766,7 @@ function attachEventListeners() {
                     resume_template: JSON.parse(document.getElementById('prof-resume-template').value || "{}"),
                     cover_letter_template: JSON.parse(document.getElementById('prof-cover-letter-template').value || "{}"),
                 },
-                ...state.loadedProfileExtras
+                ...loadedProfileExtras
             };
             await api.saveProfile(data);
 
@@ -787,7 +801,7 @@ function attachEventListeners() {
         const file = e.target.files[0];
         if (!file) return;
         const b64 = await ui.readFileAsDataUrl(file);
-        state.setLoadedProfileImage(b64);
+        setLoadedProfileImage(b64);
         const b64Input = document.getElementById('prof-image-base64');
         if (b64Input) b64Input.value = b64;
         profPreview.style.backgroundImage = `url(${b64})`;
@@ -819,7 +833,7 @@ function attachEventListeners() {
 
     document.querySelectorAll('.tab').forEach(btn => {
         btn.onclick = () => {
-            state.setActiveTab(btn.dataset.target);
+            setActiveTab(btn.dataset.target);
             document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             updateIframe({ syncChatHistory: false });
@@ -877,7 +891,7 @@ function attachEventListeners() {
             if (!ingestRes.job_id) throw new Error("Échec ingestion");
             
             emit(EVENTS.OFFER_INGESTED, { jobId: ingestRes.job_id });
-            state.setActiveJobId(ingestRes.job_id);
+            setActiveJobId(ingestRes.job_id);
 
             const delivs = document.getElementById('deliv-selector-ingest');
             const options = {
@@ -886,7 +900,7 @@ function attachEventListeners() {
                 cover_letter: delivs?.querySelector('[data-deliv="cover"]')?.classList.contains('active') ?? true,
             };
 
-            await api.generateApplication(ingestRes.job_id, state.selectedLlmProvider, options);
+            await api.generateApplication(ingestRes.job_id, selectedLlmProvider, options);
             emit(EVENTS.GEN_COMPLETED, { jobId: ingestRes.job_id });
             emit(EVENTS.NOTIFICATION, { message: 'Application générée avec succès !', type: 'success' });
             
@@ -902,7 +916,7 @@ function attachEventListeners() {
         const files = Array.from(e.target.files);
         for (const file of files) {
             const data = await ui.readFileAsDataUrl(file);
-            state.aiChatAttachments.push({ name: file.name, content_type: file.type, data });
+            aiChatAttachments.push({ name: file.name, content_type: file.type, data });
         }
         renderAiChatAttachments();
         e.target.value = '';
@@ -930,12 +944,18 @@ function setupSelector(containerId) {
         // 2. Click Handler
         pill.onclick = (e) => {
             e.preventDefault();
-            if (prov) {
-                setSelectedLlmProvider(prov);
-                emit(EVENTS.LLM_PROVIDER_CHANGED, { provider: prov });
-            } else if (deliv) {
-                pill.classList.toggle('active');
-                setDelivConfig(deliv, pill.classList.contains('active'));
+            console.log("[DEBUG] LLM Pill clicked", { prov, deliv });
+            try {
+                if (prov) {
+                    setSelectedLlmProvider(prov);
+                    emit(EVENTS.LLM_PROVIDER_CHANGED, { provider: prov });
+                } else if (deliv) {
+                    pill.classList.toggle('active');
+                    setDelivConfig(deliv, pill.classList.contains('active'));
+                }
+            } catch (err) {
+                console.error("[DEBUG] Click Handler Error:", err);
+                alert("[DEBUG] Click Handler Error: " + err.message);
             }
         };
     });
