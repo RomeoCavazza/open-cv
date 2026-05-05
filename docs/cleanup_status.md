@@ -34,6 +34,20 @@
 - **Data** : Tests Postgres réels (Round-trip JSONB).
 - **Polish** : Skeletons, transitions fluides et export PDF final.
 
+### 3. Frontend Modularization (Phase 3.5) - [2026-05-05]
+**Status: SUCCESS ✅**
+- **Event Bus**: Unified event bus implemented in `web/assets/js/modules/events.js`.
+- **Decoupling**: `dashboard.js` and `chat.js` are now independent. Communication happens via `OFFER_SELECTED`, `LLM_PROVIDER_CHANGED`, etc.
+- **Window Purge**: `window.activeJobId`, `window.activeInstanceSlug`, and `window.activeInstanceData` have been completely removed.
+- **Premium UI**: Added CSS loaders and an event-driven Toast notification system.
+- **Debt remaining**: Physical splitting of `dashboard.js` into smaller controllers (Phase 4) is pending but unblocked.
+
+### 4. Remaining Debt & Next Steps
+1. **Backend**: Decouple Restitution from RAG (`generate/mod.rs`).
+2. **Backend**: Implement automated indexer for the `chunks` table.
+3. **Frontend**: Physically split `dashboard.js` into modules (Phase 4).
+4. **Validation**: Re-run Test 1.3/1.4 once LLM quotas/models are upgraded.
+
 ## 4. RÈGLES DE GOUVERNANCE (NON-NÉGOCIABLES)
 
 1.  **No Silent Edits** : Toute modification de contrat API ou de logique métier doit être explicitement validée par un test.
