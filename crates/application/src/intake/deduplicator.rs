@@ -1,8 +1,8 @@
 //! Deduplicator — Logique de calcul de hash et de détection de doublons.
 
-use sha2::{Digest, Sha256};
-use ports::{OffreRepo, RepoError};
 use domain::Offre;
+use ports::{OffreRepo, RepoError};
+use sha2::{Digest, Sha256};
 use std::sync::Arc;
 
 pub struct Deduplicator {

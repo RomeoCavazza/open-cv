@@ -66,7 +66,10 @@ pub async fn ingest_handler(
                         let gen_input = build_generate_input(
                             instance,
                             profil.id,
-                            payload.config.as_ref().expect("config presence checked by should_generate"),
+                            payload
+                                .config
+                                .as_ref()
+                                .expect("config presence checked by should_generate"),
                         );
 
                         state

@@ -188,7 +188,10 @@ mod tests {
     #[test]
     fn active_profile_content_returns_raw_content() {
         let profil = build_profile(true);
-        assert_eq!(active_profile_content(profil)["profile"]["firstname"], json!("Original"));
+        assert_eq!(
+            active_profile_content(profil)["profile"]["firstname"],
+            json!("Original")
+        );
     }
 
     #[test]

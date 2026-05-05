@@ -6,8 +6,8 @@ use crate::events::GenerationStep;
 use crate::prompts;
 use crate::AppError;
 use domain::{Chunk, CoverLetter, InstanceId, Offre, ProfilId, Restitution, Resume};
-use ports::{EmbedMode, ExtractionRequest, LlmClient};
 use once_cell::sync::Lazy;
+use ports::{EmbedMode, ExtractionRequest, LlmClient};
 use std::sync::Arc;
 use tracing::warn;
 

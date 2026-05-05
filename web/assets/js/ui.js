@@ -290,23 +290,6 @@ export function createAnnexeRow(item = {}) {
     div.className = 'form-row-annexe';
     div.style = "display:flex; flex-direction:column; gap:0; margin-bottom:12px; border:1px solid var(--hairline); border-radius:10px; background:var(--canvas); overflow:hidden; transition: all 0.2s ease;";
 
-    function createIconSvg(pathDefs, width = '17', height = '17') {
-        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-        svg.setAttribute('width', width);
-        svg.setAttribute('height', height);
-        svg.setAttribute('fill', 'none');
-        svg.setAttribute('viewBox', '0 0 24 24');
-        svg.setAttribute('stroke-width', '1.5');
-        svg.setAttribute('stroke', 'currentColor');
-        pathDefs.forEach((def) => {
-            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-            path.setAttribute('stroke-linecap', 'round');
-            path.setAttribute('stroke-linejoin', 'round');
-            path.setAttribute('d', def);
-            svg.appendChild(path);
-        });
-        return svg;
-    }
 
     // Mapping des données (supporte le format API et le format local)
     const id = item.id || "";
@@ -454,8 +437,7 @@ export function createAnnexeRow(item = {}) {
                 nameInput.value = rawName.charAt(0).toUpperCase() + rawName.slice(1);
             }
             
-            viewBtn.style.display = 'flex';
-            viewBtn.style.color = 'var(--primary)';
+            // viewBtn is not used as preview is handled by icon/title click
         } catch (err) {
             console.error("Annexe load failed", err);
         }

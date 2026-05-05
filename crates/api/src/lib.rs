@@ -1,10 +1,9 @@
+use axum::http::StatusCode;
+use axum::response::IntoResponse;
 use axum::{
-    extract::State,
     routing::{delete, get, post, put},
     Router,
 };
-use axum::response::IntoResponse;
-use axum::http::StatusCode;
 use tower_http::cors::CorsLayer;
 use tower_http::trace::TraceLayer;
 
@@ -12,50 +11,93 @@ pub mod errors;
 pub(crate) mod handlers;
 pub mod state;
 
-use crate::state::AppState;
 use crate::handlers::{
     chat::chat_handler,
     ingest::ingest_handler,
-    instance::{get_instance_by_offre_slug, get_instance_by_slug, get_instance_resume, get_instance_cover_letter, generate_instance},
+    instance::{
+        generate_instance, get_instance_by_offre_slug, get_instance_by_slug,
+        get_instance_cover_letter, get_instance_resume,
+    },
     offre::{get_offre_by_slug, list_offres},
     profile::{
-        delete_annexe_handler, download_annexe_handler, get_active_profile_calendar_handler, get_active_profile_cover_letter_template_handler,
-        get_active_profile_handler, get_active_profile_photo_handler, get_active_profile_resume_handler,
+        delete_annexe_handler, download_annexe_handler, get_active_profile_calendar_handler,
+        get_active_profile_cover_letter_template_handler, get_active_profile_handler,
+        get_active_profile_photo_handler, get_active_profile_resume_handler,
         get_active_profile_resume_template_handler, list_annexes_handler, list_profiles_handler,
         update_active_profile_handler, upload_annexe_handler,
     },
 };
+use crate::state::AppState;
 
 pub fn create_app(state: AppState) -> Router {
     let web_dir = std::env::var("WEB_DIR").unwrap_or_else(|_| "web".to_string());
-    
+
     Router::new()
         .route("/health", get(health))
         .route("/api/offres", get(list_offres))
         .route("/api/offres/:slug", get(get_offre_by_slug))
-        .route("/api/offres/:slug/instance", get(get_instance_by_offre_slug))
+        .route(
+            "/api/offres/:slug/instance",
+            get(get_instance_by_offre_slug),
+        )
         .route("/api/instances/:slug", get(get_instance_by_slug))
         .route("/api/instances/:slug/resume", get(get_instance_resume))
-        .route("/api/instances/:slug/cover-letter", get(get_instance_cover_letter))
+        .route(
+            "/api/instances/:slug/cover-letter",
+            get(get_instance_cover_letter),
+        )
         .route("/api/instances/:slug/generate", post(generate_instance))
         .route("/api/profile/active", get(get_active_profile_handler))
         .route("/api/profile/active", put(update_active_profile_handler))
-        .route("/api/profile/active/resume", get(get_active_profile_resume_handler))
-        .route("/api/profile/active/resume/template", get(get_active_profile_resume_template_handler))
-        .route("/api/profile/active/cover-letter/template", get(get_active_profile_cover_letter_template_handler))
-        .route("/api/profile/active/calendar", get(get_active_profile_calendar_handler))
-        .route("/api/profile/active/photo", get(get_active_profile_photo_handler))
+        .route(
+            "/api/profile/active/resume",
+            get(get_active_profile_resume_handler),
+        )
+        .route(
+            "/api/profile/active/resume/template",
+            get(get_active_profile_resume_template_handler),
+        )
+        .route(
+            "/api/profile/active/cover-letter/template",
+            get(get_active_profile_cover_letter_template_handler),
+        )
+        .route(
+            "/api/profile/active/calendar",
+            get(get_active_profile_calendar_handler),
+        )
+        .route(
+            "/api/profile/active/photo",
+            get(get_active_profile_photo_handler),
+        )
         .route("/api/profiles", get(list_profiles_handler))
         .route("/api/profile/active/annexes", get(list_annexes_handler))
         .route("/api/profile/active/annexes", post(upload_annexe_handler))
-        .route("/api/profile/active/annexes/:id", get(download_annexe_handler))
-        .route("/api/profile/active/annexes/:id", delete(delete_annexe_handler))
+        .route(
+            "/api/profile/active/annexes/:id",
+            get(download_annexe_handler),
+        )
+        .route(
+            "/api/profile/active/annexes/:id",
+            delete(delete_annexe_handler),
+        )
         .route("/api/chat", post(chat_handler))
         .route("/api/ingest", post(ingest_handler))
-        .nest_service("/assets", tower_http::services::ServeDir::new(format!("{}/assets", web_dir)))
-        .nest_service("/restitution", tower_http::services::ServeDir::new(format!("{}/restitution", web_dir)))
-        .nest_service("/resume", tower_http::services::ServeDir::new(format!("{}/resume", web_dir)))
-        .nest_service("/cover-letter", tower_http::services::ServeDir::new(format!("{}/cover-letter", web_dir)))
+        .nest_service(
+            "/assets",
+            tower_http::services::ServeDir::new(format!("{}/assets", web_dir)),
+        )
+        .nest_service(
+            "/restitution",
+            tower_http::services::ServeDir::new(format!("{}/restitution", web_dir)),
+        )
+        .nest_service(
+            "/resume",
+            tower_http::services::ServeDir::new(format!("{}/resume", web_dir)),
+        )
+        .nest_service(
+            "/cover-letter",
+            tower_http::services::ServeDir::new(format!("{}/cover-letter", web_dir)),
+        )
         .fallback(get(get_index))
         .with_state(state)
         .layer(TraceLayer::new_for_http())

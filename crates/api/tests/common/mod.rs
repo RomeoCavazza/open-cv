@@ -1,6 +1,12 @@
 use async_trait::async_trait;
-use domain::{Profil, ProfilId, Offre, OffreId, Instance, InstanceId, Slug, Annexe, Message, AnnexeId, Chunk};
-use ports::{ProfilRepo, OffreRepo, InstanceRepo, ChunkRepo, AnnexeRepo, MessageRepo, RepoError, Scraper, ScrapeResult, ScrapeError, Embedder, EmbedMode, EmbedError, LlmClient, CompletionRequest, CompletionResponse, LlmError, ExtractionRequest};
+use domain::{
+    Annexe, AnnexeId, Chunk, Instance, InstanceId, Message, Offre, OffreId, Profil, ProfilId, Slug,
+};
+use ports::{
+    AnnexeRepo, ChunkRepo, CompletionRequest, CompletionResponse, EmbedError, EmbedMode, Embedder,
+    ExtractionRequest, InstanceRepo, LlmClient, LlmError, MessageRepo, OffreRepo, ProfilRepo,
+    RepoError, ScrapeError, ScrapeResult, Scraper,
+};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
@@ -23,7 +29,13 @@ impl MockRepos {
 #[async_trait]
 impl ProfilRepo for MockRepos {
     async fn get_active(&self) -> Result<Option<Profil>, RepoError> {
-        Ok(self.profils.lock().unwrap().values().find(|p| p.is_active).cloned())
+        Ok(self
+            .profils
+            .lock()
+            .unwrap()
+            .values()
+            .find(|p| p.is_active)
+            .cloned())
     }
     async fn get_by_id(&self, id: ProfilId) -> Result<Option<Profil>, RepoError> {
         Ok(self.profils.lock().unwrap().get(&id).cloned())
@@ -32,7 +44,10 @@ impl ProfilRepo for MockRepos {
         Ok(self.profils.lock().unwrap().values().cloned().collect())
     }
     async fn upsert(&self, profil: &Profil) -> Result<(), RepoError> {
-        self.profils.lock().unwrap().insert(profil.id.clone(), profil.clone());
+        self.profils
+            .lock()
+            .unwrap()
+            .insert(profil.id, profil.clone());
         Ok(())
     }
 }
@@ -43,7 +58,13 @@ impl OffreRepo for MockRepos {
         Ok(self.offres.lock().unwrap().get(&id).cloned())
     }
     async fn get_by_slug(&self, slug: &Slug) -> Result<Option<Offre>, RepoError> {
-        Ok(self.offres.lock().unwrap().values().find(|o| &o.slug == slug).cloned())
+        Ok(self
+            .offres
+            .lock()
+            .unwrap()
+            .values()
+            .find(|o| &o.slug == slug)
+            .cloned())
     }
     async fn list_all(&self) -> Result<Vec<Offre>, RepoError> {
         Ok(self.offres.lock().unwrap().values().cloned().collect())
@@ -53,13 +74,17 @@ impl OffreRepo for MockRepos {
         Ok(self.offres.lock().unwrap().values().cloned().collect())
     }
     async fn upsert(&self, offre: &Offre) -> Result<(), RepoError> {
-        self.offres.lock().unwrap().insert(offre.id.clone(), offre.clone());
+        self.offres.lock().unwrap().insert(offre.id, offre.clone());
         Ok(())
     }
     async fn count(&self) -> Result<u64, RepoError> {
         Ok(self.offres.lock().unwrap().len() as u64)
     }
-    async fn find_by_content_hash(&self, source_host: &str, hash: &[u8]) -> Result<Option<Offre>, RepoError> {
+    async fn find_by_content_hash(
+        &self,
+        source_host: &str,
+        hash: &[u8],
+    ) -> Result<Option<Offre>, RepoError> {
         let _ = (source_host, hash);
         Ok(None)
     }
@@ -71,14 +96,23 @@ impl InstanceRepo for MockRepos {
         Ok(self.instances.lock().unwrap().get(&id).cloned())
     }
     async fn get_by_slug(&self, slug: &Slug) -> Result<Option<Instance>, RepoError> {
-        Ok(self.instances.lock().unwrap().values().find(|i| &i.slug == slug).cloned())
+        Ok(self
+            .instances
+            .lock()
+            .unwrap()
+            .values()
+            .find(|i| &i.slug == slug)
+            .cloned())
     }
     async fn list_recent(&self, limit: u32) -> Result<Vec<Instance>, RepoError> {
         let _ = limit;
         Ok(self.instances.lock().unwrap().values().cloned().collect())
     }
     async fn upsert(&self, instance: &Instance) -> Result<(), RepoError> {
-        self.instances.lock().unwrap().insert(instance.id.clone(), instance.clone());
+        self.instances
+            .lock()
+            .unwrap()
+            .insert(instance.id, instance.clone());
         Ok(())
     }
     async fn get_by_offre_id(&self, offre_id: OffreId) -> Result<Option<Instance>, RepoError> {
@@ -89,62 +123,73 @@ impl InstanceRepo for MockRepos {
 
 #[async_trait]
 impl ChunkRepo for MockRepos {
-    async fn upsert(&self, chunk: &Chunk) -> Result<(), RepoError> { 
+    async fn upsert(&self, chunk: &Chunk) -> Result<(), RepoError> {
         let _ = chunk;
-        Ok(()) 
+        Ok(())
     }
-    async fn top_k_by_embedding(&self, profil_id: ProfilId, query_embedding: &[f32], k: u32) -> Result<Vec<(Chunk, f32)>, RepoError> {
+    async fn top_k_by_embedding(
+        &self,
+        profil_id: ProfilId,
+        query_embedding: &[f32],
+        k: u32,
+    ) -> Result<Vec<(Chunk, f32)>, RepoError> {
         let _ = (query_embedding, k);
-        Ok(vec![(Chunk {
-            id: domain::ChunkId::new(),
-            profil_id,
-            kind: domain::ChunkKind::Experience,
-            titre: "Dummy Experience".to_string(),
-            content: "Experience dummy".to_string(),
-            metadata: serde_json::json!({}),
-            embedding: vec![0.0; 1024],
-            created_at: chrono::Utc::now(),
-        }, 1.0)])
+        Ok(vec![(
+            Chunk {
+                id: domain::ChunkId::new(),
+                profil_id,
+                kind: domain::ChunkKind::Experience,
+                titre: "Dummy Experience".to_string(),
+                content: "Experience dummy".to_string(),
+                metadata: serde_json::json!({}),
+                embedding: vec![0.0; 1024],
+                created_at: chrono::Utc::now(),
+            },
+            1.0,
+        )])
     }
 }
 
 #[async_trait]
 impl AnnexeRepo for MockRepos {
-    async fn get_by_id(&self, id: AnnexeId) -> Result<Option<Annexe>, RepoError> { 
+    async fn get_by_id(&self, id: AnnexeId) -> Result<Option<Annexe>, RepoError> {
         let _ = id;
-        Ok(None) 
+        Ok(None)
     }
-    async fn list_by_profil_id(&self, profil_id: ProfilId) -> Result<Vec<Annexe>, RepoError> { 
+    async fn list_by_profil_id(&self, profil_id: ProfilId) -> Result<Vec<Annexe>, RepoError> {
         let _ = profil_id;
-        Ok(vec![]) 
+        Ok(vec![])
     }
-    async fn upsert(&self, annexe: &Annexe) -> Result<(), RepoError> { 
+    async fn upsert(&self, annexe: &Annexe) -> Result<(), RepoError> {
         let _ = annexe;
-        Ok(()) 
+        Ok(())
     }
-    async fn delete(&self, id: AnnexeId) -> Result<(), RepoError> { 
+    async fn delete(&self, id: AnnexeId) -> Result<(), RepoError> {
         let _ = id;
-        Ok(()) 
+        Ok(())
     }
 }
 
 #[async_trait]
 impl MessageRepo for MockRepos {
-    async fn list_by_instance_id(&self, instance_id: InstanceId) -> Result<Vec<Message>, RepoError> { 
+    async fn list_by_instance_id(
+        &self,
+        instance_id: InstanceId,
+    ) -> Result<Vec<Message>, RepoError> {
         let _ = instance_id;
-        Ok(vec![]) 
+        Ok(vec![])
     }
-    async fn list_by_profil_id(&self, profil_id: ProfilId) -> Result<Vec<Message>, RepoError> { 
+    async fn list_by_profil_id(&self, profil_id: ProfilId) -> Result<Vec<Message>, RepoError> {
         let _ = profil_id;
-        Ok(vec![]) 
+        Ok(vec![])
     }
-    async fn push(&self, message: &Message) -> Result<(), RepoError> { 
+    async fn push(&self, message: &Message) -> Result<(), RepoError> {
         let _ = message;
-        Ok(()) 
+        Ok(())
     }
-    async fn delete_all_for_instance(&self, instance_id: InstanceId) -> Result<(), RepoError> { 
+    async fn delete_all_for_instance(&self, instance_id: InstanceId) -> Result<(), RepoError> {
         let _ = instance_id;
-        Ok(()) 
+        Ok(())
     }
 }
 
@@ -155,8 +200,12 @@ impl Embedder for MockEmbedder {
         let _ = (texts, mode);
         Ok(vec![vec![0.0; 1024]; texts.len()])
     }
-    fn dimension(&self) -> usize { 1024 }
-    fn name(&self) -> &'static str { "mock" }
+    fn dimension(&self) -> usize {
+        1024
+    }
+    fn name(&self) -> &'static str {
+        "mock"
+    }
 }
 
 pub struct MockLlm;
@@ -213,11 +262,13 @@ impl LlmClient for MockLlm {
                 "points_attention": ["None"],
                 "questions_entretien": ["Why Rust?"]
             }),
-            _ => serde_json::json!({})
+            _ => serde_json::json!({}),
         };
         Ok(json)
     }
-    fn name(&self) -> &'static str { "mock" }
+    fn name(&self) -> &'static str {
+        "mock"
+    }
 }
 
 pub struct MockScraper;
@@ -247,5 +298,7 @@ impl Scraper for MockScraper {
             status: 200,
         })
     }
-    fn name(&self) -> &'static str { "mock" }
+    fn name(&self) -> &'static str {
+        "mock"
+    }
 }

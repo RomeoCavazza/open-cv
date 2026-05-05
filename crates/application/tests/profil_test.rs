@@ -1,5 +1,5 @@
-use domain::{Profil, ProfilId};
 use chrono::Utc;
+use domain::{Profil, ProfilId};
 use serde_json::json;
 
 #[test]

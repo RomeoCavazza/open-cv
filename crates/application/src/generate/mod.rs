@@ -112,6 +112,7 @@ pub struct GenerateApplicationUseCase {
 }
 
 impl GenerateApplicationUseCase {
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         offres: Arc<dyn OffreRepo>,
         profils: Arc<dyn ProfilRepo>,

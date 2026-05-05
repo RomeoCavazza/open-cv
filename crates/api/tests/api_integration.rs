@@ -3,10 +3,10 @@ mod common;
 use api::create_app;
 use api::state::AppState;
 use axum_test::TestServer;
-use common::{MockRepos, MockEmbedder, MockLlm, MockScraper};
-use domain::{Profil, ProfilId, ProfilContent, ProfileSection, Slug};
-use std::sync::Arc;
+use common::{MockEmbedder, MockLlm, MockRepos, MockScraper};
+use domain::{Profil, ProfilContent, ProfilId, ProfileSection};
 use std::collections::HashMap;
+use std::sync::Arc;
 
 async fn setup_test_server() -> (TestServer, Arc<MockRepos>) {
     let mock_repos = Arc::new(MockRepos::new());
@@ -66,7 +66,7 @@ async fn test_get_profile_404_when_empty() {
 #[tokio::test]
 async fn test_get_profile_200_when_seeded() {
     let (server, repos) = setup_test_server().await;
-    
+
     let profil = Profil {
         id: ProfilId::new(),
         label: "Test Profile".to_string(),
@@ -86,11 +86,15 @@ async fn test_get_profile_200_when_seeded() {
         cover_letter_template: None,
         notes: serde_json::json!({}),
     };
-    repos.profils.lock().unwrap().insert(profil.id.clone(), profil.clone());
+    repos
+        .profils
+        .lock()
+        .unwrap()
+        .insert(profil.id, profil.clone());
 
     let response = server.get("/api/profile/active").await;
     response.assert_status_success();
-    
+
     let body = response.json::<Profil>();
     assert_eq!(body.content.profile.firstname, "John");
 }
@@ -98,10 +102,10 @@ async fn test_get_profile_200_when_seeded() {
 #[tokio::test]
 async fn test_put_profile_200_updates_content() {
     let (server, repos) = setup_test_server().await;
-    
+
     let id = ProfilId::new();
     let profil = Profil {
-        id: id.clone(),
+        id: id,
         label: "Initial".to_string(),
         is_active: true,
         content: ProfilContent::default(),
@@ -112,7 +116,7 @@ async fn test_put_profile_200_updates_content() {
         cover_letter_template: None,
         notes: serde_json::json!({}),
     };
-    repos.profils.lock().unwrap().insert(id.clone(), profil);
+    repos.profils.lock().unwrap().insert(id, profil);
 
     let new_content = ProfilContent {
         profile: ProfileSection {
@@ -133,7 +137,7 @@ async fn test_put_profile_200_updates_content() {
 #[tokio::test]
 async fn test_put_profile_400_on_malformed_payload() {
     let (server, repos) = setup_test_server().await;
-    
+
     let profil = Profil {
         id: ProfilId::new(),
         label: "Test".to_string(),
@@ -146,7 +150,7 @@ async fn test_put_profile_400_on_malformed_payload() {
         cover_letter_template: None,
         notes: serde_json::json!({}),
     };
-    repos.profils.lock().unwrap().insert(profil.id.clone(), profil);
+    repos.profils.lock().unwrap().insert(profil.id, profil);
 
     // Malformed JSON (firstname should be a string, not a number)
     let malformed = serde_json::json!({
@@ -157,7 +161,7 @@ async fn test_put_profile_400_on_malformed_payload() {
 
     let response = server.put("/api/profile/active").json(&malformed).await;
     response.assert_status_bad_request();
-    
+
     let text = response.text();
     assert!(text.contains("Invalid profile payload"));
 }
@@ -165,14 +169,17 @@ async fn test_put_profile_400_on_malformed_payload() {
 #[tokio::test]
 async fn test_post_profile_active_405() {
     let (server, _) = setup_test_server().await;
-    let response = server.post("/api/profile/active").json(&serde_json::json!({})).await;
+    let response = server
+        .post("/api/profile/active")
+        .json(&serde_json::json!({}))
+        .await;
     response.assert_status(axum::http::StatusCode::METHOD_NOT_ALLOWED);
 }
 
 #[tokio::test]
 async fn test_post_ingest_200_with_restitution() {
     let (server, repos) = setup_test_server().await;
-    
+
     let profil = Profil {
         id: ProfilId::new(),
         label: "Test".to_string(),
@@ -185,7 +192,7 @@ async fn test_post_ingest_200_with_restitution() {
         cover_letter_template: None,
         notes: serde_json::json!({}),
     };
-    repos.profils.lock().unwrap().insert(profil.id.clone(), profil);
+    repos.profils.lock().unwrap().insert(profil.id, profil);
 
     let payload = serde_json::json!({
         "input": "http://job-offer.com",
@@ -203,7 +210,7 @@ async fn test_post_ingest_200_with_restitution() {
 #[tokio::test]
 async fn test_post_ingest_400_with_legacy_analysis_field() {
     let (server, _) = setup_test_server().await;
-    
+
     let payload = serde_json::json!({
         "input": "http://job-offer.com",
         "config": {
@@ -220,7 +227,7 @@ async fn test_post_ingest_400_with_legacy_analysis_field() {
 #[tokio::test]
 async fn test_get_annexes_200() {
     let (server, repos) = setup_test_server().await;
-    
+
     // Seed active profile
     let profil = Profil {
         id: ProfilId::new(),
@@ -234,7 +241,7 @@ async fn test_get_annexes_200() {
         cover_letter_template: None,
         notes: serde_json::json!({}),
     };
-    repos.profils.lock().unwrap().insert(profil.id.clone(), profil);
+    repos.profils.lock().unwrap().insert(profil.id, profil);
 
     let response = server.get("/api/profile/active/annexes").await;
     response.assert_status_success();

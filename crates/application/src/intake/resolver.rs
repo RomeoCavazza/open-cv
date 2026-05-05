@@ -1,8 +1,8 @@
 //! Resolver — Transformation d'un input brut (URL ou texte) en texte d'offre propre.
 
+use crate::AppError;
 use ports::Scraper;
 use std::sync::Arc;
-use crate::AppError;
 
 pub struct ContentResolver {
     scraper: Arc<dyn Scraper>,
@@ -48,18 +48,32 @@ pub(crate) fn looks_like_url(s: &str) -> bool {
 
 fn clean_raw_text(input: &str) -> String {
     let nav_keywords = [
-        "Our Teams", "Our Culture", "How We Hire", "Recruitment Process", "FAQ",
-        "See All Jobs", "Cookie", "Imagine New Horizons", "Mentions légales",
-        "Careers", "Politique de confidentialité",
+        "Our Teams",
+        "Our Culture",
+        "How We Hire",
+        "Recruitment Process",
+        "FAQ",
+        "See All Jobs",
+        "Cookie",
+        "Imagine New Horizons",
+        "Mentions légales",
+        "Careers",
+        "Politique de confidentialité",
     ];
 
     input
         .lines()
         .filter(|line| {
             let trimmed = line.trim();
-            if trimmed.is_empty() { return true; }
-            if is_just_markdown_link(trimmed) { return false; }
-            if nav_keywords.iter().any(|kw| trimmed.contains(kw)) { return false; }
+            if trimmed.is_empty() {
+                return true;
+            }
+            if is_just_markdown_link(trimmed) {
+                return false;
+            }
+            if nav_keywords.iter().any(|kw| trimmed.contains(kw)) {
+                return false;
+            }
             true
         })
         .collect::<Vec<_>>()
@@ -73,8 +87,14 @@ fn is_just_markdown_link(line: &str) -> bool {
 
 fn validate_quality(text: &str) -> Result<(), AppError> {
     let business_keywords = [
-        "mission", "profil", "compétence", "expérience", "formation",
-        "responsabilité", "stack", "technologie",
+        "mission",
+        "profil",
+        "compétence",
+        "expérience",
+        "formation",
+        "responsabilité",
+        "stack",
+        "technologie",
     ];
     let has_business_signal = business_keywords
         .iter()
@@ -82,7 +102,7 @@ fn validate_quality(text: &str) -> Result<(), AppError> {
 
     if text.len() < 500 && !has_business_signal {
         return Err(AppError::Other(
-            "Le contenu fourni semble être pauvre ou manque de signal métier.".into()
+            "Le contenu fourni semble être pauvre ou manque de signal métier.".into(),
         ));
     }
     Ok(())

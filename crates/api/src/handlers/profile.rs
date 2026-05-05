@@ -192,10 +192,7 @@ pub async fn get_active_profile_calendar_handler(
 ) -> Result<impl IntoResponse, ApiError> {
     let profil = resolve_active_profile(state.profil_repo.as_ref()).await?;
     match profil.calendar_pdf {
-        Some(pdf) => Ok((
-            [("content-type", "application/pdf")],
-            pdf,
-        )),
+        Some(pdf) => Ok(([("content-type", "application/pdf")], pdf)),
         None => Err(ApiError::NotFound("Calendrier non disponible".to_string())),
     }
 }

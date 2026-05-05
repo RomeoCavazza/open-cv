@@ -469,10 +469,7 @@ async fn instance_chat_keeps_read_only_questions_in_message_mode() {
     assert!(!schema_text.contains("\"cover\""));
 
     let instance_after = stores.instance.lock().unwrap().clone();
-    assert_eq!(
-        instance_after.resume_json.unwrap().accroche.titre,
-        "resume"
-    );
+    assert_eq!(instance_after.resume_json.unwrap().accroche.titre, "resume");
     assert_eq!(
         instance_after.cover_letter_json.unwrap().objet.libelle,
         "cover"
@@ -506,7 +503,10 @@ async fn instance_chat_updates_documents_for_explicit_mutations() {
     assert!(schema_text.contains("\"cover\""));
 
     let instance_after = stores.instance.lock().unwrap().clone();
-    assert_eq!(instance_after.resume_json.unwrap().accroche.titre, "updated resume");
+    assert_eq!(
+        instance_after.resume_json.unwrap().accroche.titre,
+        "updated resume"
+    );
     assert_eq!(
         instance_after.cover_letter_json.unwrap().objet.libelle,
         "updated cover"

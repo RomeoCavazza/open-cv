@@ -35,35 +35,48 @@ async fn main() -> anyhow::Result<()> {
 
     // LLM Registry
     let mut llm_map: HashMap<String, Arc<dyn ports::LlmClient>> = HashMap::new();
-    
+
     // Anthropic
     if let Ok(key) = std::env::var("ANTHROPIC_API_KEY") {
         if !key.is_empty() {
-            llm_map.insert("claude".into(), Arc::new(adapter_llm_claude::ClaudeClient::new(key)));
+            llm_map.insert(
+                "claude".into(),
+                Arc::new(adapter_llm_claude::ClaudeClient::new(key)),
+            );
             tracing::info!("LLM: Anthropic (Claude) activé");
         }
     }
-    
+
     // OpenAI
     if let Ok(key) = std::env::var("OPENAI_API_KEY") {
         if !key.is_empty() {
-            llm_map.insert("openai".into(), Arc::new(adapter_llm_openai::OpenAiClient::new(key)));
+            llm_map.insert(
+                "openai".into(),
+                Arc::new(adapter_llm_openai::OpenAiClient::new(key)),
+            );
             tracing::info!("LLM: OpenAI activé");
         }
     }
 
     // Ollama (local)
-    let ollama_base = std::env::var("OLLAMA_BASE_URL").unwrap_or_else(|_| "http://localhost:11434".into());
+    let ollama_base =
+        std::env::var("OLLAMA_BASE_URL").unwrap_or_else(|_| "http://localhost:11434".into());
     let ollama_model = std::env::var("OLLAMA_MODEL").unwrap_or_else(|_| "qwen2.5:7b".into());
-    let ollama_client = Arc::new(adapter_llm_ollama::OllamaClient::new(ollama_base.clone(), ollama_model.clone(), 1024));
+    let ollama_client = Arc::new(adapter_llm_ollama::OllamaClient::new(
+        ollama_base.clone(),
+        ollama_model.clone(),
+        1024,
+    ));
     llm_map.insert("ollama".into(), ollama_client.clone());
     tracing::info!("LLM: Ollama activé ({} @ {})", ollama_model, ollama_base);
 
     let default_llm = ollama_client.clone();
 
     // Embedder (Ollama)
-    let embed_base = std::env::var("OLLAMA_BASE_URL").unwrap_or_else(|_| "http://localhost:11434".into());
-    let embed_model = std::env::var("OLLAMA_EMBED_MODEL").unwrap_or_else(|_| "mxbai-embed-large".into());
+    let embed_base =
+        std::env::var("OLLAMA_BASE_URL").unwrap_or_else(|_| "http://localhost:11434".into());
+    let embed_model =
+        std::env::var("OLLAMA_EMBED_MODEL").unwrap_or_else(|_| "mxbai-embed-large".into());
     tracing::info!("Embedder: Ollama activé ({} @ {})", embed_model, embed_base);
     let embedder: Arc<dyn ports::Embedder> = Arc::new(adapter_llm_ollama::OllamaClient::new(
         embed_base,

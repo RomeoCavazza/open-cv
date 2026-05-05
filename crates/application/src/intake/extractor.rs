@@ -1,11 +1,11 @@
 //! Extractor — Extraction structurée via LLM avec fallback robuste.
 
-use std::sync::Arc;
+use domain::{OffreStructured, Slug};
 use once_cell::sync::Lazy;
+use ports::{ExtractionRequest, LlmClient};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use domain::{OffreStructured, Slug};
-use ports::{ExtractionRequest, LlmClient};
+use std::sync::Arc;
 use tracing::{info, warn};
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
@@ -24,8 +24,10 @@ pub struct OffreExtraction {
     pub mots_cles: Vec<String>,
 }
 
-static EXTRACTION_SCHEMA: Lazy<serde_json::Value> =
-    Lazy::new(|| serde_json::to_value(schemars::schema_for!(OffreExtraction)).expect("Schema is always serializable"));
+static EXTRACTION_SCHEMA: Lazy<serde_json::Value> = Lazy::new(|| {
+    serde_json::to_value(schemars::schema_for!(OffreExtraction))
+        .expect("Schema is always serializable")
+});
 
 pub struct StructuredExtractor {
     llm: Arc<dyn LlmClient>,
@@ -36,12 +38,23 @@ impl StructuredExtractor {
         Self { llm }
     }
 
-    pub async fn extract(&self, text: &str, llm_override: Option<Arc<dyn LlmClient>>) -> (String, String, Option<String>, Option<String>, OffreStructured) {
+    pub async fn extract(
+        &self,
+        text: &str,
+        llm_override: Option<Arc<dyn LlmClient>>,
+    ) -> (
+        String,
+        String,
+        Option<String>,
+        Option<String>,
+        OffreStructured,
+    ) {
         let llm = llm_override.unwrap_or_else(|| self.llm.clone());
-        
+
         let req = ExtractionRequest {
             system: Some("Tu extrais les métadonnées structurées d'une offre d'emploi.".into()),
-            instruction: "Extrais toutes les informations structurées de cette offre d'emploi.".into(),
+            instruction: "Extrais toutes les informations structurées de cette offre d'emploi."
+                .into(),
             input: vec![ports::MessageContent::Text(text.to_string())],
             schema_name: "OffreExtraction".into(),
             schema_description: "Métadonnées structurées extraites d'une offre d'emploi".into(),
@@ -54,16 +67,22 @@ impl StructuredExtractor {
             Ok(json) => match serde_json::from_value::<OffreExtraction>(json) {
                 Ok(ext) => {
                     info!("extraction LLM réussie");
-                    (ext.intitule, ext.entreprise, ext.localisation, ext.contrat, OffreStructured {
-                        resume_court: ext.resume_court,
-                        stack: ext.stack,
-                        missions: ext.missions,
-                        exigences: ext.exigences,
-                        soft_skills: ext.soft_skills,
-                        niveau_etudes: ext.niveau_etudes,
-                        type_contrat: ext.type_contrat,
-                        mots_cles: ext.mots_cles,
-                    })
+                    (
+                        ext.intitule,
+                        ext.entreprise,
+                        ext.localisation,
+                        ext.contrat,
+                        OffreStructured {
+                            resume_court: ext.resume_court,
+                            stack: ext.stack,
+                            missions: ext.missions,
+                            exigences: ext.exigences,
+                            soft_skills: ext.soft_skills,
+                            niveau_etudes: ext.niveau_etudes,
+                            type_contrat: ext.type_contrat,
+                            mots_cles: ext.mots_cles,
+                        },
+                    )
                 }
                 Err(e) => {
                     warn!("déserialisation extraction échouée : {e}");
@@ -78,7 +97,15 @@ impl StructuredExtractor {
     }
 }
 
-pub(crate) fn fallback_extraction(text: &str) -> (String, String, Option<String>, Option<String>, OffreStructured) {
+pub(crate) fn fallback_extraction(
+    text: &str,
+) -> (
+    String,
+    String,
+    Option<String>,
+    Option<String>,
+    OffreStructured,
+) {
     let first_line = text.lines().next().unwrap_or("Offre importée").to_string();
     (
         first_line,
@@ -88,7 +115,7 @@ pub(crate) fn fallback_extraction(text: &str) -> (String, String, Option<String>
         OffreStructured {
             resume_court: "Extraction LLM échouée.".into(),
             ..Default::default()
-        }
+        },
     )
 }
 

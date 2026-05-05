@@ -97,7 +97,6 @@ fn build_test_resume(
         formations,
         projets: vec![],
         langues: vec![],
-        ..domain::Resume::default()
     }
 }
 

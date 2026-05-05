@@ -1,1 +1,4 @@
-include!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../data/scripts/seed_profile.rs"));
+include!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../../data/scripts/seed_profile.rs"
+));
