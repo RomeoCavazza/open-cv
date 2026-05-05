@@ -804,20 +804,47 @@ function attachEventListeners() {
     setupSelector('llm-selector-chat');
     setupSelector('deliv-selector-ingest');
 
+    // Listeners for Generation UI
+    window.AppEvents.on(EVENTS.GEN_STARTED, () => {
+        const btn = document.getElementById('btn-ingest-run');
+        if (btn) {
+            btn.disabled = true;
+            btn._oldHTML = btn.innerHTML;
+            btn.innerHTML = '<span class="loader"></span>';
+        }
+    });
+
+    window.AppEvents.on(EVENTS.GEN_COMPLETED, () => {
+        const btn = document.getElementById('btn-ingest-run');
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = btn._oldHTML || 'Generate Application';
+        }
+        router.switchView('app');
+        loadOffers();
+        updateIframe();
+    });
+
+    window.AppEvents.on(EVENTS.GEN_FAILED, (data) => {
+        const btn = document.getElementById('btn-ingest-run');
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = btn._oldHTML || 'Generate Application';
+        }
+        alert('Erreur: ' + data.message);
+    });
+
     safeClick('btn-ingest-run', async () => {
         const input = document.getElementById('job-input');
-        if (!input) return;
-        const rawText = input.value;
-        if (!rawText) return;
+        if (!input || !input.value.trim()) return;
 
-        const btn = document.getElementById('btn-ingest-run');
-        btn.disabled = true;
-        const oldText = btn.innerHTML;
-        btn.innerHTML = '...';
+        emit(EVENTS.GEN_STARTED);
 
         try {
-            const ingestRes = await api.ingestOffer(rawText);
+            const ingestRes = await api.ingestOffer(input.value);
             if (!ingestRes.job_id) throw new Error("Échec ingestion");
+            
+            emit(EVENTS.OFFER_INGESTED, { jobId: ingestRes.job_id });
             state.setActiveJobId(ingestRes.job_id);
 
             const delivs = document.getElementById('deliv-selector-ingest');
@@ -827,15 +854,11 @@ function attachEventListeners() {
                 cover_letter: delivs?.querySelector('[data-deliv="cover"]')?.classList.contains('active') ?? true,
             };
 
-            const genRes = await api.generateApplication(ingestRes.job_id, state.selectedLlmProvider, options);
-            router.switchView('app');
-            loadOffers();
-            if (genRes.slug) updateIframe();
+            await api.generateApplication(ingestRes.job_id, state.selectedLlmProvider, options);
+            emit(EVENTS.GEN_COMPLETED, { jobId: ingestRes.job_id });
+            
         } catch (e) {
-            alert('Erreur: ' + e.message);
-        } finally {
-            btn.disabled = false;
-            btn.innerHTML = oldText;
+            emit(EVENTS.GEN_FAILED, { message: e.message });
         }
     });
 
