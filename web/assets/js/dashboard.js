@@ -23,7 +23,7 @@ import {
 } from './state.js';
 import * as api from './api.js';
 import * as ui from './ui.js';
-import { clear } from './dom.js';
+import { clear, safeClick } from './dom.js';
 import * as router from './router.js';
 import * as iframeRender from './render/iframe.js';
 import * as offerRender from './render/offers.js';
@@ -877,9 +877,14 @@ function attachEventListeners() {
     });
 
     safeClick('btn-ingest-run', async () => {
+        console.log("[DEBUG] Generate button clicked");
         const input = document.getElementById('job-input');
-        if (!input || !input.value.trim()) return;
+        if (!input || !input.value.trim()) {
+            console.warn("[DEBUG] Empty input, aborting.");
+            return;
+        }
 
+        console.log("[DEBUG] Emitting GEN_STARTED");
         emit(EVENTS.GEN_STARTED);
 
         try {

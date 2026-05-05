@@ -287,8 +287,14 @@
                     } else if (instance.status === 'generating') {
                         showGenerating();
                         if (!pollInterval) pollInterval = setInterval(checkStatus, 2000);
-                    } else { showEmpty(); }
-                } else { showEmpty(); }
+                    } else { 
+                        showEmpty(); 
+                        if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
+                    }
+                } else { 
+                    showEmpty(); 
+                    if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
+                }
             } catch (e) { console.error(e); }
         }
 

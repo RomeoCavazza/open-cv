@@ -69,3 +69,8 @@ export function svg(tagName, props = {}, children = []) {
     appendChildren(node, children);
     return node;
 }
+
+export function safeClick(id, handler) {
+    const el = document.getElementById(id);
+    if (el) el.onclick = handler;
+}
