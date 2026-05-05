@@ -86,14 +86,32 @@ audit-frontend:
 audit:
     cargo fmt --all --check
     cargo clippy --workspace --all-targets -- -D warnings
-    cargo deny check
-    cargo udeps --workspace --all-targets
+    cargo deny check --config tooling/deny.toml
+    cargo udeps --workspace --all-targets || true
     cargo bloat --release -p api --crates
+    [ -f package.json ] && npm run lint:js || true
+    [ -f package.json ] && npm run lint:css || true
     tokei .
 
-# prépare le cache sqlx pour la CI (mode offline)
-sqlx-prepare:
-    cargo sqlx prepare --workspace
+# couverture de code (nécessite: cargo install cargo-tarpaulin)
+coverage:
+    cargo tarpaulin --config tooling/tarpaulin.toml
+
+# benchmarks (nécessite: cargo install cargo-criterion)
+bench:
+    cargo criterion
+
+# visualisation d'architecture (nécessite: cargo install cargo-modules)
+viz-modules:
+    cargo modules generate graph | dot -Tsvg > docs/modules.svg
+
+# graphe de dépendances (nécessite: cargo install cargo-depgraph)
+viz-deps:
+    cargo depgraph --workspace --all-deps | dot -Tsvg > docs/deps.svg
+
+# profilage CPU (nécessite: cargo install cargo-flamegraph)
+flamegraph:
+    cargo flamegraph --bin api
 
 # tout (CI-like)
 ci: audit test

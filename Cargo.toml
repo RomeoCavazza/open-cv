@@ -71,6 +71,9 @@ base64     = "0.22"
 scraper      = "0.26"
 encoding_rs  = "0.8"
 
+# Benchmarking
+criterion = { version = "0.5", features = ["html"] }
+
 [profile.release]
 lto             = "thin"
 codegen-units   = 1

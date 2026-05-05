@@ -267,7 +267,7 @@ mod tests {
             }
         });
 
-        apply_profile_update(&mut profil, new_content);
+        let _ = apply_profile_update(&mut profil, new_content);
 
         assert_eq!(profil.content.profile.firstname, "Updated");
         assert_eq!(

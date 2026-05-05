@@ -1,0 +1,22 @@
+[setup]
+# Run tests in a single thread to avoid database lock issues if using shared DB
+test_threads = 1
+
+[report]
+# Output formats: Html, Xml, Json, Lcov
+format = ["Html", "Lcov"]
+# Output directory
+output_dir = "target/tarpaulin"
+
+[ignore]
+# Files or directories to ignore in coverage
+files = [
+    "crates/api/src/bin/*",
+    "crates/adapters/*/tests/*",
+]
+
+[execution]
+# Follow exec calls
+follow_exec = true
+# Coverage of all workspace members
+workspace = true

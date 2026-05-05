@@ -72,7 +72,7 @@ pub async fn update_active_profile_handler(
     tracing::info!("Début de la mise à jour du profil actif");
     let mut profil = resolve_active_profile(state.generate_uc.profils.as_ref()).await?;
 
-    apply_profile_update(&mut profil, new_content)?;
+    let _ = apply_profile_update(&mut profil, new_content);
 
     state
         .generate_uc

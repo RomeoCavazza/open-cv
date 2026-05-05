@@ -1,0 +1,19 @@
+{
+  "name": "recruitai-tooling",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Tooling for RecruitAI (Linting, Coverage, etc.)",
+  "scripts": {
+    "lint:js": "eslint --config tooling/eslint.config.js web/assets/js",
+    "lint:css": "stylelint --config tooling/stylelint.config.js \"web/assets/css/**/*.css\"",
+    "knip": "knip --config tooling/knip.json",
+    "purgecss": "purgecss --css web/assets/css/**/*.css --content web/index.html web/assets/js/**/*.js --output web/assets/css/dist"
+  },
+  "devDependencies": {
+    "eslint": "^9.0.0",
+    "stylelint": "^16.0.0",
+    "stylelint-config-standard": "^36.0.0",
+    "knip": "^5.0.0",
+    "@purgecss/cli": "^6.0.0"
+  }
+}

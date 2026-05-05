@@ -105,7 +105,7 @@ async fn test_put_profile_200_updates_content() {
 
     let id = ProfilId::new();
     let profil = Profil {
-        id: id,
+        id,
         label: "Initial".to_string(),
         is_active: true,
         content: ProfilContent::default(),
