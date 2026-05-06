@@ -56,7 +56,9 @@ pub async fn ingest_handler(
 
         match state.intake_uc.execute(input, llm_provider.clone()).await {
             Ok(output) => {
-                if should_generate(payload.config.as_ref()) {
+                // On ne déclenche la génération que si ce n'est PAS un doublon
+                // pour éviter d'écraser le travail existant (CV/Lettre modifiés via le chat)
+                if !output.was_duplicate && should_generate(payload.config.as_ref()) {
                     if let Some(instance) = state
                         .instance_repo
                         .get_by_id(output.instance_id)

@@ -7,11 +7,11 @@ pub mod resolver;
 mod tests;
 
 use chrono::Utc;
-use domain::{Instance, InstanceId, InstanceStatus, Offre, OffreId, Slug};
+use domain::{Instance, InstanceId, InstanceStatus, JsonValue, Offre, OffreId, Slug};
 use ports::{InstanceRepo, LlmClient, OffreRepo, ProfilRepo};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
-use tracing::info;
+use tracing::{error, info};
 
 use self::deduplicator::Deduplicator;
 use self::extractor::StructuredExtractor;
@@ -65,62 +65,138 @@ impl IntakeOffreUseCase {
         input: IntakeInput,
         llm_override: Option<Arc<dyn LlmClient>>,
     ) -> Result<IntakeOutput, AppError> {
-        // 1. Résolution & Nettoyage
-        let (raw_text, source_url) = self.resolver.resolve(&input.raw_input).await?;
-
-        // 2. Déduplication
+        let (raw_text, source_url) = self.resolve_content(&input.raw_input).await?;
         let host = self.deduplicator.resolve_host(&source_url);
         let hash = self.deduplicator.compute_hash(&raw_text);
 
-        if let Some(existing_offre) = self
+        if let Some(existing) = self.find_existing_offre(&source_url, &host, &hash).await? {
+            return self.handle_existing_offre(existing, input.profil_id).await;
+        }
+
+        info!("début extraction structurée via LLM");
+        let (intitule, entreprise, localisation, contrat, structured) =
+            self.extractor.extract(&raw_text, llm_override).await;
+        info!(entreprise = %entreprise, intitule = %intitule, "extraction terminée");
+
+        let offre_id = OffreId::new();
+        let slug = extractor::build_offre_slug(&entreprise, &intitule);
+        let offre = self.build_offre(
+            offre_id,
+            slug.clone(),
+            source_url,
+            host,
+            hash,
+            entreprise,
+            intitule,
+            localisation,
+            contrat,
+            raw_text,
+            structured,
+        );
+
+        self.persist_offre(&offre).await?;
+        info!("création instance draft");
+        let instance = self
+            .create_draft_instance(offre_id, slug.clone(), input.profil_id)
+            .await
+            .map_err(|e| {
+                error!(error = %e, "échec création instance");
+                e
+            })?;
+
+        Ok(IntakeOutput {
+            offre_slug: slug.to_string(),
+            instance_id: instance.id,
+            instance_slug: instance.slug.to_string(),
+            was_duplicate: false,
+        })
+    }
+
+    async fn resolve_content(&self, raw_input: &str) -> Result<(String, String), AppError> {
+        info!(input_len = raw_input.len(), "début résolution contenu");
+        let (raw_text, source_url) = self.resolver.resolve(raw_input).await.map_err(|e| {
+            error!(error = %e, "échec résolution contenu");
+            e
+        })?;
+        info!(source_url = %source_url, text_len = raw_text.len(), "résolution réussie");
+        Ok((raw_text, source_url))
+    }
+
+    async fn find_existing_offre(
+        &self,
+        source_url: &str,
+        host: &str,
+        hash: &[u8],
+    ) -> Result<Option<Offre>, AppError> {
+        if let Some(existing) = self
             .deduplicator
-            .find_existing(&host, &hash)
+            .find_by_url(source_url)
             .await
             .map_err(AppError::Repo)?
         {
-            if let Some(instance) = self
-                .instances
-                .get_by_offre_id(existing_offre.id)
-                .await
-                .map_err(AppError::Repo)?
-            {
-                return Ok(IntakeOutput {
-                    offre_slug: existing_offre.slug.to_string(),
-                    instance_id: instance.id,
-                    instance_slug: instance.slug.to_string(),
-                    was_duplicate: true,
-                });
-            }
+            return Ok(Some(existing));
+        }
 
-            let instance = self
-                .create_draft_instance(
-                    existing_offre.id,
-                    existing_offre.slug.clone(),
-                    input.profil_id,
-                )
-                .await?;
+        self.deduplicator
+            .find_existing(host, hash)
+            .await
+            .map_err(AppError::Repo)
+    }
+
+    async fn handle_existing_offre(
+        &self,
+        existing: Offre,
+        profil_id: domain::ProfilId,
+    ) -> Result<IntakeOutput, AppError> {
+        info!(slug = %existing.slug, "offre existante trouvée (déduplication)");
+        if let Some(instance) = self
+            .instances
+            .get_by_offre_and_profil(existing.id, profil_id)
+            .await
+            .map_err(AppError::Repo)?
+        {
+            info!(instance_slug = %instance.slug, "instance existante trouvée pour cette offre et ce profil");
             return Ok(IntakeOutput {
-                offre_slug: existing_offre.slug.to_string(),
+                offre_slug: existing.slug.to_string(),
                 instance_id: instance.id,
                 instance_slug: instance.slug.to_string(),
                 was_duplicate: true,
             });
         }
 
-        // 3. Extraction
-        let (intitule, entreprise, localisation, contrat, structured) =
-            self.extractor.extract(&raw_text, llm_override).await;
+        info!("pas d'instance pour cette offre/profil, création d'une nouvelle instance draft");
+        let instance = self
+            .create_draft_instance(existing.id, existing.slug.clone(), profil_id)
+            .await?;
+        Ok(IntakeOutput {
+            offre_slug: existing.slug.to_string(),
+            instance_id: instance.id,
+            instance_slug: instance.slug.to_string(),
+            was_duplicate: false,
+        })
+    }
 
-        // 4. Persistance Offre
-        let offre_id = OffreId::new();
-        let slug = extractor::build_offre_slug(&entreprise, &intitule);
-
-        let offre = Offre {
+    #[allow(clippy::too_many_arguments)]
+    fn build_offre(
+        &self,
+        offre_id: OffreId,
+        slug: Slug,
+        source_url: String,
+        source_host: String,
+        source_hash: Vec<u8>,
+        entreprise: String,
+        intitule: String,
+        localisation: Option<String>,
+        contrat: Option<String>,
+        raw_text: String,
+        structured: domain::OffreStructured,
+    ) -> Offre {
+        Offre {
             id: offre_id,
-            slug: slug.clone(),
+            slug,
             source_url,
-            source_host: host,
-            source_hash: hash,
+            source_host,
+            source_hash,
             entreprise,
             intitule,
             localisation,
@@ -131,22 +207,16 @@ impl IntakeOffreUseCase {
             last_seen_at: Utc::now(),
             closed_at: None,
             categorie: None,
-        };
+        }
+    }
 
-        self.offres.upsert(&offre).await.map_err(AppError::Repo)?;
+    async fn persist_offre(&self, offre: &Offre) -> Result<(), AppError> {
+        self.offres.upsert(offre).await.map_err(|e| {
+            error!(error = %e, "échec upsert offre");
+            AppError::Repo(e)
+        })?;
         info!(slug = %offre.slug, "nouvelle offre ingérée");
-
-        // 5. Instance Draft
-        let instance = self
-            .create_draft_instance(offre_id, slug.clone(), input.profil_id)
-            .await?;
-
-        Ok(IntakeOutput {
-            offre_slug: slug.to_string(),
-            instance_id: instance.id,
-            instance_slug: instance.slug.to_string(),
-            was_duplicate: false,
-        })
+        Ok(())
     }
 
     async fn create_draft_instance(
@@ -164,7 +234,7 @@ impl IntakeOffreUseCase {
             restitution: None,
             resume_json: None,
             cover_letter_json: None,
-            notes: serde_json::Value::Null,
+            notes: JsonValue::Null,
             created_at: Utc::now(),
             updated_at: Utc::now(),
             sent_at: None,

@@ -34,4 +34,11 @@ impl Deduplicator {
     pub async fn find_existing(&self, host: &str, hash: &[u8]) -> Result<Option<Offre>, RepoError> {
         self.offres.find_by_content_hash(host, hash).await
     }
+
+    pub async fn find_by_url(&self, url: &str) -> Result<Option<Offre>, RepoError> {
+        if url == "manual" {
+            return Ok(None);
+        }
+        self.offres.find_by_url(url).await
+    }
 }
