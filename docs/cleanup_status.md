@@ -60,6 +60,7 @@
 - Decouple Restitution from RAG (`generate/mod.rs`).
 - Implement automated indexer for the `chunks` table.
 - [FIXED] **God Module Dashboard**: `dashboard.js` (168 LOC). Modularization complete (Phase 4).
+- **[BUG] Ingestion 500** : Erreur 500 intermittente sur `/api/offres/ingest` lors du test final de la Phase 4 (probable timeout ou parsing).
 
 ## 4. AUDIT DE STABILITÉ ET INTÉGRITÉ (2026-05-06)
 *Diagnostic exhaustif du comportement du pipeline post-reset DB.*
