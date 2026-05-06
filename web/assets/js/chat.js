@@ -4,6 +4,7 @@ import { EVENTS, on } from './modules/events.js';
 let pendingAttachments = [];
 let currentActiveJobId = null;
 let currentLlmProvider = localStorage.getItem('recruitai_llm') || 'ollama';
+let currentAbortController = null;
 
 function updateAttachmentsUI() {
     const container = document.getElementById('ai-chat-attachments');
@@ -39,6 +40,7 @@ function updateAttachmentsUI() {
         container.appendChild(chip);
     });
 }
+
 function appendMessage(role, text, isStreaming = false) {
     const sidebarBody = document.querySelector('.ai-sidebar-body');
     if (!sidebarBody) return null;
@@ -98,8 +100,6 @@ function renderChatHistory(history) {
 function setSendButtonBusy(isBusy) {
     const sendBtn = document.querySelector('.ai-send-btn');
     if (!sendBtn) return;
-
-    sendBtn.disabled = isBusy;
     sendBtn.classList.toggle('is-busy', isBusy);
 }
 
@@ -139,16 +139,15 @@ async function loadChatHistory() {
     }
 }
 
-async function readChatErrorMessage(response) {
-    try {
-        const payload = await response.json();
-        return payload?.error || payload?.message || `Erreur HTTP ${response.status}`;
-    } catch (_) {
-        return `Erreur HTTP ${response.status}`;
-    }
-}
-
 async function sendChatMessage() {
+    // Si déjà occupé, on agit comme un bouton STOP
+    if (currentAbortController) {
+        currentAbortController.abort();
+        currentAbortController = null;
+        setSendButtonBusy(false);
+        return;
+    }
+
     const input = document.getElementById('chat-input');
     const message = input.value.trim();
     if (!message) return;
@@ -161,11 +160,13 @@ async function sendChatMessage() {
     const instance_id = instanceData?.id || null;
 
     setSendButtonBusy(true);
+    currentAbortController = new AbortController();
 
     try {
         const response = await fetch('/api/chat/stream', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
+            signal: currentAbortController.signal,
             body: JSON.stringify({
                 message,
                 instance_id,
@@ -208,15 +209,20 @@ async function sendChatMessage() {
         updateAttachmentsUI();
 
     } catch (e) {
-        console.error("[Chat] Streaming error:", e);
-        appendMessage('ai', `Désolé, une erreur est survenue : ${e.message}`);
+        if (e.name === 'AbortError') {
+            console.log("[Chat] Génération arrêtée par l'utilisateur.");
+            appendMessage('ai', " (Arrêté)");
+        } else {
+            console.error("[Chat] Streaming error:", e);
+            appendMessage('ai', `Désolé, une erreur est survenue : ${e.message}`);
+        }
     } finally {
+        currentAbortController = null;
         setSendButtonBusy(false);
     }
 }
 
 function initChat() {
-
     // File attachment handling
     document.addEventListener('change', async (e) => {
         if (e.target.id === 'ai-chat-file-input') {
@@ -259,7 +265,11 @@ function initChat() {
                 return;
             } else {
                 e.preventDefault();
-                sendChatMessage();
+                // Si on appuie sur Entrée alors que c'est busy, on n'arrête pas (UX choice)
+                // On n'envoie que si ce n'est pas busy
+                if (!currentAbortController) {
+                    sendChatMessage();
+                }
             }
         }
     });
