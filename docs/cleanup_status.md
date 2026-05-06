@@ -14,23 +14,24 @@
 
 ## 2. ÉTAT ACTUEL (2026-05-06)
 
-- **Backend** : ✅ Stable & Architecturalement pur.
-- **Tests** : ✅ 64 tests validés (Workspace total).
-- **Frontend** : ⚠️ Modularisé mais `ui.js` (546 LOC) en surpoids.
-- **Dette Critique** : Bug Ingestion 500 encore à reproduire et circonscrire.
-- **Architecture** : ✅ Couche Domaine purifiée (découplage `serde_json`).
+- **Backend** : ✅ Stable, Architecturalement pur.
+- **Tests** : ✅ 64 tests validés (Workspace total, 100% pass).
+- **Frontend** : ✅ Modularisé. `ui.js` allégé.
+- **Dette Critique** : ✅ Bug Ingestion 500 résolu via typage d'erreurs plus précis.
+- **Architecture** : ✅ Couche Domaine purifiée. Outillage au vert.
 
 ## 3. DETTES TECHNIQUES PRIORISÉES (RED LIST)
 
 ### HIGH (Critique / Bloquant)
-1. **[BUG] Ingestion 500** : Erreur intermittente sur `/api/offres/ingest`. Cause non confirmée à ce stade.
-2. **[UI] Refacto ui.js** : 546 LOC. Doit être segmenté en modules spécialisés (Toasts, Modals, Shared components).
-3. **[RAG] Couplage Restitution/RAG** : L'étape de recherche vectorielle bloque la Restitution même sans besoin de profil.
+1. **[INGESTION] Correction du bug 500** : ✅ Résolu. Les erreurs de contenu pauvre sont désormais des `400 Bad Request`. Logs ajoutés.
+2. **[UI] Refacto ui.js** : ✅ Terminé. Découpé en `components/` et `modules/`.
+3. **[RAG] Couplage Restitution/RAG** : ✅ Résolu. Pipeline optimisé dans `application/generate/mod.rs`.
 
 ### MED (Amélioration / Modularité)
 1. **[CODE] crates/application/src/chat/mod.rs** : God Module (582 LOC). Stream et persistence entremêlés.
 2. **[DATA] Templates MBDA** : Hardcodés dans `data/templates/*.json`. Doivent être génériques.
 3. **[SCRAPE] Anti-bot** : Échec sur SPA/Anti-bot (WTTJ, Siemens). Bypass texte brut nécessaire.
+   Décision d'architecture : évaluer **ScrapingAnt** comme fallback premium ciblé par domaine, et non comme chemin par défaut. Usage recommandé seulement après échec du scraper natif, HTML vide/incomplet ou détection d'un challenge JS/anti-bot.
 
 ### LOW (Hygiène / Polish)
 Aucune dette low ouverte.
