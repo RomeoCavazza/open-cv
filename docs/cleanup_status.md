@@ -29,7 +29,7 @@
 ### Phase 4 : Modularisation (Le Split) - [2026-05-06]
 **Status: SUCCESS ✅**
 - **Controllers**: Extracted `OfferController.js` and `ProfileController.js`.
-- **Decoupling**: `dashboard.js` reduced from **808 LOC** to **365 LOC**.
+- **Decoupling**: `dashboard.js` reduced from **808 LOC** to **168 LOC**.
 - **Architecture**: Orchestrator pattern implemented. `dashboard.js` only handles high-level events and routing.
 - **Persistence**: Fixed Profile data persistence and API body limits (10MB).
 
@@ -59,7 +59,7 @@
 - **Data Loss (HIGH)**: Ingestion/Generation wipes existing deliverables (CV, cover letter) if the hash changes or during the start of the generation pipeline. Re-scraping an existing URL causes associated documents to disappear. Requires URL-based deduplication and application instance preservation logic.
 - Decouple Restitution from RAG (`generate/mod.rs`).
 - Implement automated indexer for the `chunks` table.
-- [FIXED] **God Module Dashboard**: `dashboard.js` (365 LOC). Modularization complete (Phase 4).
+- [FIXED] **God Module Dashboard**: `dashboard.js` (168 LOC). Modularization complete (Phase 4).
 
 ## 4. AUDIT DE STABILITÉ ET INTÉGRITÉ (2026-05-06)
 *Diagnostic exhaustif du comportement du pipeline post-reset DB.*
@@ -88,7 +88,7 @@
 ### Dette Technique Résiduelle (Confirmée)
 - [FIXED] **Indexeur de profil** : Résolu via `seed_chunks`. Intégré au pipeline canonique.
 - [HIGH] **Couplage Restitution/RAG** : L'étape de recherche vectorielle (`generate/mod.rs:220`) bloque la Restitution même sans besoin de profil.
-- [MED] **Modularité Frontend** : `dashboard.js` (365 LOC) modularisé. `ui.js` (458 LOC) reste à découper.
+- [MED] **Modularité Frontend** : `dashboard.js` (168 LOC) modularisé. `ui.js` (458 LOC) reste à découper.
 - [MED] **Scraper limité** : Échec sur SPA/Anti-bot (WTTJ, Siemens). Bypass texte brut nécessaire.
 - [LOW] **Templates contaminés** : Contenu MBDA hardcodé dans `data/templates/*.json` polluant les sorties LLM.
 
