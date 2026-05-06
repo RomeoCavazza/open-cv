@@ -1,4 +1,5 @@
 use super::*;
+use crate::chat::prompt_utils::MAX_CHAT_HISTORY_ENTRIES;
 use async_trait::async_trait;
 use chrono::Utc;
 use domain::{

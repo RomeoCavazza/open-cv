@@ -1,75 +1,35 @@
-use base64::Engine;
-use domain::{Instance, Message, MessageRole};
+use domain::{Message, MessageRole};
 use ports::{
-    AnnexeRepo, ChunkRepo, EmbedMode, Embedder, ExtractionRequest, InstanceRepo, LlmClient,
-    MessageRepo, ProfilRepo,
+    AnnexeRepo, ChunkRepo, Embedder, InstanceRepo, LlmClient, MessageRepo, ProfilRepo, OffreRepo, LlmError,
 };
-use serde::{Deserialize, Serialize};
 use std::sync::Arc;
-use tracing::info;
 
-use crate::prompts;
+pub mod persistence;
+pub mod prompt_utils;
+pub mod streaming;
+pub mod types;
 
-const MAX_CHAT_HISTORY_ENTRIES: usize = 20;
+#[cfg(test)]
+mod tests;
 
-mod prompt_utils;
-
+pub use self::types::*;
+use self::persistence::ChatContextLoader;
+use self::streaming::StreamOrchestrator;
 use self::prompt_utils::{
     build_offer_prompt_context, build_profile_prompt_context, extract_chat_history,
     push_chat_history, render_chat_history_for_prompt, wants_identity, wants_mutation,
 };
 
-#[derive(Debug, Deserialize)]
-pub struct ChatRequest {
-    pub message: String,
-    pub instance_id: Option<String>,
-    pub llm_provider: String,
-    #[serde(default)]
-    pub attachments: Vec<ChatAttachment>,
-}
-
-#[derive(Debug, Deserialize, Clone)]
-pub struct ChatAttachment {
-    pub name: String,
-    pub content_type: String,
-    pub data: String, // Base64 (data:image/jpeg;base64,...)
-}
-
-#[derive(Debug, Serialize)]
-pub struct ChatResponse {
-    pub updated_instance: Option<Instance>,
-    pub message: String,
-}
-
-#[derive(Debug, Clone, Copy)]
-enum ChatOutputKind {
-    MessageOnly,
-    Mutation,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, schemars::JsonSchema)]
-struct ChatMutationOutput {
-    #[serde(default)]
-    resume: Option<domain::Resume>,
-    #[serde(default)]
-    cover: Option<domain::CoverLetter>,
-    message: String,
-}
-
 pub struct ChatWithApplicationUseCase {
-    pub offre_repo: Arc<dyn ports::OffreRepo>,
-    pub instance_repo: Arc<dyn InstanceRepo>,
-    pub profil_repo: Arc<dyn ProfilRepo>,
-    pub annexe_repo: Arc<dyn AnnexeRepo>,
-    pub chunk_repo: Arc<dyn ChunkRepo>,
+    pub loader: ChatContextLoader,
     pub message_repo: Arc<dyn MessageRepo>,
-    pub embedder: Arc<dyn Embedder>,
     pub llm_registry: std::collections::HashMap<String, Arc<dyn LlmClient>>,
 }
+
 impl ChatWithApplicationUseCase {
     #[allow(clippy::too_many_arguments)]
     pub fn new(
-        offre_repo: Arc<dyn ports::OffreRepo>,
+        offre_repo: Arc<dyn OffreRepo>,
         instance_repo: Arc<dyn InstanceRepo>,
         profil_repo: Arc<dyn ProfilRepo>,
         annexe_repo: Arc<dyn AnnexeRepo>,
@@ -79,23 +39,23 @@ impl ChatWithApplicationUseCase {
         llm_registry: std::collections::HashMap<String, Arc<dyn LlmClient>>,
     ) -> Self {
         Self {
-            offre_repo,
-            instance_repo,
-            profil_repo,
-            annexe_repo,
-            chunk_repo,
+            loader: ChatContextLoader {
+                offres: offre_repo,
+                instances: instance_repo,
+                profils: profil_repo,
+                annexes: annexe_repo,
+                chunks: chunk_repo,
+                embedder,
+            },
             message_repo,
-            embedder,
             llm_registry,
         }
     }
 
     pub async fn execute(&self, req: ChatRequest) -> anyhow::Result<ChatResponse> {
-        let instance_id = req.instance_id.clone();
-        if let Some(id) = instance_id {
-            if !id.is_empty() {
-                return self.execute_instance_chat(&id, req).await;
-            }
+        if let Some(id) = req.instance_id.as_ref().filter(|s| !s.is_empty()) {
+            let id = id.to_string();
+            return self.execute_instance_chat(&id, req).await;
         }
         self.execute_global_chat(req).await
     }
@@ -103,140 +63,45 @@ impl ChatWithApplicationUseCase {
     pub async fn execute_stream(
         &self,
         req: ChatRequest,
-    ) -> anyhow::Result<ports::BoxStream<'static, anyhow::Result<String>>> {
-        let instance_id = req.instance_id.clone();
-        if let Some(id) = instance_id {
-            if !id.is_empty() {
-                return self.execute_instance_chat_stream(&id, req).await;
-            }
+    ) -> anyhow::Result<ports::BoxStream<'static, Result<String, LlmError>>> {
+        if let Some(id) = req.instance_id.as_ref().filter(|s| !s.is_empty()) {
+            let id = id.to_string();
+            return self.execute_instance_chat_stream(&id, req).await;
         }
         self.execute_global_chat_stream(req).await
     }
+
+    // --- Instance Chat ---
 
     async fn execute_instance_chat(
         &self,
         instance_id: &str,
         req: ChatRequest,
     ) -> anyhow::Result<ChatResponse> {
-        let instance_uuid = uuid::Uuid::parse_str(instance_id)?;
-        let mut instance = self
-            .instance_repo
-            .get_by_id(domain::InstanceId::from_uuid(instance_uuid))
-            .await?
-            .ok_or_else(|| anyhow::anyhow!("Instance non trouvée"))?;
-
-        let profil = self
-            .profil_repo
-            .get_by_id(instance.profil_id)
-            .await?
-            .ok_or_else(|| anyhow::anyhow!("Profil non trouvé"))?;
-
-        let offre = self
-            .offre_repo
-            .get_by_id(instance.offre_id)
-            .await?
-            .ok_or_else(|| anyhow::anyhow!("Offre non trouvée"))?;
-
-        let wants_mutation = wants_mutation(&req.message);
-        let wants_identity = wants_identity(&req.message);
-
+        let (mut instance, profil, offre) = self.loader.load_instance_context(instance_id).await?;
+        let llm = self.get_llm(&req.llm_provider)?;
         let history = self.message_repo.list_by_instance_id(instance.id).await?;
-
-        info!(
-            "Chat (Instance): Historique extrait ({} messages)",
-            history.len()
-        );
+        let rag_context = self.loader.get_rag_context(instance.profil_id, &req.message).await?;
 
         let user_msg = Message::new(instance.id, MessageRole::User, req.message.clone());
         self.message_repo.push(&user_msg).await?;
 
-        instance.updated_at = chrono::Utc::now();
-        self.instance_repo.upsert(&instance).await?;
+        let wants_mutation = wants_mutation(&req.message);
+        let wants_identity = wants_identity(&req.message);
 
-        let llm = self.get_llm(&req.llm_provider)?;
+        let system_prompt = self.select_instance_system_prompt(wants_mutation, wants_identity);
+        let user_input = self.build_instance_user_input(&instance, &profil, &offre, &history, &rag_context, &req);
 
-        let rag_context = self
-            .get_rag_context(instance.profil_id, &req.message)
-            .await?;
-
-        let system_prompt = if wants_mutation {
-            prompts::chat::INSTANCE_MUTATION_SYSTEM
-        } else if wants_identity {
-            prompts::chat::INSTANCE_IDENTITY_SYSTEM
-        } else {
-            prompts::chat::INSTANCE_DEFAULT_SYSTEM
-        };
-
-        let history_prompt = render_chat_history_for_prompt(&history);
-
-        let mut user_input = vec![ports::MessageContent::Text(format!(
-            "IDENTITÉ DE L'UTILISATEUR (Profil complet):\n{}\n\n\
-            ANNEXES DISPONIBLES (en DB):\n{}\n\n\
-            OFFRE CIBLÉE (fiche brute et structurée):\n{}\n\n\
-            ANALYSE DE L'OFFRE CIBLÉE (Restitution):\n{}\n\n\
-            FRAGMENTS DE PARCOURS (RAG):\n{}\n\n\
-            HISTORIQUE RÉCENT DU CHAT:\n{}\n\n\
-            DEMANDE DE L'UTILISATEUR: {}\n\n\
-            JSON ACTUEL DU CV: {}\n\n\
-            JSON ACTUEL DE LA LETTRE: {}",
-            serde_json::to_string_pretty(&build_profile_prompt_context(&profil))?,
-            serde_json::to_string_pretty(&self.annexe_repo.list_by_profil_id(profil.id).await?)?,
-            serde_json::to_string_pretty(&build_offer_prompt_context(&offre))?,
-            serde_json::to_string_pretty(&instance.restitution)?,
-            rag_context,
-            history_prompt,
-            req.message,
-            serde_json::to_string_pretty(&instance.resume_json)?,
-            serde_json::to_string_pretty(&instance.cover_letter_json)?
-        ))];
-
-        for att in req.attachments {
-            if att.content_type.starts_with("image/") {
-                let b64 = att.data.split(',').nth(1).unwrap_or(&att.data);
-                if let Ok(data) = base64::engine::general_purpose::STANDARD.decode(b64) {
-                    user_input.push(ports::MessageContent::Image {
-                        data,
-                        content_type: att.content_type,
-                    });
-                }
-            }
-        }
-
-        let response_json = self
-            .call_llm_extract(
-                llm,
-                system_prompt,
-                user_input,
-                if wants_mutation {
-                    ChatOutputKind::Mutation
-                } else {
-                    ChatOutputKind::MessageOnly
-                },
-            )
-            .await?;
-
+        let response_json = self.call_llm_extract(llm, system_prompt, user_input, wants_mutation).await?;
         let new_data: ChatMutationOutput = serde_json::from_value(response_json)?;
 
-        let ai_message = if new_data.message.trim().is_empty() {
-            "J'ai mis à jour les documents selon votre demande.".to_string()
-        } else {
-            new_data.message
-        };
-
-        if let Some(res) = new_data.resume {
-            instance.resume_json = Some(res);
-            instance.status = domain::InstanceStatus::Ready;
-        }
-        if let Some(cov) = new_data.cover {
-            instance.cover_letter_json = Some(cov);
-            instance.status = domain::InstanceStatus::Ready;
-        }
+        let ai_message = self.process_instance_mutation(&mut instance, new_data).await?;
 
         let assistant_msg = Message::new(instance.id, MessageRole::Assistant, ai_message.clone());
         self.message_repo.push(&assistant_msg).await?;
 
         instance.updated_at = chrono::Utc::now();
-        self.instance_repo.upsert(&instance).await?;
+        self.loader.instances.upsert(&instance).await?;
 
         Ok(ChatResponse {
             updated_instance: Some(instance),
@@ -244,82 +109,99 @@ impl ChatWithApplicationUseCase {
         })
     }
 
-    async fn execute_global_chat(&self, req: ChatRequest) -> anyhow::Result<ChatResponse> {
-        let mut profil = self
-            .profil_repo
-            .get_active()
-            .await?
-            .ok_or_else(|| anyhow::anyhow!("Aucun profil actif trouvé"))?;
+    async fn execute_instance_chat_stream(
+        &self,
+        instance_id: &str,
+        req: ChatRequest,
+    ) -> anyhow::Result<ports::BoxStream<'static, Result<String, LlmError>>> {
+        let (instance, profil, offre) = self.loader.load_instance_context(instance_id).await?;
+        let llm = self.get_llm(&req.llm_provider)?;
+        let history = self.message_repo.list_by_instance_id(instance.id).await?;
+        let rag_context = self.loader.get_rag_context(instance.profil_id, &req.message).await?;
 
+        let user_msg = Message::new(instance.id, MessageRole::User, req.message.clone());
+        self.message_repo.push(&user_msg).await?;
+
+        let user_input = self.render_instance_input_simple(&instance, &profil, &offre, &history, &rag_context, &req.message)?;
+        
+        let completion_req = ports::CompletionRequest {
+            system: Some(crate::prompts::chat::INSTANCE_DEFAULT_SYSTEM.to_string()),
+            messages: vec![ports::Message::user(user_input)],
+            model: None,
+            max_tokens: Some(4000),
+            temperature: None,
+        };
+
+        let stream = llm.stream(completion_req).await?;
+        Ok(StreamOrchestrator::wrap_instance_stream(
+            stream, 
+            instance, 
+            self.message_repo.clone(), 
+            self.loader.instances.clone()
+        ))
+    }
+
+    // --- Global Chat ---
+
+    async fn execute_global_chat(&self, req: ChatRequest) -> anyhow::Result<ChatResponse> {
+        let mut profil = self.loader.load_active_profil().await?;
+        let llm = self.get_llm(&req.llm_provider)?;
+        let rag_context = self.loader.get_rag_context(profil.id, &req.message).await?;
         let chat_history = extract_chat_history(&profil.notes);
-        info!(
-            "Chat (Global): Historique extrait ({} entrées)",
-            chat_history.len()
-        );
+        let offres = self.loader.offres.list_all().await?;
 
         push_chat_history(&mut profil.notes, "user", &req.message);
-        self.profil_repo.upsert(&profil).await?;
+        self.loader.profils.upsert(&profil).await?;
 
-        let llm = self.get_llm(&req.llm_provider)?;
-
-        let rag_context = self.get_rag_context(profil.id, &req.message).await?;
-
-        let offres = self.offre_repo.list_all().await?;
-
-        let system_prompt = prompts::chat::GLOBAL_CHAT_SYSTEM;
-
-        let history_prompt = render_chat_history_for_prompt(&chat_history);
-
-        let mut user_input = vec![ports::MessageContent::Text(format!(
-            "IDENTITÉ DE L'UTILISATEUR (Profil complet):\n{}\n\n\
-            ANNEXES DISPONIBLES (en DB):\n{}\n\n\
-            OFFRES DISPONIBLES EN BASE ({} offres):\n{}\n\n\
-            DÉTAILS DU PARCOURS (RAG):\n{}\n\n\
-            HISTORIQUE RÉCENT DU CHAT:\n{}\n\n\
-            DEMANDE DE L'UTILISATEUR: {}",
-            serde_json::to_string_pretty(&build_profile_prompt_context(&profil))?,
-            serde_json::to_string_pretty(&self.annexe_repo.list_by_profil_id(profil.id).await?)?,
-            offres.len(),
-            serde_json::to_string_pretty(
-                &offres
-                    .iter()
-                    .map(|o| (o.slug.to_string(), o.intitule.clone(), o.entreprise.clone()))
-                    .collect::<Vec<_>>()
-            )?,
-            rag_context,
-            history_prompt,
-            req.message
-        ))];
-
-        for att in req.attachments {
-            if att.content_type.starts_with("image/") {
-                let b64 = att.data.split(',').nth(1).unwrap_or(&att.data);
-                if let Ok(data) = base64::engine::general_purpose::STANDARD.decode(b64) {
-                    user_input.push(ports::MessageContent::Image {
-                        data,
-                        content_type: att.content_type,
-                    });
-                }
-            }
-        }
-
-        let response_json = self
-            .call_llm_extract(llm, system_prompt, user_input, ChatOutputKind::MessageOnly)
-            .await?;
-
+        let user_input = self.build_global_user_input(&profil, &offres, &chat_history, &rag_context, &req);
+        
+        let response_json = self.call_llm_extract(llm, crate::prompts::chat::GLOBAL_CHAT_SYSTEM, user_input, false).await?;
         let ai_message = response_json["message"]
             .as_str()
             .unwrap_or("Désolé, je n'ai pas pu générer de réponse.")
             .to_string();
 
         push_chat_history(&mut profil.notes, "assistant", &ai_message);
-        self.profil_repo.upsert(&profil).await?;
+        self.loader.profils.upsert(&profil).await?;
 
         Ok(ChatResponse {
             updated_instance: None,
             message: ai_message,
         })
     }
+
+    async fn execute_global_chat_stream(
+        &self,
+        req: ChatRequest,
+    ) -> anyhow::Result<ports::BoxStream<'static, Result<String, LlmError>>> {
+        let mut profil = self.loader.load_active_profil().await?;
+        let llm = self.get_llm(&req.llm_provider)?;
+        let rag_context = self.loader.get_rag_context(profil.id, &req.message).await?;
+        let chat_history = extract_chat_history(&profil.notes);
+        let offres = self.loader.offres.list_all().await?;
+
+        push_chat_history(&mut profil.notes, "user", &req.message);
+        self.loader.profils.upsert(&profil).await?;
+
+        let user_input = self.render_global_input_simple(&profil, &offres, &chat_history, &rag_context, &req.message)?;
+        
+        let completion_req = ports::CompletionRequest {
+            system: Some(crate::prompts::chat::GLOBAL_CHAT_SYSTEM.to_string()),
+            messages: vec![ports::Message::user(user_input)],
+            model: None,
+            max_tokens: Some(4000),
+            temperature: None,
+        };
+
+        let stream = llm.stream(completion_req).await?;
+        Ok(StreamOrchestrator::wrap_global_stream(
+            stream, 
+            profil, 
+            self.loader.profils.clone()
+        ))
+    }
+
+    // --- Helpers ---
 
     fn get_llm(&self, provider: &str) -> anyhow::Result<Arc<dyn LlmClient>> {
         self.llm_registry
@@ -328,47 +210,20 @@ impl ChatWithApplicationUseCase {
             .ok_or_else(|| anyhow::anyhow!("LLM '{}' non configuré", provider))
     }
 
-    async fn get_rag_context(
-        &self,
-        profil_id: domain::ProfilId,
-        message: &str,
-    ) -> anyhow::Result<String> {
-        let query_text = format!("{} career context", message);
-        let embeddings = self
-            .embedder
-            .embed(&[&query_text], EmbedMode::Query)
-            .await?;
-
-        let query_vec = embeddings
-            .first()
-            .ok_or_else(|| anyhow::anyhow!("No embeddings returned"))?;
-
-        let chunks = self
-            .chunk_repo
-            .top_k_by_embedding(profil_id, query_vec, 5)
-            .await?;
-
-        Ok(chunks
-            .iter()
-            .map(|(c, _)| format!("### {} - {}\n{}", c.kind.as_str(), c.titre, c.content))
-            .collect::<Vec<_>>()
-            .join("\n\n"))
-    }
-
     async fn call_llm_extract(
         &self,
         llm: Arc<dyn LlmClient>,
         system: &str,
         input: Vec<ports::MessageContent>,
-        kind: ChatOutputKind,
+        wants_mutation: bool,
     ) -> anyhow::Result<serde_json::Value> {
-        let extraction_req = ExtractionRequest {
+        let extraction_req = ports::ExtractionRequest {
             system: Some(system.to_string()),
             instruction: "RÉPONDS UNIQUEMENT AVEC DU JSON.".into(),
             input,
             schema_name: "ChatResponse".into(),
             schema_description: "Réponse du chat".into(),
-            json_schema: if matches!(kind, ChatOutputKind::Mutation) {
+            json_schema: if wants_mutation {
                 serde_json::to_value(schemars::schema_for!(ChatMutationOutput))?
             } else {
                 serde_json::json!({
@@ -388,35 +243,145 @@ impl ChatWithApplicationUseCase {
             .map_err(|e| anyhow::anyhow!(e))
     }
 
-    async fn execute_global_chat_stream(
+    fn select_instance_system_prompt(&self, wants_mutation: bool, wants_identity: bool) -> &'static str {
+        if wants_mutation {
+            crate::prompts::chat::INSTANCE_MUTATION_SYSTEM
+        } else if wants_identity {
+            crate::prompts::chat::INSTANCE_IDENTITY_SYSTEM
+        } else {
+            crate::prompts::chat::INSTANCE_DEFAULT_SYSTEM
+        }
+    }
+
+    fn build_instance_user_input(
         &self,
-        req: ChatRequest,
-    ) -> anyhow::Result<ports::BoxStream<'static, anyhow::Result<String>>> {
-        let mut profil = self
-            .profil_repo
-            .get_active()
-            .await?
-            .ok_or_else(|| anyhow::anyhow!("Aucun profil actif trouvé"))?;
-
-        let chat_history = extract_chat_history(&profil.notes);
-        push_chat_history(&mut profil.notes, "user", &req.message);
-        self.profil_repo.upsert(&profil).await?;
-
-        let llm = self.get_llm(&req.llm_provider)?;
-        let rag_context = self.get_rag_context(profil.id, &req.message).await?;
-        let offres = self.offre_repo.list_all().await?;
-        let system_prompt = prompts::chat::GLOBAL_CHAT_SYSTEM;
-        let history_prompt = render_chat_history_for_prompt(&chat_history);
-
-        let user_input = format!(
+        instance: &domain::Instance,
+        profil: &domain::Profil,
+        offre: &domain::Offre,
+        history: &[domain::Message],
+        rag_context: &str,
+        req: &ChatRequest,
+    ) -> Vec<ports::MessageContent> {
+        let history_prompt = render_chat_history_for_prompt(history);
+        let mut contents = vec![ports::MessageContent::Text(format!(
             "IDENTITÉ DE L'UTILISATEUR (Profil complet):\n{}\n\n\
-            ANNEXES DISPONIBLES (en DB):\n{}\n\n\
+            OFFRE CIBLÉE (fiche brute et structurée):\n{}\n\n\
+            ANALYSE DE L'OFFRE CIBLÉE (Restitution):\n{}\n\n\
+            FRAGMENTS DE PARCOURS (RAG):\n{}\n\n\
+            HISTORIQUE RÉCENT DU CHAT:\n{}\n\n\
+            DEMANDE DE L'UTILISATEUR: {}\n\n\
+            JSON ACTUEL DU CV: {}\n\n\
+            JSON ACTUEL DE LA LETTRE: {}",
+            serde_json::to_string_pretty(&build_profile_prompt_context(profil)).unwrap_or_default(),
+            serde_json::to_string_pretty(&build_offer_prompt_context(offre)).unwrap_or_default(),
+            serde_json::to_string_pretty(&instance.restitution).unwrap_or_default(),
+            rag_context,
+            history_prompt,
+            req.message,
+            serde_json::to_string_pretty(&instance.resume_json).unwrap_or_default(),
+            serde_json::to_string_pretty(&instance.cover_letter_json).unwrap_or_default()
+        ))];
+
+        self.append_attachments(&mut contents, &req.attachments);
+        contents
+    }
+
+    fn build_global_user_input(
+        &self,
+        profil: &domain::Profil,
+        offres: &[domain::Offre],
+        chat_history: &[domain::Message],
+        rag_context: &str,
+        req: &ChatRequest,
+    ) -> Vec<ports::MessageContent> {
+        let history_prompt = render_chat_history_for_prompt(chat_history);
+        let mut contents = vec![ports::MessageContent::Text(format!(
+            "IDENTITÉ DE L'UTILISATEUR (Profil complet):\n{}\n\n\
             OFFRES DISPONIBLES EN BASE ({} offres):\n{}\n\n\
             DÉTAILS DU PARCOURS (RAG):\n{}\n\n\
             HISTORIQUE RÉCENT DU CHAT:\n{}\n\n\
             DEMANDE DE L'UTILISATEUR: {}",
-            serde_json::to_string_pretty(&build_profile_prompt_context(&profil))?,
-            serde_json::to_string_pretty(&self.annexe_repo.list_by_profil_id(profil.id).await?)?,
+            serde_json::to_string_pretty(&build_profile_prompt_context(profil)).unwrap_or_default(),
+            offres.len(),
+            serde_json::to_string_pretty(
+                &offres
+                    .iter()
+                    .map(|o| (o.slug.to_string(), o.intitule.clone(), o.entreprise.clone()))
+                    .collect::<Vec<_>>()
+            ).unwrap_or_default(),
+            rag_context,
+            history_prompt,
+            req.message
+        ))];
+
+        self.append_attachments(&mut contents, &req.attachments);
+        contents
+    }
+
+    fn append_attachments(&self, contents: &mut Vec<ports::MessageContent>, attachments: &[ChatAttachment]) {
+        use base64::Engine;
+        for att in attachments {
+            if att.content_type.starts_with("image/") {
+                let b64 = att.data.split(',').nth(1).unwrap_or(&att.data);
+                if let Ok(data) = base64::engine::general_purpose::STANDARD.decode(b64) {
+                    contents.push(ports::MessageContent::Image {
+                        data,
+                        content_type: att.content_type.clone(),
+                    });
+                }
+            }
+        }
+    }
+
+    async fn process_instance_mutation(&self, instance: &mut domain::Instance, new_data: ChatMutationOutput) -> anyhow::Result<String> {
+        let ai_message = if new_data.message.trim().is_empty() {
+            "J'ai mis à jour les documents selon votre demande.".to_string()
+        } else {
+            new_data.message
+        };
+
+        if let Some(res) = new_data.resume {
+            instance.resume_json = Some(res);
+            instance.status = domain::InstanceStatus::Ready;
+        }
+        if let Some(cov) = new_data.cover {
+            instance.cover_letter_json = Some(cov);
+            instance.status = domain::InstanceStatus::Ready;
+        }
+        Ok(ai_message)
+    }
+
+    fn render_instance_input_simple(&self, instance: &domain::Instance, profil: &domain::Profil, offre: &domain::Offre, history: &[domain::Message], rag_context: &str, message: &str) -> anyhow::Result<String> {
+        let history_prompt = render_chat_history_for_prompt(history);
+        Ok(format!(
+            "IDENTITÉ DE L'UTILISATEUR (Profil complet):\n{}\n\n\
+            OFFRE CIBLÉE (fiche brute et structurée):\n{}\n\n\
+            ANALYSE DE L'OFFRE CIBLÉE (Restitution):\n{}\n\n\
+            FRAGMENTS DE PARCOURS (RAG):\n{}\n\n\
+            HISTORIQUE RÉCENT DU CHAT:\n{}\n\n\
+            DEMANDE DE L'UTILISATEUR: {}\n\n\
+            JSON ACTUEL DU CV: {}\n\n\
+            JSON ACTUEL DE LA LETTRE: {}",
+            serde_json::to_string_pretty(&build_profile_prompt_context(profil))?,
+            serde_json::to_string_pretty(&build_offer_prompt_context(offre))?,
+            serde_json::to_string_pretty(&instance.restitution)?,
+            rag_context,
+            history_prompt,
+            message,
+            serde_json::to_string_pretty(&instance.resume_json)?,
+            serde_json::to_string_pretty(&instance.cover_letter_json)?
+        ))
+    }
+
+    fn render_global_input_simple(&self, profil: &domain::Profil, offres: &[domain::Offre], chat_history: &[domain::Message], rag_context: &str, message: &str) -> anyhow::Result<String> {
+        let history_prompt = render_chat_history_for_prompt(chat_history);
+        Ok(format!(
+            "IDENTITÉ DE L'UTILISATEUR (Profil complet):\n{}\n\n\
+            OFFRES DISPONIBLES EN BASE ({} offres):\n{}\n\n\
+            DÉTAILS DU PARCOURS (RAG):\n{}\n\n\
+            HISTORIQUE RÉCENT DU CHAT:\n{}\n\n\
+            DEMANDE DE L'UTILISATEUR: {}",
+            serde_json::to_string_pretty(&build_profile_prompt_context(profil))?,
             offres.len(),
             serde_json::to_string_pretty(
                 &offres
@@ -426,157 +391,7 @@ impl ChatWithApplicationUseCase {
             )?,
             rag_context,
             history_prompt,
-            req.message
-        );
-
-        let completion_req = ports::CompletionRequest {
-            system: Some(system_prompt.to_string()),
-            messages: vec![ports::Message::user(user_input)],
-            model: None,
-            max_tokens: Some(4000),
-            temperature: None,
-        };
-
-        let stream = llm.stream(completion_req).await?;
-
-        // On crée un stream qui va aussi accumuler pour sauvegarder à la fin
-        let profil_repo = self.profil_repo.clone();
-        let full_response = String::new();
-
-        let mapped_stream = futures::stream::unfold(
-            (stream, profil, full_response, profil_repo),
-            |(mut stream, mut profil, mut full_response, profil_repo)| async move {
-                use futures::StreamExt;
-                match stream.next().await {
-                    Some(Ok(token)) => {
-                        full_response.push_str(&token);
-                        Some((Ok(token), (stream, profil, full_response, profil_repo)))
-                    }
-                    Some(Err(e)) => Some((
-                        Err(anyhow::anyhow!(e)),
-                        (stream, profil, full_response, profil_repo),
-                    )),
-                    None => {
-                        // Fin du stream, on sauvegarde
-                        if !full_response.is_empty() {
-                            push_chat_history(&mut profil.notes, "assistant", &full_response);
-                            let _ = profil_repo.upsert(&profil).await;
-                        }
-                        None
-                    }
-                }
-            },
-        );
-
-        Ok(Box::pin(mapped_stream))
-    }
-
-    async fn execute_instance_chat_stream(
-        &self,
-        instance_id: &str,
-        req: ChatRequest,
-    ) -> anyhow::Result<ports::BoxStream<'static, anyhow::Result<String>>> {
-        let instance_uuid = uuid::Uuid::parse_str(instance_id)?;
-        let instance = self
-            .instance_repo
-            .get_by_id(domain::InstanceId::from_uuid(instance_uuid))
-            .await?
-            .ok_or_else(|| anyhow::anyhow!("Instance non trouvée"))?;
-
-        let profil = self
-            .profil_repo
-            .get_by_id(instance.profil_id)
-            .await?
-            .ok_or_else(|| anyhow::anyhow!("Profil non trouvé"))?;
-
-        let offre = self
-            .offre_repo
-            .get_by_id(instance.offre_id)
-            .await?
-            .ok_or_else(|| anyhow::anyhow!("Offre non trouvée"))?;
-
-        let history = self.message_repo.list_by_instance_id(instance.id).await?;
-        let user_msg =
-            domain::Message::new(instance.id, domain::MessageRole::User, req.message.clone());
-        self.message_repo.push(&user_msg).await?;
-
-        let llm = self.get_llm(&req.llm_provider)?;
-        let rag_context = self
-            .get_rag_context(instance.profil_id, &req.message)
-            .await?;
-        let history_prompt = render_chat_history_for_prompt(&history);
-
-        let user_input = format!(
-            "IDENTITÉ DE L'UTILISATEUR (Profil complet):\n{}\n\n\
-            ANNEXES DISPONIBLES (en DB):\n{}\n\n\
-            OFFRE CIBLÉE (fiche brute et structurée):\n{}\n\n\
-            ANALYSE DE L'OFFRE CIBLÉE (Restitution):\n{}\n\n\
-            FRAGMENTS DE PARCOURS (RAG):\n{}\n\n\
-            HISTORIQUE RÉCENT DU CHAT:\n{}\n\n\
-            DEMANDE DE L'UTILISATEUR: {}\n\n\
-            JSON ACTUEL DU CV: {}\n\n\
-            JSON ACTUEL DE LA LETTRE: {}",
-            serde_json::to_string_pretty(&build_profile_prompt_context(&profil))?,
-            serde_json::to_string_pretty(&self.annexe_repo.list_by_profil_id(profil.id).await?)?,
-            serde_json::to_string_pretty(&build_offer_prompt_context(&offre))?,
-            serde_json::to_string_pretty(&instance.restitution)?,
-            rag_context,
-            history_prompt,
-            req.message,
-            serde_json::to_string_pretty(&instance.resume_json)?,
-            serde_json::to_string_pretty(&instance.cover_letter_json)?
-        );
-
-        let completion_req = ports::CompletionRequest {
-            system: Some(prompts::chat::INSTANCE_DEFAULT_SYSTEM.to_string()),
-            messages: vec![ports::Message::user(user_input)],
-            model: None,
-            max_tokens: Some(4000),
-            temperature: None,
-        };
-
-        let stream = llm.stream(completion_req).await?;
-
-        let message_repo = self.message_repo.clone();
-        let instance_repo = self.instance_repo.clone();
-        let full_response = String::new();
-
-        let mapped_stream = futures::stream::unfold(
-            (stream, instance, full_response, message_repo, instance_repo),
-            |(mut stream, mut instance, mut full_response, message_repo, instance_repo)| async move {
-                use futures::StreamExt;
-                match stream.next().await {
-                    Some(Ok(token)) => {
-                        full_response.push_str(&token);
-                        Some((
-                            Ok(token),
-                            (stream, instance, full_response, message_repo, instance_repo),
-                        ))
-                    }
-                    Some(Err(e)) => Some((
-                        Err(anyhow::anyhow!(e)),
-                        (stream, instance, full_response, message_repo, instance_repo),
-                    )),
-                    None => {
-                        if !full_response.is_empty() {
-                            let assistant_msg = domain::Message::new(
-                                instance.id,
-                                domain::MessageRole::Assistant,
-                                full_response.clone(),
-                            );
-                            let _ = message_repo.push(&assistant_msg).await;
-                            instance.updated_at = chrono::Utc::now();
-                            let _ = instance_repo.upsert(&instance).await;
-                        }
-                        None
-                    }
-                }
-            },
-        );
-
-        Ok(Box::pin(mapped_stream))
+            message
+        ))
     }
 }
-
-#[cfg(test)]
-mod tests;

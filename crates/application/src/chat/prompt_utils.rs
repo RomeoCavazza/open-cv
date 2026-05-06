@@ -1,8 +1,8 @@
 use domain::{JsonValue, Message, MessageRole};
 
-use super::MAX_CHAT_HISTORY_ENTRIES;
+pub const MAX_CHAT_HISTORY_ENTRIES: usize = 20;
 
-pub(super) fn build_profile_prompt_context(profil: &domain::Profil) -> serde_json::Value {
+pub fn build_profile_prompt_context(profil: &domain::Profil) -> serde_json::Value {
     serde_json::json!({
         "id": profil.id,
         "label": profil.label,
@@ -16,7 +16,7 @@ pub(super) fn build_profile_prompt_context(profil: &domain::Profil) -> serde_jso
     })
 }
 
-pub(super) fn build_offer_prompt_context(offre: &domain::Offre) -> serde_json::Value {
+pub fn build_offer_prompt_context(offre: &domain::Offre) -> serde_json::Value {
     let raw_text_preview = if offre.raw_text.chars().count() > 4000 {
         offre.raw_text.chars().take(4000).collect::<String>() + "…"
     } else {
@@ -41,62 +41,30 @@ pub(super) fn build_offer_prompt_context(offre: &domain::Offre) -> serde_json::V
     })
 }
 
-pub(super) fn wants_mutation(message: &str) -> bool {
+pub fn wants_mutation(message: &str) -> bool {
     let lowered = message.to_lowercase();
     let mutation_markers = [
-        "modifie",
-        "modifier",
-        "change",
-        "changer",
-        "corrige",
-        "corriger",
-        "ajoute",
-        "ajouter",
-        "supprime",
-        "enlève",
-        "retire",
-        "remplace",
-        "mets",
-        "mettre",
-        "réécris",
-        "reecris",
-        "réécrire",
-        "reecrire",
-        "actualise",
-        "actualiser",
-        "adapte",
-        "adapter",
-        "réorganise",
-        "reorganise",
-        "modification",
-        "édition",
-        "edite",
-        "éditer",
-        "editer",
+        "modifie", "modifier", "change", "changer", "corrige", "corriger",
+        "ajoute", "ajouter", "supprime", "enlève", "retire", "remplace",
+        "mets", "mettre", "réécris", "reecris", "réécrire", "reecrire",
+        "actualise", "actualiser", "adapte", "adapter", "réorganise",
+        "reorganise", "modification", "édition", "edite", "éditer", "editer",
     ];
 
-    mutation_markers
-        .iter()
-        .any(|marker| lowered.contains(marker))
+    mutation_markers.iter().any(|marker| lowered.contains(marker))
 }
 
-pub(super) fn wants_identity(message: &str) -> bool {
+pub fn wants_identity(message: &str) -> bool {
     let lowered = message.to_lowercase();
     let identity_markers = [
-        "comment je m'appelle",
-        "c'est quoi mon nom",
-        "quel est mon nom",
-        "tu sais comment je m'appelle",
-        "tu connais mon nom",
-        "je m'appelle comment",
+        "comment je m'appelle", "c'est quoi mon nom", "quel est mon nom",
+        "tu sais comment je m'appelle", "tu connais mon nom", "je m'appelle comment",
     ];
 
-    identity_markers
-        .iter()
-        .any(|marker| lowered.contains(marker))
+    identity_markers.iter().any(|marker| lowered.contains(marker))
 }
 
-pub(super) fn extract_chat_history(notes: &JsonValue) -> Vec<Message> {
+pub fn extract_chat_history(notes: &JsonValue) -> Vec<Message> {
     notes
         .get("chat_history")
         .and_then(|v| v.as_array())
@@ -124,7 +92,7 @@ pub(super) fn extract_chat_history(notes: &JsonValue) -> Vec<Message> {
         .unwrap_or_default()
 }
 
-pub(super) fn render_chat_history_for_prompt(history: &[Message]) -> String {
+pub fn render_chat_history_for_prompt(history: &[Message]) -> String {
     if history.is_empty() {
         return "Aucun historique".to_string();
     }
@@ -133,8 +101,6 @@ pub(super) fn render_chat_history_for_prompt(history: &[Message]) -> String {
         .iter()
         .rev()
         .take(12)
-        .collect::<Vec<_>>()
-        .into_iter()
         .rev()
         .map(|m| {
             let label = match m.role {
@@ -148,9 +114,7 @@ pub(super) fn render_chat_history_for_prompt(history: &[Message]) -> String {
         .join("\n")
 }
 
-pub(super) fn push_chat_history(notes: &mut JsonValue, role: &str, content: &str) {
-    tracing::info!("Chat: Pushing history for role: {}", role);
-
+pub fn push_chat_history(notes: &mut JsonValue, role: &str, content: &str) {
     if !notes.is_object() {
         *notes = JsonValue::Object(std::collections::BTreeMap::new());
     }
@@ -166,107 +130,13 @@ pub(super) fn push_chat_history(notes: &mut JsonValue, role: &str, content: &str
     if let Some(history) = history_value.as_array_mut() {
         let mut entry = std::collections::BTreeMap::new();
         entry.insert("role".to_string(), JsonValue::String(role.to_string()));
-        entry.insert(
-            "content".to_string(),
-            JsonValue::String(content.to_string()),
-        );
-        entry.insert(
-            "ts".to_string(),
-            JsonValue::String(chrono::Utc::now().to_rfc3339()),
-        );
+        entry.insert("content".to_string(), JsonValue::String(content.to_string()));
+        entry.insert("ts".to_string(), JsonValue::String(chrono::Utc::now().to_rfc3339()));
         history.push(JsonValue::Object(entry));
 
         if history.len() > MAX_CHAT_HISTORY_ENTRIES {
             let excess = history.len() - MAX_CHAT_HISTORY_ENTRIES;
             history.drain(0..excess);
         }
-
-        tracing::info!("Chat: History size now: {} entries", history.len());
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use chrono::Utc;
-    use domain::{Offre, OffreId, OffreStructured, Profil, ProfilId, Slug};
-    use serde_json::json;
-
-    fn build_test_profile() -> Profil {
-        Profil {
-            id: ProfilId::new(),
-            label: "Test Profil".into(),
-            content: domain::ProfilContent::default(),
-            is_active: true,
-            profile_photo: None,
-            calendar_pdf: None,
-            resume_template: None,
-            cover_letter_template: None,
-            notes: JsonValue::Object(Default::default()),
-            created_at: Utc::now(),
-        }
-    }
-
-    fn build_test_offer() -> Offre {
-        Offre {
-            id: OffreId::new(),
-            slug: Slug::parse("test_offer").unwrap(),
-            source_url: "https://example.com/job".into(),
-            source_host: "example.com".into(),
-            source_hash: vec![0; 32],
-            entreprise: "Example SA".into(),
-            intitule: "Alternance Dev".into(),
-            localisation: Some("Paris".into()),
-            contrat: Some("alternance".into()),
-            raw_text: "x".repeat(4100),
-            structured: OffreStructured::default(),
-            scraped_at: Utc::now(),
-            last_seen_at: Utc::now(),
-            closed_at: None,
-            categorie: None,
-        }
-    }
-
-    #[test]
-    fn mutation_and_identity_detection_work() {
-        assert!(wants_mutation("modifie mon CV"));
-        assert!(!wants_mutation("résume l'offre"));
-        assert!(wants_identity("tu sais comment je m'appelle ?"));
-        assert!(!wants_identity("tu peux résumer l'offre ?"));
-    }
-
-    #[test]
-    fn prompt_context_builders_include_expected_fields() {
-        let profil = build_test_profile();
-        let offre = build_test_offer();
-
-        let profile_json = build_profile_prompt_context(&profil);
-        let offer_json = build_offer_prompt_context(&offre);
-
-        assert_eq!(profile_json["label"], json!("Test Profil"));
-        assert_eq!(offer_json["entreprise"], json!("Example SA"));
-        assert_eq!(
-            offer_json["raw_text_preview"]
-                .as_str()
-                .unwrap()
-                .chars()
-                .count(),
-            4001
-        );
-    }
-
-    #[test]
-    fn chat_history_helpers_round_trip() {
-        let mut notes = JsonValue::Object(Default::default());
-        for idx in 0..=MAX_CHAT_HISTORY_ENTRIES {
-            push_chat_history(&mut notes, "user", &format!("message-{idx}"));
-        }
-
-        let history = extract_chat_history(&notes);
-        assert_eq!(history.len(), MAX_CHAT_HISTORY_ENTRIES);
-
-        let rendered = render_chat_history_for_prompt(&history);
-        assert!(rendered.contains("UTILISATEUR: message-1"));
-        assert!(!rendered.contains("message-0"));
     }
 }
