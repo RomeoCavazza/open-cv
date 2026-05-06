@@ -52,9 +52,11 @@
 - **Organization**: Cleaned up project root by moving configs to `tooling/`.
 
 ### 6. Remaining Debt & Next Steps
-1. **Backend**: Decouple Restitution from RAG (`generate/mod.rs`).
-2. **Backend**: Implement automated indexer for the `chunks` table.
-3. **Frontend**: Physically split `dashboard.js` into modules (Phase 4).
+1. **Backend**: 
+- **Data Loss (HIGH)**: Ingestion/Generation wipes existing deliverables (CV, cover letter) if the hash changes or during the start of the generation pipeline. Re-scraping an existing URL causes associated documents to disappear. Requires URL-based deduplication and application instance preservation logic.
+- Decouple Restitution from RAG (`generate/mod.rs`).
+- Implement automated indexer for the `chunks` table.
+- [ ] **God Module Dashboard**: `dashboard.js` (960 LOC) en cours de modularisation (Phase 4).
 
 ## 4. AUDIT DE STABILITÉ ET INTÉGRITÉ (2026-05-06)
 *Diagnostic exhaustif du comportement du pipeline post-reset DB.*
