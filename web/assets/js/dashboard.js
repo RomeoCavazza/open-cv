@@ -110,20 +110,6 @@ router.initRouter({
     }
 });
 
-async function loadProfile() {
-    return profileController.loadProfile();
-}
-
-// Temporarily expose for OfferController (Step 3c)
-window.mutateOfferFlags = function(jobId, mutate) {
-    const nextFlags = { ...(offerFlags[jobId] || {}) };
-    mutate(nextFlags);
-    if (!nextFlags.locked && !nextFlags.archived && !nextFlags.oldCv && !nextFlags.deleted) delete offerFlags[jobId];
-    else offerFlags[jobId] = nextFlags;
-    saveOfferFlags();
-    offerController.loadOffers();
-};
-
 async function updateIframe(options = {}) {
     if (!activeJobId) {
         iframeRender.resetIframeToEmptyState();
@@ -210,7 +196,7 @@ async function init() {
 
     try {
         await loadI18n();
-        await loadProfile();
+        await profileController.loadProfile();
         await offerController.loadOffers();
         await router.handleRouting();
         renderAiChatAttachments();
