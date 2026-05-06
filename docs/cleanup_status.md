@@ -8,22 +8,24 @@
 - **[FIXED] Alignement API** : Support du verbe **PUT** sur le profil et correction de la route des annexes (`/api/profile/active/annexes`).
 - **[FIXED] Validation** : Renforcement de la validation JSON en entrée.
 - **[DONE] Phase 3.5 & 4** : Modularisation du frontend. `dashboard.js` (168 LOC) découpé en contrôleurs.
+- **[DONE] Hygiène std** : Remplacement de `once_cell` par `std::sync::OnceLock` dans `application`.
+- **[DONE] Hygiène intake** : Nettoyage du bruit visuel dans `crates/application/src/intake/mod.rs`.
+- **[FIXED] Data Loss Bug** : La régénération partielle n'efface plus le CV ni la lettre existants. Correctif métier dans `generate/` + normalisation des `jsonb null` côté Postgres.
 
 ## 2. ÉTAT ACTUEL (2026-05-06)
 
-- **Backend** : ✅ Stable. Tag : `backend-stable-2026-05-05`.
-- **Tests** : ✅ 63 tests validés (Workspace total).
-- **Frontend** : ⚠️ Modularisé mais `ui.js` (555 LOC) en surpoids.
-- **Dette Critique** : Bug Ingestion 500 & Fuites `serde_json`.
+- **Backend** : ✅ Stable & Architecturalement pur.
+- **Tests** : ✅ 64 tests validés (Workspace total).
+- **Frontend** : ⚠️ Modularisé mais `ui.js` (546 LOC) en surpoids.
+- **Dette Critique** : Bug Ingestion 500 encore à reproduire et circonscrire.
+- **Architecture** : ✅ Couche Domaine purifiée (découplage `serde_json`).
 
 ## 3. DETTES TECHNIQUES PRIORISÉES (RED LIST)
 
 ### HIGH (Critique / Bloquant)
-1. **[BUG] Ingestion 500** : Erreur intermittente sur `/api/offres/ingest`. Cause : Inconnue (timeout/parsing ?).
-2. **[DATA] Data Loss Bug** : Re-scrapper une offre écrase les livrables existants (CV/Lettre). Nécessite déduplication par URL.
-3. **[ARCHI] Fuite de couche (Domain)** : `serde_json::Value` présent dans `crates/domain/` (profil, instance, chunk).
-4. **[UI] Refacto ui.js** : 555 LOC. Doit être segmenté en modules spécialisés (Toasts, Modals, Shared components).
-5. **[RAG] Couplage Restitution/RAG** : L'étape de recherche vectorielle bloque la Restitution même sans besoin de profil.
+1. **[BUG] Ingestion 500** : Erreur intermittente sur `/api/offres/ingest`. Cause non confirmée à ce stade.
+2. **[UI] Refacto ui.js** : 546 LOC. Doit être segmenté en modules spécialisés (Toasts, Modals, Shared components).
+3. **[RAG] Couplage Restitution/RAG** : L'étape de recherche vectorielle bloque la Restitution même sans besoin de profil.
 
 ### MED (Amélioration / Modularité)
 1. **[CODE] crates/application/src/chat/mod.rs** : God Module (582 LOC). Stream et persistence entremêlés.
@@ -31,8 +33,7 @@
 3. **[SCRAPE] Anti-bot** : Échec sur SPA/Anti-bot (WTTJ, Siemens). Bypass texte brut nécessaire.
 
 ### LOW (Hygiène / Polish)
-1. **[STD] OnceLock** : Remplacer `once_cell` par `std::sync::OnceLock`.
-2. **[DOC] Commentaires** : Nettoyage du bruit visuel dans `intake/mod.rs`.
+Aucune dette low ouverte.
 
 ---
 
