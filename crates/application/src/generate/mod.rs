@@ -216,62 +216,71 @@ impl GenerateApplicationUseCase {
             .map_err(AppError::Repo)?;
 
         let pipeline_result: Result<Instance, GenerateError> = async {
-            // Étape 1 : RETRIEVE
-            self.events.started(instance_id, GenerationStep::Retrieve);
-            let candidates = self.retrieve_chunks(&offre, profil.id).await?;
-            self.events.done(
-                instance_id,
-                GenerationStep::Retrieve,
-                Some(format!("{} chunks candidats", candidates.len())),
-            );
-
-            if candidates.is_empty() {
-                info!(
-                    "RAG : aucun chunk trouvé, la génération continuera sans contexte granulaire"
-                );
-            }
-
-            // Étape 2 : RERANK
-            self.events.started(instance_id, GenerationStep::Rerank);
-            let retained = self.rerank(&offre, &candidates, llm.clone()).await?;
-            self.events.done(
-                instance_id,
-                GenerationStep::Rerank,
-                Some(format!("{} chunks retenus", retained.len())),
-            );
-
-            // Étape 3 : PLAN
-            self.events.started(instance_id, GenerationStep::Plan);
-            let plan = self.plan(&offre, &retained, llm.clone()).await?;
-            self.events
-                .done(instance_id, GenerationStep::Plan, Some(plan.angle.clone()));
-
-            // Étape 4 : Génération séquentielle
+            // Étape 1 : Restitution (ne dépend pas du RAG)
             let restitution = self
                 .maybe_generate_restitution(input.livrables, &offre, instance_id, llm.clone())
                 .await?;
-            let resume = self
-                .maybe_generate_resume(
+
+            let mut retained = Vec::new();
+            let mut plan = None;
+
+            if input.livrables.resume || input.livrables.cover_letter {
+                // Étape 2 : RETRIEVE
+                self.events.started(instance_id, GenerationStep::Retrieve);
+                let candidates = self.retrieve_chunks(&offre, profil.id).await?;
+                self.events.done(
+                    instance_id,
+                    GenerationStep::Retrieve,
+                    Some(format!("{} chunks candidats", candidates.len())),
+                );
+
+                // Étape 3 : RERANK
+                self.events.started(instance_id, GenerationStep::Rerank);
+                retained = self.rerank(&offre, &candidates, llm.clone()).await?;
+                self.events.done(
+                    instance_id,
+                    GenerationStep::Rerank,
+                    Some(format!("{} chunks retenus", retained.len())),
+                );
+
+                // Étape 4 : PLAN
+                self.events.started(instance_id, GenerationStep::Plan);
+                let p = self.plan(&offre, &retained, llm.clone()).await?;
+                self.events
+                    .done(instance_id, GenerationStep::Plan, Some(p.angle.clone()));
+                plan = Some(p);
+            }
+
+            // Étape 5 : Génération des documents (dépendent du RAG)
+            let resume = if let Some(ref p) = plan {
+                self.maybe_generate_resume(
                     input.livrables,
                     &offre,
                     &profil,
                     &retained,
-                    &plan,
+                    p,
                     instance_id,
                     llm.clone(),
                 )
-                .await?;
-            let cover_letter = self
-                .maybe_generate_cover_letter(
+                .await?
+            } else {
+                None
+            };
+
+            let cover_letter = if let Some(ref p) = plan {
+                self.maybe_generate_cover_letter(
                     input.livrables,
                     &offre,
                     &profil,
                     &retained,
-                    &plan,
+                    p,
                     instance_id,
                     llm.clone(),
                 )
-                .await?;
+                .await?
+            } else {
+                None
+            };
 
             // Étape 5 : VALIDATE
             self.events.started(instance_id, GenerationStep::Validate);
