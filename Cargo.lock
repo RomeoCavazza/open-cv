@@ -142,7 +142,6 @@ dependencies = [
  "chrono",
  "domain",
  "futures",
- "once_cell",
  "ports",
  "schemars",
  "serde",
@@ -552,7 +551,6 @@ dependencies = [
  "chrono",
  "schemars",
  "serde",
- "serde_json",
  "thiserror 2.0.18",
  "uuid",
 ]

@@ -6,21 +6,39 @@ use crate::events::GenerationStep;
 use crate::prompts;
 use crate::AppError;
 use domain::{Chunk, CoverLetter, InstanceId, Offre, ProfilId, Restitution, Resume};
-use once_cell::sync::Lazy;
 use ports::{EmbedMode, ExtractionRequest, LlmClient};
-use std::sync::Arc;
+use std::sync::{Arc, OnceLock};
 use tracing::warn;
 
-static RERANK_SCHEMA: Lazy<serde_json::Value> =
-    Lazy::new(|| serde_json::to_value(schemars::schema_for!(RerankResponse)).unwrap());
-static PLAN_SCHEMA: Lazy<serde_json::Value> =
-    Lazy::new(|| serde_json::to_value(schemars::schema_for!(CandidaturePlan)).unwrap());
-static RESTITUTION_SCHEMA: Lazy<serde_json::Value> =
-    Lazy::new(|| serde_json::to_value(schemars::schema_for!(Restitution)).unwrap());
-static RESUME_SCHEMA: Lazy<serde_json::Value> =
-    Lazy::new(|| serde_json::to_value(schemars::schema_for!(Resume)).unwrap());
-static COVER_LETTER_SCHEMA: Lazy<serde_json::Value> =
-    Lazy::new(|| serde_json::to_value(schemars::schema_for!(CoverLetter)).unwrap());
+static RERANK_SCHEMA: OnceLock<serde_json::Value> = OnceLock::new();
+static PLAN_SCHEMA: OnceLock<serde_json::Value> = OnceLock::new();
+static RESTITUTION_SCHEMA: OnceLock<serde_json::Value> = OnceLock::new();
+static RESUME_SCHEMA: OnceLock<serde_json::Value> = OnceLock::new();
+static COVER_LETTER_SCHEMA: OnceLock<serde_json::Value> = OnceLock::new();
+
+fn rerank_schema() -> &'static serde_json::Value {
+    RERANK_SCHEMA
+        .get_or_init(|| serde_json::to_value(schemars::schema_for!(RerankResponse)).unwrap())
+}
+
+fn plan_schema() -> &'static serde_json::Value {
+    PLAN_SCHEMA
+        .get_or_init(|| serde_json::to_value(schemars::schema_for!(CandidaturePlan)).unwrap())
+}
+
+fn restitution_schema() -> &'static serde_json::Value {
+    RESTITUTION_SCHEMA
+        .get_or_init(|| serde_json::to_value(schemars::schema_for!(Restitution)).unwrap())
+}
+
+fn resume_schema() -> &'static serde_json::Value {
+    RESUME_SCHEMA.get_or_init(|| serde_json::to_value(schemars::schema_for!(Resume)).unwrap())
+}
+
+fn cover_letter_schema() -> &'static serde_json::Value {
+    COVER_LETTER_SCHEMA
+        .get_or_init(|| serde_json::to_value(schemars::schema_for!(CoverLetter)).unwrap())
+}
 
 pub async fn retrieve_chunks(
     this: &GenerateApplicationUseCase,
@@ -83,7 +101,7 @@ pub async fn rerank(
         ))],
         schema_name: "RerankResponse".into(),
         schema_description: "Sélection des chunks pertinents avec justification".into(),
-        json_schema: RERANK_SCHEMA.clone(),
+        json_schema: rerank_schema().clone(),
         model: None,
         max_tokens: Some(1024),
     };
@@ -139,7 +157,7 @@ pub async fn plan(
         ))],
         schema_name: "CandidaturePlan".into(),
         schema_description: "Stratégie de la candidature".into(),
-        json_schema: PLAN_SCHEMA.clone(),
+        json_schema: plan_schema().clone(),
         model: None,
         max_tokens: Some(1024),
     };
@@ -179,7 +197,7 @@ pub async fn maybe_generate_restitution(
         ))],
         schema_name: "Restitution".into(),
         schema_description: "Fiche d'analyse haute-fidélité d'une offre".into(),
-        json_schema: RESTITUTION_SCHEMA.clone(),
+        json_schema: restitution_schema().clone(),
         model: None,
         max_tokens: Some(4000),
     };
@@ -225,7 +243,7 @@ pub async fn maybe_generate_resume(
         ))],
         schema_name: "Resume".into(),
         schema_description: "CV structuré, contenu adapté à l'offre".into(),
-        json_schema: RESUME_SCHEMA.clone(),
+        json_schema: resume_schema().clone(),
         model: None,
         max_tokens: Some(3000),
     };
@@ -271,7 +289,7 @@ pub async fn maybe_generate_cover_letter(
         ))],
         schema_name: "CoverLetter".into(),
         schema_description: "Lettre structurée par paragraphes typés".into(),
-        json_schema: COVER_LETTER_SCHEMA.clone(),
+        json_schema: cover_letter_schema().clone(),
         model: None,
         max_tokens: Some(2500),
     };

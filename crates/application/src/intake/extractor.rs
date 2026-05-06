@@ -1,11 +1,10 @@
 //! Extractor — Extraction structurée via LLM avec fallback robuste.
 
 use domain::{OffreStructured, Slug};
-use once_cell::sync::Lazy;
 use ports::{ExtractionRequest, LlmClient};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
+use std::sync::{Arc, OnceLock};
 use tracing::{info, warn};
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
@@ -24,10 +23,14 @@ pub struct OffreExtraction {
     pub mots_cles: Vec<String>,
 }
 
-static EXTRACTION_SCHEMA: Lazy<serde_json::Value> = Lazy::new(|| {
-    serde_json::to_value(schemars::schema_for!(OffreExtraction))
-        .expect("Schema is always serializable")
-});
+static EXTRACTION_SCHEMA: OnceLock<serde_json::Value> = OnceLock::new();
+
+fn extraction_schema() -> &'static serde_json::Value {
+    EXTRACTION_SCHEMA.get_or_init(|| {
+        serde_json::to_value(schemars::schema_for!(OffreExtraction))
+            .expect("Schema is always serializable")
+    })
+}
 
 pub struct StructuredExtractor {
     llm: Arc<dyn LlmClient>,
@@ -58,7 +61,7 @@ impl StructuredExtractor {
             input: vec![ports::MessageContent::Text(text.to_string())],
             schema_name: "OffreExtraction".into(),
             schema_description: "Métadonnées structurées extraites d'une offre d'emploi".into(),
-            json_schema: EXTRACTION_SCHEMA.clone(),
+            json_schema: extraction_schema().clone(),
             model: None,
             max_tokens: Some(4000),
         };
