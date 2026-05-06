@@ -24,13 +24,6 @@ Cargo.lock.bak
 /result-*
 
 # Data
-/data/*
-!/data/templates/
-!/data/scripts/
-!/data/user/
-/data/user/*
-!/data/user/profil_to_upload.md
-!/data/user/profile-picture.jpg
-/data/instances/
+/data/
 
 .cargo/
