@@ -26,9 +26,12 @@
 3.  **Organisation Interne** : Regrouper les fonctions de `dashboard.js` par blocs logiques (UI, Offres, Profil).
 4.  **Security** : Remplacer les derniers `innerHTML` par du `textContent` ou des templates.
 
-### Phase 4 : Modularisation (Le Split)
-- Extraction de `OfferController.js`, `ProfileController.js`, `ChatController.js`.
-- Communication inter-modules via `events.js` uniquement.
+### Phase 4 : Modularisation (Le Split) - [2026-05-06]
+**Status: SUCCESS ✅**
+- **Controllers**: Extracted `OfferController.js` and `ProfileController.js`.
+- **Decoupling**: `dashboard.js` reduced from **808 LOC** to **365 LOC**.
+- **Architecture**: Orchestrator pattern implemented. `dashboard.js` only handles high-level events and routing.
+- **Persistence**: Fixed Profile data persistence and API body limits (10MB).
 
 ### Phase 5-7 : Durcissement & Production
 - **IA** : Fix bug RAG 500 (profil vide) → passage en 422.
@@ -56,14 +59,14 @@
 - **Data Loss (HIGH)**: Ingestion/Generation wipes existing deliverables (CV, cover letter) if the hash changes or during the start of the generation pipeline. Re-scraping an existing URL causes associated documents to disappear. Requires URL-based deduplication and application instance preservation logic.
 - Decouple Restitution from RAG (`generate/mod.rs`).
 - Implement automated indexer for the `chunks` table.
-- [ ] **God Module Dashboard**: `dashboard.js` (960 LOC) en cours de modularisation (Phase 4).
+- [FIXED] **God Module Dashboard**: `dashboard.js` (365 LOC). Modularization complete (Phase 4).
 
 ## 4. AUDIT DE STABILITÉ ET INTÉGRITÉ (2026-05-06)
 *Diagnostic exhaustif du comportement du pipeline post-reset DB.*
 
 ### RED LIST (CRIT)
 - **[CRIT] crates/domain/src/lib.rs** : Fuite de couche. `serde_json` utilisé directement dans le domaine. Nécessite des types métier purs.
-- **[CRIT] web/assets/js/dashboard.js** : God Module (959 LOC). Mélange UI, API et État. Découpage urgent (Phase 4).
+- **[FIXED] web/assets/js/dashboard.js** : Modularization complete. Logic moved to ProfileController and OfferController.
 - **[CRIT] crates/application/src/chat/mod.rs** : God Module (582 LOC). Logique de stream et persistence entremêlées.
 - **[CRIT] crates/adapters/postgres/src/profil.rs:205** : Hardcoded UUID avec `unwrap()`. Risque de crash au démarrage si incohérence DB.
 
@@ -85,7 +88,7 @@
 ### Dette Technique Résiduelle (Confirmée)
 - [FIXED] **Indexeur de profil** : Résolu via `seed_chunks`. Intégré au pipeline canonique.
 - [HIGH] **Couplage Restitution/RAG** : L'étape de recherche vectorielle (`generate/mod.rs:220`) bloque la Restitution même sans besoin de profil.
-- [HIGH] **Modularité Frontend** : `dashboard.js` et `ui.js` dépassent les seuils de maintenabilité (>250 LOC).
+- [MED] **Modularité Frontend** : `dashboard.js` (365 LOC) modularisé. `ui.js` (458 LOC) reste à découper.
 - [MED] **Scraper limité** : Échec sur SPA/Anti-bot (WTTJ, Siemens). Bypass texte brut nécessaire.
 - [LOW] **Templates contaminés** : Contenu MBDA hardcodé dans `data/templates/*.json` polluant les sorties LLM.
 
