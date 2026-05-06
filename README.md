@@ -13,13 +13,21 @@ Local application builder that turns raw job postings into tailored resumes, str
 [![Backend CI](https://github.com/RomeoCavazza/open-cv/actions/workflows/backend.yml/badge.svg)](https://github.com/RomeoCavazza/open-cv/actions/workflows/backend.yml)
 [![Frontend CI](https://github.com/RomeoCavazza/open-cv/actions/workflows/frontend.yml/badge.svg)](https://github.com/RomeoCavazza/open-cv/actions/workflows/frontend.yml)
 
-This project is a local application-generation engine. It ingests job postings, structures them, connects them to a candidate profile stored in the database, and produces high-fidelity deliverables through a **Rust + Axum** backend, a **PostgreSQL** database, and structured calls to **AI models** (Claude, GPT, or local models).
+This project is a local application-generation engine. It ingests job postings, structures them, connects them to a candidate profile stored in the database, and produces high-fidelity deliverables through a Rust + Axum backend, a PostgreSQL database, and structured calls to AI models (Claude, GPT, or local models).
 
 ## Previews
 
-| Resume | Cover Letter |
-| :---: | :---: |
-| ![Resume Preview](docs/assets/preview-resume.png) | ![Letter Preview](docs/assets/preview-letter.png) |
+### Job Analysis
+![Analysis](docs/assets/preview-restitution.png)
+
+### Tailored Resume
+![Resume](docs/assets/preview-resume.png)
+
+### Targeted Cover Letter
+![Letter](docs/assets/preview-cover-letter.png)
+
+### Workspace Board
+![Board](docs/assets/canva.png)
 
 ---
 
@@ -29,7 +37,7 @@ This project is a local application-generation engine. It ingests job postings, 
 .
 ├── crates/             # Rust workspace: domain, ports, application, adapters, api
 ├── docs/               # Documentation and usage guides
-├── migrations/         # SQL schema source of truth
+├── migrations/         # SQL schema source of truth (0001_initial.sql)
 ├── web/                # Static frontend and document renderers
 │   ├── resume/         # Resume renderer
 │   ├── cover-letter/   # Cover letter renderer
@@ -46,12 +54,12 @@ This project is a local application-generation engine. It ingests job postings, 
 
 The workflow is driven by the Rust backend and can be summarized in five main steps:
 
-1. **Ingestion**: a job posting is sent to the API, deduplicated, normalized, and stored in `offres`.
-2. **Analysis**: the posting is structured to extract responsibilities, stack, and key signals.
-3. **Context selection**: the active profile and its chunks are loaded from PostgreSQL.
-4. **Generation**: the application produces a structured analysis, a tailored resume, and a targeted cover letter.
-5. **Rendering**: the static frontend loads the JSON payloads and displays them through printable HTML renderers.
-6. **Interaction**: a built-in real-time chat (Server-Sent Events) allows refining the documents with instant token streaming.
+1. Ingestion: a job posting is sent to the API, deduplicated, normalized, and stored in offres.
+2. Analysis: the posting is structured to extract responsibilities, stack, and key signals.
+3. Context selection: the active profile and its chunks are loaded from PostgreSQL.
+4. Generation: the application produces a structured analysis, a tailored resume, and a targeted cover letter.
+5. Rendering: the static frontend loads the JSON payloads and displays them through printable HTML renderers.
+6. Interaction: a built-in real-time chat (Server-Sent Events) allows refining the documents with instant token streaming.
 
 ### Installation
 
@@ -72,11 +80,11 @@ just migrate
 just dev
 ```
 
-The application is then available at `http://localhost:8000`.
+The application is then available at http://localhost:8000.
 
 ---
 
-## Quality & Performance
+## Quality and Performance
 
 The project includes a robust audit and performance suite:
 
@@ -97,11 +105,11 @@ just viz-deps     # Generate dependency graph
 
 ## Technical Stack
 
-- **Backend**: Rust, Axum, Tokio, hexagonal architecture.
-- **Database**: PostgreSQL 16, `sqlx`, `pgvector`, `pgcrypto`, `pg_trgm`.
-- **AI**: Multi-provider LLM support (Anthropic Claude, OpenAI, Ollama).
-- **Frontend**: native HTML, CSS, and JavaScript, with iframes to isolate document rendering.
-- **Environment**: Nix, Just, Cargo workspace.
+- Backend: Rust, Axum, Tokio, hexagonal architecture.
+- Database: PostgreSQL 16, sqlx, pgvector, pgcrypto, pg_trgm.
+- AI: Multi-provider LLM support (Anthropic Claude, OpenAI, Ollama).
+- Frontend: native HTML, CSS, and JavaScript, with iframes to isolate document rendering.
+- Environment: Nix, Just, Cargo workspace.
 
 ---
 
@@ -126,6 +134,12 @@ flowchart LR
     PG --> API
     API --> UI
 ```
+
+---
+
+## Internal Module Architecture
+
+![Modules](docs/assets/modules.svg)
 
 ---
 
@@ -173,24 +187,14 @@ flowchart TD
 
 ---
 
-## Workspace Board
-
-This board captures the current product direction at a glance: the intake dashboard, the application workspace with live document preview, the profile editor, the visual system, and the technical notes that connect the frontend to the Rust backend and database model.
-
-It is intended as a working overview of the project rather than a polished marketing mockup. It shows how the interface, rendering pipeline, and implementation details fit together in the same workspace.
-
-![Workspace Board](docs/assets/canva.png)
-
----
-
 ## Documentation
 
-- **[docs/README.md](docs/README.md)** : Index détaillé de la documentation.
-- **[docs/cleanup_status.md](docs/cleanup_status.md)** : **Pilotage opérationnel**, roadmap et état d'avancement.
-- **[docs/blueprint.md](docs/blueprint.md)** : Spécifications techniques et pipeline IA.
-- **[docs/project_map.md](docs/project_map.md)** : Cartographie détaillée de l arborescence et rôle des fichiers.
-- **[docs/instructions.md](docs/instructions.md)** : Setup et commandes courantes.
-- **[docs/design.md](docs/design.md)** : Direction visuelle et principes UI.
+- [docs/README.md](docs/README.md) : Index détaillé de la documentation.
+- [docs/blueprint.md](docs/blueprint.md) : Spécifications techniques et roadmap de hardening.
+- [docs/toolkit.md](docs/toolkit.md) : Liste des outils et commandes de diagnostic.
+- [docs/project_map.md](docs/project_map.md) : Cartographie détaillée de l arborescence et rôle des fichiers.
+- [docs/instructions.md](docs/instructions.md) : Setup et commandes courantes.
+- [docs/design.md](docs/design.md) : Direction visuelle et principes UI.
 
 ---
 
