@@ -2,9 +2,9 @@ use crate::errors::ApiError;
 use crate::handlers::profile::AnnexeMetadata;
 use axum::http::header::{CONTENT_DISPOSITION, CONTENT_TYPE};
 use base64::{engine::general_purpose, Engine as _};
-use domain::{Annexe, AnnexeId, Profil, ProfilId};
+use domain::{Annexe, AnnexeId, JsonValue as DomainJsonValue, Profil, ProfilId};
 use ports::ProfilRepo;
-use serde_json::Value as JsonValue;
+use serde_json::Value as SerdeJsonValue;
 
 use super::UploadAnnexeRequest;
 
@@ -18,24 +18,27 @@ pub(super) async fn resolve_active_profile(
         .ok_or_else(|| ApiError::NotFound("Aucun profil actif trouvé".to_string()))
 }
 
-pub(super) fn active_profile_content(profil: Profil) -> JsonValue {
+pub(super) fn active_profile_content(profil: Profil) -> SerdeJsonValue {
     serde_json::to_value(profil.content).expect("ProfilContent is always serializable")
 }
 
-pub(super) fn active_profile_resume_template_or_content(profil: Profil) -> JsonValue {
+pub(super) fn active_profile_resume_template_or_content(profil: Profil) -> SerdeJsonValue {
     if let Some(template) = &profil.content.documents.resume_template {
-        return template.clone();
+        return serde_json::to_value(template).expect("JsonValue is always serializable");
     }
 
     serde_json::to_value(profil.content).expect("ProfilContent is always serializable")
 }
 
-pub(super) fn active_profile_cover_letter_template(profil: Profil) -> Result<JsonValue, ApiError> {
+pub(super) fn active_profile_cover_letter_template(
+    profil: Profil,
+) -> Result<SerdeJsonValue, ApiError> {
     profil
         .content
         .documents
         .cover_letter_template
         .clone()
+        .map(|v| serde_json::to_value(v).expect("JsonValue is always serializable"))
         .ok_or_else(|| ApiError::NotFound("Aucun modèle de lettre trouvé".to_string()))
 }
 
@@ -46,13 +49,13 @@ pub(super) fn apply_persisted_markers(profil: &mut Profil) {
 
     if profil.calendar_pdf.is_some() {
         profil.content.documents.apprenticeship_calendar =
-            Some(serde_json::json!("persisted:bytea"));
+            Some(DomainJsonValue::String("persisted:bytea".to_string()));
     }
 }
 
 pub(super) fn apply_profile_update(
     profil: &mut Profil,
-    new_content: JsonValue,
+    new_content: SerdeJsonValue,
 ) -> Result<(), ApiError> {
     let content = serde_json::from_value::<domain::ProfilContent>(new_content)
         .map_err(|e| ApiError::BadRequest(format!("Invalid profile payload: {e}")))?;
@@ -162,7 +165,8 @@ mod tests {
         let mut content = domain::ProfilContent::default();
         content.profile.firstname = "Original".into();
         if with_resume_template {
-            content.documents.resume_template = Some(json!({"foo": "bar"}));
+            content.documents.resume_template =
+                Some(serde_json::from_value(json!({"foo": "bar"})).unwrap());
         }
 
         Profil {
@@ -174,7 +178,7 @@ mod tests {
             calendar_pdf: None,
             resume_template: None,
             cover_letter_template: None,
-            notes: json!({}),
+            notes: DomainJsonValue::Object(Default::default()),
             created_at: Utc::now(),
         }
     }
@@ -228,7 +232,7 @@ mod tests {
         assert_eq!(profil.content.profile.image, "persisted:bytea");
         assert_eq!(
             profil.content.documents.apprenticeship_calendar,
-            Some(json!("persisted:bytea"))
+            Some(DomainJsonValue::String("persisted:bytea".to_string()))
         );
     }
 
@@ -272,12 +276,12 @@ mod tests {
         assert_eq!(profil.content.profile.firstname, "Updated");
         assert_eq!(
             profil.content.documents.resume_template,
-            Some(json!({"foo": "bar"}))
+            Some(serde_json::from_value(json!({"foo": "bar"})).unwrap())
         );
         assert_eq!(profil.content.profile.image, "persisted:bytea");
         assert_eq!(
             profil.content.documents.apprenticeship_calendar,
-            Some(json!("persisted:bytea"))
+            Some(DomainJsonValue::String("persisted:bytea".to_string()))
         );
         assert_eq!(profil.profile_photo, Some(b"hello".to_vec()));
         assert_eq!(profil.calendar_pdf, Some(b"world".to_vec()));

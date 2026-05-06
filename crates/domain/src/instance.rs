@@ -1,11 +1,10 @@
 //! Instance : 1 candidature = (offre + profil + CV généré + lettre générée).
 
+use crate::ids::{InstanceId, OffreId, ProfilId, Slug};
+use crate::json::JsonValue;
+use crate::{CoverLetter, Restitution, Resume};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use serde_json::Value as Json;
-
-use crate::ids::{InstanceId, OffreId, ProfilId, Slug};
-use crate::{CoverLetter, Restitution, Resume};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -57,7 +56,7 @@ pub struct Instance {
     pub restitution: Option<Restitution>,
     pub resume_json: Option<Resume>,
     pub cover_letter_json: Option<CoverLetter>,
-    pub notes: Json,
+    pub notes: JsonValue,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
     pub sent_at: Option<DateTime<Utc>>,

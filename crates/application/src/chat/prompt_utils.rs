@@ -1,4 +1,4 @@
-use domain::{Message, MessageRole};
+use domain::{JsonValue, Message, MessageRole};
 
 use super::MAX_CHAT_HISTORY_ENTRIES;
 
@@ -96,7 +96,7 @@ pub(super) fn wants_identity(message: &str) -> bool {
         .any(|marker| lowered.contains(marker))
 }
 
-pub(super) fn extract_chat_history(notes: &serde_json::Value) -> Vec<Message> {
+pub(super) fn extract_chat_history(notes: &JsonValue) -> Vec<Message> {
     notes
         .get("chat_history")
         .and_then(|v| v.as_array())
@@ -148,11 +148,11 @@ pub(super) fn render_chat_history_for_prompt(history: &[Message]) -> String {
         .join("\n")
 }
 
-pub(super) fn push_chat_history(notes: &mut serde_json::Value, role: &str, content: &str) {
+pub(super) fn push_chat_history(notes: &mut JsonValue, role: &str, content: &str) {
     tracing::info!("Chat: Pushing history for role: {}", role);
 
     if !notes.is_object() {
-        *notes = serde_json::json!({});
+        *notes = JsonValue::Object(std::collections::BTreeMap::new());
     }
 
     let Some(obj) = notes.as_object_mut() else {
@@ -160,27 +160,29 @@ pub(super) fn push_chat_history(notes: &mut serde_json::Value, role: &str, conte
     };
 
     let history_value = obj
-        .entry("chat_history")
-        .or_insert_with(|| serde_json::json!([]));
-    if !history_value.is_array() {
-        *history_value = serde_json::json!([]);
+        .entry("chat_history".to_string())
+        .or_insert_with(|| JsonValue::Array(Vec::new()));
+
+    if let Some(history) = history_value.as_array_mut() {
+        let mut entry = std::collections::BTreeMap::new();
+        entry.insert("role".to_string(), JsonValue::String(role.to_string()));
+        entry.insert(
+            "content".to_string(),
+            JsonValue::String(content.to_string()),
+        );
+        entry.insert(
+            "ts".to_string(),
+            JsonValue::String(chrono::Utc::now().to_rfc3339()),
+        );
+        history.push(JsonValue::Object(entry));
+
+        if history.len() > MAX_CHAT_HISTORY_ENTRIES {
+            let excess = history.len() - MAX_CHAT_HISTORY_ENTRIES;
+            history.drain(0..excess);
+        }
+
+        tracing::info!("Chat: History size now: {} entries", history.len());
     }
-    let Some(history) = history_value.as_array_mut() else {
-        return;
-    };
-
-    history.push(serde_json::json!({
-        "role": role,
-        "content": content,
-        "ts": chrono::Utc::now().to_rfc3339(),
-    }));
-
-    if history.len() > MAX_CHAT_HISTORY_ENTRIES {
-        let excess = history.len() - MAX_CHAT_HISTORY_ENTRIES;
-        history.drain(0..excess);
-    }
-
-    tracing::info!("Chat: History size now: {} entries", history.len());
 }
 
 #[cfg(test)]
@@ -200,7 +202,7 @@ mod tests {
             calendar_pdf: None,
             resume_template: None,
             cover_letter_template: None,
-            notes: json!({}),
+            notes: JsonValue::Object(Default::default()),
             created_at: Utc::now(),
         }
     }
@@ -255,7 +257,7 @@ mod tests {
 
     #[test]
     fn chat_history_helpers_round_trip() {
-        let mut notes = json!({});
+        let mut notes = JsonValue::Object(Default::default());
         for idx in 0..=MAX_CHAT_HISTORY_ENTRIES {
             push_chat_history(&mut notes, "user", &format!("message-{idx}"));
         }

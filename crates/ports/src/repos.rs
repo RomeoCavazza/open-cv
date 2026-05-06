@@ -23,6 +23,9 @@ pub trait OffreRepo: Send + Sync {
     async fn upsert(&self, offre: &Offre) -> Result<(), RepoError>;
     async fn count(&self) -> Result<u64, RepoError>;
 
+    /// Lookup par URL pour la dédup à l'intake.
+    async fn find_by_url(&self, url: &str) -> Result<Option<Offre>, RepoError>;
+
     /// Lookup par hash du contenu pour la dédup à l'intake.
     async fn find_by_content_hash(
         &self,
@@ -61,6 +64,11 @@ pub trait InstanceRepo: Send + Sync {
     async fn get_by_offre_id(
         &self,
         offre_id: domain::OffreId,
+    ) -> Result<Option<Instance>, RepoError>;
+    async fn get_by_offre_and_profil(
+        &self,
+        offre_id: domain::OffreId,
+        profil_id: domain::ProfilId,
     ) -> Result<Option<Instance>, RepoError>;
 }
 

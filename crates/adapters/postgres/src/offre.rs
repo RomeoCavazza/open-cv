@@ -217,6 +217,43 @@ impl OffreRepo for OffreRepoPg {
         Ok(row.c.unwrap_or(0) as u64)
     }
 
+    async fn find_by_url(&self, url: &str) -> Result<Option<Offre>, RepoError> {
+        let row = sqlx::query!(
+            r#"
+            SELECT id, slug, source_url, source_host, source_hash,
+                   entreprise, intitule, localisation, contrat,
+                   raw_text, structured, scraped_at, last_seen_at, closed_at, categorie
+            FROM offres
+            WHERE source_url = $1
+            "#,
+            url
+        )
+        .fetch_optional(&self.pool)
+        .await
+        .map_err(map_sqlx)?;
+
+        row.map(|r| {
+            build_offre(OffreRow {
+                id: r.id,
+                slug: r.slug,
+                source_url: r.source_url,
+                source_host: r.source_host,
+                source_hash: r.source_hash,
+                entreprise: r.entreprise,
+                intitule: r.intitule,
+                localisation: r.localisation,
+                contrat: r.contrat,
+                raw_text: r.raw_text,
+                structured: r.structured,
+                scraped_at: r.scraped_at,
+                last_seen_at: r.last_seen_at,
+                closed_at: r.closed_at,
+                categorie: r.categorie,
+            })
+        })
+        .transpose()
+    }
+
     async fn find_by_content_hash(
         &self,
         source_host: &str,

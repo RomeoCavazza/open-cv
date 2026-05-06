@@ -127,9 +127,9 @@ impl ProfilRepo for ProfilRepoPg {
             profil.is_active,
             profil.profile_photo,
             profil.calendar_pdf,
-            profil.resume_template,
-            profil.cover_letter_template,
-            profil.notes,
+            serde_json::to_value(&profil.resume_template).unwrap_or(serde_json::Value::Null),
+            serde_json::to_value(&profil.cover_letter_template).unwrap_or(serde_json::Value::Null),
+            serde_json::to_value(&profil.notes).unwrap_or(serde_json::Value::Null),
             profil.created_at
         )
         .execute(&self.pool)

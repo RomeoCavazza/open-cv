@@ -1,7 +1,7 @@
 //! `GenerateApplicationUseCase` — Orchestrateur du pipeline.
 
 use chrono::Utc;
-use domain::{Instance, InstanceId, Offre, OffreId, ProfilId};
+use domain::{Instance, InstanceId, JsonValue, Offre, OffreId, ProfilId};
 use ports::{ChunkRepo, Embedder, InstanceRepo, LlmClient, OffreRepo, ProfilRepo};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -207,7 +207,7 @@ impl GenerateApplicationUseCase {
                 restitution: rest,
                 resume_json: resu,
                 cover_letter_json: cove,
-                notes: existing_notes.unwrap_or_else(|| serde_json::json!({})),
+                notes: existing_notes.unwrap_or_else(|| JsonValue::Object(Default::default())),
                 created_at,
                 updated_at: Utc::now(),
                 sent_at: old.and_then(|i| i.sent_at),
@@ -291,9 +291,7 @@ impl GenerateApplicationUseCase {
                 .map_err(AppError::Repo)?
                 .ok_or_else(|| AppError::Other("Instance introuvable après génération".into()))?;
 
-            instance.restitution = restitution;
-            instance.resume_json = resume;
-            instance.cover_letter_json = cover_letter;
+            merge_generated_outputs(&mut instance, restitution, resume, cover_letter);
             instance.status = domain::InstanceStatus::Ready;
             instance.updated_at = Utc::now();
 
@@ -404,5 +402,22 @@ impl GenerateApplicationUseCase {
             llm,
         )
         .await
+    }
+}
+
+fn merge_generated_outputs(
+    instance: &mut Instance,
+    restitution: Option<domain::Restitution>,
+    resume: Option<domain::Resume>,
+    cover_letter: Option<domain::CoverLetter>,
+) {
+    if let Some(restitution) = restitution {
+        instance.restitution = Some(restitution);
+    }
+    if let Some(resume) = resume {
+        instance.resume_json = Some(resume);
+    }
+    if let Some(cover_letter) = cover_letter {
+        instance.cover_letter_json = Some(cover_letter);
     }
 }

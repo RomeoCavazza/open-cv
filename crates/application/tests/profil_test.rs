@@ -1,5 +1,5 @@
 use chrono::Utc;
-use domain::{Profil, ProfilId};
+use domain::{JsonValue, Profil, ProfilId};
 use serde_json::json;
 
 #[test]
@@ -15,7 +15,7 @@ fn test_profil_serialization_regression() {
                 ..Default::default()
             },
             documents: domain::DocumentSection {
-                resume_template: Some(json!({"foo": "bar"})),
+                resume_template: Some(serde_json::from_value(json!({"foo": "bar"})).unwrap()),
                 ..Default::default()
             },
             ..Default::default()
@@ -25,7 +25,7 @@ fn test_profil_serialization_regression() {
         calendar_pdf: None,
         resume_template: None,
         cover_letter_template: None,
-        notes: json!({}),
+        notes: JsonValue::Object(Default::default()),
         created_at: Utc::now(),
     };
 

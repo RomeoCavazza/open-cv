@@ -116,12 +116,28 @@ pub(super) fn build_instance(row: InstanceRow) -> Result<Instance, RepoError> {
         offre_id: domain::OffreId::from_uuid(row.offre_id),
         profil_id: domain::ProfilId::from_uuid(row.profil_id),
         status: parse_status(&row.status)?,
-        restitution: row.restitution.and_then(|v| serde_json::from_value(v).ok()),
-        resume_json: row.resume_json.and_then(|v| serde_json::from_value(v).ok()),
-        cover_letter_json: row
-            .cover_letter_json
-            .and_then(|v| serde_json::from_value(v).ok()),
-        notes: row.notes,
+        restitution: row.restitution.and_then(|value| {
+            if value.is_null() {
+                None
+            } else {
+                serde_json::from_value(value).ok()
+            }
+        }),
+        resume_json: row.resume_json.and_then(|value| {
+            if value.is_null() {
+                None
+            } else {
+                serde_json::from_value(value).ok()
+            }
+        }),
+        cover_letter_json: row.cover_letter_json.and_then(|value| {
+            if value.is_null() {
+                None
+            } else {
+                serde_json::from_value(value).ok()
+            }
+        }),
+        notes: serde_json::from_value(row.notes).unwrap_or_default(),
         created_at: row.created_at,
         updated_at: row.updated_at,
         sent_at: row.sent_at,
@@ -185,9 +201,13 @@ pub(super) fn build_profil(row: ProfilRow) -> Profil {
         is_active: row.is_active,
         profile_photo: row.profile_photo,
         calendar_pdf: row.calendar_pdf,
-        resume_template: row.resume_template,
-        cover_letter_template: row.cover_letter_template,
-        notes: row.notes,
+        resume_template: row
+            .resume_template
+            .and_then(|v| serde_json::from_value(v).ok()),
+        cover_letter_template: row
+            .cover_letter_template
+            .and_then(|v| serde_json::from_value(v).ok()),
+        notes: serde_json::from_value(row.notes).unwrap_or_default(),
         created_at: row.created_at,
     }
 }
@@ -212,7 +232,7 @@ pub(super) fn build_chunk(row: ChunkRow) -> (Chunk, f32) {
             kind: parse_chunk_kind(&row.kind),
             titre: row.titre,
             content: row.content,
-            metadata: row.metadata,
+            metadata: serde_json::from_value(row.metadata).unwrap_or_default(),
             embedding: parse_embedding(&row.embedding),
             created_at: row.created_at,
         },

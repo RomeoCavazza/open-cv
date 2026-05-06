@@ -93,7 +93,7 @@ impl ChunkRepo for ChunkRepoPg {
         .bind(chunk.kind.as_str())
         .bind(&chunk.titre)
         .bind(&chunk.content)
-        .bind(&chunk.metadata)
+        .bind(serde_json::to_value(&chunk.metadata).unwrap_or(serde_json::Value::Null))
         .bind(embedding_str)
         .bind(chunk.created_at)
         .execute(&self.pool)

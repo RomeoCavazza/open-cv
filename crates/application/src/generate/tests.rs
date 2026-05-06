@@ -5,7 +5,6 @@ use domain::{
     Chunk, ChunkKind, CoverLetter, InstanceId, Objet, Offre, OffreId, OffreStructured, Paragraphe,
     ParagrapheRole, Profil, ProfilId, Resume, Signature, Slug,
 };
-use serde_json::json;
 
 fn build_test_offre() -> Offre {
     Offre {
@@ -52,7 +51,7 @@ fn build_test_profil() -> Profil {
         calendar_pdf: None,
         resume_template: None,
         cover_letter_template: None,
-        notes: json!({"note": "test"}),
+        notes: JsonValue::Object(Default::default()),
         created_at: Utc::now(),
     }
 }
@@ -182,7 +181,7 @@ fn build_generation_input_includes_core_sections() {
         kind: ChunkKind::Experience,
         titre: "Stage Rust".into(),
         content: "Développement backend".into(),
-        metadata: json!({}),
+        metadata: JsonValue::Object(Default::default()),
         embedding: vec![],
         created_at: Utc::now(),
     }];
@@ -228,5 +227,62 @@ fn validate_outputs_rejects_incomplete_cover_letter() {
 
     assert!(
         matches!(result, Err(GenerateError::Invalide(message)) if message.contains("lettre incomplète"))
+    );
+}
+
+#[test]
+fn merge_generated_outputs_preserves_existing_resume_and_cover_letter() {
+    let offre = build_test_offre();
+    let profil = build_test_profil();
+    let mut instance = domain::Instance {
+        id: InstanceId::new(),
+        slug: Slug::parse("instance_test").unwrap(),
+        offre_id: offre.id,
+        profil_id: profil.id,
+        status: domain::InstanceStatus::Ready,
+        restitution: None,
+        resume_json: Some(build_test_resume(vec![], vec![])),
+        cover_letter_json: Some(build_test_cover_letter(&[
+            ParagrapheRole::Salutation,
+            ParagrapheRole::Accroche,
+            ParagrapheRole::Cloture,
+        ])),
+        notes: JsonValue::Object(Default::default()),
+        created_at: Utc::now(),
+        updated_at: Utc::now(),
+        sent_at: None,
+    };
+    let previous_resume_title = instance
+        .resume_json
+        .as_ref()
+        .map(|resume| resume.accroche.titre.clone());
+    let previous_cover_letter_paragraph_count = instance
+        .cover_letter_json
+        .as_ref()
+        .map(|cover_letter| cover_letter.paragraphes.len());
+    let new_restitution = domain::Restitution {
+        fit_score: 82,
+        ..Default::default()
+    };
+
+    merge_generated_outputs(&mut instance, Some(new_restitution.clone()), None, None);
+
+    assert_eq!(
+        instance.restitution.as_ref().map(|r| r.fit_score),
+        Some(new_restitution.fit_score)
+    );
+    assert_eq!(
+        instance
+            .resume_json
+            .as_ref()
+            .map(|resume| resume.accroche.titre.clone()),
+        previous_resume_title
+    );
+    assert_eq!(
+        instance
+            .cover_letter_json
+            .as_ref()
+            .map(|cover_letter| cover_letter.paragraphes.len()),
+        previous_cover_letter_paragraph_count
     );
 }

@@ -2,8 +2,8 @@ use super::*;
 use async_trait::async_trait;
 use chrono::Utc;
 use domain::{
-    Chunk, ChunkKind, Instance, InstanceId, InstanceStatus, Offre, OffreId, OffreStructured,
-    Profil, ProfilId, Slug,
+    Chunk, ChunkKind, Instance, InstanceId, InstanceStatus, JsonValue as DomainJsonValue, Offre,
+    OffreId, OffreStructured, Profil, ProfilId, Slug,
 };
 use ports::{
     ChunkRepo, EmbedError, EmbedMode, Embedder, ExtractionRequest, InstanceRepo, LlmClient,
@@ -77,6 +77,15 @@ impl InstanceRepo for TestInstanceRepo {
         let instance = self.stores.instance.lock().unwrap().clone();
         Ok((instance.offre_id == offre_id).then_some(instance))
     }
+
+    async fn get_by_offre_and_profil(
+        &self,
+        offre_id: domain::OffreId,
+        profil_id: domain::ProfilId,
+    ) -> Result<Option<Instance>, RepoError> {
+        let instance = self.stores.instance.lock().unwrap().clone();
+        Ok((instance.offre_id == offre_id && instance.profil_id == profil_id).then_some(instance))
+    }
 }
 
 #[async_trait]
@@ -130,6 +139,10 @@ impl OffreRepo for TestOffreRepo {
         Ok(1)
     }
 
+    async fn find_by_url(&self, _url: &str) -> Result<Option<Offre>, RepoError> {
+        Ok(None)
+    }
+
     async fn find_by_content_hash(
         &self,
         _source_host: &str,
@@ -179,7 +192,7 @@ impl ChunkRepo for TestChunkRepo {
                 kind: ChunkKind::Experience,
                 titre: "Expérience test".into(),
                 content: "Travail sur un prototype IA".into(),
-                metadata: json!({"source": "test"}),
+                metadata: DomainJsonValue::Object(Default::default()),
                 embedding: vec![0.0, 0.0],
                 created_at: Utc::now(),
             },
@@ -294,11 +307,11 @@ fn build_test_data() -> (Instance, Profil, Offre) {
             ..Default::default()
         },
         is_active: true,
-        resume_template: Some(json!({"template": "cv"})),
-        cover_letter_template: Some(json!({"template": "lettre"})),
+        resume_template: Some(DomainJsonValue::Object(Default::default())),
+        cover_letter_template: Some(DomainJsonValue::Object(Default::default())),
         profile_photo: None,
         calendar_pdf: None,
-        notes: json!({}),
+        notes: DomainJsonValue::Object(Default::default()),
         created_at: Utc::now(),
     };
 
@@ -353,7 +366,7 @@ fn build_test_data() -> (Instance, Profil, Offre) {
             },
             ..Default::default()
         }),
-        notes: json!({}),
+        notes: DomainJsonValue::Object(Default::default()),
         created_at: Utc::now(),
         updated_at: Utc::now(),
         sent_at: None,
@@ -412,7 +425,7 @@ fn detects_identity_requests() {
 
 #[test]
 fn push_chat_history_trims_old_entries() {
-    let mut notes = json!({});
+    let mut notes = DomainJsonValue::Object(Default::default());
 
     for idx in 0..=MAX_CHAT_HISTORY_ENTRIES {
         push_chat_history(&mut notes, "user", &format!("message-{idx}"));
@@ -426,11 +439,14 @@ fn push_chat_history_trims_old_entries() {
     assert_eq!(history.len(), MAX_CHAT_HISTORY_ENTRIES);
     assert_eq!(
         history.first().and_then(|entry| entry.get("content")),
-        Some(&json!("message-1"))
+        Some(&DomainJsonValue::String("message-1".to_string()))
     );
     assert_eq!(
         history.last().and_then(|entry| entry.get("content")),
-        Some(&json!(format!("message-{}", MAX_CHAT_HISTORY_ENTRIES)))
+        Some(&DomainJsonValue::String(format!(
+            "message-{}",
+            MAX_CHAT_HISTORY_ENTRIES
+        )))
     );
 }
 

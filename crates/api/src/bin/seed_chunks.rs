@@ -137,7 +137,7 @@ async fn create_chunk(
         kind,
         titre: titre.to_string(),
         content: content.to_string(),
-        metadata: serde_json::json!({}),
+        metadata: domain::JsonValue::Object(Default::default()),
         embedding,
         created_at: Utc::now(),
     })

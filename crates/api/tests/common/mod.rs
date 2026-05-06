@@ -80,6 +80,9 @@ impl OffreRepo for MockRepos {
     async fn count(&self) -> Result<u64, RepoError> {
         Ok(self.offres.lock().unwrap().len() as u64)
     }
+    async fn find_by_url(&self, _url: &str) -> Result<Option<Offre>, RepoError> {
+        Ok(None)
+    }
     async fn find_by_content_hash(
         &self,
         source_host: &str,
@@ -119,6 +122,14 @@ impl InstanceRepo for MockRepos {
         let _ = offre_id;
         Ok(None)
     }
+    async fn get_by_offre_and_profil(
+        &self,
+        offre_id: domain::OffreId,
+        profil_id: domain::ProfilId,
+    ) -> Result<Option<Instance>, RepoError> {
+        let _ = (offre_id, profil_id);
+        Ok(None)
+    }
 }
 
 #[async_trait]
@@ -141,7 +152,7 @@ impl ChunkRepo for MockRepos {
                 kind: domain::ChunkKind::Experience,
                 titre: "Dummy Experience".to_string(),
                 content: "Experience dummy".to_string(),
-                metadata: serde_json::json!({}),
+                metadata: domain::JsonValue::Object(Default::default()),
                 embedding: vec![0.0; 1024],
                 created_at: chrono::Utc::now(),
             },

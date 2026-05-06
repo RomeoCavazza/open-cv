@@ -3,9 +3,9 @@
 use chrono::{DateTime, Utc};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use serde_json::Value as Json;
 
 use crate::ids::{AnnexeId, ProfilId};
+use crate::json::JsonValue;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Profil {
@@ -17,9 +17,9 @@ pub struct Profil {
     pub profile_photo: Option<Vec<u8>>,
     #[serde(skip)]
     pub calendar_pdf: Option<Vec<u8>>,
-    pub resume_template: Option<Json>,
-    pub cover_letter_template: Option<Json>,
-    pub notes: Json,
+    pub resume_template: Option<JsonValue>,
+    pub cover_letter_template: Option<JsonValue>,
+    pub notes: JsonValue,
     pub created_at: DateTime<Utc>,
 }
 
@@ -120,11 +120,11 @@ pub struct LanguageEntry {
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]
 pub struct DocumentSection {
     #[serde(default)]
-    pub resume_template: Option<Json>,
+    pub resume_template: Option<JsonValue>,
     #[serde(default)]
-    pub cover_letter_template: Option<Json>,
+    pub cover_letter_template: Option<JsonValue>,
     #[serde(default)]
-    pub apprenticeship_calendar: Option<Json>,
+    pub apprenticeship_calendar: Option<JsonValue>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

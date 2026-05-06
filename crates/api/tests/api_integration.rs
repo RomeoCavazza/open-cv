@@ -84,7 +84,7 @@ async fn test_get_profile_200_when_seeded() {
         calendar_pdf: None,
         resume_template: None,
         cover_letter_template: None,
-        notes: serde_json::json!({}),
+        notes: domain::JsonValue::Object(Default::default()),
     };
     repos
         .profils
@@ -114,7 +114,7 @@ async fn test_put_profile_200_updates_content() {
         calendar_pdf: None,
         resume_template: None,
         cover_letter_template: None,
-        notes: serde_json::json!({}),
+        notes: domain::JsonValue::Object(Default::default()),
     };
     repos.profils.lock().unwrap().insert(id, profil);
 
@@ -148,7 +148,7 @@ async fn test_put_profile_400_on_malformed_payload() {
         calendar_pdf: None,
         resume_template: None,
         cover_letter_template: None,
-        notes: serde_json::json!({}),
+        notes: domain::JsonValue::Object(Default::default()),
     };
     repos.profils.lock().unwrap().insert(profil.id, profil);
 
@@ -190,7 +190,7 @@ async fn test_post_ingest_200_with_restitution() {
         calendar_pdf: None,
         resume_template: None,
         cover_letter_template: None,
-        notes: serde_json::json!({}),
+        notes: domain::JsonValue::Object(Default::default()),
     };
     repos.profils.lock().unwrap().insert(profil.id, profil);
 
@@ -239,7 +239,7 @@ async fn test_get_annexes_200() {
         calendar_pdf: None,
         resume_template: None,
         cover_letter_template: None,
-        notes: serde_json::json!({}),
+        notes: domain::JsonValue::Object(Default::default()),
     };
     repos.profils.lock().unwrap().insert(profil.id, profil);
 

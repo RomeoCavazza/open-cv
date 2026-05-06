@@ -126,17 +126,22 @@ impl InstanceRepo for InstanceRepoPg {
 
     async fn upsert(&self, instance: &Instance) -> Result<(), RepoError> {
         tracing::info!(
-            "DB: Upserting instance {} (slug: {}). Notes size: {} bytes, History entries: {}",
+            "DB: Upserting instance {} (slug: {})",
             instance.id,
             instance.slug.as_str(),
-            instance.notes.to_string().len(),
-            instance
-                .notes
-                .get("chat_history")
-                .and_then(|h| h.as_array())
-                .map(|a| a.len())
-                .unwrap_or(0)
         );
+        let restitution = instance
+            .restitution
+            .as_ref()
+            .map(|value| serde_json::to_value(value).expect("restitution serializable"));
+        let resume_json = instance
+            .resume_json
+            .as_ref()
+            .map(|value| serde_json::to_value(value).expect("resume serializable"));
+        let cover_letter_json = instance
+            .cover_letter_json
+            .as_ref()
+            .map(|value| serde_json::to_value(value).expect("cover letter serializable"));
         sqlx::query(
             r#"
             INSERT INTO instances (
@@ -160,10 +165,10 @@ impl InstanceRepo for InstanceRepoPg {
         .bind(instance.offre_id.as_uuid())
         .bind(instance.profil_id.as_uuid())
         .bind(instance.status.as_str())
-        .bind(serde_json::to_value(&instance.restitution).unwrap_or(serde_json::Value::Null))
-        .bind(serde_json::to_value(&instance.resume_json).unwrap_or(serde_json::Value::Null))
-        .bind(serde_json::to_value(&instance.cover_letter_json).unwrap_or(serde_json::Value::Null))
-        .bind(instance.notes.clone())
+        .bind(restitution)
+        .bind(resume_json)
+        .bind(cover_letter_json)
+        .bind(serde_json::to_value(&instance.notes).unwrap_or(serde_json::Value::Null))
         .bind(instance.created_at)
         .bind(instance.updated_at)
         .bind(instance.sent_at)
@@ -187,9 +192,9 @@ impl InstanceRepo for InstanceRepoPg {
             WHERE offre_id = $1
             ORDER BY
                 CASE
-                    WHEN restitution IS NOT NULL
-                      OR resume_json IS NOT NULL
-                      OR cover_letter_json IS NOT NULL
+                    WHEN (restitution IS NOT NULL AND restitution <> 'null'::jsonb)
+                      OR (resume_json IS NOT NULL AND resume_json <> 'null'::jsonb)
+                      OR (cover_letter_json IS NOT NULL AND cover_letter_json <> 'null'::jsonb)
                     THEN 0
                     ELSE 1
                 END,
@@ -198,6 +203,47 @@ impl InstanceRepo for InstanceRepoPg {
             "#,
         )
         .bind(offre_id.as_uuid())
+        .fetch_optional(&self.pool)
+        .await
+        .map_err(map_sqlx)?;
+
+        row.map(|r| {
+            use sqlx::Row;
+            build_instance(InstanceRow {
+                id: r.get("id"),
+                slug: r.get::<String, _>("slug"),
+                offre_id: r.get("offre_id"),
+                profil_id: r.get("profil_id"),
+                status: r.get("status"),
+                restitution: r.get("restitution"),
+                resume_json: r.get("resume_json"),
+                cover_letter_json: r.get("cover_letter_json"),
+                notes: r.get("notes"),
+                created_at: r.get("created_at"),
+                updated_at: r.get("updated_at"),
+                sent_at: r.get("sent_at"),
+            })
+        })
+        .transpose()
+    }
+
+    async fn get_by_offre_and_profil(
+        &self,
+        offre_id: domain::OffreId,
+        profil_id: domain::ProfilId,
+    ) -> Result<Option<Instance>, RepoError> {
+        let row = sqlx::query(
+            r#"
+            SELECT id, slug, offre_id, profil_id, status::text,
+                   restitution, resume_json, cover_letter_json, notes,
+                   created_at, updated_at, sent_at
+            FROM instances
+            WHERE offre_id = $1 AND profil_id = $2
+            LIMIT 1
+            "#,
+        )
+        .bind(offre_id.as_uuid())
+        .bind(profil_id.as_uuid())
         .fetch_optional(&self.pool)
         .await
         .map_err(map_sqlx)?;

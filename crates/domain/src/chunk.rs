@@ -1,10 +1,9 @@
 //! Chunks : expériences, projets, compétences découpés pour le RAG.
 
+use crate::ids::{ChunkId, ProfilId};
+use crate::json::JsonValue;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use serde_json::Value as Json;
-
-use crate::ids::{ChunkId, ProfilId};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -35,7 +34,7 @@ pub struct Chunk {
     pub kind: ChunkKind,
     pub titre: String,
     pub content: String,
-    pub metadata: Json,
+    pub metadata: JsonValue,
     /// Embedding (dimension dépend du modèle ; ex 1024 pour voyage-3).
     pub embedding: Vec<f32>,
     pub created_at: DateTime<Utc>,
