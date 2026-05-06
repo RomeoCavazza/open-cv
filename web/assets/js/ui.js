@@ -1,5 +1,13 @@
-import { i18n } from './state.js';
+import { 
+    i18n, 
+    aiChatAttachments, 
+    selectedLlmProvider, 
+    delivConfig, 
+    setDelivConfig, 
+    setSelectedLlmProvider 
+} from './state.js';
 import { clear, el, svg } from './dom.js';
+import { EVENTS, emit } from './modules/events.js';
 
 export function updateUIStrings() {
     const t = i18n.translations[i18n.current];
@@ -455,4 +463,93 @@ export function renderList(containerId, items, rowCreator) {
     if (containerId === 'list-experiences' || containerId === 'list-projects') {
         initSortableContainer(container);
     }
+}
+
+export function showToast(message, type = 'info') {
+    let container = document.getElementById('toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        document.body.appendChild(container);
+    }
+
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+    container.appendChild(toast);
+
+    setTimeout(() => {
+        toast.classList.add('fade-out');
+        setTimeout(() => toast.remove(), 300);
+    }, 4000);
+}
+
+export function setupSelector(containerId) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    container.querySelectorAll('.llm-pill').forEach(pill => {
+        const prov = pill.dataset.provider;
+        const deliv = pill.dataset.deliv;
+
+        if (prov) {
+            if (selectedLlmProvider === prov) pill.classList.add('active');
+            else pill.classList.remove('active');
+        } else if (deliv) {
+            const val = delivConfig[deliv];
+            if (val === true) pill.classList.add('active');
+            else if (val === false) pill.classList.remove('active');
+        }
+
+        pill.onclick = (e) => {
+            e.preventDefault();
+            if (prov) {
+                setSelectedLlmProvider(prov);
+                emit(EVENTS.LLM_PROVIDER_CHANGED, { provider: prov });
+            } else if (deliv) {
+                const newVal = !delivConfig[deliv];
+                delivConfig[deliv] = newVal;
+                setDelivConfig({ ...delivConfig });
+                if (newVal) pill.classList.add('active');
+                else pill.classList.remove('active');
+            }
+        };
+    });
+}
+
+export function renderAiChatAttachments() {
+    const container = document.getElementById('ai-chat-attachments');
+    if (!container) return;
+    const t = i18n.translations[i18n.current];
+    clear(container);
+
+    if (!aiChatAttachments.length) {
+        container.style.display = 'none';
+        return;
+    }
+
+    container.style.display = 'flex';
+    aiChatAttachments.forEach((file, index) => {
+        const remove = document.createElement('button');
+        remove.type = 'button';
+        remove.className = 'ai-attachment-remove';
+        remove.setAttribute('aria-label', t.attached_files);
+        remove.innerText = '×';
+
+        remove.onclick = () => {
+            aiChatAttachments.splice(index, 1);
+            renderAiChatAttachments();
+        };
+
+        const chip = document.createElement('div');
+        chip.className = 'ai-attachment-chip';
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'ai-attachment-name';
+        nameSpan.title = file.name;
+        nameSpan.innerText = file.name;
+
+        chip.appendChild(nameSpan);
+        chip.appendChild(remove);
+        container.appendChild(chip);
+    });
 }
