@@ -16,7 +16,7 @@ impl ContentResolver {
     pub async fn resolve(&self, raw: &str) -> Result<(String, String), AppError> {
         let raw = raw.trim();
         if raw.is_empty() {
-            return Err(AppError::Other("input vide".into()));
+            return Err(AppError::Validation("input vide".into()));
         }
 
         let (raw_text_uncleaned, source_url) = if looks_like_url(raw) {
@@ -28,7 +28,7 @@ impl ContentResolver {
             (result.raw_text, raw.to_string())
         } else {
             if raw.len() < 200 {
-                return Err(AppError::Other(
+                return Err(AppError::Validation(
                     "texte trop court pour être une offre (<200 chars)".into(),
                 ));
             }
@@ -101,7 +101,7 @@ fn validate_quality(text: &str) -> Result<(), AppError> {
         .any(|kw| text.to_lowercase().contains(kw));
 
     if text.len() < 500 && !has_business_signal {
-        return Err(AppError::Other(
+        return Err(AppError::Validation(
             "Le contenu fourni semble être pauvre ou manque de signal métier.".into(),
         ));
     }

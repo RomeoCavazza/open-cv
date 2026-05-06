@@ -16,6 +16,7 @@ impl From<application::AppError> for ApiError {
     fn from(e: application::AppError) -> Self {
         match e {
             application::AppError::NotFound => Self::NotFound("ressource introuvable".into()),
+            application::AppError::Validation(m) => Self::BadRequest(m),
             other => Self::Internal(other.to_string()),
         }
     }

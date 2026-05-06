@@ -50,7 +50,7 @@ pub async fn ingest_handler(
 
     for item in items {
         let input = IntakeInput {
-            raw_input: item,
+            raw_input: item.clone(),
             profil_id: profil.id,
         };
 
@@ -79,6 +79,7 @@ pub async fn ingest_handler(
                             .execute(gen_input, llm_provider.clone())
                             .await
                             .map_err(|e| {
+                                tracing::error!(error = %e, "Erreur lors de la génération des livrables");
                                 ApiError::Internal(format!("Erreur de génération : {}", e))
                             })?;
                     }
@@ -90,6 +91,7 @@ pub async fn ingest_handler(
                 }));
             }
             Err(e) => {
+                tracing::error!(error = %e, input = %item, "Échec de l'ingestion d'un item");
                 return Err(ApiError::Internal(format!("Erreur d'ingestion : {}", e)));
             }
         }

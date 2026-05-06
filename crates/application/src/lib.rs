@@ -24,6 +24,9 @@ pub enum AppError {
     #[error("ressource introuvable")]
     NotFound,
 
+    #[error("validation : {0}")]
+    Validation(String),
+
     #[error("autre : {0}")]
     Other(String),
 }
