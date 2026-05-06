@@ -97,7 +97,7 @@ export class OfferController {
                     toggle.appendChild(count);
                     catDiv.appendChild(toggle);
 
-                    catDiv.onclick = () => window.toggleOfferCategory(cat);
+                    catDiv.onclick = () => this.toggleOfferCategory(cat);
                     list.appendChild(catDiv);
                     groupContainer = document.createElement('div');
                     groupContainer.style.display = isCollapsed ? 'none' : 'block';
@@ -136,7 +136,7 @@ export class OfferController {
                         });
                     };
 
-                    card.onclick = () => window.selectOffer(o.job_id);
+                    card.onclick = () => this.selectOffer(o.job_id);
                     groupContainer.appendChild(card);
                 });
             });
@@ -185,7 +185,7 @@ export class OfferController {
                         });
                     };
 
-                    card.onclick = () => window.selectOffer(o.job_id);
+                    card.onclick = () => this.selectOffer(o.job_id);
                     list.appendChild(card);
                 });
             }
@@ -196,7 +196,8 @@ export class OfferController {
     }
 
     selectOffer(jobId) {
-        // Implementation in Step 3b
+        setActiveJobId(jobId);
+        emit(EVENTS.OFFER_SELECTED, { jobId });
     }
 
     mutateOfferFlags(jobId, mutate) {
@@ -204,7 +205,11 @@ export class OfferController {
     }
 
     toggleOfferCategory(category) {
-        // Implementation in Step 3b
+        const index = collapsedOfferCategories.indexOf(category);
+        if (index >= 0) collapsedOfferCategories.splice(index, 1);
+        else collapsedOfferCategories.push(category);
+        saveCollapsedCategories();
+        this.loadOffers();
     }
 
     renderDashboardApplications(offers) {

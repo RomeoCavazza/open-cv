@@ -89,14 +89,18 @@ function showToast(message, type = 'info') {
 // --- Dashboard Logic ---
 
 const views = {
-    ingest: document.getElementById('view-ingest'),
-    app: document.getElementById('view-app'),
-    profile: document.getElementById('view-profile')
+    get ingest() { return document.getElementById('view-ingest'); },
+    get app() { return document.getElementById('view-app'); },
+    get profile() { return document.getElementById('view-profile'); }
 };
 
 // Initialize router
 router.initRouter({
-    views,
+    views: {
+        ingest: document.getElementById('view-ingest'),
+        app: document.getElementById('view-app'),
+        profile: document.getElementById('view-profile')
+    },
     callbacks: {
         onLoadOffers: () => offerController.loadOffers(),
         onResetIframe: () => iframeRender.resetIframeToEmptyState(),
@@ -110,26 +114,13 @@ async function loadProfile() {
     return profileController.loadProfile();
 }
 
-// Temporarily expose for OfferController (Steps 3b/3c)
+// Temporarily expose for OfferController (Step 3c)
 window.mutateOfferFlags = function(jobId, mutate) {
     const nextFlags = { ...(offerFlags[jobId] || {}) };
     mutate(nextFlags);
     if (!nextFlags.locked && !nextFlags.archived && !nextFlags.oldCv && !nextFlags.deleted) delete offerFlags[jobId];
     else offerFlags[jobId] = nextFlags;
     saveOfferFlags();
-    offerController.loadOffers();
-};
-
-window.selectOffer = function(jobId) {
-    setActiveJobId(jobId);
-    emit(EVENTS.OFFER_SELECTED, { jobId });
-};
-
-window.toggleOfferCategory = function(category) {
-    const index = collapsedOfferCategories.indexOf(category);
-    if (index >= 0) collapsedOfferCategories.splice(index, 1);
-    else collapsedOfferCategories.push(category);
-    saveCollapsedCategories();
     offerController.loadOffers();
 };
 
