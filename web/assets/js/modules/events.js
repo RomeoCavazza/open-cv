@@ -35,16 +35,7 @@ const bus = new EventTarget();
 export function on(eventName, callback) {
     const handler = (e) => callback(e.detail);
     bus.addEventListener(eventName, handler);
-    return handler; // Return handler for off()
-}
-
-/**
- * Unsubscribe from an event
- * @param {string} eventName 
- * @param {Function} handler 
- */
-export function off(eventName, handler) {
-    bus.removeEventListener(eventName, handler);
+    return handler;
 }
 
 /**
@@ -59,4 +50,4 @@ export function emit(eventName, detail = {}) {
 }
 
 // Legacy global expose for dashboard.js transition
-window.AppEvents = { EVENTS, on, emit, off };
+window.AppEvents = { EVENTS, on, emit };

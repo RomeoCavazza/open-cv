@@ -26,16 +26,6 @@ export async function fetchOffers() {
     return await res.json();
 }
 
-export async function runIngest(payload) {
-    const res = await fetch('/api/ingest', { 
-        method: 'POST', 
-        headers: { 'Content-Type': 'application/json' }, 
-        body: JSON.stringify(payload) 
-    });
-    if (!res.ok) throw new Error('Ingest failed');
-    return res;
-}
-
 export async function fetchAnnexes() {
     const res = await fetch('/api/profile/active/annexes');
     if (!res.ok) throw new Error('Failed to fetch annexes');
@@ -80,21 +70,7 @@ export async function generateApplication(jobId, provider, options = {}) {
     return { slug: jobId }; // The backend returns 202 Accepted
 }
 
-export async function sendChatMessage(payload) {
-    const res = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-    });
-    if (!res.ok) throw new Error('Chat failed');
-    return await res.json();
-}
-
-export function getAnnexeUrl(id) {
-    return `/api/profile/active/annexes/${id}`;
-}
-
-export async function updateAnnexe(id, payload) {
-    // Note: This endpoint might not exist yet, but for parity
+export async function updateAnnexe(_id, _payload) {
+    // Endpoint non expose pour l'instant; on garde la fonction pour l'API UI.
     return Promise.resolve();
 }

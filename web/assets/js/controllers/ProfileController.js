@@ -1,9 +1,8 @@
 import * as api from '../api.js';
 import * as ui from '../ui.js';
-import { clear, safeClick } from '../dom.js';
+import { safeClick } from '../dom.js';
 import { EVENTS, emit } from '../modules/events.js';
 import { 
-    setActiveProfilId, 
     setLoadedProfileImage, 
     setLoadedProfileExtras,
     loadedProfileImage,
@@ -19,7 +18,6 @@ export class ProfileController {
         try {
             const profileResponse = await api.fetchProfile();
             const content = profileResponse.content;
-            setActiveProfilId(profileResponse.id || null);
 
             setLoadedProfileExtras(Object.fromEntries(
                 Object.entries(content).filter(([key]) => ![

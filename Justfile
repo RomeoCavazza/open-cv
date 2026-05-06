@@ -87,7 +87,7 @@ audit:
     cargo fmt --all --check
     cargo clippy --workspace --all-targets -- -D warnings
     cargo deny check --config tooling/deny.toml
-    cargo udeps --workspace --all-targets || true
+    RUSTC_BOOTSTRAP=1 cargo udeps --workspace --all-targets || true
     cargo bloat --release -p api --crates
     [ -f package.json ] && npm run lint:js || true
     [ -f package.json ] && npm run lint:css || true

@@ -1,6 +1,11 @@
 {
   "$schema": "https://unpkg.com/knip@5/schema.json",
-  "entry": ["web/assets/js/chat.js", "web/assets/js/dashboard.js"],
+  "entry": [
+    "web/assets/js/chat.js",
+    "web/assets/js/dashboard.js",
+    "web/resume/script.js",
+    "web/cover-letter/script.js"
+  ],
   "project": ["web/assets/js/**/*.js"],
-  "ignoreDependencies": ["eslint", "stylelint", "knip", "@purgecss/cli"]
+  "ignoreDependencies": ["eslint", "stylelint", "purgecss"]
 }

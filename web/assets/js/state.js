@@ -78,10 +78,8 @@ export let i18n = {
 export let activeJobId = null;
 export let activeTab = 'restitution';
 export let aiChatAttachments = [];
-export let activeProfilId = null;
 export let loadedProfileExtras = {};
 export let loadedProfileImage = "";
-export let loadedApprenticeshipCalendarDocument = null;
 export let selectedLlmProvider = localStorage.getItem('recruitai_llm') || 'ollama';
 
 export let collapsedOfferCategories = (() => {
@@ -108,7 +106,7 @@ export let delivConfig = (() => {
     }
 })();
 
-export function saveDelivConfig(config) {
+function saveDelivConfig(config) {
     localStorage.setItem('recruitai_delivs', JSON.stringify(config));
 }
 
@@ -120,9 +118,7 @@ export function setDelivConfig(key, val) {
 // Setters
 export function setActiveJobId(id) { activeJobId = id; }
 export function setActiveTab(tab) { activeTab = tab; }
-export function setActiveProfilId(id) { activeProfilId = id; }
 export function setLoadedProfileImage(img) { loadedProfileImage = img; }
-export function setLoadedApprenticeshipCalendarDocument(doc) { loadedApprenticeshipCalendarDocument = doc; }
 export function setLoadedProfileExtras(extras) { loadedProfileExtras = extras; }
 export function setSelectedLlmProvider(provider) { 
     selectedLlmProvider = provider; 

@@ -33,7 +33,7 @@ export function updateUIStrings() {
     });
 }
 
-export function dragHandleMarkup() {
+function dragHandleMarkup() {
     return el('button', {
         type: 'button',
         className: 'drag-handle',
@@ -84,15 +84,6 @@ export function stringifyDocument(value) {
     }
 }
 
-export function readFileAsText(file) {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(String(reader.result || ""));
-        reader.onerror = () => reject(new Error('file-read-failed'));
-        reader.readAsText(file);
-    });
-}
-
 export function readFileAsDataUrl(file) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -102,7 +93,7 @@ export function readFileAsDataUrl(file) {
     });
 }
 
-export function getDragAfterElement(container, y) {
+function getDragAfterElement(container, y) {
     const rows = [...container.querySelectorAll('.form-row-exp:not(.dragging-profile-row)')];
     return rows.reduce((closest, child) => {
         const box = child.getBoundingClientRect();
@@ -114,7 +105,7 @@ export function getDragAfterElement(container, y) {
     }, { offset: Number.NEGATIVE_INFINITY, element: null }).element;
 }
 
-export function initSortableContainer(container) {
+function initSortableContainer(container) {
     if (!container || container.dataset.sortableContainerReady === 'true') return;
     container.dataset.sortableContainerReady = 'true';
     container.addEventListener('dragover', (event) => {
@@ -133,7 +124,7 @@ export function initSortableContainer(container) {
     });
 }
 
-export function setupSortableRow(row) {
+function setupSortableRow(row) {
     if (row.dataset.sortableReady === 'true') return;
     row.dataset.sortableReady = 'true';
     row.draggable = true;
@@ -209,7 +200,7 @@ export function createLangRow(item = {}) {
     return div;
 }
 
-export function normalizeSkillGroup(item = {}) {
+function normalizeSkillGroup(item = {}) {
     const category = item.category || item.role || "";
     let items = item.items;
     if (!Array.isArray(items)) {
