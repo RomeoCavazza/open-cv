@@ -1,0 +1,59 @@
+{
+  "profile": {
+    "name": "[VOTRE NOM]",
+    "title": "[TITRE DU POSTE VISÉ]",
+    "image": "assets/profile-picture.jpg",
+    "location": "[VILLE, CP]",
+    "email": "[EMAIL]",
+    "phone": "[TÉLÉPHONE]",
+    "website": "[SITE WEB]",
+    "linkedin": "[LINKEDIN]",
+    "github": "[GITHUB]",
+    "pitch": "[PHRASE D'ACCROCHE DÉCRIVANT VOTRE PROFIL ET VOTRE MOTIVATION POUR CE POSTE]"
+  },
+  "apprenticeship": {
+    "duration": "[DURÉE]",
+    "start": "[DATE DE DÉBUT]",
+    "rhythm": "[RYTHME D'ALTERNANCE]"
+  },
+  "experiences": [
+    {
+      "company": "[NOM DE L'ENTREPRISE]",
+      "role": "[INTITULÉ DU POSTE]",
+      "period": "[PÉRIODE]",
+      "description": [
+        "[DESCRIPTION DE VOS RÉALISATIONS 1]",
+        "[DESCRIPTION DE VOS RÉALISATIONS 2]"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "school": "[NOM DE L'ÉCOLE]",
+      "degree": "[INTITULÉ DU DIPLÔME]",
+      "period": "[PÉRIODE]"
+    }
+  ],
+  "skills": [
+    {
+      "category": "[CATÉGORIE]",
+      "items": ["[COMPÉTENCE 1]", "[COMPÉTENCE 2]"]
+    }
+  ],
+  "languages": [
+    { "name": "[LANGUE]", "level": "[NIVEAU]" }
+  ],
+  "labels": {
+    "duration": "Durée :",
+    "rhythm": "Rythme :",
+    "contact": "CONTACT",
+    "skills": "COMPÉTENCES",
+    "languages": "LANGUES",
+    "experiences": "EXPÉRIENCES",
+    "education": "FORMATIONS",
+    "linkedin": "LinkedIn",
+    "github": "GitHub",
+    "website": "Site web",
+    "download": "Télécharger en PDF (A4)"
+  }
+}

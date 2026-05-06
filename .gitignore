@@ -2,10 +2,10 @@
 /target/
 Cargo.lock.bak
 
-# sqlx offline cache (on l'ignore maintenant car la CI utilise un service PG)
+# sqlx offline cache
 /.sqlx/
 
-# Postgres local (créé par `just db-init`)
+# Postgres local
 /.pg/
 
 # Env
@@ -22,7 +22,15 @@ Cargo.lock.bak
 /.direnv/
 /result
 /result-*
-/data/
+
+# Data
+/data/*
+!/data/templates/
+!/data/scripts/
+!/data/user/
+/data/user/*
+!/data/user/profil_to_upload.md
+!/data/user/profile-picture.jpg
+/data/instances/
+
 .cargo/
-data/
-data/instances/

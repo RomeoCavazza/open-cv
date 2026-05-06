@@ -29,7 +29,7 @@
 
 ### MED (Amélioration / Modularité)
 1. **[CODE] crates/application/src/chat/mod.rs** : ✅ Terminé. Module découpé en `types.rs`, `persistence.rs` et `streaming.rs`. Orchestration clarifiée.
-2. **[DATA] Templates MBDA** : Hardcodés dans `data/templates/*.json`. Doivent être génériques.
+2. **[DATA] Templates MBDA** : ✅ Terminé. Les templates dans `data/templates/` sont désormais génériques (placeholders).
 3. **[SCRAPE] Anti-bot** : Échec sur SPA/Anti-bot (WTTJ, Siemens). Bypass texte brut nécessaire.
    Décision d'architecture : évaluer **ScrapingAnt** comme fallback premium ciblé par domaine, et non comme chemin par défaut. Usage recommandé seulement après échec du scraper natif, HTML vide/incomplet ou détection d'un challenge JS/anti-bot.
 
@@ -37,6 +37,8 @@
 Aucune dette low ouverte.
 
 ---
+
+4. **[UX] Chat Unifié** : Unifier le chat global et par instance pour une continuité conversationnelle. L'IA doit pouvoir orchestrer plusieurs offres via un seul fil de discussion (Idée validée, à faire en phase finale).
 
 ## 4. RÈGLES DE GOUVERNANCE (NON-NÉGOCIABLES)
 
