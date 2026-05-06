@@ -58,7 +58,7 @@ seed-all: seed-profile seed-data
 
 # version avec auto-rebuild (nécessite: cargo install cargo-watch)
 watch:
-    cargo watch -x 'run -p api'
+    cargo watch -x 'run -p api --bin api'
 
 # tests
 test:
