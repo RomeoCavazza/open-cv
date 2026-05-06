@@ -24,8 +24,6 @@ Le backend suit une architecture hexagonale découpée en **crates**.
 ### 3. `crates/adapters/` (Les Implémentations)
 *Contient le code lié aux outils et services externes.*
 - **`postgres/`** : Persistance via SQLx.
-  - `lib.rs` : Connexion et gestion des transactions.
-  - `profil.rs`, `offre.rs`, etc. : Implémentations spécifiques des repos SQL.
 - **`llm_claude/`, `llm_openai/`, `llm_ollama/`** : Clients API pour les différents modèles.
 - **`scraper_http/`** : Web scraping basique.
 
@@ -34,46 +32,44 @@ Le backend suit une architecture hexagonale découpée en **crates**.
 - **`intake/`** : Pipeline d'ingestion d'offres (Scraping -> Extraction IA -> Déduplication).
 - **`generate/`** : Pipeline de génération de candidature (Retrieval -> Reranking -> Planning -> Generation).
 - **`chat/`** : Logique de discussion interactive avec l'IA sur une candidature.
-- **`prompts/`** : Gestion centralisée des System Prompts envoyés à l'IA.
+- **`prompts/`** : Gestion centralisée des System Prompts.
 
 ### 5. `crates/api/` (L'Interface HTTP)
 *Point d'entrée Axum.*
-- `main.rs` : Initialisation du serveur, de la base de données et des logs.
-- `lib.rs` : Configuration du routeur, des middlewares et du service de fichiers statiques.
-- `handlers/` : Contrôleurs HTTP qui font le pont entre les requêtes et les Use Cases.
-- `bin/` : Scripts utilitaires (Seeding).
-  - `seed_profile.rs` : Importation du profil réel.
-  - `seed_blank.rs` : Création d'un état vierge.
-  - `seed_offers_instances.rs` : Importation de données de test.
-- `tests/api_integration.rs` : Tests de bout en bout validant les contrats API.
+- `main.rs` : Initialisation du serveur et de la base.
+- `lib.rs` : Configuration du routeur et du service statique.
+- `handlers/` : Pont entre requêtes HTTP et Use Cases.
+- `bin/` : Scripts de seeding (`seed_profile`, `seed_offers_instances`).
 
 ---
 
 ## 🌐 Frontend (Vanilla JS)
 
-Le frontend est situé dans `/web` et fonctionne sans build-pipeline.
+Le frontend est situé dans `/web` et fonctionne en architecture modulaire orientée contrôleurs.
 
-### 1. `web/assets/js/` (Logique Globale)
-- `api.js` : Client HTTP centralisé pour communiquer avec le backend.
-- `state.js` : Gestion de l'état local (offre active, profil chargé).
-- `router.js` : Routage côté client (SPA) via `history.pushState`.
-- `dashboard.js` : **Monolithe actuel** à découper (gestion de l'UI principale).
-- `events.js` : (Prévu) Bus d'événements pour le découplage.
+### 1. `web/assets/js/` (Cœur & Orchestration)
+- `dashboard.js` : **Orchestrateur central**. Gère le routage et délègue la logique aux contrôleurs.
+- `api.js` : Client HTTP centralisé.
+- `ui.js` : Composants et utilitaires UI globaux (Toasts, Skeletons, Modals).
+- `router.js` : Routage SPA via `history.pushState`.
 
-### 2. Moteurs de Rendu (Renderers)
-*Documents isolés dans des iframes.*
-- **`web/resume/`** : Moteur de rendu HTML/CSS pour le CV (optimisé pour impression A4).
-- **`web/cover-letter/`** : Moteur de rendu pour la lettre de motivation.
-- **`web/restitution/`** : Rendu de l'analyse "Reverse-Engineering" de l'offre.
+### 2. `web/assets/js/controllers/` (Business Logic)
+- `OfferController.js` : Gestion des offres (chargement, sélection, filtrage).
+- `ProfileController.js` : Gestion du profil candidat (édition, sauvegarde, upload).
+- `IngestController.js` : Gestion de l'ingestion de nouvelles offres.
+
+### 3. `web/assets/js/modules/` (Infrastructure)
+- `events.js` : **Bus d'événements** (Pattern EventTarget) pour le découplage inter-modules.
+- `view.js` : Gestion des transitions de vue (Tabs, Loader states).
+
+### 4. Moteurs de Rendu (Renderers)
+- **`web/resume/`**, **`web/cover-letter/`**, **`web/restitution/`** : Rendu de documents isolés.
 
 ---
 
 ## 🛠️ Infrastructure & Outils
 
-- **`migrations/`** : Scripts SQL (`0001_init.sql`) définissant le schéma de la base Postgres.
-- **`flake.nix`** : Configuration de l'environnement de développement (Rust, Postgres, Just).
-- **`Justfile`** : Recettes d'automatisation (`just dev`, `just migrate`, `just test`).
-- **`docs/`** : Documentation technique et opérationnelle.
-  - `design.md` : Standards UI/UX (Monochrome + Blue).
-  - `data_management.md` : Guide de réinitialisation et seeding.
-  - `project_map.md` : Ce document.
+- **`migrations/`** : Schéma SQL Postgres.
+- **`Justfile`** : Commandes automatisées (`just dev`, `just test`).
+- **`tooling/`** : Configurations (ESLint, Stylelint, Cargo-deny).
+- **`docs/`** : Documentation (Cleanup, Design, Data Management).
