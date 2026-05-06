@@ -1,11 +1,11 @@
-import { 
+import {
     activeJobId,
-    activeTab, 
+    activeTab,
     activeProfilId,
     aiChatAttachments,
     loadedProfileExtras,
     loadedProfileImage,
-    selectedLlmProvider, 
+    selectedLlmProvider,
     collapsedOfferCategories,
     offerFlags,
     delivConfig,
@@ -28,6 +28,9 @@ import * as router from './router.js';
 import * as iframeRender from './render/iframe.js';
 import * as offerRender from './render/offers.js';
 import { EVENTS, emit, on } from './modules/events.js';
+import { ProfileController } from './controllers/ProfileController.js';
+
+const profileController = new ProfileController();
 
 // --- Expose State & Utils for legacy scripts (chat.js) ---
 window.state = {
@@ -100,67 +103,7 @@ router.initRouter({
 });
 
 async function loadProfile() {
-    try {
-        const profileResponse = await api.fetchProfile();
-        const content = profileResponse.content;
-        setActiveProfilId(profileResponse.id || null);
-
-        setLoadedProfileExtras(Object.fromEntries(
-            Object.entries(content).filter(([key]) => ![
-                'profile', 'apprenticeship', 'experiences', 'projects',
-                'education', 'languages', 'skills', 'labels'
-            ].includes(key))
-        ));
-
-        const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ""; };
-        setVal('prof-firstname', content.profile?.firstname);
-        setVal('prof-lastname', content.profile?.lastname);
-        setVal('prof-title', content.profile?.title);
-        setVal('prof-offer-type', content.profile?.offer_type || "Alternance");
-        setVal('prof-duration', content.apprenticeship?.duration);
-        setVal('prof-rhythm', content.apprenticeship?.rhythm);
-        setVal('prof-pitch', content.profile?.pitch);
-        setVal('prof-location', content.profile?.location);
-        setVal('prof-phone', content.profile?.phone);
-        setVal('prof-email', content.profile?.email);
-        setVal('prof-linkedin', content.profile?.linkedin);
-        setVal('prof-website', content.profile?.website);
-        setVal('prof-github', content.profile?.github);
-
-        setVal('prof-resume-template', ui.stringifyDocument(content.documents?.resume_template || content.resume_template));
-        setVal('prof-cover-letter-template', ui.stringifyDocument(content.documents?.cover_letter_template || content.cover_letter_template));
-
-        setLoadedProfileImage(content.profile?.image || "");
-        setVal('prof-image-base64', (content.profile?.image === "persisted:bytea") ? "" : loadedProfileImage);
-
-        const preview = document.getElementById('prof-image-preview');
-        const placeholder = document.getElementById('preview-placeholder');
-        if (preview && content.profile?.image) {
-            const imageUrl = (content.profile.image === "persisted:bytea")
-                ? `/api/profile/active/photo?t=${Date.now()}`
-                : content.profile.image;
-            preview.style.backgroundImage = `url(${imageUrl})`;
-            if (placeholder) placeholder.style.display = 'none';
-        } else if (preview) {
-            preview.style.backgroundImage = '';
-            if (placeholder) placeholder.style.display = 'block';
-        }
-
-        ui.renderList('list-experiences', content.experiences || [], ui.createExpRow);
-        ui.renderList('list-projects', content.projects || [], ui.createExpRow);
-        ui.renderList('list-education', content.education || [], ui.createEduRow);
-        ui.renderList('list-languages', content.languages || [], ui.createLangRow);
-        ui.renderList('list-skills', content.skills || [], ui.createSkillRow);
-
-        try {
-            const annexes = await api.fetchAnnexes();
-            ui.renderList('list-annexes', annexes || [], ui.createAnnexeRow);
-        } catch (annexError) {
-            console.error("Échec du chargement des annexes", annexError);
-        }
-
-        ui.updateUIStrings();
-    } catch (e) { console.warn("Profile load failed", e); }
+    return profileController.loadProfile();
 }
 
 async function loadOffers() {
@@ -612,7 +555,7 @@ async function updateIframe(options = {}) {
     }
     const initialTab = activeTab;
     const offerSlug = activeJobId;
-    
+
     const iframe = document.getElementById('iframe-doc');
     if (!iframe) return;
 
@@ -637,7 +580,7 @@ async function updateIframe(options = {}) {
         const query = activeTab === 'restitution'
             ? `offer=${encodeURIComponent(offerSlug)}&instance=${encodeURIComponent(instanceSlug)}`
             : `id=${encodeURIComponent(instanceSlug)}&offer=${encodeURIComponent(offerSlug)}`;
-            
+
         iframe.removeAttribute('srcdoc');
         iframe.src = `${path}?${query}&v=${Date.now()}`;
         router.updatePath();
@@ -709,101 +652,7 @@ function attachEventListeners() {
     safeClick('nav-app', (e) => { e.preventDefault(); router.switchView('app'); });
     safeClick('nav-profile', (e) => { e.preventDefault(); router.switchView('profile'); });
 
-    safeClick('btn-save-profile', async () => {
-        const btn = document.getElementById('btn-save-profile');
-        btn.disabled = true;
-        btn.textContent = '...';
-        try {
-            const data = {
-                profile: {
-                    firstname: document.getElementById('prof-firstname').value,
-                    lastname: document.getElementById('prof-lastname').value,
-                    title: document.getElementById('prof-title').value,
-                    offer_type: document.getElementById('prof-offer-type').value,
-                    pitch: document.getElementById('prof-pitch').value,
-                    location: document.getElementById('prof-location').value,
-                    phone: document.getElementById('prof-phone').value,
-                    email: document.getElementById('prof-email').value,
-                    linkedin: document.getElementById('prof-linkedin').value,
-                    website: document.getElementById('prof-website').value,
-                    github: document.getElementById('prof-github').value,
-                    image: document.getElementById('prof-image-base64').value || loadedProfileImage || "",
-                },
-                apprenticeship: {
-                    duration: document.getElementById('prof-duration').value,
-                    rhythm: document.getElementById('prof-rhythm').value,
-                },
-                experiences: Array.from(document.querySelectorAll('#list-experiences .form-row-exp')).map(r => ({
-                    role: r.querySelector('.exp-role').value,
-                    company: r.querySelector('.exp-company').value,
-                    period: r.querySelector('.exp-period').value,
-                    description: r.querySelector('.exp-desc').value.split('\n').filter(Boolean),
-                })),
-                projects: Array.from(document.querySelectorAll('#list-projects .form-row-exp')).map(r => ({
-                    role: r.querySelector('.exp-role').value,
-                    company: r.querySelector('.exp-company').value,
-                    period: r.querySelector('.exp-period').value,
-                    description: r.querySelector('.exp-desc').value.split('\n').filter(Boolean),
-                })),
-                education: Array.from(document.querySelectorAll('.form-row-edu')).map(r => ({
-                    school: r.querySelector('.edu-school').value,
-                    degree: r.querySelector('.edu-degree').value,
-                    period: r.querySelector('.edu-period').value,
-                })),
-                languages: Array.from(document.querySelectorAll('.form-row-lang')).map(r => ({
-                    name: r.querySelector('.lang-name').value,
-                    level: r.querySelector('.lang-level').value,
-                })),
-                skills: Array.from(document.querySelectorAll('.skill-cat-row')).map(r => ({
-                    category: r.querySelector('.skill-cat-name').value,
-                    items: Array.from(r.querySelectorAll('.skill-text')).map(s => s.textContent),
-                })),
-                documents: {
-                    resume_template: JSON.parse(document.getElementById('prof-resume-template').value || "{}"),
-                    cover_letter_template: JSON.parse(document.getElementById('prof-cover-letter-template').value || "{}"),
-                },
-                ...loadedProfileExtras
-            };
-            await api.saveProfile(data);
-
-            const annexeRows = Array.from(document.querySelectorAll('.form-row-annexe'));
-            for (const row of annexeRows) {
-                if (row.dataset.markedForDeletion === "true") {
-                    await api.deleteAnnexe(row.dataset.fileId);
-                } else if (!row.dataset.fileId && row.dataset.fileData) {
-                    await api.uploadAnnexe({
-                        label: row.querySelector('.annexe-name').value,
-                        filename: row.dataset.fileName,
-                        content_type: row.dataset.fileType,
-                        data_url: row.dataset.fileData
-                    });
-                } else if (row.dataset.fileId) {
-                    await api.updateAnnexe(row.dataset.fileId, {
-                        label: row.querySelector('.annexe-name').value
-                    });
-                }
-            }
-
-            await loadProfile();
-            alert('Profil sauvegardé !');
-        } catch (e) { alert('Erreur sauvegarde'); console.error(e); }
-        finally { btn.disabled = false; btn.textContent = 'Sauvegarder'; }
-    });
-
-    const profPreview = document.getElementById('prof-image-preview');
-    if (profPreview) profPreview.onclick = () => document.getElementById('prof-image-file').click();
-    const profFile = document.getElementById('prof-image-file');
-    if (profFile) profFile.onchange = async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        const b64 = await ui.readFileAsDataUrl(file);
-        setLoadedProfileImage(b64);
-        const b64Input = document.getElementById('prof-image-base64');
-        if (b64Input) b64Input.value = b64;
-        profPreview.style.backgroundImage = `url(${b64})`;
-        const placeholder = document.getElementById('preview-placeholder');
-        if (placeholder) placeholder.style.display = 'none';
-    };
+    profileController.attachEventListeners();
 
     safeClick('add-exp', () => document.getElementById('list-experiences').appendChild(ui.createExpRow()));
     safeClick('add-project', () => document.getElementById('list-projects').appendChild(ui.createExpRow()));
@@ -890,7 +739,7 @@ function attachEventListeners() {
         try {
             const ingestRes = await api.ingestOffer(input.value);
             if (!ingestRes.job_id) throw new Error("Échec ingestion");
-            
+
             emit(EVENTS.OFFER_INGESTED, { jobId: ingestRes.job_id });
             setActiveJobId(ingestRes.job_id);
 
@@ -904,7 +753,7 @@ function attachEventListeners() {
             await api.generateApplication(ingestRes.job_id, selectedLlmProvider, options);
             emit(EVENTS.GEN_COMPLETED, { jobId: ingestRes.job_id });
             emit(EVENTS.NOTIFICATION, { message: 'Application générée avec succès !', type: 'success' });
-            
+
         } catch (e) {
             emit(EVENTS.GEN_FAILED, { message: e.message });
             emit(EVENTS.NOTIFICATION, { message: 'Erreur: ' + e.message, type: 'error' });
