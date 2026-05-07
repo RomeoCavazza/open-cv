@@ -44,24 +44,56 @@ pub fn build_offer_prompt_context(offre: &domain::Offre) -> serde_json::Value {
 pub fn wants_mutation(message: &str) -> bool {
     let lowered = message.to_lowercase();
     let mutation_markers = [
-        "modifie", "modifier", "change", "changer", "corrige", "corriger",
-        "ajoute", "ajouter", "supprime", "enlève", "retire", "remplace",
-        "mets", "mettre", "réécris", "reecris", "réécrire", "reecrire",
-        "actualise", "actualiser", "adapte", "adapter", "réorganise",
-        "reorganise", "modification", "édition", "edite", "éditer", "editer",
+        "modifie",
+        "modifier",
+        "change",
+        "changer",
+        "corrige",
+        "corriger",
+        "ajoute",
+        "ajouter",
+        "supprime",
+        "enlève",
+        "retire",
+        "remplace",
+        "mets",
+        "mettre",
+        "réécris",
+        "reecris",
+        "réécrire",
+        "reecrire",
+        "actualise",
+        "actualiser",
+        "adapte",
+        "adapter",
+        "réorganise",
+        "reorganise",
+        "modification",
+        "édition",
+        "edite",
+        "éditer",
+        "editer",
     ];
 
-    mutation_markers.iter().any(|marker| lowered.contains(marker))
+    mutation_markers
+        .iter()
+        .any(|marker| lowered.contains(marker))
 }
 
 pub fn wants_identity(message: &str) -> bool {
     let lowered = message.to_lowercase();
     let identity_markers = [
-        "comment je m'appelle", "c'est quoi mon nom", "quel est mon nom",
-        "tu sais comment je m'appelle", "tu connais mon nom", "je m'appelle comment",
+        "comment je m'appelle",
+        "c'est quoi mon nom",
+        "quel est mon nom",
+        "tu sais comment je m'appelle",
+        "tu connais mon nom",
+        "je m'appelle comment",
     ];
 
-    identity_markers.iter().any(|marker| lowered.contains(marker))
+    identity_markers
+        .iter()
+        .any(|marker| lowered.contains(marker))
 }
 
 pub fn extract_chat_history(notes: &JsonValue) -> Vec<Message> {
@@ -130,8 +162,14 @@ pub fn push_chat_history(notes: &mut JsonValue, role: &str, content: &str) {
     if let Some(history) = history_value.as_array_mut() {
         let mut entry = std::collections::BTreeMap::new();
         entry.insert("role".to_string(), JsonValue::String(role.to_string()));
-        entry.insert("content".to_string(), JsonValue::String(content.to_string()));
-        entry.insert("ts".to_string(), JsonValue::String(chrono::Utc::now().to_rfc3339()));
+        entry.insert(
+            "content".to_string(),
+            JsonValue::String(content.to_string()),
+        );
+        entry.insert(
+            "ts".to_string(),
+            JsonValue::String(chrono::Utc::now().to_rfc3339()),
+        );
         history.push(JsonValue::Object(entry));
 
         if history.len() > MAX_CHAT_HISTORY_ENTRIES {

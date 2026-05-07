@@ -1,6 +1,7 @@
 use domain::{Message, MessageRole};
 use ports::{
-    AnnexeRepo, ChunkRepo, Embedder, InstanceRepo, LlmClient, MessageRepo, ProfilRepo, OffreRepo, LlmError,
+    AnnexeRepo, ChunkRepo, Embedder, InstanceRepo, LlmClient, LlmError, MessageRepo, OffreRepo,
+    ProfilRepo,
 };
 use std::sync::Arc;
 
@@ -12,13 +13,13 @@ pub mod types;
 #[cfg(test)]
 mod tests;
 
-pub use self::types::*;
 use self::persistence::ChatContextLoader;
-use self::streaming::StreamOrchestrator;
 use self::prompt_utils::{
     build_offer_prompt_context, build_profile_prompt_context, extract_chat_history,
     push_chat_history, render_chat_history_for_prompt, wants_identity, wants_mutation,
 };
+use self::streaming::StreamOrchestrator;
+pub use self::types::*;
 
 pub struct ChatWithApplicationUseCase {
     pub loader: ChatContextLoader,
@@ -81,7 +82,10 @@ impl ChatWithApplicationUseCase {
         let (mut instance, profil, offre) = self.loader.load_instance_context(instance_id).await?;
         let llm = self.get_llm(&req.llm_provider)?;
         let history = self.message_repo.list_by_instance_id(instance.id).await?;
-        let rag_context = self.loader.get_rag_context(instance.profil_id, &req.message).await?;
+        let rag_context = self
+            .loader
+            .get_rag_context(instance.profil_id, &req.message)
+            .await?;
 
         let user_msg = Message::new(instance.id, MessageRole::User, req.message.clone());
         self.message_repo.push(&user_msg).await?;
@@ -90,12 +94,23 @@ impl ChatWithApplicationUseCase {
         let wants_identity = wants_identity(&req.message);
 
         let system_prompt = self.select_instance_system_prompt(wants_mutation, wants_identity);
-        let user_input = self.build_instance_user_input(&instance, &profil, &offre, &history, &rag_context, &req);
+        let user_input = self.build_instance_user_input(
+            &instance,
+            &profil,
+            &offre,
+            &history,
+            &rag_context,
+            &req,
+        );
 
-        let response_json = self.call_llm_extract(llm, system_prompt, user_input, wants_mutation).await?;
+        let response_json = self
+            .call_llm_extract(llm, system_prompt, user_input, wants_mutation)
+            .await?;
         let new_data: ChatMutationOutput = serde_json::from_value(response_json)?;
 
-        let ai_message = self.process_instance_mutation(&mut instance, new_data).await?;
+        let ai_message = self
+            .process_instance_mutation(&mut instance, new_data)
+            .await?;
 
         let assistant_msg = Message::new(instance.id, MessageRole::Assistant, ai_message.clone());
         self.message_repo.push(&assistant_msg).await?;
@@ -117,13 +132,23 @@ impl ChatWithApplicationUseCase {
         let (instance, profil, offre) = self.loader.load_instance_context(instance_id).await?;
         let llm = self.get_llm(&req.llm_provider)?;
         let history = self.message_repo.list_by_instance_id(instance.id).await?;
-        let rag_context = self.loader.get_rag_context(instance.profil_id, &req.message).await?;
+        let rag_context = self
+            .loader
+            .get_rag_context(instance.profil_id, &req.message)
+            .await?;
 
         let user_msg = Message::new(instance.id, MessageRole::User, req.message.clone());
         self.message_repo.push(&user_msg).await?;
 
-        let user_input = self.render_instance_input_simple(&instance, &profil, &offre, &history, &rag_context, &req.message)?;
-        
+        let user_input = self.render_instance_input_simple(
+            &instance,
+            &profil,
+            &offre,
+            &history,
+            &rag_context,
+            &req.message,
+        )?;
+
         let completion_req = ports::CompletionRequest {
             system: Some(crate::prompts::chat::INSTANCE_DEFAULT_SYSTEM.to_string()),
             messages: vec![ports::Message::user(user_input)],
@@ -134,10 +159,10 @@ impl ChatWithApplicationUseCase {
 
         let stream = llm.stream(completion_req).await?;
         Ok(StreamOrchestrator::wrap_instance_stream(
-            stream, 
-            instance, 
-            self.message_repo.clone(), 
-            self.loader.instances.clone()
+            stream,
+            instance,
+            self.message_repo.clone(),
+            self.loader.instances.clone(),
         ))
     }
 
@@ -153,9 +178,17 @@ impl ChatWithApplicationUseCase {
         push_chat_history(&mut profil.notes, "user", &req.message);
         self.loader.profils.upsert(&profil).await?;
 
-        let user_input = self.build_global_user_input(&profil, &offres, &chat_history, &rag_context, &req);
-        
-        let response_json = self.call_llm_extract(llm, crate::prompts::chat::GLOBAL_CHAT_SYSTEM, user_input, false).await?;
+        let user_input =
+            self.build_global_user_input(&profil, &offres, &chat_history, &rag_context, &req);
+
+        let response_json = self
+            .call_llm_extract(
+                llm,
+                crate::prompts::chat::GLOBAL_CHAT_SYSTEM,
+                user_input,
+                false,
+            )
+            .await?;
         let ai_message = response_json["message"]
             .as_str()
             .unwrap_or("Désolé, je n'ai pas pu générer de réponse.")
@@ -183,8 +216,14 @@ impl ChatWithApplicationUseCase {
         push_chat_history(&mut profil.notes, "user", &req.message);
         self.loader.profils.upsert(&profil).await?;
 
-        let user_input = self.render_global_input_simple(&profil, &offres, &chat_history, &rag_context, &req.message)?;
-        
+        let user_input = self.render_global_input_simple(
+            &profil,
+            &offres,
+            &chat_history,
+            &rag_context,
+            &req.message,
+        )?;
+
         let completion_req = ports::CompletionRequest {
             system: Some(crate::prompts::chat::GLOBAL_CHAT_SYSTEM.to_string()),
             messages: vec![ports::Message::user(user_input)],
@@ -195,9 +234,9 @@ impl ChatWithApplicationUseCase {
 
         let stream = llm.stream(completion_req).await?;
         Ok(StreamOrchestrator::wrap_global_stream(
-            stream, 
-            profil, 
-            self.loader.profils.clone()
+            stream,
+            profil,
+            self.loader.profils.clone(),
         ))
     }
 
@@ -240,10 +279,15 @@ impl ChatWithApplicationUseCase {
 
         llm.extract(extraction_req)
             .await
+            .map(|resp| resp.value)
             .map_err(|e| anyhow::anyhow!(e))
     }
 
-    fn select_instance_system_prompt(&self, wants_mutation: bool, wants_identity: bool) -> &'static str {
+    fn select_instance_system_prompt(
+        &self,
+        wants_mutation: bool,
+        wants_identity: bool,
+    ) -> &'static str {
         if wants_mutation {
             crate::prompts::chat::INSTANCE_MUTATION_SYSTEM
         } else if wants_identity {
@@ -308,7 +352,8 @@ impl ChatWithApplicationUseCase {
                     .iter()
                     .map(|o| (o.slug.to_string(), o.intitule.clone(), o.entreprise.clone()))
                     .collect::<Vec<_>>()
-            ).unwrap_or_default(),
+            )
+            .unwrap_or_default(),
             rag_context,
             history_prompt,
             req.message
@@ -318,7 +363,11 @@ impl ChatWithApplicationUseCase {
         contents
     }
 
-    fn append_attachments(&self, contents: &mut Vec<ports::MessageContent>, attachments: &[ChatAttachment]) {
+    fn append_attachments(
+        &self,
+        contents: &mut Vec<ports::MessageContent>,
+        attachments: &[ChatAttachment],
+    ) {
         use base64::Engine;
         for att in attachments {
             if att.content_type.starts_with("image/") {
@@ -333,7 +382,11 @@ impl ChatWithApplicationUseCase {
         }
     }
 
-    async fn process_instance_mutation(&self, instance: &mut domain::Instance, new_data: ChatMutationOutput) -> anyhow::Result<String> {
+    async fn process_instance_mutation(
+        &self,
+        instance: &mut domain::Instance,
+        new_data: ChatMutationOutput,
+    ) -> anyhow::Result<String> {
         let ai_message = if new_data.message.trim().is_empty() {
             "J'ai mis à jour les documents selon votre demande.".to_string()
         } else {
@@ -351,7 +404,15 @@ impl ChatWithApplicationUseCase {
         Ok(ai_message)
     }
 
-    fn render_instance_input_simple(&self, instance: &domain::Instance, profil: &domain::Profil, offre: &domain::Offre, history: &[domain::Message], rag_context: &str, message: &str) -> anyhow::Result<String> {
+    fn render_instance_input_simple(
+        &self,
+        instance: &domain::Instance,
+        profil: &domain::Profil,
+        offre: &domain::Offre,
+        history: &[domain::Message],
+        rag_context: &str,
+        message: &str,
+    ) -> anyhow::Result<String> {
         let history_prompt = render_chat_history_for_prompt(history);
         Ok(format!(
             "IDENTITÉ DE L'UTILISATEUR (Profil complet):\n{}\n\n\
@@ -373,7 +434,14 @@ impl ChatWithApplicationUseCase {
         ))
     }
 
-    fn render_global_input_simple(&self, profil: &domain::Profil, offres: &[domain::Offre], chat_history: &[domain::Message], rag_context: &str, message: &str) -> anyhow::Result<String> {
+    fn render_global_input_simple(
+        &self,
+        profil: &domain::Profil,
+        offres: &[domain::Offre],
+        chat_history: &[domain::Message],
+        rag_context: &str,
+        message: &str,
+    ) -> anyhow::Result<String> {
         let history_prompt = render_chat_history_for_prompt(chat_history);
         Ok(format!(
             "IDENTITÉ DE L'UTILISATEUR (Profil complet):\n{}\n\n\

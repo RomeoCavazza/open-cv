@@ -226,12 +226,12 @@ impl LlmClient for RecordingLlm {
         Err(LlmError::Other("not used".into()))
     }
 
-    async fn extract(&self, req: ExtractionRequest) -> Result<serde_json::Value, LlmError> {
+    async fn extract(&self, req: ExtractionRequest) -> Result<ports::ExtractionResponse, LlmError> {
         self.stores.requests.lock().unwrap().push(req.clone());
         let schema_text = req.json_schema.to_string();
 
-        if schema_text.contains("\"resume\"") {
-            Ok(json!({
+        let value = if schema_text.contains("\"resume\"") {
+            json!({
                 "resume": domain::Resume {
                     accroche: domain::Accroche {
                         titre: "updated resume".into(),
@@ -247,12 +247,17 @@ impl LlmClient for RecordingLlm {
                     ..Default::default()
                 },
                 "message": "mise à jour appliquée"
-            }))
+            })
         } else {
-            Ok(json!({
+            json!({
                 "message": "lecture factuelle"
-            }))
-        }
+            })
+        };
+
+        Ok(ports::ExtractionResponse {
+            value,
+            raw: "mock-raw-response".into(),
+        })
     }
 
     async fn stream(
