@@ -56,6 +56,20 @@ seed-data:
 # remplit le profil puis les offres/instances
 seed-all: seed-profile seed-data
 
+# reset complet : purge DB, migrate, seed et validation
+reset-all:
+    dropdb -h localhost -U alternance alternance || true
+    createdb -h localhost -U alternance alternance
+    psql -h localhost -U alternance -d alternance -c "CREATE EXTENSION IF NOT EXISTS vector;"
+    just migrate
+    just seed-all
+    @psql -h localhost -U alternance -d alternance -c " \
+    SELECT 'Profils' as table, count(*) as nb, 'OK' as status FROM profils \
+    UNION ALL \
+    SELECT 'Offres', count(*), 'OK' FROM offres \
+    UNION ALL \
+    SELECT 'Instances', count(*), 'OK' FROM instances;"
+
 # version avec auto-rebuild (nécessite: cargo install cargo-watch)
 watch:
     cargo watch -x 'run -p api --bin api'
@@ -114,4 +128,45 @@ flamegraph:
     cargo flamegraph --bin api
 
 # tout (CI-like)
-ci: audit test
+ci: health audit test
+
+# génère un rapport de santé complet du projet dans tooling/health_report.md
+health:
+    @mkdir -p tooling
+    @echo "# Rapport de Sante RecruitAI" > tooling/health_report.md
+    @echo "Généré le : $(date '+%Y-%m-%d %H:%M:%S')" >> tooling/health_report.md
+    @echo "" >> tooling/health_report.md
+    @echo "## 1. Statistiques du Code (Tokei)" >> tooling/health_report.md
+    @echo "\`\`\`" >> tooling/health_report.md
+    @tokei --exclude data >> tooling/health_report.md
+    @echo "\`\`\`" >> tooling/health_report.md
+    @echo "" >> tooling/health_report.md
+    @echo "## 2. Architecture du Projet (Eza)" >> tooling/health_report.md
+    @echo "\`\`\`" >> tooling/health_report.md
+    @eza --tree --level=3 --ignore-glob="target|node_modules|.git|.direnv|data" >> tooling/health_report.md
+    @echo "\`\`\`" >> tooling/health_report.md
+    @echo "" >> tooling/health_report.md
+    @echo "## 3. Securite et Dependances" >> tooling/health_report.md
+    @echo "### Audit Cargo" >> tooling/health_report.md
+    @echo "\`\`\`" >> tooling/health_report.md
+    @cargo audit 2>/dev/null || echo "Avertissement: Vulnerabilites detectees ou audit impossible sans reseau." >> tooling/health_report.md
+    @echo "\`\`\`" >> tooling/health_report.md
+    @echo "" >> tooling/health_report.md
+    @echo "### Doublons de dependances" >> tooling/health_report.md
+    @echo "\`\`\`" >> tooling/health_report.md
+    @cargo tree -e no-dev --duplicates >> tooling/health_report.md
+    @echo "\`\`\`" >> tooling/health_report.md
+    @echo "" >> tooling/health_report.md
+    @echo "## 4. Poids et Optimisation" >> tooling/health_report.md
+    @echo "### Analyse du binaire (Cargo Bloat)" >> tooling/health_report.md
+    @echo "\`\`\`" >> tooling/health_report.md
+    @cargo bloat --release -p api --crates -n 20 >> tooling/health_report.md
+    @echo "\`\`\`" >> tooling/health_report.md
+    @echo "" >> tooling/health_report.md
+    @echo "## 5. Nettoyage et Code Mort (Knip)" >> tooling/health_report.md
+    @echo "\`\`\`" >> tooling/health_report.md
+    @npm run knip 2>/dev/null || echo "Info: Knip a trouve du code mort ou des dependances inutilisees." >> tooling/health_report.md
+    @echo "\`\`\`" >> tooling/health_report.md
+    @echo "" >> tooling/health_report.md
+    @echo "---" >> tooling/health_report.md
+    @echo "Rapport genere avec succes dans tooling/health_report.md"
