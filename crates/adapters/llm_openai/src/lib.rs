@@ -114,6 +114,7 @@ struct OpenAiResponse {
 #[derive(Deserialize)]
 struct Choice {
     message: OpenAiResponseMessage,
+    finish_reason: Option<String>,
 }
 
 #[derive(Deserialize)]
@@ -237,7 +238,7 @@ impl LlmClient for OpenAiClient {
     }
 
     #[instrument(skip(self, req), fields(model = %self.model, schema = %req.schema_name))]
-    async fn extract(&self, req: ExtractionRequest) -> Result<serde_json::Value, LlmError> {
+    async fn extract(&self, req: ExtractionRequest) -> Result<ports::ExtractionResponse, LlmError> {
         let mut messages = Vec::new();
         if let Some(sys) = req.system {
             messages.push(OpenAiMessage {
@@ -293,7 +294,7 @@ impl LlmClient for OpenAiClient {
                 Some(OpenAiResponseFormat {
                     format_type: "json_schema".into(),
                     json_schema: Some(OpenAiJsonSchema {
-                        name: req.schema_name,
+                        name: req.schema_name.clone(),
                         description: Some(req.schema_description),
                         schema: req.json_schema,
                         strict: false,
@@ -333,15 +334,28 @@ impl LlmClient for OpenAiClient {
         let parsed: OpenAiResponse =
             serde_json::from_str(&raw).map_err(|e| LlmError::Json(e.to_string()))?;
 
-        let content = parsed
-            .choices
-            .first()
-            .and_then(|c| c.message.content.clone())
+        let choice = parsed.choices.first().ok_or_else(|| {
+            LlmError::BadStructuredOutput("Aucun choix renvoyé par OpenAI".into())
+        })?;
+
+        if let Some(reason) = &choice.finish_reason {
+            if reason == "length" {
+                return Err(LlmError::Truncated {
+                    step: req.schema_name,
+                    partial_payload: raw,
+                });
+            }
+        }
+
+        let content = choice
+            .message
+            .content
+            .clone()
             .ok_or_else(|| LlmError::BadStructuredOutput("Réponse vide d'OpenAI".into()))?;
 
         let json = serde_json::from_str(&content).map_err(|e| LlmError::Json(e.to_string()))?;
 
-        Ok(json)
+        Ok(ports::ExtractionResponse { value: json, raw })
     }
 
     fn name(&self) -> &'static str {

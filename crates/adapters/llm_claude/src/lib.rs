@@ -108,6 +108,7 @@ struct AnthropicResponse {
     content: Vec<ContentBlock>,
     usage: Usage,
     model: String,
+    stop_reason: Option<String>,
 }
 
 #[derive(Deserialize)]
@@ -253,7 +254,7 @@ impl LlmClient for ClaudeClient {
     }
 
     #[instrument(skip(self, req), fields(model = %self.model, schema = %req.schema_name))]
-    async fn extract(&self, req: ExtractionRequest) -> Result<serde_json::Value, LlmError> {
+    async fn extract(&self, req: ExtractionRequest) -> Result<ports::ExtractionResponse, LlmError> {
         let schema = if req.json_schema.is_string() && req.json_schema.as_str() == Some("json") {
             serde_json::json!({ "type": "object" })
         } else {
@@ -351,6 +352,15 @@ impl LlmClient for ClaudeClient {
         let parsed: AnthropicResponse =
             serde_json::from_str(&raw).map_err(|e| LlmError::Json(e.to_string()))?;
 
+        if let Some(reason) = &parsed.stop_reason {
+            if reason == "max_tokens" {
+                return Err(LlmError::Truncated {
+                    step: req.schema_name,
+                    partial_payload: raw,
+                });
+            }
+        }
+
         // Find the tool_use block
         for block in &parsed.content {
             if let ContentBlock::ToolUse { input, .. } = block {
@@ -360,13 +370,17 @@ impl LlmClient for ClaudeClient {
                     latency_ms = _latency_ms,
                     "extract completed"
                 );
-                return Ok(input.clone());
+                return Ok(ports::ExtractionResponse {
+                    value: input.clone(),
+                    raw,
+                });
             }
         }
 
-        Err(LlmError::BadStructuredOutput(
-            "Aucun bloc tool_use trouvé dans la réponse Claude".into(),
-        ))
+        Err(LlmError::BadStructuredOutput(format!(
+            "Aucun bloc tool_use trouvé dans la réponse Claude (stop_reason: {:?})",
+            parsed.stop_reason
+        )))
     }
 
     fn name(&self) -> &'static str {

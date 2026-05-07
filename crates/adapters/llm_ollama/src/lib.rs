@@ -49,11 +49,12 @@ struct OllamaMessage {
 
 #[derive(Deserialize)]
 struct OllamaChatResponse {
-    message: Option<OllamaMessage>, // Optionnel dans le cas du streaming
+    message: Option<OllamaMessage>,
     #[serde(default)]
-    content: Option<String>, // Parfois présent directement selon la version d'Ollama
+    content: Option<String>,
     #[allow(dead_code)]
     done: bool,
+    done_reason: Option<String>,
     prompt_eval_count: Option<u32>,
     eval_count: Option<u32>,
     #[allow(dead_code)]
@@ -156,7 +157,7 @@ impl LlmClient for OllamaClient {
     }
 
     #[instrument(skip(self, req), fields(model = %self.model, schema = %req.schema_name))]
-    async fn extract(&self, req: ExtractionRequest) -> Result<serde_json::Value, LlmError> {
+    async fn extract(&self, req: ExtractionRequest) -> Result<ports::ExtractionResponse, LlmError> {
         let mut messages = Vec::new();
         if let Some(sys) = req.system {
             messages.push(OllamaMessage {
@@ -203,8 +204,6 @@ impl LlmClient for OllamaClient {
             obj.remove("$schema");
             obj.remove("title");
 
-            // Si le schéma contient des $ref, Ollama risque de planter (invalid JSON schema).
-            // On vérifie récursivement ou on cherche simplement la string "$ref".
             let schema_str = serde_json::to_string(&cleaned_schema).unwrap_or_default();
             if schema_str.contains("\"$ref\"") {
                 tracing::warn!(
@@ -224,7 +223,10 @@ impl LlmClient for OllamaClient {
             } else {
                 Some(serde_json::json!("json"))
             },
-            options: Some(serde_json::json!({ "num_ctx": 16384 })),
+            options: Some(serde_json::json!({
+                "num_ctx": 16384,
+                "num_predict": req.max_tokens
+            })),
         };
 
         let url = format!("{}/api/chat", self.base_url);
@@ -242,7 +244,6 @@ impl LlmClient for OllamaClient {
             .await
             .map_err(|e| LlmError::Http(e.to_string()))?;
 
-        // Fallback automatique si le schéma est rejeté par Ollama
         if status == 500 && raw.contains("invalid JSON schema in format") {
             tracing::warn!("Ollama rejected the JSON schema. Retrying with format: 'json'...");
             let mut fallback_body = body;
@@ -269,6 +270,16 @@ impl LlmClient for OllamaClient {
 
         let parsed: OllamaChatResponse =
             serde_json::from_str(&raw).map_err(|e| LlmError::Json(e.to_string()))?;
+
+        if let Some(reason) = &parsed.done_reason {
+            if reason == "length" {
+                return Err(LlmError::Truncated {
+                    step: req.schema_name,
+                    partial_payload: raw,
+                });
+            }
+        }
+
         let content = parsed
             .message
             .map(|m| m.content)
@@ -285,16 +296,13 @@ impl LlmClient for OllamaClient {
             content
         };
 
-        let json = serde_json::from_str(cleaned).map_err(|e| {
-            tracing::error!(
-                "Failed to parse JSON from Ollama: {}. Content: {}",
-                e,
-                cleaned
-            );
-            LlmError::Json(e.to_string())
+        let json = serde_json::from_str(cleaned).map_err(|e| LlmError::ParseFailed {
+            step: req.schema_name,
+            error: e.to_string(),
+            payload: cleaned.to_string(),
         })?;
 
-        Ok(json)
+        Ok(ports::ExtractionResponse { value: json, raw })
     }
     fn name(&self) -> &'static str {
         "ollama"
