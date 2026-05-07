@@ -267,7 +267,7 @@ export class OfferController {
             });
             archiveAction.button.onclick = (event) => {
                 event.stopPropagation();
-                        this.mutateOfferFlags(offer.job_id, (nextFlags) => {
+                this.mutateOfferFlags(offer.job_id, (nextFlags) => {
                     nextFlags.archived = !nextFlags.archived;
                     if (nextFlags.archived) {
                         nextFlags.oldCv = false;

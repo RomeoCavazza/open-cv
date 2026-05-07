@@ -485,6 +485,16 @@ textarea:focus { border-color: var(--primary); }
     color: var(--heading);
 }
 
+/* Regenerate button is always partially visible as a visual cue */
+.offer-action-btn[data-action="regenerate"] {
+    opacity: 0.4;
+}
+.offer-card:hover .offer-action-btn[data-action="regenerate"],
+.old-offer-item:hover .offer-action-btn[data-action="regenerate"] {
+    opacity: 1;
+    color: var(--primary);
+}
+
 /* Keep archived icon visible too if it's the 'active' one? 
    User specifically said "cadena actif", so I'll stick to lock. */
 

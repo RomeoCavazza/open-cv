@@ -1,5 +1,42 @@
 import { clear, el, svg, text } from '../assets/js/dom.js';
 
+window.handleGenerate = async () => {
+  const urlParams = new URLSearchParams(window.location.search);
+  const jobId = urlParams.get('id') || urlParams.get('instance');
+  if (!jobId) return;
+
+  showGenerating();
+
+  try {
+    const res = await fetch(
+      `/api/instances/${jobId}/generate?cover_letter=true&resume=false&restitution=false`,
+      { method: 'POST' }
+    );
+    if (res.ok) {
+      if (!window.pollInterval) window.pollInterval = setInterval(loadCoverLetter, 2000);
+    } else {
+      loadCoverLetter();
+    }
+  } catch (e) {
+    loadCoverLetter();
+  }
+};
+
+function showGenerating() {
+  const gen = document.getElementById('generating-state');
+  const con = document.getElementById('cl-container');
+  if (gen) gen.style.display = 'flex';
+  if (con) con.style.display = 'none';
+  if (window.lucide) lucide.createIcons();
+}
+
+function showContent() {
+  const gen = document.getElementById('generating-state');
+  const con = document.getElementById('cl-container');
+  if (gen) gen.style.display = 'none';
+  if (con) con.style.display = 'block';
+}
+
 async function loadCoverLetter() {
   try {
     const urlParams = new URLSearchParams(window.location.search);
@@ -11,15 +48,30 @@ async function loadCoverLetter() {
       return;
     }
 
-    const response = await fetch(`/api/instances/${jobId}/cover-letter`);
-
-    if (!response.ok) {
+    const resInstance = await fetch(`/api/instances/${jobId}`);
+    if (!resInstance.ok) {
       renderEmptyCoverLetterState(jobId);
       return;
     }
+    const instance = await resInstance.json();
+    const status = instance.status.toLowerCase();
 
-    const data = await response.json();
-    renderTemplateCoverLetter(data);
+    if (status === 'generating') {
+      showGenerating();
+      if (!window.pollInterval) window.pollInterval = setInterval(loadCoverLetter, 2000);
+      return;
+    }
+
+    if (instance.cover_letter_json) {
+      if (window.pollInterval) { clearInterval(window.pollInterval); window.pollInterval = null; }
+      showContent();
+      renderTemplateCoverLetter(instance.cover_letter_json);
+    } else if (status === 'ready' || status === 'failed') {
+      if (window.pollInterval) { clearInterval(window.pollInterval); window.pollInterval = null; }
+      renderEmptyCoverLetterState(jobId);
+    } else {
+      if (!window.pollInterval) window.pollInterval = setInterval(loadCoverLetter, 2000);
+    }
   } catch (error) {
     console.error("Unable to load cover letter data:", error);
   }
@@ -56,27 +108,11 @@ function renderEmptyCoverLetterState(jobId) {
     hasGenerateAction ? el('button', {
       id: 'btn-generate-cover',
       style: 'background:#0052ff; color:white; border:none; padding:14px 32px; border-radius:12px; font-weight:600; cursor:pointer; font-size:15px; box-shadow:0 4px 12px rgba(0,82,255,0.2); transition:all 0.2s;',
-      text: 'Générer la lettre'
+      text: 'Générer la lettre',
+      onclick: () => window.handleGenerate()
     }) : null
   ]));
   if (window.lucide) lucide.createIcons();
-  // No applyPreviewScale here as we want full-width/height
-
-  if (hasGenerateAction) {
-    document.getElementById('btn-generate-cover').onclick = async () => {
-      const btn = document.getElementById('btn-generate-cover');
-      btn.disabled = true;
-      btn.innerText = "Génération...";
-      try {
-        const res = await fetch(
-          `/api/instances/${jobId}/generate?cover_letter=true&resume=false&restitution=false`,
-          { method: 'POST' }
-        );
-        if (res.ok) window.location.reload();
-        else btn.disabled = false;
-      } catch (e) { btn.disabled = false; }
-    };
-  }
 }
 
 function renderTemplateCoverLetter(data) {

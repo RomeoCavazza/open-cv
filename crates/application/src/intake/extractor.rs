@@ -1,7 +1,7 @@
 //! Extractor — Extraction structurée via LLM avec fallback robuste.
 
 use domain::{OffreStructured, Slug};
-use ports::{ExtractionRequest, LlmClient};
+use ports::{ExtractionRequest, LlmClient, LlmClientExt};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, OnceLock};
@@ -66,32 +66,26 @@ impl StructuredExtractor {
             max_tokens: Some(4000),
         };
 
-        match llm.extract(req).await {
-            Ok(json) => match serde_json::from_value::<OffreExtraction>(json) {
-                Ok(ext) => {
-                    info!("extraction LLM réussie");
-                    (
-                        ext.intitule,
-                        ext.entreprise,
-                        ext.localisation,
-                        ext.contrat,
-                        OffreStructured {
-                            resume_court: ext.resume_court,
-                            stack: ext.stack,
-                            missions: ext.missions,
-                            exigences: ext.exigences,
-                            soft_skills: ext.soft_skills,
-                            niveau_etudes: ext.niveau_etudes,
-                            type_contrat: ext.type_contrat,
-                            mots_cles: ext.mots_cles,
-                        },
-                    )
-                }
-                Err(e) => {
-                    warn!("déserialisation extraction échouée : {e}");
-                    fallback_extraction(text)
-                }
-            },
+        match llm.extract_typed::<OffreExtraction>(req).await {
+            Ok(ext) => {
+                info!("extraction LLM réussie");
+                (
+                    ext.intitule,
+                    ext.entreprise,
+                    ext.localisation,
+                    ext.contrat,
+                    OffreStructured {
+                        resume_court: ext.resume_court,
+                        stack: ext.stack,
+                        missions: ext.missions,
+                        exigences: ext.exigences,
+                        soft_skills: ext.soft_skills,
+                        niveau_etudes: ext.niveau_etudes,
+                        type_contrat: ext.type_contrat,
+                        mots_cles: ext.mots_cles,
+                    },
+                )
+            }
             Err(e) => {
                 warn!("extraction LLM échouée : {e}");
                 fallback_extraction(text)

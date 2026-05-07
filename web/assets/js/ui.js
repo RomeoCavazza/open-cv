@@ -22,7 +22,6 @@ export {
     createLangRow,
     createSkillRow,
     createAnnexeRow,
-    initSortableContainer,
     stringifyDocument,
     readFileAsDataUrl
 };

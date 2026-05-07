@@ -17,6 +17,7 @@ import { updateIframe } from './modules/view.js';
 import { ProfileController } from './controllers/ProfileController.js';
 import { OfferController } from './controllers/OfferController.js';
 import { IngestController } from './controllers/IngestController.js';
+import * as api from './api.js';
 
 const profileController = new ProfileController();
 const offerController = new OfferController();
@@ -138,7 +139,36 @@ function attachGlobalEventListeners() {
         };
     });
 
-    safeClick('btn-reload-tab', () => updateIframe());
+    safeClick('btn-reload-tab', () => {
+        if (!activeJobId) return;
+
+        console.log("[Dashboard] Spark regenerate triggered for:", activeJobId, "Tab:", activeTab);
+        
+        const iframe = document.getElementById('iframe-doc');
+        if (iframe && iframe.contentWindow && typeof iframe.contentWindow.handleGenerate === 'function') {
+            console.log("[Dashboard] Delegating generation to iframe handleGenerate()");
+            iframe.contentWindow.handleGenerate();
+            return;
+        }
+
+        // Fallback for when iframe is not fully loaded or missing handleGenerate
+        const provider = localStorage.getItem('llm_provider') || 'claude';
+        const options = {
+            restitution: activeTab === 'restitution',
+            resume: activeTab === 'resume',
+            cover_letter: activeTab === 'cover'
+        };
+
+        api.generateApplication(activeJobId, provider, options)
+            .then(() => {
+                ui.showToast(i18n.translations[i18n.current]?.generationStarted || "Génération démarrée");
+                setTimeout(updateIframe, 500); 
+            })
+            .catch(err => {
+                ui.showToast(err.message, 'error');
+                updateIframe();
+            });
+    });
     safeClick('btn-download-pdf', () => {
         const iframe = document.getElementById('iframe-doc');
         if (iframe?.contentWindow) iframe.contentWindow.print();

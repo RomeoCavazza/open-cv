@@ -232,8 +232,8 @@ impl LlmClient for MockLlm {
             latency_ms: 0,
         })
     }
-    async fn extract(&self, req: ExtractionRequest) -> Result<serde_json::Value, LlmError> {
-        let json = match req.schema_name.as_str() {
+    async fn extract(&self, req: ExtractionRequest) -> Result<ports::ExtractionResponse, LlmError> {
+        let value = match req.schema_name.as_str() {
             "OffreExtraction" => serde_json::json!({
                 "intitule": "Mock Job",
                 "entreprise": "Mock Corp",
@@ -275,7 +275,10 @@ impl LlmClient for MockLlm {
             }),
             _ => serde_json::json!({}),
         };
-        Ok(json)
+        Ok(ports::ExtractionResponse {
+            value,
+            raw: "mock-raw-response".into(),
+        })
     }
 
     async fn stream(

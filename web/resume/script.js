@@ -1,5 +1,42 @@
 import { clear, el, svg, text } from '../assets/js/dom.js';
 
+window.handleGenerate = async () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const jobId = urlParams.get('id') || urlParams.get('instance');
+    if (!jobId) return;
+
+    showGenerating();
+
+    try {
+        const res = await fetch(
+            `/api/instances/${jobId}/generate?resume=true&restitution=false&cover_letter=false`,
+            { method: 'POST' }
+        );
+        if (res.ok) {
+            if (!window.pollInterval) window.pollInterval = setInterval(loadCV, 2000);
+        } else {
+            loadCV(); // Reset view
+        }
+    } catch (e) {
+        loadCV();
+    }
+};
+
+function showGenerating() {
+    const gen = document.getElementById('generating-state');
+    const con = document.getElementById('cv-container');
+    if (gen) gen.style.display = 'flex';
+    if (con) con.style.display = 'none';
+    if (window.lucide) lucide.createIcons();
+}
+
+function showContent() {
+    const gen = document.getElementById('generating-state');
+    const con = document.getElementById('cv-container');
+    if (gen) gen.style.display = 'none';
+    if (con) con.style.display = 'block';
+}
+
 async function loadCV() {
     try {
         const urlParams = new URLSearchParams(window.location.search);
@@ -11,15 +48,31 @@ async function loadCV() {
             return;
         }
 
-        const response = await fetch(`/api/instances/${jobId}/resume`);
-
-        if (!response.ok) {
+        const resInstance = await fetch(`/api/instances/${jobId}`);
+        if (!resInstance.ok) {
             renderEmptyResumeState(jobId);
             return;
         }
+        const instance = await resInstance.json();
+        const status = instance.status.toLowerCase();
 
-        const data = await response.json();
-        renderTemplateResume(data);
+        if (status === 'generating') {
+            showGenerating();
+            if (!window.pollInterval) window.pollInterval = setInterval(loadCV, 2000);
+            return;
+        }
+
+        if (instance.resume_json) {
+            if (window.pollInterval) { clearInterval(window.pollInterval); window.pollInterval = null; }
+            showContent();
+            renderTemplateResume(instance.resume_json);
+        } else if (status === 'ready' || status === 'failed') {
+            if (window.pollInterval) { clearInterval(window.pollInterval); window.pollInterval = null; }
+            renderEmptyResumeState(jobId);
+        } else {
+            // Keep polling if we're not in a terminal state yet
+            if (!window.pollInterval) window.pollInterval = setInterval(loadCV, 2000);
+        }
     } catch (error) { console.error(error); }
 }
 
@@ -54,29 +107,11 @@ function renderEmptyResumeState(jobId) {
         hasGenerateAction ? el('button', {
             id: 'btn-generate-cv',
             style: 'background:#0052ff; color:white; border:none; padding:14px 32px; border-radius:12px; font-weight:600; cursor:pointer; font-size:15px; box-shadow:0 4px 12px rgba(0,82,255,0.2); transition:all 0.2s;',
-            text: 'Générer le CV'
+            text: 'Générer le CV',
+            onclick: () => window.handleGenerate()
         }) : null
     ]));
     if (window.lucide) lucide.createIcons();
-    // No applyPreviewScale here as we want full-width/height
-
-    if (hasGenerateAction) {
-        document.getElementById('btn-generate-cv').onclick = async () => {
-            const btn = document.getElementById('btn-generate-cv');
-            btn.disabled = true;
-            btn.innerText = 'Génération...';
-            try {
-                const res = await fetch(
-                    `/api/instances/${jobId}/generate?resume=true&restitution=false&cover_letter=false`,
-                    { method: 'POST' }
-                );
-                if (res.ok) window.location.reload();
-                else btn.disabled = false;
-            } catch (e) {
-                btn.disabled = false;
-            }
-        };
-    }
 }
 
 function renderTemplateResume(data) {

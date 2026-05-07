@@ -7,42 +7,58 @@ import {
 import * as router from '../router.js';
 import * as iframeRender from '../render/iframe.js';
 
+let pollInterval = null;
+
 export async function updateIframe(options = {}) {
     if (!activeJobId) {
         iframeRender.resetIframeToEmptyState();
         return;
     }
-    const initialTab = activeTab;
     const offerSlug = activeJobId;
 
     const iframe = document.getElementById('iframe-doc');
     if (!iframe) return;
 
-    const path = activeTab === 'restitution'
-        ? '/restitution/index.html'
-        : (activeTab === 'resume' ? '/resume/index.html' : '/cover-letter/index.html');
-
-    if (!offerSlug || offerSlug === 'null') return;
-
     try {
         const res = await fetch(`/api/offres/${offerSlug}/instance`);
         let instanceSlug = offerSlug;
+        
         if (res.ok) {
             const instance = await res.json();
             if (instance && instance.slug) {
                 instanceSlug = instance.slug;
             }
+            
+            if (instance && instance.status === 'Generating') {
+                if (pollInterval) clearInterval(pollInterval);
+                pollInterval = setInterval(() => updateIframe({ isPolling: true }), 2000);
+                return;
+            }
+        }
+        
+        if (pollInterval) {
+            clearInterval(pollInterval);
+            pollInterval = null;
         }
 
-        if (activeJobId !== offerSlug || activeTab !== initialTab) return;
+        const path = activeTab === 'restitution'
+            ? '/restitution/index.html'
+            : (activeTab === 'resume' ? '/resume/index.html' : '/cover-letter/index.html');
 
         const query = activeTab === 'restitution'
             ? `offer=${encodeURIComponent(offerSlug)}&instance=${encodeURIComponent(instanceSlug)}`
             : `id=${encodeURIComponent(instanceSlug)}&offer=${encodeURIComponent(offerSlug)}`;
-
-        iframe.removeAttribute('srcdoc');
-        iframe.src = `${path}?${query}&v=${Date.now()}`;
-        router.updatePath();
+        
+        const newUrl = new URL(`${path}?${query}`, window.location.origin);
+        const currentUrl = new URL(iframe.src, window.location.origin);
+        currentUrl.searchParams.delete('v'); // Strip version for comparison
+        
+        // Only update if the base path or query has changed
+        if (currentUrl.pathname !== newUrl.pathname || currentUrl.search !== newUrl.search) {
+            iframe.removeAttribute('srcdoc');
+            iframe.src = `${newUrl.href}&v=${Date.now()}`;
+            router.updatePath();
+        }
     } catch (error) {
         console.warn("[View] Failed to update iframe", error);
     }

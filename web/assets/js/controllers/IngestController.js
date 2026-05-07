@@ -1,4 +1,5 @@
 import * as api from '../api.js';
+import * as iframeRender from '../render/iframe.js';
 import { EVENTS, emit, on } from '../modules/events.js';
 import { 
     activeJobId, 
@@ -32,6 +33,9 @@ export class IngestController {
                 resume: delivs?.querySelector('[data-deliv="resume"]')?.classList.contains('active') ?? true,
                 cover_letter: delivs?.querySelector('[data-deliv="cover"]')?.classList.contains('active') ?? true,
             };
+
+            // Force skeleton for the active tab (usually restitution after ingest)
+            iframeRender.renderIframeLoadingState('restitution');
 
             await api.generateApplication(ingestRes.job_id, selectedLlmProvider, options);
             emit(EVENTS.GEN_COMPLETED, { jobId: ingestRes.job_id });
