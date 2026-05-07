@@ -48,10 +48,19 @@ Le frontend est minimaliste pour garantir performance et pérennité :
 La priorité actuelle est la fiabilité de la pipeline (Scraping -> DB -> LLM).
 
 ### MED (Robustesse et UX)
-1. Hardening Ingestion : Résilience face aux échecs de scraping (fallback manuel).
-2. Validation JSON : Renforcement des schémas de sortie.
-3. Scraping Premium : Évaluation de solutions comme ScrapingAnt.
+1. Hardening Ingestion : Résilience face aux échecs de scraping via **ScrapingAnt** (protection anti-bot/Cloudflare).
+2. Validation JSON : Renforcement des schémas de sortie et messages de succès pour les mutations.
+3. UX Interaction : États "Thinking" et streaming de tokens fluides.
 
 ### LOW (Hygiène et Polish)
 1. Design Premium : Amélioration esthétique (micro-animations, transitions fluides).
 2. Chat Unifié : Orchestration de plusieurs offres via un fil de discussion unique.
+3. Tests de Troncature : Mise en place de tests unitaires permanents pour `LlmError::Truncated`.
+
+## 8. Validation Q&A End-to-End
+Pour garantir une stabilité durable, les scénarios suivants doivent être validés manuellement et automatisés :
+- [ ] Génération via dashboard global (restitution, cv, cover letter).
+- [ ] Génération via slots vides individuels.
+- [ ] Régénération via icônes d'écrasement.
+- [ ] Rendu immédiat post-génération (disparition du skeleton).
+- [ ] Cohérence du chat avec injection complète du `JSON.profile`.

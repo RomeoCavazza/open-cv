@@ -199,3 +199,18 @@ flowchart TD
 ---
 
 *This project is built around a local Rust backend to industrialize the application workflow without losing the quality of tailored deliverables.*
+
+---
+
+## Professional TODO
+
+### 🎯 High Priority (Hardening Phase)
+- [ ] **End-to-End Validation**: Verify all generation paths (Dashboard, individual slots, and Re-generate icons).
+- [ ] **UI Polish**: Ensure skeleton screens and immediate display are working across all document types.
+- [ ] **Scraping Resilience**: Implement ScrapingAnt fallback (403/Cloudflare protection) for 100% ingestion success.
+- [ ] **Technical Safety**: Add permanent unit tests for `LlmError::Truncated` and `ParseFailed`.
+
+### ✨ UX & Interaction
+- [ ] **Enhanced Chat**: Implement "Thinking" UI states and improved streaming token animations.
+- [ ] **Context Visibility**: Ensure JSON profile injection is fully accessible to the LLM without context saturation.
+- [ ] **System Feedback**: Add success messages for complex background tasks (JSON mutations, deliverable updates).
