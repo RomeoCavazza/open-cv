@@ -6,9 +6,9 @@ use crate::events::GenerationStep;
 use crate::prompts;
 use crate::AppError;
 use domain::{Chunk, CoverLetter, InstanceId, Offre, ProfilId, Restitution, Resume};
-use ports::{EmbedMode, ExtractionRequest, LlmClient};
+use ports::{EmbedMode, ExtractionRequest, LlmClient, LlmClientExt};
 use std::sync::{Arc, OnceLock};
-use tracing::warn;
+use tracing::{error, warn};
 
 static RERANK_SCHEMA: OnceLock<serde_json::Value> = OnceLock::new();
 static PLAN_SCHEMA: OnceLock<serde_json::Value> = OnceLock::new();
@@ -67,7 +67,7 @@ pub async fn retrieve_chunks(
 }
 
 pub async fn rerank(
-    _this: &GenerateApplicationUseCase,
+    this: &GenerateApplicationUseCase,
     offre: &Offre,
     candidates: &[(Chunk, f32)],
     llm: Arc<dyn LlmClient>,
@@ -106,20 +106,33 @@ pub async fn rerank(
         max_tokens: Some(1024),
     };
 
-    let response_json = llm
-        .extract(req)
-        .await
-        .map_err(|e| AppError::Other(e.to_string()))?;
+    // Resilience: If rerank fails (API error, credit limit, etc.), we fallback to system LLM
+    let response: Result<RerankResponse, _> = match llm.extract_typed(req.clone()).await {
+        Ok(r) => Ok(r),
+        Err(e) => {
+            warn!(
+                "Rerank primary LLM failed: {}. Falling back to system LLM...",
+                e
+            );
+            this.llm.extract_typed(req).await
+        }
+    };
 
-    let response: RerankResponse =
-        serde_json::from_value(response_json).map_err(|e| AppError::Other(e.to_string()))?;
-
-    let retained: Vec<Chunk> = response
-        .indices_retenus
-        .into_iter()
-        .filter_map(|i| candidates.get(i).map(|(c, _)| c.clone()))
-        .take(6)
-        .collect();
+    let retained: Vec<Chunk> = match response {
+        Ok(res) => res
+            .indices_retenus
+            .into_iter()
+            .filter_map(|i| candidates.get(i).map(|(c, _)| c.clone()))
+            .take(6)
+            .collect(),
+        Err(e) => {
+            error!(
+                "Rerank critically failed: {}. Using top-3 similarity fallback.",
+                e
+            );
+            Vec::new() // Will trigger fallback below
+        }
+    };
 
     if retained.is_empty() {
         warn!("rerank a retenu 0 chunks — fallback sur les top-3 par score");
@@ -130,7 +143,7 @@ pub async fn rerank(
 }
 
 pub async fn plan(
-    _this: &GenerateApplicationUseCase,
+    this: &GenerateApplicationUseCase,
     offre: &Offre,
     retained: &[Chunk],
     llm: Arc<dyn LlmClient>,
@@ -162,13 +175,34 @@ pub async fn plan(
         max_tokens: Some(1024),
     };
 
-    let response_json = llm
-        .extract(req)
-        .await
-        .map_err(|e| GenerateError::App(AppError::Other(e.to_string())))?;
+    let response: Result<CandidaturePlan, _> = match llm.extract_typed(req.clone()).await {
+        Ok(p) => Ok(p),
+        Err(e) => {
+            warn!(
+                "Plan primary LLM failed: {}. Falling back to system LLM...",
+                e
+            );
+            this.llm.extract_typed(req).await
+        }
+    };
 
-    serde_json::from_value(response_json)
-        .map_err(|e| GenerateError::App(AppError::Other(e.to_string())))
+    let response = match response {
+        Ok(p) => p,
+        Err(e) => {
+            error!(
+                "Plan critically failed: {}. Using generic fallback plan.",
+                e
+            );
+            CandidaturePlan {
+                angle: "Candidature standard focalisée sur l'adéquation profil-poste".into(),
+                forces_a_souligner: vec!["Expérience technique".into(), "Adaptabilité".into()],
+                mots_cles_critiques: vec!["Compétences".into(), "Motivation".into()],
+                faiblesses_a_adresser: vec![],
+            }
+        }
+    };
+
+    Ok(response)
 }
 
 pub async fn maybe_generate_restitution(
@@ -202,13 +236,10 @@ pub async fn maybe_generate_restitution(
         max_tokens: Some(4000),
     };
 
-    let response_json = llm.extract(req).await.map_err(|e| {
-        this.events
-            .failed(instance_id, GenerationStep::Restitution, e.to_string());
-        AppError::Other(e.to_string())
-    })?;
+    let response = llm.extract_typed(req).await;
 
-    let restitution: Restitution = serde_json::from_value(response_json).map_err(|e| {
+    let restitution: Restitution = response.map_err(|e| {
+        error!("Restitution failed: {}", e);
         this.events
             .failed(instance_id, GenerationStep::Restitution, e.to_string());
         AppError::Other(e.to_string())
@@ -245,16 +276,13 @@ pub async fn maybe_generate_resume(
         schema_description: "CV structuré, contenu adapté à l'offre".into(),
         json_schema: resume_schema().clone(),
         model: None,
-        max_tokens: Some(3000),
+        max_tokens: Some(4000),
     };
 
-    let response_json = llm.extract(req).await.map_err(|e| {
-        this.events
-            .failed(instance_id, GenerationStep::Resume, e.to_string());
-        AppError::Other(e.to_string())
-    })?;
+    let response = llm.extract_typed(req).await;
 
-    let resume: Resume = serde_json::from_value(response_json).map_err(|e| {
+    let resume: Resume = response.map_err(|e| {
+        error!("Resume generation failed: {}", e);
         this.events
             .failed(instance_id, GenerationStep::Resume, e.to_string());
         AppError::Other(e.to_string())
@@ -294,13 +322,10 @@ pub async fn maybe_generate_cover_letter(
         max_tokens: Some(2500),
     };
 
-    let response_json = llm.extract(req).await.map_err(|e| {
-        this.events
-            .failed(instance_id, GenerationStep::CoverLetter, e.to_string());
-        AppError::Other(e.to_string())
-    })?;
+    let response = llm.extract_typed(req).await;
 
-    let cover_letter: CoverLetter = serde_json::from_value(response_json).map_err(|e| {
+    let cover_letter: CoverLetter = response.map_err(|e| {
+        error!("CoverLetter generation failed: {}", e);
         this.events
             .failed(instance_id, GenerationStep::CoverLetter, e.to_string());
         AppError::Other(e.to_string())
