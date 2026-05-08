@@ -19,9 +19,9 @@ export function renderIframeLoadingState(tab) {
     if (!iframe) return;
 
     const messages = {
-        restitution: "Analyse et Restitution Spark...",
-        resume: "Écriture du CV Spark...",
-        cover: "Rédaction de la Lettre Spark..."
+        restitution: "Analyse et Restitution...",
+        resume: "Écriture du CV...",
+        cover: "Rédaction de la Lettre..."
     };
 
     const label = messages[tab] || "Génération en cours...";

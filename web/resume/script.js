@@ -66,6 +66,7 @@ async function loadCV() {
             if (window.pollInterval) { clearInterval(window.pollInterval); window.pollInterval = null; }
             showContent();
             renderTemplateResume(instance.resume_json);
+            applyPreviewScale();
         } else if (status === 'ready' || status === 'failed') {
             if (window.pollInterval) { clearInterval(window.pollInterval); window.pollInterval = null; }
             renderEmptyResumeState(jobId);
@@ -271,9 +272,9 @@ function applyPreviewScale() {
         const offsetX = Math.max(0, (availableWidth - scaledWidth) / 2) + 20;
         const offsetY = 20;
 
-        page.style.transformOrigin = "top left";
-        page.style.transform = `scale(${scale})`;
-        page.style.left = `${offsetX}px`;
+        page.style.transformOrigin = "top center";
+        page.style.transform = `translateX(-50%) scale(${scale})`;
+        page.style.left = "50%";
         page.style.top = `${offsetY}px`;
         if (stage) stage.style.height = `${window.innerHeight}px`;
     });

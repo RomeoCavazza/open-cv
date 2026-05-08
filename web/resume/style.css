@@ -91,9 +91,9 @@ body.is-framed .page-stage {
 body.is-framed .a4-page {
     position: absolute;
     top: 0;
-    left: 0;
-    transform: none;
-    transform-origin: top left;
+    left: 50%;
+    transform: translateX(-50%);
+    transform-origin: top center;
 }
 
 /* --- HEADER (Preserve White) --- */
