@@ -170,3 +170,4 @@ health:
     @echo "" >> tooling/health_report.md
     @echo "---" >> tooling/health_report.md
     @echo "Rapport genere avec succes dans tooling/health_report.md"
+

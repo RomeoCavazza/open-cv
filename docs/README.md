@@ -7,9 +7,11 @@ Bienvenue dans la documentation technique et opérationnelle de RecruitAI.
 - [design.md](design.md) : Guide de style et principes visuels du dashboard.
 - [toolkit.md](toolkit.md) : Liste exhaustive des outils d'audit, performance et diagnostic.
 
+- [audit.md](audit.md) : Rapport d'audit technique et analyse de la dette.
+
 ## Guides Pratiques
 - [instructions.md](instructions.md) : Guide de démarrage rapide (Installation, Nix, Justfile, Base de données).
 - [project_map.md](project_map.md) : Cartographie détaillée de l'arborescence des fichiers.
 
 ---
-*Dernière mise à jour : 2026-05-06 (Refactoring Completed)*
+*Dernière mise à jour : 2026-05-08 (Technical Audit)*
