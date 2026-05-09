@@ -1,5 +1,5 @@
 # Rapport de Sante RecruitAI
-Généré le : 2026-05-09 02:31:26
+Généré le : 2026-05-09 03:12:53
 
 ## 1. Statistiques du Code (Tokei)
 ```
@@ -7,28 +7,28 @@ Généré le : 2026-05-09 02:31:26
  Language              Files        Lines         Code     Comments       Blanks
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  CSS                       3         1498         1313           38          147
- JavaScript               26         3258         2753           94          411
+ JavaScript               26         3276         2770           93          413
  JSON                      2           30           30            0            0
  Just                      1          173          118           27           28
  Nix                       1           80           63            6           11
  SQL                       1          244          195           28           21
  SVG                       1         4902         4223          679            0
- TOML                     13          349          295           17           37
+ TOML                     13          350          296           17           37
 ─────────────────────────────────────────────────────────────────────────────────
  HTML                      5         1015          957            4           54
  |- CSS                    4           65           59            0            6
- |- JavaScript             2          152          143            1            8
- (Total)                             1232         1159            5           68
+ |- JavaScript             2          150          141            1            8
+ (Total)                             1230         1157            5           68
 ─────────────────────────────────────────────────────────────────────────────────
- Markdown                 10          758            0          591          167
+ Markdown                 10          761            0          594          167
  |- BASH                   4           48           30           11            7
- (Total)                              806           30          602          174
+ (Total)                              809           30          605          174
 ─────────────────────────────────────────────────────────────────────────────────
- Rust                     68         9490         8406           53         1031
+ Rust                     68         9604         8513           54         1037
  |- Markdown              28          155            0          142           13
- (Total)                             9645         8406          195         1044
+ (Total)                             9759         8513          196         1050
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- Total                   131        22217        18585         1691         1941
+ Total                   131        22351        18708         1694         1949
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
@@ -175,6 +175,7 @@ chrono v0.4.44
 │       ├── adapter-scraper-http v0.1.0 (/home/tco/Bureau/alternance/crates/adapters/scraper_http) (*)
 │       ├── api v0.1.0 (/home/tco/Bureau/alternance/crates/api)
 │       └── application v0.1.0 (/home/tco/Bureau/alternance/crates/application) (*)
+├── ports v0.1.0 (/home/tco/Bureau/alternance/crates/ports) (*)
 ├── schemars v0.8.22
 │   ├── application v0.1.0 (/home/tco/Bureau/alternance/crates/application) (*)
 │   └── domain v0.1.0 (/home/tco/Bureau/alternance/crates/domain) (*)
@@ -401,29 +402,29 @@ webpki-roots v1.0.7
 ## 4. Poids et Optimisation
 ### Analyse du binaire (Cargo Bloat)
 ```
- File  .text     Size Crate
-10.0%  25.4%   1.7MiB std
- 2.2%   5.6% 379.8KiB rustls
- 2.2%   5.6% 377.8KiB sqlx_postgres
- 1.7%   4.3% 292.3KiB ring
- 1.6%   4.0% 272.4KiB sqlx_core
- 1.4%   3.6% 245.1KiB axum
- 1.4%   3.5% 235.1KiB serde_json
- 1.2%   3.1% 212.8KiB adapter_postgres
- 1.2%   3.1% 208.7KiB tokio
- 1.0%   2.5% 172.5KiB application
- 1.0%   2.4% 165.4KiB domain
- 0.9%   2.3% 156.3KiB reqwest
- 0.9%   2.3% 153.0KiB regex_syntax
- 0.8%   2.1% 145.5KiB html5ever
- 0.8%   2.1% 141.7KiB hyper
- 0.7%   1.8% 124.6KiB regex_automata
- 0.7%   1.8% 122.7KiB hyper_util
- 0.7%   1.8% 120.4KiB api
- 0.7%   1.7% 115.7KiB http
- 0.5%   1.2%  83.4KiB tower
- 7.3%  18.5%   1.2MiB And 95 more crates. Use -n N to show more.
-39.5% 100.0%   6.6MiB .text section size, the file size is 16.7MiB
+ File  .text      Size Crate
+10.0%  28.9% 1018.4KiB std
+ 3.5%  10.3%  361.5KiB rustls
+ 3.0%   8.6%  302.3KiB sqlx_postgres
+ 2.9%   8.3%  292.3KiB ring
+ 2.0%   5.7%  201.8KiB sqlx_core
+ 1.5%   4.3%  153.0KiB regex_syntax
+ 1.3%   3.9%  135.9KiB tokio
+ 1.2%   3.5%  124.6KiB regex_automata
+ 1.2%   3.5%  122.9KiB adapter_postgres
+ 1.0%   2.9%  101.6KiB seed_offers_instances
+ 0.7%   2.0%   70.8KiB [Unknown]
+ 0.7%   2.0%   69.7KiB tracing_subscriber
+ 0.7%   1.9%   67.9KiB webpki
+ 0.6%   1.9%   65.8KiB serde_json
+ 0.4%   1.3%   44.2KiB url
+ 0.3%   1.0%   34.1KiB chrono
+ 0.3%   0.8%   29.4KiB domain
+ 0.3%   0.8%   28.9KiB idna
+ 0.2%   0.5%   18.3KiB tracing
+ 0.1%   0.4%   15.2KiB anyhow
+ 2.2%   6.4%  225.5KiB And 53 more crates. Use -n N to show more.
+34.6% 100.0%    3.4MiB .text section size, the file size is 10.0MiB
 
 Note: numbers above are a result of guesswork. They are not 100% correct and never will be.
 ```

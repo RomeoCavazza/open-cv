@@ -87,6 +87,29 @@ impl InstanceRepo for TestInstanceRepo {
         let instance = self.stores.instance.lock().unwrap().clone();
         Ok((instance.offre_id == offre_id && instance.profil_id == profil_id).then_some(instance))
     }
+
+    async fn update_livrables(
+        &self,
+        _id: InstanceId,
+        restitution: Option<domain::Restitution>,
+        resume_json: Option<domain::Resume>,
+        cover_letter_json: Option<domain::CoverLetter>,
+        status: domain::InstanceStatus,
+        _updated_at: chrono::DateTime<chrono::Utc>,
+    ) -> Result<(), RepoError> {
+        let mut instance = self.stores.instance.lock().unwrap();
+        if let Some(r) = restitution {
+            instance.restitution = Some(r);
+        }
+        if let Some(r) = resume_json {
+            instance.resume_json = Some(r);
+        }
+        if let Some(c) = cover_letter_json {
+            instance.cover_letter_json = Some(c);
+        }
+        instance.status = status;
+        Ok(())
+    }
 }
 
 #[async_trait]

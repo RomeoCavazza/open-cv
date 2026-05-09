@@ -130,6 +130,31 @@ impl InstanceRepo for MockRepos {
         let _ = (offre_id, profil_id);
         Ok(None)
     }
+
+    async fn update_livrables(
+        &self,
+        id: InstanceId,
+        restitution: Option<domain::Restitution>,
+        resume_json: Option<domain::Resume>,
+        cover_letter_json: Option<domain::CoverLetter>,
+        status: domain::InstanceStatus,
+        _updated_at: chrono::DateTime<chrono::Utc>,
+    ) -> Result<(), RepoError> {
+        let mut instances = self.instances.lock().unwrap();
+        if let Some(instance) = instances.get_mut(&id) {
+            if let Some(r) = restitution {
+                instance.restitution = Some(r);
+            }
+            if let Some(r) = resume_json {
+                instance.resume_json = Some(r);
+            }
+            if let Some(c) = cover_letter_json {
+                instance.cover_letter_json = Some(c);
+            }
+            instance.status = status;
+        }
+        Ok(())
+    }
 }
 
 #[async_trait]

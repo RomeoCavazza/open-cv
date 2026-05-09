@@ -4,29 +4,21 @@ import { playSuccessSound } from '../assets/js/render/audio.js';
 // Local flag removed in favor of localStorage
 window.handleGenerate = async () => {
   const urlParams = new URLSearchParams(window.location.search);
-  const jobId = urlParams.get('id') || urlParams.get('instance');
+  let jobId = urlParams.get('id') || urlParams.get('instance');
   const offerId = urlParams.get('offer');
   if (!jobId) return;
 
-  try {
-    const target = { resume: false, cover_letter: true, restitution: false };
-    localStorage.setItem('generating_target_' + jobId, JSON.stringify(target));
-    if (offerId) localStorage.setItem('generating_target_' + offerId, JSON.stringify(target));
-  } catch(e) {}
-
-  showGenerating();
+  const provider = window.parent.state?.selectedLlmProvider || 'claude';
 
   try {
-    const res = await fetch(
-      `/api/instances/${jobId}/generate?cover_letter=true&resume=false&restitution=false`,
-      { method: 'POST' }
-    );
-    if (res.ok) {
-      if (!window.pollInterval) window.pollInterval = setInterval(loadCoverLetter, 2000);
-    } else {
-      loadCoverLetter();
+    const result = await window.parent.api.generateApplication(jobId, provider, { cover_letter: true }, offerId);
+    if (result && result.slug) {
+        window._currentJobId = result.slug;
     }
+    showGenerating();
+    if (!window.pollInterval) window.pollInterval = setInterval(loadCoverLetter, 2000);
   } catch (e) {
+    console.error(e);
     loadCoverLetter();
   }
 };
@@ -53,7 +45,8 @@ function showContent() {
 async function loadCoverLetter() {
   try {
     const urlParams = new URLSearchParams(window.location.search);
-    const jobId = urlParams.get('id') || urlParams.get('instance');
+    const jobIdInUrl = urlParams.get('id') || urlParams.get('instance');
+    const jobId = window._currentJobId || jobIdInUrl;
     const hasInstance = !!(jobId && jobId !== 'null');
 
     if (!hasInstance) {
@@ -61,8 +54,15 @@ async function loadCoverLetter() {
       return;
     }
 
-    const target = `/api/instances/${jobId}?t=${Date.now()}`;
-    const resInstance = await fetch(target);
+    let target = `/api/instances/${jobId}?t=${Date.now()}`;
+    let resInstance = await fetch(target);
+    
+    if (!resInstance.ok && !jobId.includes('__')) {
+        // Try resolving via offer slug if the direct instance fetch failed
+        target = `/api/offres/${jobId}/instance?t=${Date.now()}`;
+        resInstance = await fetch(target);
+    }
+
     if (!resInstance.ok) {
       renderEmptyCoverLetterState(jobId);
       return;
@@ -71,12 +71,10 @@ async function loadCoverLetter() {
     const status = instance.status.toLowerCase();
     const offerId = urlParams.get('offer');
 
-    let genTarget = { cover_letter: true }; // default
+    let genTarget = { cover_letter: false }; // default
+    const storageKey = offerId || jobIdInUrl;
     try {
-        const stored = localStorage.getItem('generating_target_' + jobId) 
-                    || (offerId && localStorage.getItem('generating_target_' + offerId))
-                    || localStorage.getItem('generating_target_' + instance.id)
-                    || localStorage.getItem('generating_target_' + instance.offre_id);
+        const stored = localStorage.getItem('generating_target_' + storageKey);
         if (stored) genTarget = JSON.parse(stored);
     } catch(e) {}
 
@@ -84,7 +82,7 @@ async function loadCoverLetter() {
     if (instance.cover_letter_json) {
       if (genTarget.cover_letter) {
         genTarget.cover_letter = false;
-        localStorage.setItem('generating_target_' + jobId, JSON.stringify(genTarget));
+        localStorage.setItem('generating_target_' + storageKey, JSON.stringify(genTarget));
       }
       if (window.pollInterval) { clearInterval(window.pollInterval); window.pollInterval = null; playSuccessSound(); }
       showContent();
@@ -94,7 +92,7 @@ async function loadCoverLetter() {
       // We are waiting for it!
       if (status === 'failed') {
         genTarget.cover_letter = false;
-        localStorage.setItem('generating_target_' + jobId, JSON.stringify(genTarget));
+        localStorage.setItem('generating_target_' + storageKey, JSON.stringify(genTarget));
         if (window.pollInterval) { clearInterval(window.pollInterval); window.pollInterval = null; }
         renderEmptyCoverLetterState(jobId, false);
       } else {

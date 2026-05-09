@@ -58,6 +58,7 @@ seed-all: seed-profile seed-data
 
 # reset complet : purge DB, migrate, seed et validation
 reset-all:
+    @psql -h localhost -U alternance -d postgres -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = 'alternance' AND pid <> pg_backend_pid();" >/dev/null 2>&1 || true
     dropdb -h localhost -U alternance alternance || true
     createdb -h localhost -U alternance alternance
     psql -h localhost -U alternance -d alternance -c "CREATE EXTENSION IF NOT EXISTS vector;"

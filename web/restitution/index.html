@@ -329,9 +329,10 @@
 
         async function checkStatus() {
             try {
+                const resolvedId = window._resolvedInstanceSlug || instanceSlug;
                 const [resOffre, resInstance] = await Promise.all([
                     fetch(`/api/offres/${offerSlug}`),
-                    instanceSlug ? fetch(`/api/instances/${instanceSlug}?t=${Date.now()}`) : fetch(`/api/offres/${offerSlug}/instance?t=${Date.now()}`)
+                    resolvedId ? fetch(`/api/instances/${resolvedId}?t=${Date.now()}`) : fetch(`/api/offres/${offerSlug}/instance?t=${Date.now()}`)
                 ]);
                 if (!resOffre.ok) return;
                 const offre = await resOffre.json();
@@ -362,29 +363,29 @@
                 if (resInstance.ok) {
                     const instance = await resInstance.json();
                     const status = (instance.status || '').toLowerCase();
-                    let genTarget = { restitution: true }; // default
+                    let genTarget = { restitution: false }; // default
                     try {
-                        const stored = localStorage.getItem('generating_target_' + instance.id) 
-                                    || localStorage.getItem('generating_target_' + instance.slug)
-                                    || localStorage.getItem('generating_target_' + instance.offre_id);
+                        const storageKey = offerSlug || instanceSlug;
+                        const stored = localStorage.getItem('generating_target_' + storageKey);
                         if (stored) genTarget = JSON.parse(stored);
                     } catch(e) {}
 
-                    if (instance.restitution) {
-                        if (genTarget.restitution) {
-                            genTarget.restitution = false;
-                            localStorage.setItem('generating_target_' + instance.slug, JSON.stringify(genTarget));
-                        }
-                        renderRestitution(instance.restitution);
-                        showContent();
-                        if (pollInterval) { clearInterval(pollInterval); pollInterval = null; import('../assets/js/render/audio.js').then(m => m.playSuccessSound()); }
-                    } else if (genTarget.restitution) {
-                        if (status === 'failed') {
-                            genTarget.restitution = false;
-                            localStorage.setItem('generating_target_' + instance.slug, JSON.stringify(genTarget));
-                            showEmpty(false);
-                            if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
-                        } else {
+                        const storageKey = offerSlug || instanceSlug;
+                        if (instance.restitution) {
+                            if (genTarget.restitution) {
+                                genTarget.restitution = false;
+                                localStorage.setItem('generating_target_' + storageKey, JSON.stringify(genTarget));
+                            }
+                            renderRestitution(instance.restitution);
+                            showContent();
+                            if (pollInterval) { clearInterval(pollInterval); pollInterval = null; import('../assets/js/render/audio.js').then(m => m.playSuccessSound()); }
+                        } else if (genTarget.restitution) {
+                            if (status === 'failed') {
+                                genTarget.restitution = false;
+                                localStorage.setItem('generating_target_' + storageKey, JSON.stringify(genTarget));
+                                showEmpty(false);
+                                if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
+                            } else {
                             showGenerating();
                             if (!pollInterval) pollInterval = setInterval(checkStatus, 2000);
                         }
@@ -424,21 +425,19 @@
 
         async function handleGenerate() {
             try {
-                let existingOpts = {};
-                try {
-                    existingOpts = JSON.parse(localStorage.getItem('generating_target_' + (instanceSlug || offerSlug)) || '{}');
-                } catch(e) {}
-                const targetOptions = { 
-                    restitution: true, 
-                    resume: existingOpts.resume || false, 
-                    cover_letter: existingOpts.cover_letter || false 
-                };
-                localStorage.setItem('generating_target_' + (instanceSlug || offerSlug), JSON.stringify(targetOptions));
-            } catch(e) {}
-            showGenerating();
-            const target = instanceSlug ? `/api/instances/${instanceSlug}/generate?restitution=true&resume=false&cover_letter=false` : `/api/offres/${offerSlug}/generate`;
-            await fetch(target, { method: 'POST' });
-            if (!pollInterval) pollInterval = setInterval(checkStatus, 2000);
+                const provider = window.parent.state?.selectedLlmProvider || 'claude';
+                const jobId = instanceSlug || offerSlug;
+                const result = await window.parent.api.generateApplication(jobId, provider, { restitution: true }, offerSlug);
+                if (result && result.slug) {
+                    // Update current view context if needed
+                    window._resolvedInstanceSlug = result.slug;
+                }
+                showGenerating();
+                if (!pollInterval) pollInterval = setInterval(checkStatus, 2000);
+            } catch (e) {
+                console.error(e);
+                showEmpty(false);
+            }
         }
 
         function showGenerating() {

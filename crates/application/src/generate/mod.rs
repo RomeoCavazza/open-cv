@@ -423,4 +423,3 @@ impl GenerateApplicationUseCase {
         .await
     }
 }
-

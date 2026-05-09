@@ -140,6 +140,23 @@ fn build_test_cover_letter(roles: &[ParagrapheRole]) -> CoverLetter {
     }
 }
 
+fn merge_generated_outputs(
+    instance: &mut domain::Instance,
+    restitution: Option<domain::Restitution>,
+    resume: Option<domain::Resume>,
+    cover_letter: Option<domain::CoverLetter>,
+) {
+    if let Some(r) = restitution {
+        instance.restitution = Some(r);
+    }
+    if let Some(r) = resume {
+        instance.resume_json = Some(r);
+    }
+    if let Some(c) = cover_letter {
+        instance.cover_letter_json = Some(c);
+    }
+}
+
 #[test]
 fn truncate_court_inchange() {
     assert_eq!(truncate("hello", 10), "hello");

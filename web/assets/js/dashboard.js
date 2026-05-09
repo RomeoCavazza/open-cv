@@ -5,6 +5,7 @@ import {
     setActiveJobId,
     setActiveTab,
     setSelectedLlmProvider,
+    selectedLlmProvider,
     loadI18n,
     i18n
 } from './state.js';
@@ -28,10 +29,13 @@ window.state = {
     get activeTab() { return activeTab; },
     get activeJobId() { return activeJobId; },
     get aiChatAttachments() { return aiChatAttachments; },
+    get selectedLlmProvider() { return selectedLlmProvider; },
     setSelectedLlmProvider,
     setActiveTab,
     setActiveJobId
 };
+
+window.api = api;
 
 // --- Event Subscriptions ---
 on(EVENTS.OFFER_SELECTED, () => {
@@ -152,7 +156,7 @@ function attachGlobalEventListeners() {
         }
 
         // Fallback for when iframe is not fully loaded or missing handleGenerate
-        const provider = localStorage.getItem('llm_provider') || 'claude';
+        const provider = selectedLlmProvider || 'claude';
         const options = {
             restitution: activeTab === 'restitution',
             resume: activeTab === 'resume',

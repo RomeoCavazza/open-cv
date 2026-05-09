@@ -58,7 +58,21 @@ export async function ingestOffer(urlOrText) {
     return await res.json();
 }
 
-export async function generateApplication(jobId, provider, options = {}) {
+export async function generateApplication(jobId, provider, options = {}, storageKey = null) {
+    const key = storageKey || jobId;
+    let targetId = jobId;
+
+    // If it's an offer slug, resolve the instance slug first
+    if (jobId && !jobId.includes('__')) {
+        try {
+            const res = await fetch(`/api/offres/${jobId}/instance`);
+            if (res.ok) {
+                const inst = await res.json();
+                if (inst && inst.slug) targetId = inst.slug;
+            }
+        } catch(e) {}
+    }
+
     const backendOpts = {
         restitution: options.restitution ?? false,
         resume: options.resume ?? false,
@@ -67,7 +81,7 @@ export async function generateApplication(jobId, provider, options = {}) {
 
     let existingOpts = {};
     try {
-        existingOpts = JSON.parse(localStorage.getItem('generating_target_' + jobId) || '{}');
+        existingOpts = JSON.parse(localStorage.getItem('generating_target_' + key) || '{}');
     } catch(e) {}
 
     const uiOpts = {
@@ -77,18 +91,24 @@ export async function generateApplication(jobId, provider, options = {}) {
     };
     
     try {
-        localStorage.setItem('generating_target_' + jobId, JSON.stringify(uiOpts));
+        localStorage.setItem('generating_target_' + key, JSON.stringify(uiOpts));
     } catch(e) {}
     
     const query = new URLSearchParams({
-        llm_provider: provider,
+        llm_provider: provider || 'ollama',
         restitution: backendOpts.restitution,
         resume: backendOpts.resume,
         cover_letter: backendOpts.cover_letter
     });
-    const res = await fetch(`/api/instances/${jobId}/generate?${query}`, { method: 'POST' });
-    if (!res.ok) throw new Error('Generation failed');
-    return { slug: jobId }; // The backend returns 202 Accepted
+
+    console.log(`[API] Starting generation for ${targetId} (key: ${key})`, backendOpts);
+    const res = await fetch(`/api/instances/${targetId}/generate?${query}`, { method: 'POST' });
+    if (!res.ok) {
+        const err = await res.text();
+        console.error(`[API] Generation failed for ${targetId}:`, err);
+        throw new Error('Generation failed: ' + err);
+    }
+    return { slug: targetId };
 }
 
 export async function updateAnnexe(_id, _payload) {

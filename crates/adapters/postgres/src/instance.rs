@@ -265,7 +265,6 @@ impl InstanceRepo for InstanceRepoPg {
                 sent_at: r.get("sent_at"),
             })
         })
-        })
         .transpose()
     }
 
@@ -279,7 +278,7 @@ impl InstanceRepo for InstanceRepoPg {
         updated_at: chrono::DateTime<chrono::Utc>,
     ) -> Result<(), RepoError> {
         tracing::info!("DB: Partial update for instance {}", id);
-        
+
         let restitution_val = restitution
             .as_ref()
             .map(|value| serde_json::to_value(value).expect("restitution serializable"));
