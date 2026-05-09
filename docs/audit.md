@@ -21,6 +21,7 @@ Architecture : **Hexagonale (Workspace Rust)**
 | Composant | Problématique | Risque | Priorité |
 | :--- | :--- | :--- | :--- |
 | **Réactivité** | Manipulation directe du DOM via `getElementById`. | Code verbeux, difficile à maintenir si le nombre de livrables augmente. | **Moyenne** |
+| **Remédiation** | *Envisager Alpine.js ou HTMX pour simplifier la réactivité (voir Blueprint Section 9).* | | |
 | **Gestion d'État** | Fragmentation entre `window.state` et `localStorage`. | Risque de désynchronisation visuelle entre les iframes. | **Moyenne** |
 | **Centralisation** | Logique de polling historiquement dupliquée. | **Résolu** : Migration vers l'architecture *Master Poller* réactive. | **Check** |
 

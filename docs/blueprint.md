@@ -79,3 +79,19 @@ Pour garantir une stabilité durable, les scénarios suivants doivent être vali
 - [x] Régénération via icônes d'écrasement.
 - [x] Rendu immédiat post-génération (disparition du skeleton via BackgroundPollManager).
 - [ ] Cohérence du chat avec injection complète du `JSON.profile`.
+
+---
+
+## 9. Évolution du Frontend (Pistes de Réflexion)
+
+Bien que l'approche **Vanilla JS** soit actuelle et ultra-performante, deux technologies s'alignent parfaitement avec la philosophie "minimaliste et robuste" du projet pour réduire la verbosité du code de manipulation du DOM :
+
+### 9.1 HTMX (Le choix du Server-Side)
+- **Concept** : Permet d'effectuer des requêtes AJAX, de gérer des WebSockets et des Server-Sent Events directement via des attributs HTML.
+- **Avantage pour RecruitAI** : Au lieu de recevoir du JSON et de reconstruire le DOM en JS (ex: la sidebar des offres), Axum pourrait renvoyer directement un fragment HTML.
+- **Bénéfice** : Suppression de 50% du code JS côté client. Cohérence totale avec la puissance du backend Rust.
+
+### 9.2 Alpine.js (Le "Tailwind du JS")
+- **Concept** : Un framework déclaratif ultra-léger (8kb) qui s'utilise directement dans le HTML pour gérer les états locaux (modals, onglets, toggles).
+- **Avantage pour RecruitAI** : Remplacerait les `document.getElementById` verbeux pour la gestion des pillules LLM (`llm-pill`) et des états d'affichage des boutons.
+- **Bénéfice** : Code frontend plus lisible, déclaratif et plus facile à maintenir sans ajouter de complexe de build (pas de npm/webpack nécessaire).
