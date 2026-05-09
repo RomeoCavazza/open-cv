@@ -130,6 +130,17 @@ flowchart TD
 
 ---
 
+## Documentation
+
+- [docs/README.md](docs/README.md) : Index détaillé de la documentation.
+- [docs/blueprint.md](docs/blueprint.md) : Spécifications techniques et roadmap de hardening.
+- [docs/toolkit.md](docs/toolkit.md) : Liste des outils et commandes de diagnostic.
+- [docs/project_map.md](docs/project_map.md) : Cartographie détaillée de l'arborescence.
+- [docs/instructions.md](docs/instructions.md) : Setup et commandes courantes.
+- [docs/design.md](docs/design.md) : Direction visuelle et principes UI.
+
+---
+
 ## Installation & Quality
 
 ### Getting Started
@@ -169,18 +180,7 @@ just coverage
 
 ---
 
-## Documentation
-
-- [docs/README.md](docs/README.md) : Index détaillé de la documentation.
-- [docs/blueprint.md](docs/blueprint.md) : Spécifications techniques et roadmap de hardening.
-- [docs/toolkit.md](docs/toolkit.md) : Liste des outils et commandes de diagnostic.
-- [docs/project_map.md](docs/project_map.md) : Cartographie détaillée de l'arborescence.
-- [docs/instructions.md](docs/instructions.md) : Setup et commandes courantes.
-- [docs/design.md](docs/design.md) : Direction visuelle et principes UI.
-
----
-
-## Professional TODO
+## TODO
 
 ### High Priority (Hardening Phase)
 - [ ] **End-to-End Validation**: Verify all generation paths (Dashboard, individual slots, and Re-generate icons).
@@ -192,7 +192,3 @@ just coverage
 - [ ] **Enhanced Chat**: Implement "Thinking" UI states and improved streaming token animations.
 - [ ] **Context Visibility**: Ensure JSON profile injection is fully accessible to the LLM.
 - [ ] **System Feedback**: Add success messages for complex background tasks.
-
----
-
-*This project is built around a local Rust backend to industrialize the application workflow without losing the quality of tailored deliverables.*
