@@ -81,29 +81,36 @@ async function loadCoverLetter() {
 
     // Data-first: show existing content regardless of global status
     if (instance.cover_letter_json) {
+      if (genTarget.cover_letter) {
+        genTarget.cover_letter = false;
+        localStorage.setItem('generating_target_' + jobId, JSON.stringify(genTarget));
+      }
       if (window.pollInterval) { clearInterval(window.pollInterval); window.pollInterval = null; playSuccessSound(); }
       showContent();
       renderTemplateCoverLetter(instance.cover_letter_json);
       applyPreviewScale();
-    } else if (status === 'generating' && genTarget.cover_letter) {
-      // Only show skeleton if WE initiated this generation
-      showGenerating();
-      if (!window.pollInterval) window.pollInterval = setInterval(loadCoverLetter, 2000);
-    } else if (status === 'ready' || status === 'failed') {
-      if (window.pollInterval) { clearInterval(window.pollInterval); window.pollInterval = null; playSuccessSound(); }
-      renderEmptyCoverLetterState(jobId);
-    } else if (status === 'generating') {
-      // Another doc is generating, not us — show empty state, no skeleton
-      renderEmptyCoverLetterState(jobId);
+    } else if (genTarget.cover_letter) {
+      // We are waiting for it!
+      if (status === 'failed') {
+        genTarget.cover_letter = false;
+        localStorage.setItem('generating_target_' + jobId, JSON.stringify(genTarget));
+        if (window.pollInterval) { clearInterval(window.pollInterval); window.pollInterval = null; }
+        renderEmptyCoverLetterState(jobId, false);
+      } else {
+        showGenerating();
+        if (!window.pollInterval) window.pollInterval = setInterval(loadCoverLetter, 2000);
+      }
     } else {
-      if (!window.pollInterval) window.pollInterval = setInterval(loadCoverLetter, 2000);
+      // It's not requested, and we don't have it
+      if (window.pollInterval) { clearInterval(window.pollInterval); window.pollInterval = null; }
+      renderEmptyCoverLetterState(jobId, false);
     }
   } catch (error) {
     console.error("Unable to load cover letter data:", error);
   }
 }
 
-function renderEmptyCoverLetterState(jobId) {
+function renderEmptyCoverLetterState(jobId, isInstanceGenerating = false) {
   const stage = document.getElementById('empty-state');
   const gen = document.getElementById('generating-state');
   const con = document.getElementById('cl-container');
@@ -113,6 +120,7 @@ function renderEmptyCoverLetterState(jobId) {
   stage.style.display = 'flex';
 
   const hasGenerateAction = !!jobId;
+
   clear(stage).appendChild(el('div', {
     style: 'display:flex; flex-direction:column; align-items:center;'
   }, [

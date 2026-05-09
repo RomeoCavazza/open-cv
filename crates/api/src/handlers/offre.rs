@@ -90,8 +90,9 @@ pub async fn list_offres(
     let rows = sqlx::query!(
         r#"
         SELECT o.id, o.slug, o.intitule, o.source_url, o.entreprise, o.categorie,
-               EXISTS(SELECT 1 FROM instances i WHERE i.offre_id = o.id) as "has_instance!"
+               i.status::text as "instance_status?"
         FROM offres o
+        LEFT JOIN instances i ON i.offre_id = o.id
         ORDER BY o.scraped_at DESC
         LIMIT $1
         "#,
@@ -110,7 +111,7 @@ pub async fn list_offres(
                 "job_id": r.slug,
                 "entreprise": r.entreprise,
                 "category": public_offer_category(&r.slug, &r.intitule, r.categorie.as_deref()),
-                "status": if r.has_instance { "ready" } else { "draft" },
+                "status": r.instance_status.as_deref().unwrap_or("draft"),
             })
         })
         .collect();

@@ -293,24 +293,28 @@ impl GenerateApplicationUseCase {
             self.events
                 .done(instance_id, GenerationStep::Validate, None);
 
-            let mut instance = self
+            self.events.started(instance_id, GenerationStep::Persist);
+            self.instances
+                .update_livrables(
+                    instance_id,
+                    restitution,
+                    resume,
+                    cover_letter,
+                    domain::InstanceStatus::Ready,
+                    Utc::now(),
+                )
+                .await
+                .map_err(AppError::Repo)?;
+            self.events.done(instance_id, GenerationStep::Persist, None);
+            self.events.done(instance_id, GenerationStep::Done, None);
+
+            // Fetch the updated instance to return
+            let instance = self
                 .instances
                 .get_by_id(instance_id)
                 .await
                 .map_err(AppError::Repo)?
                 .ok_or_else(|| AppError::Other("Instance introuvable après génération".into()))?;
-
-            merge_generated_outputs(&mut instance, restitution, resume, cover_letter);
-            instance.status = domain::InstanceStatus::Ready;
-            instance.updated_at = Utc::now();
-
-            self.events.started(instance_id, GenerationStep::Persist);
-            self.instances
-                .upsert(&instance)
-                .await
-                .map_err(AppError::Repo)?;
-            self.events.done(instance_id, GenerationStep::Persist, None);
-            self.events.done(instance_id, GenerationStep::Done, None);
 
             Ok(instance)
         }
@@ -319,11 +323,17 @@ impl GenerateApplicationUseCase {
         match pipeline_result {
             Ok(instance) => Ok(instance),
             Err(error) => {
-                if let Ok(Some(mut instance)) = self.instances.get_by_id(instance_id).await {
-                    instance.status = domain::InstanceStatus::Failed;
-                    instance.updated_at = Utc::now();
-                    let _ = self.instances.upsert(&instance).await;
-                }
+                let _ = self
+                    .instances
+                    .update_livrables(
+                        instance_id,
+                        None,
+                        None,
+                        None,
+                        domain::InstanceStatus::Failed,
+                        Utc::now(),
+                    )
+                    .await;
                 Err(error)
             }
         }
@@ -414,19 +424,3 @@ impl GenerateApplicationUseCase {
     }
 }
 
-fn merge_generated_outputs(
-    instance: &mut Instance,
-    restitution: Option<domain::Restitution>,
-    resume: Option<domain::Resume>,
-    cover_letter: Option<domain::CoverLetter>,
-) {
-    if let Some(restitution) = restitution {
-        instance.restitution = Some(restitution);
-    }
-    if let Some(resume) = resume {
-        instance.resume_json = Some(resume);
-    }
-    if let Some(cover_letter) = cover_letter {
-        instance.cover_letter_json = Some(cover_letter);
-    }
-}

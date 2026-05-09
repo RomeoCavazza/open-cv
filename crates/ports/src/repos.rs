@@ -70,6 +70,17 @@ pub trait InstanceRepo: Send + Sync {
         offre_id: domain::OffreId,
         profil_id: domain::ProfilId,
     ) -> Result<Option<Instance>, RepoError>;
+    
+    #[allow(clippy::too_many_arguments)]
+    async fn update_livrables(
+        &self,
+        id: InstanceId,
+        restitution: Option<domain::Restitution>,
+        resume_json: Option<domain::Resume>,
+        cover_letter_json: Option<domain::CoverLetter>,
+        status: domain::InstanceStatus,
+        updated_at: chrono::DateTime<chrono::Utc>,
+    ) -> Result<(), RepoError>;
 }
 
 #[async_trait]

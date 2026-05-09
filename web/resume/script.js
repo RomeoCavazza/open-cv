@@ -81,27 +81,34 @@ async function loadCV() {
 
         // Data-first: show existing content regardless of global status
         if (instance.resume_json) {
+            if (genTarget.resume) {
+                genTarget.resume = false;
+                localStorage.setItem('generating_target_' + jobId, JSON.stringify(genTarget));
+            }
             if (window.pollInterval) { clearInterval(window.pollInterval); window.pollInterval = null; playSuccessSound(); }
             showContent();
             renderTemplateResume(instance.resume_json);
             applyPreviewScale();
-        } else if (status === 'generating' && genTarget.resume) {
-            // Only show skeleton if WE initiated this generation (via localStorage target)
-            showGenerating();
-            if (!window.pollInterval) window.pollInterval = setInterval(loadCV, 2000);
-        } else if (status === 'ready' || status === 'failed') {
-            if (window.pollInterval) { clearInterval(window.pollInterval); window.pollInterval = null; playSuccessSound(); }
-            renderEmptyResumeState(jobId);
-        } else if (status === 'generating') {
-            // Another doc is generating, not us — show empty state, no skeleton
-            renderEmptyResumeState(jobId);
+        } else if (genTarget.resume) {
+            // We are waiting for it!
+            if (status === 'failed') {
+                genTarget.resume = false;
+                localStorage.setItem('generating_target_' + jobId, JSON.stringify(genTarget));
+                if (window.pollInterval) { clearInterval(window.pollInterval); window.pollInterval = null; }
+                renderEmptyResumeState(jobId, false);
+            } else {
+                showGenerating();
+                if (!window.pollInterval) window.pollInterval = setInterval(loadCV, 2000);
+            }
         } else {
-            if (!window.pollInterval) window.pollInterval = setInterval(loadCV, 2000);
+            // It's not requested, and we don't have it
+            if (window.pollInterval) { clearInterval(window.pollInterval); window.pollInterval = null; }
+            renderEmptyResumeState(jobId, false);
         }
     } catch (error) { console.error(error); }
 }
 
-function renderEmptyResumeState(jobId) {
+function renderEmptyResumeState(jobId, isInstanceGenerating = false) {
     const stage = document.getElementById('empty-state');
     const gen = document.getElementById('generating-state');
     const con = document.getElementById('cv-container');
@@ -111,6 +118,7 @@ function renderEmptyResumeState(jobId) {
     stage.style.display = 'flex';
 
     const hasGenerateAction = !!jobId;
+        
     clear(stage).appendChild(el('div', {
         style: 'display:flex; flex-direction:column; align-items:center;'
     }, [

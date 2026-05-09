@@ -59,19 +59,32 @@ export async function ingestOffer(urlOrText) {
 }
 
 export async function generateApplication(jobId, provider, options = {}) {
-    const opts = {
-        restitution: options.restitution ?? true,
-        resume: options.resume ?? true,
-        cover_letter: options.cover_letter ?? true
+    const backendOpts = {
+        restitution: options.restitution ?? false,
+        resume: options.resume ?? false,
+        cover_letter: options.cover_letter ?? false
     };
+
+    let existingOpts = {};
     try {
-        localStorage.setItem('generating_target_' + jobId, JSON.stringify(opts));
+        existingOpts = JSON.parse(localStorage.getItem('generating_target_' + jobId) || '{}');
     } catch(e) {}
+
+    const uiOpts = {
+        restitution: backendOpts.restitution || existingOpts.restitution || false,
+        resume: backendOpts.resume || existingOpts.resume || false,
+        cover_letter: backendOpts.cover_letter || existingOpts.cover_letter || false
+    };
+    
+    try {
+        localStorage.setItem('generating_target_' + jobId, JSON.stringify(uiOpts));
+    } catch(e) {}
+    
     const query = new URLSearchParams({
         llm_provider: provider,
-        restitution: opts.restitution,
-        resume: opts.resume,
-        cover_letter: opts.cover_letter
+        restitution: backendOpts.restitution,
+        resume: backendOpts.resume,
+        cover_letter: backendOpts.cover_letter
     });
     const res = await fetch(`/api/instances/${jobId}/generate?${query}`, { method: 'POST' });
     if (!res.ok) throw new Error('Generation failed');

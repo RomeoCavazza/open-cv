@@ -13,6 +13,8 @@ Statut global : **Sain** (Architecture robuste, mais quelques points de friction
 | **Erreurs génériques** | Usage fréquent de `AppError::Other(e.to_string())`. | Diagnostic | Faible |
 | **Logique métier en SQL** | La classification des offres (`fn_infer_offre_category`) est gérée par un trigger SQL avec Regex. | Testabilité | Haute |
 | **Stockage Binaire** | Photos et PDF stockés en `BYTEA` dans PostgreSQL. | Performance / Backup | Faible |
+| **Gestion des Tâches (Queue)** | Les générations sont lancées via `tokio::spawn` direct, sans file d'attente (Job Queue) ni worker pool. Risque de surcharge LLM. | Fiabilité à l'échelle | Haute |
+| **Statut d'Instance Global** | Un seul statut `Generating` pour l'instance, ce qui empêche un suivi granulaire et asynchrone par document (CV vs Lettre). | Robustesse UI / Race conditions | Haute |
 
 ### 1.2 Frontend (Vanilla JS)
 
@@ -47,3 +49,4 @@ L'utilisation de `pgvector` et des index GIN pour la recherche plein texte est e
 2.  **Migration de Logique** : Déplacer la classification des offres du SQL vers une couche de service Rust pour permettre des tests unitaires sur les règles de tri.
 3.  **UI Consistency** : Supprimer tous les `alert()` au profit du système de Toasts déjà présent dans `ui.js`.
 4.  **Nettoyage JS** : Continuer la migration vers les contrôleurs (`ProfileController`, etc.) pour supprimer totalement la dépendance à `window.state`.
+5.  **Système de Background Jobs** : Remplacer les `tokio::spawn` par un vrai Message Broker / Job Queue (ex: table `jobs` SQL ou `mpsc`) et atomiser les statuts (`resume_status`, `cover_letter_status`) pour une véritable concurrence asynchrone sécurisée.

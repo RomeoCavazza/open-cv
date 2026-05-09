@@ -35,9 +35,10 @@ export function createOfferActionButton({ active, action, ariaLabel, iconPath })
 /**
  * Crée une carte d'offre pour la sidebar.
  */
-export function createOfferCard(offer, { isActive, isLocked, isArchived, hasFlag, archivedView }) {
+export function createOfferCard(offer, { isActive, isLocked, isArchived, hasFlag, archivedView, status }) {
     const card = document.createElement('div');
-    card.className = `offer-card ${isActive ? 'active' : ''} ${hasFlag ? 'has-flag' : ''} ${isArchived ? 'is-archived archive-muted' : ''}`;
+    const isGenerating = status && status.toLowerCase() === 'generating';
+    card.className = `offer-card ${isActive ? 'active' : ''} ${hasFlag ? 'has-flag' : ''} ${isArchived ? 'is-archived archive-muted' : ''} ${isGenerating ? 'is-generating' : ''}`;
     card.style = `cursor: pointer; transition: all 0.2s;`; // Rely on CSS for padding/background
 
     const inner = document.createElement('div');
@@ -101,7 +102,7 @@ export function createOfferCard(offer, { isActive, isLocked, isArchived, hasFlag
 
     const actionsSlot = document.createElement('div');
     actionsSlot.className = 'offer-actions-slot';
-    if (isLocked || isArchived) actionsSlot.classList.add('has-active'); // Garde le slot visible
+    if (isLocked || isArchived || isGenerating) actionsSlot.classList.add('has-active'); // Garde le slot visible
 
     const createActionIcon = (path, active, action, label) => {
         const btn = document.createElement('button');
@@ -152,6 +153,43 @@ export function createOfferCard(offer, { isActive, isLocked, isArchived, hasFlag
         );
         actionsSlot.appendChild(restoreAction.wrapper);
         actionsSlot.appendChild(deleteAction.wrapper);
+    }
+
+    if (isGenerating) {
+        const spinner = document.createElement('div');
+        spinner.className = 'offer-generating-spinner';
+        spinner.style.display = 'flex';
+        spinner.style.alignItems = 'center';
+        spinner.style.justifyContent = 'center';
+        spinner.style.marginRight = '4px';
+        spinner.title = 'Génération en cours...';
+        
+        const svgElement = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svgElement.setAttribute('viewBox', '0 0 24 24');
+        svgElement.setAttribute('fill', 'none');
+        svgElement.setAttribute('stroke', '#0052ff');
+        svgElement.setAttribute('stroke-width', '2');
+        svgElement.style.width = '14px';
+        svgElement.style.height = '14px';
+        svgElement.style.animation = 'spin 1s linear infinite';
+        
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('stroke-linecap', 'round');
+        path.setAttribute('stroke-linejoin', 'round');
+        path.setAttribute('d', 'M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z');
+        
+        svgElement.appendChild(path);
+        spinner.appendChild(svgElement);
+        
+        // Add a global style for the spin animation if it doesn't exist
+        if (!document.getElementById('spinner-style')) {
+            const style = document.createElement('style');
+            style.id = 'spinner-style';
+            style.textContent = '@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }';
+            document.head.appendChild(style);
+        }
+        
+        actionsSlot.insertBefore(spinner, actionsSlot.firstChild);
     }
 
     const company = document.createElement('div');

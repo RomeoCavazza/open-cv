@@ -265,6 +265,52 @@ impl InstanceRepo for InstanceRepoPg {
                 sent_at: r.get("sent_at"),
             })
         })
+        })
         .transpose()
+    }
+
+    async fn update_livrables(
+        &self,
+        id: InstanceId,
+        restitution: Option<domain::Restitution>,
+        resume_json: Option<domain::Resume>,
+        cover_letter_json: Option<domain::CoverLetter>,
+        status: domain::InstanceStatus,
+        updated_at: chrono::DateTime<chrono::Utc>,
+    ) -> Result<(), RepoError> {
+        tracing::info!("DB: Partial update for instance {}", id);
+        
+        let restitution_val = restitution
+            .as_ref()
+            .map(|value| serde_json::to_value(value).expect("restitution serializable"));
+        let resume_json_val = resume_json
+            .as_ref()
+            .map(|value| serde_json::to_value(value).expect("resume serializable"));
+        let cover_letter_json_val = cover_letter_json
+            .as_ref()
+            .map(|value| serde_json::to_value(value).expect("cover letter serializable"));
+
+        sqlx::query(
+            r#"
+            UPDATE instances SET
+                restitution = COALESCE($2, restitution),
+                resume_json = COALESCE($3, resume_json),
+                cover_letter_json = COALESCE($4, cover_letter_json),
+                status = $5::instance_status,
+                updated_at = $6
+            WHERE id = $1
+            "#,
+        )
+        .bind(id.as_uuid())
+        .bind(restitution_val)
+        .bind(resume_json_val)
+        .bind(cover_letter_json_val)
+        .bind(status.as_str())
+        .bind(updated_at)
+        .execute(&self.pool)
+        .await
+        .map_err(map_sqlx)?;
+
+        Ok(())
     }
 }

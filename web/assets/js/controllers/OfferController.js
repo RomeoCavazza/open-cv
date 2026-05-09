@@ -27,6 +27,16 @@ export class OfferController {
             const offers = data.entries || [];
             if (loadSeq !== this.offersLoadSeq) return;
 
+            const isAnyGenerating = offers.some(o => o.status && o.status.toLowerCase() === 'generating');
+            if (isAnyGenerating) {
+                if (!this.pollInterval) this.pollInterval = setInterval(() => this.loadOffers(), 3000);
+            } else {
+                if (this.pollInterval) {
+                    clearInterval(this.pollInterval);
+                    this.pollInterval = null;
+                }
+            }
+
             this.renderDashboardApplications(offers);
             this.renderDashboardTreatedOffers(offers);
             this.renderOldOffers(offers);
@@ -116,6 +126,7 @@ export class OfferController {
                         isArchived,
                         hasFlag,
                         archivedView: false,
+                        status: o.status
                     });
 
                     card.querySelector('[data-action="lock"]').onclick = (event) => {
@@ -165,6 +176,7 @@ export class OfferController {
                         isArchived: true,
                         hasFlag: true,
                         archivedView: true,
+                        status: o.status
                     });
 
                     card.querySelector('[data-action="restore-inbox"]').onclick = (event) => {

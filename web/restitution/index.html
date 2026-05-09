@@ -229,7 +229,7 @@
             <i data-lucide="file-search-2" style="width: 32px; height: 32px;"></i>
         </div>
         <h2 style="font-size: 20px; font-weight: 700; color: #1e293b; margin-bottom: 12px;">Analyse non disponible</h2>
-        <button onclick="handleGenerate()"
+        <button id="btn-generate-restitution" onclick="handleGenerate()"
             style="background: var(--primary); color: white; border: none; padding: 12px 32px; border-radius: 12px; font-weight: var(--weight-medium); cursor: pointer;">Générer
             l'analyse</button>
     </div>
@@ -362,31 +362,35 @@
                 if (resInstance.ok) {
                     const instance = await resInstance.json();
                     const status = (instance.status || '').toLowerCase();
+                    let genTarget = { restitution: true }; // default
+                    try {
+                        const stored = localStorage.getItem('generating_target_' + instance.id) 
+                                    || localStorage.getItem('generating_target_' + instance.slug)
+                                    || localStorage.getItem('generating_target_' + instance.offre_id);
+                        if (stored) genTarget = JSON.parse(stored);
+                    } catch(e) {}
+
                     if (instance.restitution) {
+                        if (genTarget.restitution) {
+                            genTarget.restitution = false;
+                            localStorage.setItem('generating_target_' + instance.slug, JSON.stringify(genTarget));
+                        }
                         renderRestitution(instance.restitution);
                         showContent();
                         if (pollInterval) { clearInterval(pollInterval); pollInterval = null; import('../assets/js/render/audio.js').then(m => m.playSuccessSound()); }
-                    } else if (status === 'generating') {
-                        let genTarget = { restitution: true }; // default
-                        try {
-                            const stored = localStorage.getItem('generating_target_' + instance.id) 
-                                        || localStorage.getItem('generating_target_' + instance.slug)
-                                        || localStorage.getItem('generating_target_' + instance.offre_id);
-                            if (stored) genTarget = JSON.parse(stored);
-                        } catch(e) {}
-
-                        if (genTarget.restitution) {
+                    } else if (genTarget.restitution) {
+                        if (status === 'failed') {
+                            genTarget.restitution = false;
+                            localStorage.setItem('generating_target_' + instance.slug, JSON.stringify(genTarget));
+                            showEmpty(false);
+                            if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
+                        } else {
                             showGenerating();
                             if (!pollInterval) pollInterval = setInterval(checkStatus, 2000);
-                        } else {
-                            showEmpty();
-                            if (pollInterval) { clearInterval(pollInterval); pollInterval = null; import('../assets/js/render/audio.js').then(m => m.playSuccessSound()); }
                         }
-                    } else if (status === 'ready' || status === 'failed') {
-                        showEmpty();
-                        if (pollInterval) { clearInterval(pollInterval); pollInterval = null; import('../assets/js/render/audio.js').then(m => m.playSuccessSound()); }
                     } else {
-                        if (!pollInterval) pollInterval = setInterval(checkStatus, 2000);
+                        showEmpty(false);
+                        if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
                     }
                 } else {
                     showEmpty();
@@ -434,7 +438,7 @@
             document.getElementById('restitution-content').style.display = 'none';
             document.getElementById('empty-state').style.display = 'none';
         }
-        function showEmpty() {
+        function showEmpty(isInstanceGenerating = false) {
             document.getElementById('empty-state').style.display = 'flex';
             document.getElementById('restitution-content').style.display = 'none';
             document.getElementById('generating-state').style.display = 'none';
