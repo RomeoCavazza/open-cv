@@ -2,8 +2,6 @@
 
 Local application builder that turns raw job postings into tailored resumes, structured analyses, and cover letters.
 
-This project is a local application-generation engine. It ingests job postings, structures them, connects them to a candidate profile stored in the database, and produces high-fidelity deliverables through a Rust + Axum backend, a PostgreSQL database, and structured calls to AI models (Claude, GPT, or local models).
-
 ## System Workflow
 
 ```mermaid
@@ -39,7 +37,11 @@ flowchart LR
 
 ---
 
-## Project Architecture
+## How It Works
+
+This project is a local application-generation engine. It ingests job postings, structures them, connects them to a candidate profile stored in the database, and produces high-fidelity deliverables through a Rust + Axum backend, a PostgreSQL database, and structured calls to AI models (Claude, GPT, or local models).
+
+### Project Architecture
 
 ```text
 .
@@ -56,9 +58,7 @@ flowchart LR
 └── README.md
 ```
 
----
-
-## Technology Stack
+### Technology Stack
 
 | Layer | Technology Stack | Badges |
 | :--- | :--- | :--- |
@@ -70,9 +70,9 @@ flowchart LR
 
 ---
 
-## How It Works
+### Core Workflow
 
-The workflow is driven by the Rust backend and can be summarized in five main steps:
+The workflow is driven by the Rust backend and can be summarized in seven main steps:
 
 1. **Ingestion**: a job posting is sent to the API, deduplicated, normalized, and stored in `offres`.
 2. **Analysis**: the posting is structured to extract responsibilities, stack, and key signals.
