@@ -47,17 +47,21 @@ Le frontend est minimaliste pour garantir performance et pérennité :
 
 ## 7. Roadmap et Hardening (Phase Actuelle)
 
-La priorité actuelle est la fiabilité de la pipeline (Scraping -> DB -> LLM).
+La priorité est passée de la stabilité de base à la **résilience industrielle**.
+
+### HIGH (Résilience Système)
+1. **Job Persistence** : Mise en place d'une table de jobs pour garantir la reprise des générations après redémarrage serveur.
+2. **Gestion de Troncature** : Découpage intelligent du contexte pour éviter les erreurs `LlmError::Truncated` sur les gros profils.
+3. **Classification Rust** : Migration de la logique de catégorisation du SQL vers le backend Rust.
 
 ### MED (Robustesse et UX)
-1. Hardening Ingestion : Résilience face aux échecs de scraping via **ScrapingAnt** (protection anti-bot/Cloudflare).
-2. Validation JSON : Renforcement des schémas de sortie et messages de succès pour les mutations.
-3. UX Interaction : États "Thinking" et streaming de tokens fluides.
+1. **Master Poller & Reactive UI** : Centralisation du polling et notifications sonores via `localStorage` (Déployé).
+2. **Partial Refresh** : Capacité de régénérer et rafraîchir un seul livrable sans recharger tout l'écran.
+3. **Scraping Resilience** : Intégration de **ScrapingAnt** pour contourner les protections anti-bot complexes.
 
 ### LOW (Hygiène et Polish)
-1. Design Premium : Amélioration esthétique (micro-animations, transitions fluides).
-2. Chat Unifié : Orchestration de plusieurs offres via un fil de discussion unique.
-3. Tests de Troncature : Mise en place de tests unitaires permanents pour `LlmError::Truncated`.
+1. **Design Premium** : Peaufinage des micro-animations et transitions.
+2. **Chat Unifié** : Support multi-offres dans l'interface de discussion.
 
 ## 8. Validation Q&A End-to-End
 Pour garantir une stabilité durable, les scénarios suivants doivent être validés manuellement et automatisés :

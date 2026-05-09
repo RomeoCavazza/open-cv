@@ -1,52 +1,60 @@
-# Audit Technique - RecruitAI
+# Audit Technique & Hardening Roadmap - RecruitAI
 
-Date de l'audit : 8 mai 2026
-Statut global : **Sain** (Architecture robuste, mais quelques points de friction identifiés).
+Date de l'audit : 9 mai 2026
+Statut global : **Sain & Industriel**
+Architecture : **Hexagonale (Workspace Rust)**
 
-## 1. Synthèse de la Dette Technique
+## 1. État des Lieux & Dette Technique
 
 ### 1.1 Backend (Rust)
 
-| Point | Description | Impact | Priorité |
+| Composant | Problématique | Risque | Priorité |
 | :--- | :--- | :--- | :--- |
-| **Duplication de logique** | `maybe_generate_resume` et `maybe_generate_cover_letter` sont quasi identiques dans `generate/steps.rs`. | Maintenabilité | Moyenne |
-| **Erreurs génériques** | Usage fréquent de `AppError::Other(e.to_string())`. | Diagnostic | Faible |
-| **Logique métier en SQL** | La classification des offres (`fn_infer_offre_category`) est gérée par un trigger SQL avec Regex. | Testabilité | Haute |
-| **Stockage Binaire** | Photos et PDF stockés en `BYTEA` dans PostgreSQL. | Performance / Backup | Faible |
-| **Gestion des Tâches (Queue)** | Les générations sont lancées via `tokio::spawn` direct, sans file d'attente (Job Queue) ni worker pool. Risque de surcharge LLM. | Fiabilité à l'échelle | Haute |
-| **Statut d'Instance Global** | Un seul statut `Generating` pour l'instance. **Partiellement résolu** : Le `BackgroundPollManager` permet désormais un suivi atomique par document via `localStorage`. | Robustesse UI / Race conditions | Moyenne |
+| **Gestion des Tâches** | `tokio::spawn` utilisé pour la génération asynchrone sans persistance. | Si le serveur redémarre, les générations en cours sont perdues sans reprise. | **Haute** |
+| **Logique métier SQL** | La classification des offres (`fn_infer_offre_category`) est figée dans un trigger SQL via Regex. | Difficile à tester unitairement et à faire évoluer sans migration DB. | **Moyenne** |
+| **Couplage d'État** | Un seul `status` global par `Instance` dans la DB. | Impossible de savoir si c'est le CV ou la Lettre qui a échoué précisément. | **Moyenne** |
+| **Erreurs de Troncature** | Risque de saturation de contexte LLM sur les gros profils. | `LlmError::Truncated` non géré de manière élégante (échec sec). | **Basse** |
+| **Optimisation Binaire** | Taille actuelle : **6.2 MiB**. | Aucun risque réel, performance excellente, mais divergence avec les docs précédents. | **Basse** |
 
 ### 1.2 Frontend (Vanilla JS)
 
-| Point | Description | Impact | Priorité |
+| Composant | Problématique | Risque | Priorité |
 | :--- | :--- | :--- | :--- |
-| **Manipulation DOM** | Mises à jour manuelles via `document.getElementById` sans framework réactif. | Robustesse UI | Moyenne |
-| **Pont Legacy** | `window.state` utilisé comme pont entre les nouveaux contrôleurs et l'ancien code. | Qualité de code | Moyenne |
-| **UX Erreurs** | Usage mixte de `alert()` et de `Toast`. **Amélioré** : Migration vers notifications sonores et architecture Master Poller. | Expérience Utilisateur | Faible |
+| **Réactivité** | Manipulation directe du DOM via `getElementById`. | Code verbeux, difficile à maintenir si le nombre de livrables augmente. | **Moyenne** |
+| **Gestion d'État** | Fragmentation entre `window.state` et `localStorage`. | Risque de désynchronisation visuelle entre les iframes. | **Moyenne** |
+| **Centralisation** | Logique de polling historiquement dupliquée. | **Résolu** : Migration vers l'architecture *Master Poller* réactive. | **Check** |
 
 ---
 
-## 2. Analyse Détaillée
+## 2. Analyse de l'Architecture
 
-### 2.1 Architecture Hexagonale
-L'architecture est très bien respectée. La séparation des préoccupations entre le `domain`, les `ports` (interfaces) et les `adapters` (implémentations concrètes) est claire.
-- **Point positif** : Facilité déconcertante pour changer de provider LLM (Claude, OpenAI, Ollama).
-- **Axe d'amélioration** : Le module `generate` commence à dépasser la taille critique. Une décomposition par phase de pipeline (`Retrieve`, `Rerank`, `Plan`, `Generate`) dans des fichiers séparés est recommandée.
+### 2.1 Points Forts (Core Assets)
+- **Découplage Total** : L'abstraction via `crates/ports` permet de switcher de `Claude` à `Ollama` ou de `Postgres` à `In-memory` (pour les tests) en 2 lignes de code.
+- **RAG Performant** : L'usage combiné de `pgvector` (cosine similarity) et `pg_trgm` (fuzzy search) garantit une pertinence contextuelle de haut niveau.
+- **Légèreté** : L'absence de frameworks (React/Next) côté front assure un temps de chargement instantané (< 100ms).
 
-### 2.2 Base de Données
-L'utilisation de `pgvector` et des index GIN pour la recherche plein texte est excellente.
-- **Risque identifié** : Le trigger `tg_infer_offre_category` est une "boîte noire" métier. Si un utilisateur veut modifier les catégories, il doit modifier le schéma SQL plutôt que la configuration applicative.
-
-### 2.3 Performance et Compilation
-- **Dépendances** : Le projet présente quelques duplications de versions pour des crates comme `base64` ou `chrono`.
-- **Binaire** : `cargo-bloat` indique un binaire de ~2.1MiB, ce qui est excellent pour une application de cette envergure.
+### 2.2 Points de Vigilance (Risques)
+- **Atrocité du SQL métier** : Le trigger de catégorisation est une "boîte noire". Il devrait être migré vers une `OffreService` en Rust pour profiter du pattern matching.
+- **Atomicité des Livrables** : Le backend devrait supporter la mise à jour partielle des statuts (`resume_status: Ready`, `cover_letter_status: Generating`) pour une UX parfaite.
 
 ---
 
-## 3. Recommandations de Hardening
+## 3. Plan d'Action (Hardening Roadmap)
 
-1.  **Refactoring Pipeline** : Fusionner les logiques de génération de documents dans `application/src/generate/steps.rs` pour utiliser un template de génération structurée commun.
-2.  **Migration de Logique** : Déplacer la classification des offres du SQL vers une couche de service Rust pour permettre des tests unitaires sur les règles de tri.
-3.  **UI Consistency** : Supprimer tous les `alert()` au profit du système de Toasts déjà présent dans `ui.js`.
-4.  **Nettoyage JS** : Continuer la migration vers les contrôleurs (`ProfileController`, etc.) pour supprimer totalement la dépendance à `window.state`.
-5.  **Système de Background Jobs** : Remplacer les `tokio::spawn` par un vrai Message Broker / Job Queue (ex: table `jobs` SQL ou `mpsc`) et atomiser les statuts (`resume_status`, `cover_letter_status`) pour une véritable concurrence asynchrone sécurisée.
+### Étape 1 : Robustesse Système (Immediate)
+- [ ] **Job Persistence** : Introduire une table `background_jobs` pour que `tokio::spawn` puisse reprendre après un crash.
+- [ ] **Validation de Troncature** : Implémenter un découpage (chunking) intelligent des profils trop longs avant l'envoi au LLM.
+
+### Étape 2 : Excellence UX (En cours)
+- [x] **Master Poller** : Centraliser le polling réseau dans `dashboard.js` (Terminé).
+- [x] **Audio Feedback** : Notification sonore globale via `storage events` (Terminé).
+- [ ] **Partial Refresh** : Permettre de recharger un seul document sans rafraîchir toute l'instance.
+
+### Étape 3 : Nettoyage & Standardisation
+- [ ] **Migration Regex** : Sortir les Regex de catégorisation du SQL pour les mettre dans `crates/application`.
+- [ ] **Consolidation d'État** : Migrer `window.state` vers un `Store` minimaliste partagé.
+
+---
+
+## 4. Conclusion de l'Auditeur
+Le projet RecruitAI dispose d'une fondation Rust exceptionnelle. Les faiblesses actuelles se situent uniquement dans la couche de "confort" (gestion de tâches, réactivité UI). **L'investissement dans l'architecture hexagonale paye déjà ses fruits en rendant ces améliorations simples à implémenter sans refactorisation lourde.**
