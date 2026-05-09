@@ -14,7 +14,7 @@ Statut global : **Sain** (Architecture robuste, mais quelques points de friction
 | **Logique métier en SQL** | La classification des offres (`fn_infer_offre_category`) est gérée par un trigger SQL avec Regex. | Testabilité | Haute |
 | **Stockage Binaire** | Photos et PDF stockés en `BYTEA` dans PostgreSQL. | Performance / Backup | Faible |
 | **Gestion des Tâches (Queue)** | Les générations sont lancées via `tokio::spawn` direct, sans file d'attente (Job Queue) ni worker pool. Risque de surcharge LLM. | Fiabilité à l'échelle | Haute |
-| **Statut d'Instance Global** | Un seul statut `Generating` pour l'instance, ce qui empêche un suivi granulaire et asynchrone par document (CV vs Lettre). | Robustesse UI / Race conditions | Haute |
+| **Statut d'Instance Global** | Un seul statut `Generating` pour l'instance. **Partiellement résolu** : Le `BackgroundPollManager` permet désormais un suivi atomique par document via `localStorage`. | Robustesse UI / Race conditions | Moyenne |
 
 ### 1.2 Frontend (Vanilla JS)
 
@@ -22,7 +22,7 @@ Statut global : **Sain** (Architecture robuste, mais quelques points de friction
 | :--- | :--- | :--- | :--- |
 | **Manipulation DOM** | Mises à jour manuelles via `document.getElementById` sans framework réactif. | Robustesse UI | Moyenne |
 | **Pont Legacy** | `window.state` utilisé comme pont entre les nouveaux contrôleurs et l'ancien code. | Qualité de code | Moyenne |
-| **UX Erreurs** | Usage mixte de `alert()` et de `Toast`. | Expérience Utilisateur | Faible |
+| **UX Erreurs** | Usage mixte de `alert()` et de `Toast`. **Amélioré** : Migration vers notifications sonores et architecture Master Poller. | Expérience Utilisateur | Faible |
 
 ---
 

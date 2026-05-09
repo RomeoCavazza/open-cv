@@ -1,35 +1,8 @@
 # Rapport de Sante RecruitAI
-Généré le : 2026-05-09 03:12:53
+Généré le : 2026-05-09 04:12:00
 
 ## 1. Statistiques du Code (Tokei)
 ```
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- Language              Files        Lines         Code     Comments       Blanks
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- CSS                       3         1498         1313           38          147
- JavaScript               26         3276         2770           93          413
- JSON                      2           30           30            0            0
- Just                      1          173          118           27           28
- Nix                       1           80           63            6           11
- SQL                       1          244          195           28           21
- SVG                       1         4902         4223          679            0
- TOML                     13          350          296           17           37
-─────────────────────────────────────────────────────────────────────────────────
- HTML                      5         1015          957            4           54
- |- CSS                    4           65           59            0            6
- |- JavaScript             2          150          141            1            8
- (Total)                             1230         1157            5           68
-─────────────────────────────────────────────────────────────────────────────────
- Markdown                 10          761            0          594          167
- |- BASH                   4           48           30           11            7
- (Total)                              809           30          605          174
-─────────────────────────────────────────────────────────────────────────────────
- Rust                     68         9604         8513           54         1037
- |- Markdown              28          155            0          142           13
- (Total)                             9759         8513          196         1050
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- Total                   131        22351        18708         1694         1949
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
 ## 2. Architecture du Projet (Eza)
@@ -402,29 +375,29 @@ webpki-roots v1.0.7
 ## 4. Poids et Optimisation
 ### Analyse du binaire (Cargo Bloat)
 ```
- File  .text      Size Crate
-10.0%  28.9% 1018.4KiB std
- 3.5%  10.3%  361.5KiB rustls
- 3.0%   8.6%  302.3KiB sqlx_postgres
- 2.9%   8.3%  292.3KiB ring
- 2.0%   5.7%  201.8KiB sqlx_core
- 1.5%   4.3%  153.0KiB regex_syntax
- 1.3%   3.9%  135.9KiB tokio
- 1.2%   3.5%  124.6KiB regex_automata
- 1.2%   3.5%  122.9KiB adapter_postgres
- 1.0%   2.9%  101.6KiB seed_offers_instances
- 0.7%   2.0%   70.8KiB [Unknown]
- 0.7%   2.0%   69.7KiB tracing_subscriber
- 0.7%   1.9%   67.9KiB webpki
- 0.6%   1.9%   65.8KiB serde_json
- 0.4%   1.3%   44.2KiB url
- 0.3%   1.0%   34.1KiB chrono
- 0.3%   0.8%   29.4KiB domain
- 0.3%   0.8%   28.9KiB idna
- 0.2%   0.5%   18.3KiB tracing
- 0.1%   0.4%   15.2KiB anyhow
- 2.2%   6.4%  225.5KiB And 53 more crates. Use -n N to show more.
-34.6% 100.0%    3.4MiB .text section size, the file size is 10.0MiB
+ File  .text     Size Crate
+16.5%  30.3%   1.0MiB std
+ 5.6%  10.2% 355.6KiB rustls
+ 4.8%   8.7% 304.4KiB sqlx_postgres
+ 4.1%   7.5% 262.3KiB ring
+ 3.2%   5.8% 202.7KiB sqlx_core
+ 2.4%   4.3% 150.1KiB regex_syntax
+ 2.1%   3.9% 136.0KiB tokio
+ 2.0%   3.6% 126.3KiB regex_automata
+ 1.8%   3.4% 117.5KiB adapter_postgres
+ 1.5%   2.8%  98.5KiB seed_offers_instances
+ 1.3%   2.4%  84.0KiB serde_json
+ 1.1%   2.0%  70.0KiB tracing_subscriber
+ 1.1%   2.0%  68.2KiB webpki
+ 0.7%   1.2%  43.3KiB url
+ 0.6%   1.1%  39.0KiB [Unknown]
+ 0.5%   1.0%  34.7KiB chrono
+ 0.5%   0.8%  28.7KiB idna
+ 0.3%   0.5%  18.3KiB tracing
+ 0.2%   0.5%  15.8KiB anyhow
+ 0.2%   0.4%  14.5KiB serde
+ 3.4%   6.2% 214.7KiB And 53 more crates. Use -n N to show more.
+54.6% 100.0%   3.4MiB .text section size, the file size is 6.2MiB
 
 Note: numbers above are a result of guesswork. They are not 100% correct and never will be.
 ```

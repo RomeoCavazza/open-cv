@@ -59,7 +59,8 @@ The workflow is driven by the Rust backend and can be summarized in five main st
 3. Context selection: the active profile and its chunks are loaded from PostgreSQL.
 4. Generation: the application produces a structured analysis, a tailored resume, and a targeted cover letter.
 5. Rendering: the static frontend loads the JSON payloads and displays them through printable HTML renderers.
-6. Interaction: a built-in real-time chat (Server-Sent Events) allows refining the documents with instant token streaming.
+6. Reactive Monitoring: a centralized Master Poller in the parent window monitors generation progress and notifies iframes via storage events, playing an audio alert upon completion.
+7. Interaction: a built-in real-time chat (Server-Sent Events) allows refining the documents with instant token streaming.
 
 ### Installation
 

@@ -43,7 +43,7 @@ Point d'entrée Axum.
 
 ## Frontend (Vanilla JS)
 
-Le frontend fonctionne en architecture modulaire orientée contrôleurs.
+Le frontend fonctionne en architecture modulaire orientée contrôleurs, avec un système de gestion d'état réactif basé sur le stockage local (`localStorage`) et les événements natifs du navigateur.
 
 ### 1. web/assets/js/ (Coeur)
 - dashboard.js : Orchestrateur central.
@@ -56,6 +56,7 @@ Le frontend fonctionne en architecture modulaire orientée contrôleurs.
 
 ### 3. web/assets/js/modules/ (Infrastructure)
 - events.js : Bus d'événements global.
+- background_poll.js : Gestionnaire de polling centralisé et réactif (Master Poller).
 
 ---
 

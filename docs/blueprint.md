@@ -34,6 +34,8 @@ L'intelligence du système repose sur la génération structurée :
 ## 5. Architecture Frontend
 Le frontend est minimaliste pour garantir performance et pérennité :
 - Isolation via Iframes : Les documents sont rendus dans des iframes isolées.
+- Polling Centralisé (Master Poller) : Une seule boucle de polling dans la fenêtre parente gère les requêtes API pour tous les documents en cours, réduisant la charge réseau.
+- État Réactif via Storage : Utilisation des événements `window.onstorage` pour notifier les iframes des changements d'état sans polling redondant.
 - Vanilla ES6 : Utilisation intensive de modules natifs.
 - Routage Client : Gestion des vues via history.pushState.
 
@@ -59,8 +61,8 @@ La priorité actuelle est la fiabilité de la pipeline (Scraping -> DB -> LLM).
 
 ## 8. Validation Q&A End-to-End
 Pour garantir une stabilité durable, les scénarios suivants doivent être validés manuellement et automatisés :
-- [ ] Génération via dashboard global (restitution, cv, cover letter).
-- [ ] Génération via slots vides individuels.
-- [ ] Régénération via icônes d'écrasement.
-- [ ] Rendu immédiat post-génération (disparition du skeleton).
+- [x] Génération via dashboard global (restitution, cv, cover letter).
+- [x] Génération via slots vides individuels.
+- [x] Régénération via icônes d'écrasement.
+- [x] Rendu immédiat post-génération (disparition du skeleton via BackgroundPollManager).
 - [ ] Cohérence du chat avec injection complète du `JSON.profile`.
