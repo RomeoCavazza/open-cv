@@ -181,14 +181,15 @@ just coverage
 ---
 
 ## TODO
-
-### High Priority (Hardening Phase)
-- [ ] **End-to-End Validation**: Verify all generation paths (Dashboard, individual slots, and Re-generate icons).
-- [ ] **UI Polish**: Ensure skeleton screens and immediate display are working across all document types.
-- [ ] **Scraping Resilience**: Implement ScrapingAnt fallback for 100% ingestion success.
-- [ ] **Technical Safety**: Add permanent unit tests for `LlmError::Truncated` and `ParseFailed`.
-
-### UX & Interaction
-- [ ] **Enhanced Chat**: Implement "Thinking" UI states and improved streaming token animations.
-- [ ] **Context Visibility**: Ensure JSON profile injection is fully accessible to the LLM.
-- [ ] **System Feedback**: Add success messages for complex background tasks.
+ 
+ ### PHASE A: Hardening Pipeline (The "66%")
+ - [ ] **Industrial Scraping**: Validate platform parsing (LinkedIn, Indeed) and integrate ScrapingAnt fallback for Cloudflare/Anti-bot.
+ - [ ] **Direct Prompts**: Support generation without URLs (e.g., "Generate a DevOps CV") for generic deliverables.
+ - [ ] **Async Queueing**: Orchestrate concurrent generations with an anti-spam queue.
+ - [ ] **Sidebar Sync**: Ensure instant and accurate offer appearance (Title/Company) after ingestion.
+ 
+ ### PHASE B: Chat Optimization (The "34%")
+ - [ ] **JSON Mutations**: Enable LLM to directly modify document JSON structures via the chatbar.
+ - [ ] **RAG Efficiency**: Verify 100% contextual injection (Profile + Chunks) into the LLM prompt.
+ - [ ] **Liveliness UI**: Add reasoning/planning status indicators and hopping dot animations.
+ - [ ] **Mini-Versioning**: Explore local diff tracking (mini-git style) for LLM-driven modifications.

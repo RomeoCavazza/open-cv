@@ -45,26 +45,35 @@ Le frontend est minimaliste pour garantir performance et pérennité :
 - chunks : Fragments de profil vectorisés pour le RAG.
 - instances : Lien profil-offre + historique des messages de chat.
 
-## 7. Roadmap et Hardening (Phase Actuelle)
+## 7. Roadmap et Hardening (Phase MVP 66% -> 100%)
 
-La priorité est passée de la stabilité de base à la **résilience industrielle**.
+La priorité absolue est le **Hardening de la pipeline Data/AI** et l'optimisation de l'expérience interactive.
 
-### HIGH (Résilience Système)
-1. **Job Persistence** : Mise en place d'une table de jobs pour garantir la reprise des générations après redémarrage serveur.
-2. **Gestion de Troncature** : Découpage intelligent du contexte pour éviter les erreurs `LlmError::Truncated` sur les gros profils.
-3. **Classification Rust** : Migration de la logique de catégorisation du SQL vers le backend Rust.
+### PHASE A : Hardening Pipeline (Le "66%")
+1. **Scraping Industriel** :
+    - [ ] Validation du parsing sur les plateformes majeures (LinkedIn, Indeed, Welcome to the Jungle).
+    - [ ] Implémentation du fallback **ScrapingAnt** (Proxy/Anti-bot/Cloudflare).
+    - [ ] Support des "Prompts Directs" : Génération sans URL (ex: "Génère un CV DevOps") -> CV/Lettre génériques.
+2. **Génération & Queueing** :
+    - [ ] Orchestration asynchrone pour gérer plusieurs liens à la suite.
+    - [ ] Mise en place d'une file d'attente (Queuing) et limite anti-spam.
+    - [ ] Synchronisation Sidebar : Apparition instantanée et correcte (Nom Offre/Recruteur) après ingestion.
 
-### MED (Robustesse et UX)
-1. **Master Poller & Reactive UI** : Centralisation du polling et notifications sonores via `localStorage` (Déployé).
-2. **Partial Refresh** : Capacité de régénérer et rafraîchir un seul livrable sans recharger tout l'écran.
-3. **Scraping Resilience** : Intégration de **ScrapingAnt** pour contourner les protections anti-bot complexes.
-
-### LOW (Hygiène et Polish)
-1. **Design Premium** : Peaufinage des micro-animations et transitions.
-2. **Chat Unifié** : Support multi-offres dans l'interface de discussion.
+### PHASE B : Intelligence Interactive (Le "34%")
+1. **Chatbar & RAG Optimization** :
+    - [ ] Vérification de l'injection Contextuelle : S'assurer que le profil et les chunks RAG sont transmis à 100%.
+    - [ ] **JSON Mutations** : Permettre au LLM de modifier directement la structure JSON des documents via le chat.
+    - [ ] Comportement LLM : Ajustement du ton et de l'efficacité en phase de "refining".
+2. **UI "Alive" & Versioning** :
+    - [ ] Micro-animations d'attente (dots, planning/reasoning/generating status).
+    - [ ] **Mini-Versioning** : Exploration d'un système de diffs local (inspiré de `mini-git`) pour naviguer dans l'historique des modifications LLM.
 
 ## 8. Validation Q&A End-to-End
 Pour garantir une stabilité durable, les scénarios suivants doivent être validés manuellement et automatisés :
+- [ ] Ingestion d'une offre protégée par Cloudflare.
+- [ ] Génération concurrente de 3 instances en arrière-plan.
+- [ ] Modification d'un paragraphe du CV via le chat et validation du JSON résultant.
+
 - [x] Génération via dashboard global (restitution, cv, cover letter).
 - [x] Génération via slots vides individuels.
 - [x] Régénération via icônes d'écrasement.
