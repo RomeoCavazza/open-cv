@@ -39,7 +39,6 @@ export class IngestController {
 
             await api.generateApplication(ingestRes.job_id, selectedLlmProvider, options);
             emit(EVENTS.GEN_COMPLETED, { jobId: ingestRes.job_id });
-            emit(EVENTS.NOTIFICATION, { message: 'Application générée avec succès !', type: 'success' });
 
         } catch (e) {
             emit(EVENTS.GEN_FAILED, { message: e.message });

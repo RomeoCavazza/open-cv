@@ -378,7 +378,7 @@
                             }
                             renderRestitution(instance.restitution);
                             showContent();
-                            if (pollInterval) { clearInterval(pollInterval); pollInterval = null; import('../assets/js/render/audio.js').then(m => m.playSuccessSound()); }
+                            if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
                         } else if (genTarget.restitution) {
                             if (status === 'failed') {
                                 genTarget.restitution = false;
@@ -429,16 +429,22 @@
                 const jobId = instanceSlug || offerSlug;
                 const result = await window.parent.api.generateApplication(jobId, provider, { restitution: true }, offerSlug);
                 if (result && result.slug) {
-                    // Update current view context if needed
                     window._resolvedInstanceSlug = result.slug;
                 }
                 showGenerating();
-                if (!pollInterval) pollInterval = setInterval(checkStatus, 2000);
             } catch (e) {
                 console.error(e);
                 showEmpty(false);
             }
         }
+
+        // Reactive UI updates
+        window.addEventListener('storage', (e) => {
+            const storageKey = offerSlug || instanceSlug;
+            if (e.key === 'generating_target_' + storageKey) {
+                checkStatus();
+            }
+        });
 
         function showGenerating() {
             document.getElementById('generating-state').style.display = 'flex';

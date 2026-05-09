@@ -19,6 +19,7 @@ import { ProfileController } from './controllers/ProfileController.js';
 import { OfferController } from './controllers/OfferController.js';
 import { IngestController } from './controllers/IngestController.js';
 import * as api from './api.js';
+import { backgroundPollManager } from './modules/background_poll.js';
 
 const profileController = new ProfileController();
 const offerController = new OfferController();
@@ -77,6 +78,7 @@ on(EVENTS.GEN_FAILED, (data) => {
 async function init() {
     console.log("[Dashboard] Initializing...");
     attachGlobalEventListeners();
+    backgroundPollManager.start();
 
     try {
         await loadI18n();
@@ -165,7 +167,6 @@ function attachGlobalEventListeners() {
 
         api.generateApplication(activeJobId, provider, options)
             .then(() => {
-                ui.showToast(i18n.translations[i18n.current]?.generationStarted || "Génération démarrée");
                 setTimeout(updateIframe, 500); 
             })
             .catch(err => {

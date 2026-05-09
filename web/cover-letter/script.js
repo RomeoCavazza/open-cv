@@ -43,71 +43,65 @@ function showContent() {
 }
 
 async function loadCoverLetter() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const jobIdInUrl = urlParams.get('id') || urlParams.get('instance');
+  const offerId = urlParams.get('offer');
+  
+  const jobId = window._currentJobId || jobIdInUrl;
+  if (!jobId) return;
+
   try {
-    const urlParams = new URLSearchParams(window.location.search);
-    const jobIdInUrl = urlParams.get('id') || urlParams.get('instance');
-    const jobId = window._currentJobId || jobIdInUrl;
     const hasInstance = !!(jobId && jobId !== 'null');
+    if (!hasInstance) return renderEmptyCoverLetterState(null);
 
-    if (!hasInstance) {
-      renderEmptyCoverLetterState(null);
-      return;
-    }
-
-    let target = `/api/instances/${jobId}?t=${Date.now()}`;
-    let resInstance = await fetch(target);
-    
+    let resInstance = await fetch(`/api/instances/${jobId}?t=${Date.now()}`);
     if (!resInstance.ok && !jobId.includes('__')) {
-        // Try resolving via offer slug if the direct instance fetch failed
-        target = `/api/offres/${jobId}/instance?t=${Date.now()}`;
-        resInstance = await fetch(target);
+        resInstance = await fetch(`/api/offres/${jobId}/instance?t=${Date.now()}`);
     }
 
-    if (!resInstance.ok) {
-      renderEmptyCoverLetterState(jobId);
-      return;
-    }
+    if (!resInstance.ok) return renderEmptyCoverLetterState(jobId);
     const instance = await resInstance.json();
     const status = instance.status.toLowerCase();
-    const offerId = urlParams.get('offer');
 
-    let genTarget = { cover_letter: false }; // default
+    let genTarget = { cover_letter: false }; 
     const storageKey = offerId || jobIdInUrl;
     try {
         const stored = localStorage.getItem('generating_target_' + storageKey);
         if (stored) genTarget = JSON.parse(stored);
     } catch(e) {}
 
-    // Data-first: show existing content regardless of global status
     if (instance.cover_letter_json) {
       if (genTarget.cover_letter) {
         genTarget.cover_letter = false;
         localStorage.setItem('generating_target_' + storageKey, JSON.stringify(genTarget));
       }
-      if (window.pollInterval) { clearInterval(window.pollInterval); window.pollInterval = null; playSuccessSound(); }
       showContent();
       renderTemplateCoverLetter(instance.cover_letter_json);
       applyPreviewScale();
     } else if (genTarget.cover_letter) {
-      // We are waiting for it!
       if (status === 'failed') {
         genTarget.cover_letter = false;
         localStorage.setItem('generating_target_' + storageKey, JSON.stringify(genTarget));
-        if (window.pollInterval) { clearInterval(window.pollInterval); window.pollInterval = null; }
         renderEmptyCoverLetterState(jobId, false);
       } else {
         showGenerating();
-        if (!window.pollInterval) window.pollInterval = setInterval(loadCoverLetter, 2000);
       }
     } else {
-      // It's not requested, and we don't have it
-      if (window.pollInterval) { clearInterval(window.pollInterval); window.pollInterval = null; }
       renderEmptyCoverLetterState(jobId, false);
     }
   } catch (error) {
-    console.error("Unable to load cover letter data:", error);
+    console.error("Unable to load cover letter:", error);
   }
 }
+
+// Reactive UI updates
+window.addEventListener('storage', (e) => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const storageKey = urlParams.get('offer') || urlParams.get('id') || urlParams.get('instance');
+    if (e.key === 'generating_target_' + storageKey) {
+        loadCoverLetter();
+    }
+});
 
 function renderEmptyCoverLetterState(jobId, isInstanceGenerating = false) {
   const stage = document.getElementById('empty-state');
