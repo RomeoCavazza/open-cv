@@ -29,6 +29,9 @@ jobs:
         with:
           files: |
             target/release/api
-            target/release/import_data
+            target/release/seed_blank
+            target/release/seed_profile
+            target/release/seed_offers_instances
+            target/release/seed_chunks
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

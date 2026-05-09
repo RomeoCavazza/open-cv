@@ -365,13 +365,26 @@
                     if (instance.restitution) {
                         renderRestitution(instance.restitution);
                         showContent();
-                        if (pollInterval) clearInterval(pollInterval);
+                        if (pollInterval) { clearInterval(pollInterval); pollInterval = null; import('../assets/js/render/audio.js').then(m => m.playSuccessSound()); }
                     } else if (status === 'generating') {
-                        showGenerating();
-                        if (!pollInterval) pollInterval = setInterval(checkStatus, 2000);
+                        let genTarget = { restitution: true }; // default
+                        try {
+                            const stored = localStorage.getItem('generating_target_' + instance.id) 
+                                        || localStorage.getItem('generating_target_' + instance.slug)
+                                        || localStorage.getItem('generating_target_' + instance.offre_id);
+                            if (stored) genTarget = JSON.parse(stored);
+                        } catch(e) {}
+
+                        if (genTarget.restitution) {
+                            showGenerating();
+                            if (!pollInterval) pollInterval = setInterval(checkStatus, 2000);
+                        } else {
+                            showEmpty();
+                            if (pollInterval) { clearInterval(pollInterval); pollInterval = null; import('../assets/js/render/audio.js').then(m => m.playSuccessSound()); }
+                        }
                     } else if (status === 'ready' || status === 'failed') {
                         showEmpty();
-                        if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
+                        if (pollInterval) { clearInterval(pollInterval); pollInterval = null; import('../assets/js/render/audio.js').then(m => m.playSuccessSound()); }
                     } else {
                         if (!pollInterval) pollInterval = setInterval(checkStatus, 2000);
                     }
@@ -406,6 +419,10 @@
         }
 
         async function handleGenerate() {
+            try {
+                const targetOptions = { restitution: true, resume: false, cover_letter: false };
+                localStorage.setItem('generating_target_' + (instanceSlug || offerSlug), JSON.stringify(targetOptions));
+            } catch(e) {}
             showGenerating();
             const target = instanceSlug ? `/api/instances/${instanceSlug}/generate?restitution=true&resume=false&cover_letter=false` : `/api/offres/${offerSlug}/generate`;
             await fetch(target, { method: 'POST' });

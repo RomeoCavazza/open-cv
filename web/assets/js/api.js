@@ -59,11 +59,19 @@ export async function ingestOffer(urlOrText) {
 }
 
 export async function generateApplication(jobId, provider, options = {}) {
-    const query = new URLSearchParams({
-        llm_provider: provider,
+    const opts = {
         restitution: options.restitution ?? true,
         resume: options.resume ?? true,
         cover_letter: options.cover_letter ?? true
+    };
+    try {
+        localStorage.setItem('generating_target_' + jobId, JSON.stringify(opts));
+    } catch(e) {}
+    const query = new URLSearchParams({
+        llm_provider: provider,
+        restitution: opts.restitution,
+        resume: opts.resume,
+        cover_letter: opts.cover_letter
     });
     const res = await fetch(`/api/instances/${jobId}/generate?${query}`, { method: 'POST' });
     if (!res.ok) throw new Error('Generation failed');

@@ -1,9 +1,18 @@
 import { clear, el, svg, text } from '../assets/js/dom.js';
+import { playSuccessSound } from '../assets/js/render/audio.js';
 
+// Local flag removed in favor of localStorage
 window.handleGenerate = async () => {
   const urlParams = new URLSearchParams(window.location.search);
   const jobId = urlParams.get('id') || urlParams.get('instance');
+  const offerId = urlParams.get('offer');
   if (!jobId) return;
+
+  try {
+    const target = { resume: false, cover_letter: true, restitution: false };
+    localStorage.setItem('generating_target_' + jobId, JSON.stringify(target));
+    if (offerId) localStorage.setItem('generating_target_' + offerId, JSON.stringify(target));
+  } catch(e) {}
 
   showGenerating();
 
@@ -25,16 +34,20 @@ window.handleGenerate = async () => {
 function showGenerating() {
   const gen = document.getElementById('generating-state');
   const con = document.getElementById('cl-container');
+  const emp = document.getElementById('empty-state');
   if (gen) gen.style.display = 'flex';
   if (con) con.style.display = 'none';
+  if (emp) emp.style.display = 'none';
   if (window.lucide) lucide.createIcons();
 }
 
 function showContent() {
   const gen = document.getElementById('generating-state');
   const con = document.getElementById('cl-container');
+  const emp = document.getElementById('empty-state');
   if (gen) gen.style.display = 'none';
   if (con) con.style.display = 'block';
+  if (emp) emp.style.display = 'none';
 }
 
 async function loadCoverLetter() {
@@ -55,20 +68,32 @@ async function loadCoverLetter() {
     }
     const instance = await resInstance.json();
     const status = instance.status.toLowerCase();
+    const offerId = urlParams.get('offer');
 
-    if (status === 'generating') {
-      showGenerating();
-      if (!window.pollInterval) window.pollInterval = setInterval(loadCoverLetter, 2000);
-      return;
-    }
+    let genTarget = { cover_letter: true }; // default
+    try {
+        const stored = localStorage.getItem('generating_target_' + jobId) 
+                    || (offerId && localStorage.getItem('generating_target_' + offerId))
+                    || localStorage.getItem('generating_target_' + instance.id)
+                    || localStorage.getItem('generating_target_' + instance.offre_id);
+        if (stored) genTarget = JSON.parse(stored);
+    } catch(e) {}
 
+    // Data-first: show existing content regardless of global status
     if (instance.cover_letter_json) {
-      if (window.pollInterval) { clearInterval(window.pollInterval); window.pollInterval = null; }
+      if (window.pollInterval) { clearInterval(window.pollInterval); window.pollInterval = null; playSuccessSound(); }
       showContent();
       renderTemplateCoverLetter(instance.cover_letter_json);
       applyPreviewScale();
+    } else if (status === 'generating' && genTarget.cover_letter) {
+      // Only show skeleton if WE initiated this generation
+      showGenerating();
+      if (!window.pollInterval) window.pollInterval = setInterval(loadCoverLetter, 2000);
     } else if (status === 'ready' || status === 'failed') {
-      if (window.pollInterval) { clearInterval(window.pollInterval); window.pollInterval = null; }
+      if (window.pollInterval) { clearInterval(window.pollInterval); window.pollInterval = null; playSuccessSound(); }
+      renderEmptyCoverLetterState(jobId);
+    } else if (status === 'generating') {
+      // Another doc is generating, not us — show empty state, no skeleton
       renderEmptyCoverLetterState(jobId);
     } else {
       if (!window.pollInterval) window.pollInterval = setInterval(loadCoverLetter, 2000);
@@ -79,12 +104,17 @@ async function loadCoverLetter() {
 }
 
 function renderEmptyCoverLetterState(jobId) {
-  const stage = document.querySelector('.page-stage');
+  const stage = document.getElementById('empty-state');
+  const gen = document.getElementById('generating-state');
+  const con = document.getElementById('cl-container');
+  if (gen) gen.style.display = 'none';
+  if (con) con.style.display = 'none';
   if (!stage) return;
+  stage.style.display = 'flex';
 
   const hasGenerateAction = !!jobId;
   clear(stage).appendChild(el('div', {
-    style: 'display:flex; flex-direction:column; align-items:center; justify-content:flex-start; height:100vh; width:100%; padding-top:18vh; padding-left:40px; padding-right:40px; text-align:center; color:#64748b; background:#fff;'
+    style: 'display:flex; flex-direction:column; align-items:center;'
   }, [
     el('div', {
       style: 'width:64px; height:64px; background:#eff6ff; border-radius:50%; display:flex; align-items:center; justify-content:center; margin-bottom:24px; color:#0052ff;'

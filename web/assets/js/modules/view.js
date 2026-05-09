@@ -28,12 +28,6 @@ export async function updateIframe(options = {}) {
             if (instance && instance.slug) {
                 instanceSlug = instance.slug;
             }
-            
-            if (instance && instance.status === 'Generating') {
-                if (pollInterval) clearInterval(pollInterval);
-                pollInterval = setInterval(() => updateIframe({ isPolling: true }), 2000);
-                return;
-            }
         }
         
         if (pollInterval) {
