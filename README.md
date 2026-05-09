@@ -2,6 +2,20 @@
 
 Local application builder that turns raw job postings into tailored resumes, structured analyses, and cover letters.
 
+This project is a local application-generation engine. It ingests job postings, structures them, connects them to a candidate profile stored in the database, and produces high-fidelity deliverables through a Rust + Axum backend, a PostgreSQL database, and structured calls to AI models (Claude, GPT, or local models).
+
+## Technology Stack
+
+| Layer | Technology Stack | Badges |
+| :--- | :--- | :--- |
+| **Backend** | Rust, Axum, Tokio (Hexagonal) | ![Rust](https://img.shields.io/badge/Rust-000000?style=for-the-badge&logo=rust&logoColor=white) ![Axum](https://img.shields.io/badge/Axum-4B5563?style=for-the-badge&logo=rust&logoColor=white) |
+| **Database** | PostgreSQL 16 (pgvector, trgm) | ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-336791?style=for-the-badge&logo=postgresql&logoColor=white) |
+| **Frontend** | Vanilla JS, HTML5, CSS3 | ![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white) ![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white) ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black) |
+| **Environment** | Nix, Just, Cargo | ![Nix](https://img.shields.io/badge/NixOS-5277C3?style=for-the-badge&logo=nixos&logoColor=white) |
+| **CI / Audit** | GitHub Actions | [![Backend CI](https://github.com/RomeoCavazza/open-cv/actions/workflows/backend.yml/badge.svg)](https://github.com/RomeoCavazza/open-cv/actions/workflows/backend.yml) [![Frontend CI](https://github.com/RomeoCavazza/open-cv/actions/workflows/frontend.yml/badge.svg)](https://github.com/RomeoCavazza/open-cv/actions/workflows/frontend.yml) |
+
+---
+
 ## System Workflow
 
 ```mermaid
@@ -24,6 +38,8 @@ flowchart LR
     API --> UI
 ```
 
+---
+
 ## Previews
 
 ### Job Analysis
@@ -38,8 +54,6 @@ flowchart LR
 ---
 
 ## How It Works
-
-This project is a local application-generation engine. It ingests job postings, structures them, connects them to a candidate profile stored in the database, and produces high-fidelity deliverables through a Rust + Axum backend, a PostgreSQL database, and structured calls to AI models (Claude, GPT, or local models).
 
 ### Project Architecture
 
@@ -57,18 +71,6 @@ This project is a local application-generation engine. It ingests job postings, 
 ├── Justfile            # Common commands
 └── README.md
 ```
-
-### Technology Stack
-
-| Layer | Technology Stack | Badges |
-| :--- | :--- | :--- |
-| **Backend** | Rust, Axum, Tokio (Hexagonal) | ![Rust](https://img.shields.io/badge/Rust-000000?style=for-the-badge&logo=rust&logoColor=white) ![Axum](https://img.shields.io/badge/Axum-4B5563?style=for-the-badge&logo=rust&logoColor=white) |
-| **Database** | PostgreSQL 16 (pgvector, trgm) | ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-336791?style=for-the-badge&logo=postgresql&logoColor=white) |
-| **Frontend** | Vanilla JS, HTML5, CSS3 | ![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white) ![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white) ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black) |
-| **Environment** | Nix, Just, Cargo | ![Nix](https://img.shields.io/badge/NixOS-5277C3?style=for-the-badge&logo=nixos&logoColor=white) |
-| **CI / Audit** | GitHub Actions | [![Backend CI](https://github.com/RomeoCavazza/open-cv/actions/workflows/backend.yml/badge.svg)](https://github.com/RomeoCavazza/open-cv/actions/workflows/backend.yml) [![Frontend CI](https://github.com/RomeoCavazza/open-cv/actions/workflows/frontend.yml/badge.svg)](https://github.com/RomeoCavazza/open-cv/actions/workflows/frontend.yml) |
-
----
 
 ### Core Workflow
 
