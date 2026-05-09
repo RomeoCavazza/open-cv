@@ -61,7 +61,8 @@ async function loadCV() {
             return;
         }
 
-        const resInstance = await fetch(`/api/instances/${jobId}`);
+        const target = `/api/instances/${jobId}?t=${Date.now()}`;
+        const resInstance = await fetch(target);
         if (!resInstance.ok) {
             renderEmptyResumeState(jobId);
             return;

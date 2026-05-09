@@ -331,7 +331,7 @@
             try {
                 const [resOffre, resInstance] = await Promise.all([
                     fetch(`/api/offres/${offerSlug}`),
-                    instanceSlug ? fetch(`/api/instances/${instanceSlug}`) : fetch(`/api/offres/${offerSlug}/instance`)
+                    instanceSlug ? fetch(`/api/instances/${instanceSlug}?t=${Date.now()}`) : fetch(`/api/offres/${offerSlug}/instance?t=${Date.now()}`)
                 ]);
                 if (!resOffre.ok) return;
                 const offre = await resOffre.json();
@@ -424,7 +424,15 @@
 
         async function handleGenerate() {
             try {
-                const targetOptions = { restitution: true, resume: false, cover_letter: false };
+                let existingOpts = {};
+                try {
+                    existingOpts = JSON.parse(localStorage.getItem('generating_target_' + (instanceSlug || offerSlug)) || '{}');
+                } catch(e) {}
+                const targetOptions = { 
+                    restitution: true, 
+                    resume: existingOpts.resume || false, 
+                    cover_letter: existingOpts.cover_letter || false 
+                };
                 localStorage.setItem('generating_target_' + (instanceSlug || offerSlug), JSON.stringify(targetOptions));
             } catch(e) {}
             showGenerating();
