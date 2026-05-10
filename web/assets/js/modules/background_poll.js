@@ -26,13 +26,20 @@ class BackgroundPollManager {
         // 3. Listen for local events
         on(EVENTS.GEN_STARTED, (data) => {
             if (data?.jobId) {
-                const state = this.activeJobs.get(data.jobId);
-                if (state) {
-                    console.log(`[BackgroundPollManager] Resetting state for ${data.jobId} (New Gen started)`);
+                const jobId = data.jobId;
+                const key = 'generating_target_' + jobId;
+                
+                if (!this.activeJobs.has(jobId)) {
+                    console.log(`[BackgroundPollManager] Starting immediate poll for ${jobId}`);
+                    this.startPolling(jobId, key);
+                } else {
+                    const state = this.activeJobs.get(jobId);
+                    console.log(`[BackgroundPollManager] Resetting state for ${jobId} (New Gen started)`);
                     state.hasSeenActiveState = false;
                 }
+            } else {
+                this.scan();
             }
-            this.scan();
         });
 
         // 4. Safety net
@@ -42,11 +49,20 @@ class BackgroundPollManager {
     scan() {
         for (let i = 0; i < localStorage.length; i++) {
             const key = localStorage.key(i);
-            if (key.startsWith('generating_target_')) {
+            if (key && key.startsWith('generating_target_')) {
                 const jobId = key.replace('generating_target_', '');
                 try {
                     const target = JSON.parse(localStorage.getItem(key));
-                    const isGenerating = Object.values(target).some(v => v === true);
+                    const lastTriggered = target.last_triggered || 0;
+                    
+                    // Expiration safety: if a flag is older than 30 minutes, it's a ghost.
+                    if (Date.now() - lastTriggered > 30 * 60 * 1000) {
+                        console.warn(`[BackgroundPollManager] Expired flag for ${jobId}. Cleaning up.`);
+                        localStorage.removeItem(key);
+                        continue;
+                    }
+
+                    const isGenerating = Object.values(target).some(v => v === true && v !== target.last_triggered);
                     
                     if (isGenerating && !this.activeJobs.has(jobId)) {
                         this.startPolling(jobId, key);
@@ -76,31 +92,38 @@ class BackgroundPollManager {
         this.activeJobs.set(jobId, jobState);
         console.log(`[BackgroundPollManager] Started centralized polling for: ${jobId}`);
 
+        let retryCount = 0;
         const poll = async () => {
             if (controller.signal.aborted) return;
 
             try {
-                const stored = localStorage.getItem(storageKey);
-                if (!stored) return this.stopPolling(jobId);
+                let instance = null;
+                let res = await fetch(`/api/instances/${jobId}?t=${Date.now()}`, { signal: controller.signal });
                 
-                const target = JSON.parse(stored);
-                const stillGeneratingInUi = Object.values(target).some(v => v === true);
-                if (!stillGeneratingInUi) return this.stopPolling(jobId);
-
-                // API Request
-                const res = await fetch(`/api/instances/${jobId}?t=${Date.now()}`, { signal: controller.signal });
-                let instance;
-                
-                if (!res.ok) {
-                    const resOffre = await fetch(`/api/offres/${jobId}/instance?t=${Date.now()}`, { signal: controller.signal });
-                    if (!resOffre.ok) {
-                        return setTimeout(poll, 2500);
-                    }
-                    instance = await resOffre.json();
-                } else {
+                if (res.ok) {
                     instance = await res.json();
+                } else if (!jobId.includes('__')) {
+                    // Try by offer slug
+                    const resOffre = await fetch(`/api/offres/${jobId}/instance?t=${Date.now()}`, { signal: controller.signal });
+                    if (resOffre.ok) {
+                        instance = await resOffre.json();
+                    }
                 }
 
+                if (!instance) {
+                    retryCount++;
+                    if (retryCount > 3) {
+                        console.warn(`[BackgroundPollManager] ${jobId} not found. Cleaning up stale flag.`);
+                        localStorage.removeItem(storageKey);
+                        this.stopPolling(jobId);
+                        return;
+                    }
+                    setTimeout(poll, 3000);
+                    return;
+                }
+
+                retryCount = 0; // Reset on success
+                
                 // Check for active state in API response
                 const status = instance.status.toLowerCase();
                 if (status === 'generating' || status === 'pending') {
@@ -119,7 +142,8 @@ class BackgroundPollManager {
 
     processUpdate(instance, target, storageKey, jobId, next, jobState) {
         const status = instance.status.toLowerCase();
-        const isBackendDone = status === 'finished' || status === 'failed';
+        // The backend uses 'ready' for success, 'failed' for failure.
+        const isBackendDone = status === 'ready' || status === 'failed';
         const stillWaitingInUi = Object.values(target).some(v => v === true && v !== target.last_triggered);
 
         // Versioning check: Is the data in the API fresh or from a previous run?
@@ -127,27 +151,32 @@ class BackgroundPollManager {
         const updatedAt = new Date(instance.updated_at).getTime();
         const isDataFresh = updatedAt >= (lastTriggered - 2000); // 2s margin for clock skew
 
-        // Race condition protection: If backend says 'finished' but we haven't seen it transition 
-        // through 'pending'/'generating' yet, it's likely the OLD state from a previous run.
-        if (isBackendDone && !jobState.hasSeenActiveState && stillWaitingInUi) {
-            console.log(`[BackgroundPollManager] Polling ${jobId}: Ignoring stale finished state.`);
+        console.log(`[BackgroundPollManager] ${jobId} Status: ${status}, Fresh: ${isDataFresh}, ActiveSeen: ${jobState.hasSeenActiveState}`);
+
+        // Race condition protection: If backend says done but it's old data, ignore it.
+        if (isBackendDone && !isDataFresh && stillWaitingInUi) {
+            console.log(`[BackgroundPollManager] ${jobId}: Ignoring stale backend state.`);
             setTimeout(next, 2000);
             return;
         }
 
+        // If we see an active or fresh state, we mark the job as "seen active" for this session
+        if (!isBackendDone || isDataFresh) {
+            jobState.hasSeenActiveState = true;
+        }
+
         let changed = false;
         
-        // Sync targets ONLY if data is fresh or backend is officially finished
-        if (isDataFresh || isBackendDone) {
+        // Sync targets ONLY if data is fresh
+        if (isDataFresh) {
             if (target.restitution && instance.restitution) { target.restitution = false; changed = true; }
             if (target.resume && instance.resume_json) { target.resume = false; changed = true; }
             if (target.cover_letter && instance.cover_letter_json) { target.cover_letter = false; changed = true; }
-        } else {
-            console.log(`[BackgroundPollManager] Polling ${jobId}: Data is stale (last_triggered: ${lastTriggered}, updated_at: ${updatedAt}). Keeping skeletons.`);
         }
 
-        if (status === 'failed' || (status === 'finished' && stillWaitingInUi)) {
-            // Force clear if backend is done
+        // Handle termination
+        if (isBackendDone && isDataFresh) {
+            // Force clear if backend is done for this run
             Object.keys(target).forEach(k => {
                 if (k !== 'last_triggered') target[k] = false;
             });
@@ -162,9 +191,12 @@ class BackgroundPollManager {
         const isFullyDoneNow = !Object.entries(target).some(([k, v]) => k !== 'last_triggered' && v === true);
 
         if (isFullyDoneNow) {
-            if (jobState.hasSeenActiveState) {
-                console.log(`[BackgroundPollManager] Job ${jobId} completed. Playing sound.`);
+            // Only play sound if it was a SUCCESS and we actually saw it happening
+            if (status === 'ready' && jobState.hasSeenActiveState) {
+                console.log(`[BackgroundPollManager] ${jobId} SUCCESS (ready). Playing sound.`);
                 playSuccessSound();
+            } else if (status === 'failed') {
+                console.log(`[BackgroundPollManager] ${jobId} FAILED. No sound.`);
             }
             this.stopPolling(jobId);
             emit(EVENTS.UPDATE_IFRAME); // Final refresh

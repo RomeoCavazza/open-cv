@@ -20,10 +20,14 @@ import { OfferController } from './controllers/OfferController.js';
 import { IngestController } from './controllers/IngestController.js';
 import * as api from './api.js';
 import { backgroundPollManager } from './modules/background_poll.js';
+import { requestNotificationPermission } from './render/audio.js';
 
 const profileController = new ProfileController();
 const offerController = new OfferController();
 const ingestController = new IngestController();
+
+// Enable notifications on first interaction
+document.addEventListener('click', () => requestNotificationPermission(), { once: true });
 
 // --- Legacy Context ---
 window.state = {

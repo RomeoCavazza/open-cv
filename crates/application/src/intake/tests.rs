@@ -96,8 +96,9 @@ async fn resolver_accepts_direct_prompt() {
         .await
         .expect("direct prompt should be accepted");
     assert_eq!(source, "manual_prompt");
-    assert!(text.to_lowercase().contains("prompt direct"));
-    assert!(text.to_lowercase().contains("missions"));
+    assert!(text.to_lowercase().contains("demande de candidature"));
+    assert!(text.to_lowercase().contains("contexte"));
+    assert!(text.to_lowercase().contains("missions et profil"));
 }
 
 #[tokio::test]

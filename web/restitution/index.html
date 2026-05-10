@@ -363,29 +363,29 @@
                 if (resInstance.ok) {
                     const instance = await resInstance.json();
                     const status = (instance.status || '').toLowerCase();
-                    let genTarget = { restitution: false }; // default
+                    const storageKey = offerSlug || instanceSlug;
+                    
+                    let genTarget = { restitution: false };
                     try {
-                        const storageKey = offerSlug || instanceSlug;
                         const stored = localStorage.getItem('generating_target_' + storageKey);
                         if (stored) genTarget = JSON.parse(stored);
                     } catch(e) {}
 
-                        const storageKey = offerSlug || instanceSlug;
-                        if (instance.restitution) {
-                            if (genTarget.restitution) {
-                                genTarget.restitution = false;
-                                localStorage.setItem('generating_target_' + storageKey, JSON.stringify(genTarget));
-                            }
-                            renderRestitution(instance.restitution);
-                            showContent();
+                    if (instance.restitution) {
+                        if (genTarget.restitution) {
+                            genTarget.restitution = false;
+                            localStorage.setItem('generating_target_' + storageKey, JSON.stringify(genTarget));
+                        }
+                        renderRestitution(instance.restitution);
+                        showContent();
+                        if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
+                    } else if (genTarget.restitution) {
+                        if (status === 'failed') {
+                            genTarget.restitution = false;
+                            localStorage.setItem('generating_target_' + storageKey, JSON.stringify(genTarget));
+                            showEmpty(false);
                             if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
-                        } else if (genTarget.restitution) {
-                            if (status === 'failed') {
-                                genTarget.restitution = false;
-                                localStorage.setItem('generating_target_' + storageKey, JSON.stringify(genTarget));
-                                showEmpty(false);
-                                if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
-                            } else {
+                        } else {
                             showGenerating();
                             if (!pollInterval) pollInterval = setInterval(checkStatus, 2000);
                         }

@@ -157,6 +157,7 @@ export class IngestController {
             async () => {
                 while (cursor < queue.length) {
                     const current = queue[cursor++];
+                    emit(EVENTS.GEN_STARTED, { jobId: current.target });
                     await api.generateApplication(
                         current.target,
                         provider,
