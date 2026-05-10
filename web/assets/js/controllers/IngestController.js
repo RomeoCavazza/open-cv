@@ -31,7 +31,7 @@ export class IngestController {
         if (!input || !rawInput) return;
         if (!this.hasSelectedDeliverables()) {
             emit(EVENTS.NOTIFICATION, {
-                message: "Selectionne au moins un livrable",
+                message: "Sélectionne au moins un livrable",
                 type: 'error'
             });
             return;
@@ -39,7 +39,7 @@ export class IngestController {
 
         if (this.pendingBatches.length >= MAX_PENDING_BATCHES) {
             emit(EVENTS.NOTIFICATION, {
-                message: `File d'attente pleine (${MAX_PENDING_BATCHES}). Patiente quelques secondes.`,
+                message: `File d'attente pleine (${MAX_PENDING_BATCHES}).`,
                 type: 'error'
             });
             return;
@@ -118,10 +118,14 @@ export class IngestController {
 
     async processBatch(batch) {
         const ingestRes = await api.ingestOffer(batch.input);
-        if ((ingestRes?.rejected_count || 0) > 0 || (ingestRes?.failed_count || 0) > 0) {
-            const rejected = (ingestRes?.rejected_count || 0) + (ingestRes?.failed_count || 0);
+        const ignored = ingestRes?.ignored_demands_count ?? (ingestRes?.rejected_count || 0);
+        const rejected = ingestRes?.failed_count || 0;
+        if (ignored > 0 || rejected > 0) {
+            const parts = [];
+            if (ignored > 0) parts.push(`${ignored} demande(s) ignorée(s)`);
+            if (rejected > 0) parts.push(`${rejected} demande(s) rejetée(s)`);
             emit(EVENTS.NOTIFICATION, {
-                message: `${rejected} lien(s) rejeté(s)`,
+                message: parts.join(' · '),
                 type: 'info'
             });
         }
