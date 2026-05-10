@@ -87,7 +87,10 @@ impl IntakeOffreUseCase {
         }
 
         info!("début extraction structurée via LLM");
-        let extractions = self.extractor.extract(&raw_text, llm_override).await;
+        let extractions = self
+            .extractor
+            .extract(&raw_text, Some(&source_url), llm_override)
+            .await;
         let (extractions, dropped_count) = cap_items(extractions, MAX_EXTRACTED_OFFRES_PER_INPUT);
         if dropped_count > 0 {
             info!(
@@ -101,7 +104,16 @@ impl IntakeOffreUseCase {
 
         let mut outputs = Vec::new();
 
-        for (intitule, entreprise, localisation, contrat, structured) in extractions {
+        for (intitule, mut entreprise, localisation, contrat, structured) in extractions {
+            // Sécurité post-LLM : Inférence de l'entreprise via l'URL si "Non spécifié"
+            if entreprise == "Non spécifié" {
+                if source_url.contains("safran-group.com") {
+                    entreprise = "Safran".to_string();
+                } else if source_url.contains("totalenergies.com") {
+                    entreprise = "TotalEnergies".to_string();
+                }
+            }
+
             let hash = self.deduplicator.compute_hash(&offer_fingerprint(
                 &raw_text,
                 &intitule,

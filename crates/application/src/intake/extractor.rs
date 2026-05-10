@@ -54,6 +54,7 @@ impl StructuredExtractor {
     pub async fn extract(
         &self,
         text: &str,
+        source_url: Option<&str>,
         llm_override: Option<Arc<dyn LlmClient>>,
     ) -> Vec<(
         String,
@@ -64,15 +65,21 @@ impl StructuredExtractor {
     )> {
         let llm = llm_override.unwrap_or_else(|| self.llm.clone());
 
+        let combined_text = if let Some(url) = source_url {
+            format!("SOURCE URL: {}\n\n---\n\n{}", url, text)
+        } else {
+            text.to_string()
+        };
+
         let req = ExtractionRequest {
             system: Some("Tu es un expert en recrutement. Ton rôle est d'extraire les données d'une ou plusieurs offres d'emploi.\n\
                 Règles d'or :\n\
-                0. FORMAT : Réponds UNIQUEMENT avec l'objet JSON de données. Ne renvoie JAMAIS le schéma JSON lui-même.\n\
-                1. ENTREPRISE : Identifie l'employeur réel (ex: 'Direction de la sécurité sociale'). Ne confonds pas la plateforme de diffusion avec l'employeur. Si absent: 'Non spécifié'.\n\
-                2. INTITULÉ : Sois exhaustif et précis (ex: 'Apprenti - Pilotage stratégique SI'). Retire 'H/F', 'STP', 'CV de', 'URGENT'.\n\
-                3. CONTEXTE : Si le texte contient '__TARGET_TITLE__:', utilise cette info en priorité absolue. Ne recopie JAMAIS le label '__TARGET_TITLE__:', extrais uniquement l'intitulé.".into()),
-            instruction: "Analyse le texte et extrais-en la liste des offres d'emploi (même s'il n'y en a qu'une seule).".into(),
-            input: vec![ports::MessageContent::Text(text.to_string())],
+                0. FORMAT : Réponds UNIQUEMENT avec l'objet JSON de données.\n\
+                1. ENTREPRISE (CRITIQUE) : Identifie l'employeur réel. RECHERCHE ACTIVE : Analyse l'URL source fournie au début du texte et TOUT le contenu. Si l'URL contient 'safran-group.com', l'entreprise est 'Safran'. Si elle contient 'totalenergies.com', c'est 'TotalEnergies'. Ne renvoie 'Non spécifié' que si aucun nom d'organisation n'est mentionné.\n\
+                2. INTITULÉ : Sois exhaustif et précis (ex: 'Apprenti Data Analyst'). Retire les mentions inutiles comme 'H/F', 'STP', 'URGENT'.\n\
+                3. CONTEXTE : Si le texte contient '__TARGET_TITLE__:', utilise cet intitulé exact.".into()),
+            instruction: "Analyse le texte et l'URL fournis pour extraire la liste des offres d'emploi.".into(),
+            input: vec![ports::MessageContent::Text(combined_text)],
             schema_name: "MultiOffreExtraction".into(),
             schema_description: "Liste d'offres extraites".into(),
             json_schema: extraction_schema().clone(),
