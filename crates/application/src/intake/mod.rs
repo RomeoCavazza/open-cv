@@ -18,6 +18,8 @@ use self::extractor::StructuredExtractor;
 use self::resolver::ContentResolver;
 use crate::AppError;
 
+const MAX_EXTRACTED_OFFRES_PER_INPUT: usize = 5;
+
 #[derive(Debug, Clone)]
 pub struct IntakeInput {
     pub raw_input: String,
@@ -30,6 +32,12 @@ pub struct IntakeOutput {
     pub instance_id: domain::InstanceId,
     pub instance_slug: String,
     pub was_duplicate: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct IntakeExecutionResult {
+    pub outputs: Vec<IntakeOutput>,
+    pub ignored_count: usize,
 }
 
 pub struct IntakeOffreUseCase {
@@ -64,25 +72,58 @@ impl IntakeOffreUseCase {
         &self,
         input: IntakeInput,
         llm_override: Option<Arc<dyn LlmClient>>,
-    ) -> Result<Vec<IntakeOutput>, AppError> {
+    ) -> Result<IntakeExecutionResult, AppError> {
         let (raw_text, source_url) = self.resolve_content(&input.raw_input).await?;
         let host = self.deduplicator.resolve_host(&source_url);
-        let hash = self.deduplicator.compute_hash(&raw_text);
 
-        if let Some(existing) = self.find_existing_offre(&source_url, &host, &hash).await? {
-            let out = self.handle_existing_offre(existing, input.profil_id).await?;
-            return Ok(vec![out]);
+        if let Some(existing) = self.find_existing_offre_by_url(&source_url).await? {
+            let out = self
+                .handle_existing_offre(existing, input.profil_id)
+                .await?;
+            return Ok(IntakeExecutionResult {
+                outputs: vec![out],
+                ignored_count: 0,
+            });
         }
 
         info!("début extraction structurée via LLM");
         let extractions = self.extractor.extract(&raw_text, llm_override).await;
+        let (extractions, dropped_count) = cap_items(extractions, MAX_EXTRACTED_OFFRES_PER_INPUT);
+        if dropped_count > 0 {
+            info!(
+                kept = extractions.len(),
+                dropped = dropped_count,
+                max = MAX_EXTRACTED_OFFRES_PER_INPUT,
+                "extraction limitée au maximum autorisé"
+            );
+        }
         info!(count = extractions.len(), "extraction terminée");
 
         let mut outputs = Vec::new();
 
         for (intitule, entreprise, localisation, contrat, structured) in extractions {
+            let hash = self.deduplicator.compute_hash(&offer_fingerprint(
+                &raw_text,
+                &intitule,
+                &entreprise,
+            ));
+            if let Some(existing) = self.find_existing_offre_by_hash(&host, &hash).await? {
+                let out = self
+                    .handle_existing_offre(existing, input.profil_id)
+                    .await?;
+                outputs.push(out);
+                continue;
+            }
+
             let offre_id = OffreId::new();
             let slug = extractor::build_offre_slug(&entreprise, &intitule);
+            if let Some(existing) = self.find_existing_offre_by_slug(&slug).await? {
+                let out = self
+                    .handle_existing_offre(existing, input.profil_id)
+                    .await?;
+                outputs.push(out);
+                continue;
+            }
             let offre = self.build_offre(
                 offre_id,
                 slug.clone(),
@@ -112,10 +153,15 @@ impl IntakeOffreUseCase {
         }
 
         if outputs.is_empty() {
-            return Err(AppError::Validation("Aucune offre n'a pu être extraite".into()));
+            return Err(AppError::Validation(
+                "Aucune offre n'a pu être extraite".into(),
+            ));
         }
 
-        Ok(outputs)
+        Ok(IntakeExecutionResult {
+            outputs,
+            ignored_count: dropped_count,
+        })
     }
 
     async fn resolve_content(&self, raw_input: &str) -> Result<(String, String), AppError> {
@@ -128,25 +174,29 @@ impl IntakeOffreUseCase {
         Ok((raw_text, source_url))
     }
 
-    async fn find_existing_offre(
+    async fn find_existing_offre_by_url(
         &self,
         source_url: &str,
+    ) -> Result<Option<Offre>, AppError> {
+        self.deduplicator
+            .find_by_url(source_url)
+            .await
+            .map_err(AppError::Repo)
+    }
+
+    async fn find_existing_offre_by_hash(
+        &self,
         host: &str,
         hash: &[u8],
     ) -> Result<Option<Offre>, AppError> {
-        if let Some(existing) = self
-            .deduplicator
-            .find_by_url(source_url)
-            .await
-            .map_err(AppError::Repo)?
-        {
-            return Ok(Some(existing));
-        }
-
         self.deduplicator
             .find_existing(host, hash)
             .await
             .map_err(AppError::Repo)
+    }
+
+    async fn find_existing_offre_by_slug(&self, slug: &Slug) -> Result<Option<Offre>, AppError> {
+        self.offres.get_by_slug(slug).await.map_err(AppError::Repo)
     }
 
     async fn handle_existing_offre(
@@ -251,5 +301,45 @@ impl IntakeOffreUseCase {
             .await
             .map_err(AppError::Repo)?;
         Ok(instance)
+    }
+}
+
+fn offer_fingerprint(raw_text: &str, intitule: &str, entreprise: &str) -> String {
+    // Hash par offre (et non seulement par texte global) pour éviter les collisions
+    // lorsqu'un même prompt produit plusieurs offres distinctes.
+    format!(
+        "{}\n::title::{}\n::company::{}",
+        raw_text.trim(),
+        intitule.trim().to_lowercase(),
+        entreprise.trim().to_lowercase()
+    )
+}
+
+fn cap_items<T>(mut items: Vec<T>, max: usize) -> (Vec<T>, usize) {
+    if items.len() <= max {
+        return (items, 0);
+    }
+    let dropped = items.len() - max;
+    items.truncate(max);
+    (items, dropped)
+}
+
+#[cfg(test)]
+mod fingerprint_tests {
+    use super::{cap_items, offer_fingerprint};
+
+    #[test]
+    fn fingerprint_differs_for_distinct_titles() {
+        let raw = "Crée 2 candidatures en alternance.";
+        let fp_1 = offer_fingerprint(raw, "Data Scientist", "Non spécifié");
+        let fp_2 = offer_fingerprint(raw, "Data Engineer", "Non spécifié");
+        assert_ne!(fp_1, fp_2);
+    }
+
+    #[test]
+    fn cap_items_enforces_limit_and_reports_dropped() {
+        let (kept, dropped) = cap_items(vec![1, 2, 3, 4, 5, 6], 5);
+        assert_eq!(kept, vec![1, 2, 3, 4, 5]);
+        assert_eq!(dropped, 1);
     }
 }

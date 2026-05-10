@@ -38,11 +38,24 @@ pub(super) fn parse_input_items(input: &str) -> Vec<String> {
         }
     }
 
-    if urls.is_empty() {
-        vec![input.trim().to_string()]
-    } else {
-        urls
+    if !urls.is_empty() {
+        return urls;
     }
+
+    let trimmed = input.trim();
+    let quoted_titles = extract_quoted_titles(trimmed);
+    if quoted_titles.len() >= 2 {
+        return quoted_titles
+            .into_iter()
+            .map(|title| {
+                format!(
+                    "Fais-moi un CV pour un poste de {title} en alternance. Mets l'intitulé exact \"{title}\"."
+                )
+            })
+            .collect();
+    }
+
+    vec![trimmed.to_string()]
 }
 
 fn sanitize_url_token(token: &str) -> &str {
@@ -52,6 +65,44 @@ fn sanitize_url_token(token: &str) -> &str {
             '"' | '\'' | '<' | '>' | '(' | ')' | '[' | ']' | '{' | '}' | ',' | ';'
         )
     })
+}
+
+fn extract_quoted_titles(input: &str) -> Vec<String> {
+    let mut titles = Vec::new();
+    let mut seen = HashSet::new();
+    let mut current = String::new();
+    let mut in_quote = false;
+    let mut quote_char = '"';
+
+    for ch in input.chars() {
+        if !in_quote && (ch == '"' || ch == '\'' || ch == '“' || ch == '”') {
+            in_quote = true;
+            quote_char = ch;
+            current.clear();
+            continue;
+        }
+
+        if in_quote {
+            let is_closing = (quote_char == '"' && ch == '"')
+                || (quote_char == '\'' && ch == '\'')
+                || ((quote_char == '“' || quote_char == '”') && (ch == '”' || ch == '“'));
+            if is_closing {
+                let candidate = current.trim().to_string();
+                if !candidate.is_empty() {
+                    let key = candidate.to_ascii_lowercase();
+                    if seen.insert(key) {
+                        titles.push(candidate);
+                    }
+                }
+                in_quote = false;
+                current.clear();
+                continue;
+            }
+            current.push(ch);
+        }
+    }
+
+    titles
 }
 
 pub(super) fn should_generate(config: Option<&IngestConfig>) -> bool {
@@ -141,5 +192,15 @@ mod tests {
             cover: false,
             restitution: false,
         })));
+    }
+
+    #[test]
+    fn splits_multi_prompt_into_distinct_titles() {
+        let input = r#"Crée 2 candidatures distinctes : 1) Data Scientist en alternance, intitulé exact "Data Scientist" ; 2) Data Engineer en alternance, intitulé exact "Data Engineer"."#;
+        let items = parse_input_items(input);
+        assert_eq!(items.len(), 2);
+        assert!(items[0].contains("Data Scientist"));
+        assert!(items[1].contains("Data Engineer"));
+        assert_ne!(items[0], items[1]);
     }
 }

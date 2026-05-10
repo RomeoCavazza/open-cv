@@ -34,24 +34,35 @@ impl ContentResolver {
             match serde_json::from_str::<serde_json::Value>(raw) {
                 Ok(json) => {
                     if let Some(url) = json.get("url").and_then(|v| v.as_str()) {
-                        info!("L'input est un JSON contenant une URL, on lance le scraping de {}", url);
+                        info!(
+                            "L'input est un JSON contenant une URL, on lance le scraping de {}",
+                            url
+                        );
                         let (scraped_text, source_url) = Box::pin(self.resolve(url)).await?;
-                        
+
                         // On injecte les métadonnées du JSON comme contexte pour l'extracteur
                         let mut context = String::new();
-                        if let Some(t) = json.get("title").or_else(|| json.get("intitule")).and_then(|v| v.as_str()) {
+                        if let Some(t) = json
+                            .get("title")
+                            .or_else(|| json.get("intitule"))
+                            .and_then(|v| v.as_str())
+                        {
                             context.push_str(&format!("CONTEXTE_TITRE: {t}\n"));
                         }
-                        if let Some(e) = json.get("company").or_else(|| json.get("entreprise")).and_then(|v| v.as_str()) {
+                        if let Some(e) = json
+                            .get("company")
+                            .or_else(|| json.get("entreprise"))
+                            .and_then(|v| v.as_str())
+                        {
                             context.push_str(&format!("CONTEXTE_ENTREPRISE: {e}\n"));
                         }
-                        
+
                         let combined = if context.is_empty() {
                             scraped_text
                         } else {
                             format!("{context}\n---\n\n{scraped_text}")
                         };
-                        
+
                         return Ok((combined, source_url));
                     }
                     (raw.to_string(), "manual_json".to_string())
@@ -216,6 +227,9 @@ fn build_direct_prompt_offer(raw_prompt: &str) -> String {
 
 fn extract_target_title(raw_prompt: &str) -> String {
     let trimmed = raw_prompt.trim().trim_matches('"').trim_matches('\'');
+    if let Some(title) = first_quoted_fragment(trimmed) {
+        return normalize_title_candidate(&title);
+    }
     let lower = trimmed.to_lowercase();
     let patterns = [
         "génère-moi un cv de",
@@ -271,12 +285,129 @@ fn extract_target_title(raw_prompt: &str) -> String {
                 .trim_end_matches(" please")
                 .trim();
             if !candidate.is_empty() {
-                return candidate.to_string();
+                return normalize_title_candidate(candidate);
             }
         }
     }
 
-    trimmed.to_string()
+    normalize_title_candidate(trimmed)
+}
+
+fn first_quoted_fragment(input: &str) -> Option<String> {
+    let mut in_quote = false;
+    let mut quote_char = '"';
+    let mut current = String::new();
+
+    for ch in input.chars() {
+        if !in_quote && (ch == '"' || ch == '\'' || ch == '“' || ch == '”') {
+            in_quote = true;
+            quote_char = ch;
+            current.clear();
+            continue;
+        }
+        if in_quote {
+            let is_closing = (quote_char == '"' && ch == '"')
+                || (quote_char == '\'' && ch == '\'')
+                || ((quote_char == '“' || quote_char == '”') && (ch == '”' || ch == '“'));
+            if is_closing {
+                let candidate = current.trim().to_string();
+                if !candidate.is_empty() {
+                    return Some(candidate);
+                }
+                in_quote = false;
+                current.clear();
+                continue;
+            }
+            current.push(ch);
+        }
+    }
+
+    None
+}
+
+fn normalize_title_candidate(input: &str) -> String {
+    let mut title = input.trim().to_string();
+    if title.is_empty() {
+        return "Poste non spécifié".to_string();
+    }
+
+    let lower = title.to_lowercase();
+    if lower.starts_with("__target_title__:") {
+        title = title["__target_title__:".len()..].trim().to_string();
+    }
+
+    let leading_noise = [
+        "cv pour un poste de",
+        "cv pour le poste de",
+        "cv pour un poste",
+        "cv pour le poste",
+        "cv pour",
+        "pour un poste de",
+        "pour le poste de",
+        "un poste de",
+        "le poste de",
+        "un poste",
+        "le poste",
+        "poste de",
+        "poste",
+        "de",
+    ];
+    loop {
+        let lower = title.to_lowercase();
+        let mut changed = false;
+        for prefix in leading_noise {
+            if lower.starts_with(prefix) {
+                title = title[prefix.len()..].trim().to_string();
+                changed = true;
+                break;
+            }
+        }
+        if !changed {
+            break;
+        }
+    }
+
+    // Nettoie les détails de formulation utilisateur qui polluent le nom métier.
+    let trailing_noise = [
+        "en alternance",
+        "alternance",
+        "intitulé exact",
+        "intitule exact",
+    ];
+    loop {
+        let lower = title.to_lowercase();
+        let mut changed = false;
+        for suffix in trailing_noise {
+            if lower.ends_with(suffix) {
+                let cut = title.len().saturating_sub(suffix.len());
+                title = title[..cut]
+                    .trim()
+                    .trim_matches(':')
+                    .trim_matches('-')
+                    .trim()
+                    .to_string();
+                changed = true;
+                break;
+            }
+        }
+        if !changed {
+            break;
+        }
+    }
+
+    let cleaned = title
+        .trim()
+        .trim_matches('"')
+        .trim_matches('\'')
+        .trim_matches('?')
+        .trim_matches('.')
+        .trim()
+        .to_string();
+    if cleaned.is_empty() {
+        "Poste non spécifié".to_string()
+    } else {
+        cleaned
+    }
 }
 
 fn clean_raw_text(input: &str) -> String {

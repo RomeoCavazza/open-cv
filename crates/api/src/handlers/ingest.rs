@@ -103,6 +103,7 @@ pub async fn ingest_handler(
                 return (
                     idx,
                     Vec::new(),
+                    0usize,
                     Some(serde_json::json!({
                         "input": item,
                         "error": "Limiter introuvable pour cet hôte",
@@ -116,6 +117,7 @@ pub async fn ingest_handler(
                     return (
                         idx,
                         Vec::new(),
+                        0usize,
                         Some(serde_json::json!({
                             "input": item,
                             "error": "Limiter fermé pour cet hôte",
@@ -130,7 +132,9 @@ pub async fn ingest_handler(
             };
 
             match state.intake_uc.execute(input, llm_provider.clone()).await {
-                Ok(outputs) => {
+                Ok(exec_result) => {
+                    let outputs = exec_result.outputs;
+                    let ignored_count = exec_result.ignored_count;
                     let mut item_results = Vec::new();
 
                     for output in outputs {
@@ -141,6 +145,7 @@ pub async fn ingest_handler(
                                     return (
                                         idx,
                                         item_results,
+                                        ignored_count,
                                         Some(serde_json::json!({
                                             "input": item,
                                             "error": "Configuration de génération absente",
@@ -149,12 +154,17 @@ pub async fn ingest_handler(
                                 }
                             };
 
-                            let instance = match state.instance_repo.get_by_id(output.instance_id).await {
+                            let instance = match state
+                                .instance_repo
+                                .get_by_id(output.instance_id)
+                                .await
+                            {
                                 Ok(Some(instance)) => instance,
                                 Ok(None) => {
                                     return (
                                         idx,
                                         item_results,
+                                        ignored_count,
                                         Some(serde_json::json!({
                                             "input": item,
                                             "error": "Instance introuvable juste après ingestion",
@@ -165,6 +175,7 @@ pub async fn ingest_handler(
                                     return (
                                         idx,
                                         item_results,
+                                        ignored_count,
                                         Some(serde_json::json!({
                                             "input": item,
                                             "error": format!("Erreur DB instance: {}", e),
@@ -175,8 +186,10 @@ pub async fn ingest_handler(
 
                             let gen_input = build_generate_input(instance, profil_id, cfg);
 
-                            if let Err(e) =
-                                state.generate_uc.execute(gen_input, llm_provider.clone()).await
+                            if let Err(e) = state
+                                .generate_uc
+                                .execute(gen_input, llm_provider.clone())
+                                .await
                             {
                                 tracing::error!(
                                     error = %e,
@@ -185,6 +198,7 @@ pub async fn ingest_handler(
                                 return (
                                     idx,
                                     item_results,
+                                    ignored_count,
                                     Some(serde_json::json!({
                                         "input": item,
                                         "error": format!("Erreur de génération : {}", e),
@@ -200,13 +214,14 @@ pub async fn ingest_handler(
                         }));
                     }
 
-                    (idx, item_results, None)
+                    (idx, item_results, ignored_count, None)
                 }
                 Err(e) => {
                     tracing::error!(error = %e, input = %item, "Échec de l'ingestion d'un item");
                     (
                         idx,
                         Vec::new(),
+                        0usize,
                         Some(serde_json::json!({
                             "input": item,
                             "error": e.to_string(),
@@ -221,12 +236,14 @@ pub async fn ingest_handler(
     .await;
 
     let mut ordered_task_results = task_results;
-    ordered_task_results.sort_by_key(|(idx, _, _)| *idx);
+    ordered_task_results.sort_by_key(|(idx, _, _, _)| *idx);
 
     let mut results = Vec::new();
     let mut item_errors = Vec::new();
-    for (_, item_results, maybe_error) in ordered_task_results {
+    let mut ignored_extracted_count = 0usize;
+    for (_, item_results, ignored_count, maybe_error) in ordered_task_results {
         results.extend(item_results);
+        ignored_extracted_count += ignored_count;
         if let Some(err) = maybe_error {
             item_errors.push(err);
         }
@@ -252,18 +269,25 @@ pub async fn ingest_handler(
         .and_then(|r| r["instance_slug"].as_str())
         .unwrap_or("");
     let failed_count = item_errors.len();
+    let ignored_demands_count = rejected_count + ignored_extracted_count;
     let warning = {
         let mut parts = Vec::new();
         if rejected_count > 0 {
             parts.push(format!(
-                "Seuls {} liens ont été pris en compte. {} lien(s) en trop ont été ignorés.",
+                "Seules {} demande(s) ont été prises en compte. {} demande(s) en trop ont été ignorées.",
                 MAX_INGEST_ITEMS,
                 rejected_count
             ));
         }
+        if ignored_extracted_count > 0 {
+            parts.push(format!(
+                "{} demande(s) ignorée(s) (limite {} par prompt).",
+                ignored_extracted_count, MAX_INGEST_ITEMS
+            ));
+        }
         if failed_count > 0 {
             parts.push(format!(
-                "{} lien(s) n'ont pas pu être ingérés (403/anti-bot, etc.).",
+                "{} demande(s) rejetée(s) (403/anti-bot, etc.).",
                 failed_count
             ));
         }
@@ -281,6 +305,8 @@ pub async fn ingest_handler(
         "queue_limit": MAX_INGEST_ITEMS,
         "accepted_count": accepted_count,
         "rejected_count": rejected_count,
+        "ignored_extracted_count": ignored_extracted_count,
+        "ignored_demands_count": ignored_demands_count,
         "failed_count": failed_count,
         "warning": warning,
         "errors": item_errors,

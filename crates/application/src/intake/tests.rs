@@ -109,6 +109,45 @@ async fn resolver_accepts_direct_prompt() {
 }
 
 #[tokio::test]
+async fn resolver_prefers_quoted_title_for_direct_prompt() {
+    let resolver = ContentResolver::new(Arc::new(MockScraper));
+    let (text, source) = resolver
+        .resolve(r#"Fais-moi un CV pour un poste en alternance, intitulé exact "Data Engineer"."#)
+        .await
+        .expect("direct prompt with quoted title should be accepted");
+    assert_eq!(source, "manual_prompt");
+    assert!(text.contains("__TARGET_TITLE__: Data Engineer"));
+}
+
+#[tokio::test]
+async fn resolver_normalizes_noisy_cv_wording_in_target_title() {
+    let resolver = ContentResolver::new(Arc::new(MockScraper));
+    let (text, source) = resolver
+        .resolve("CV pour un poste de Développeur Python en alternance")
+        .await
+        .expect("noisy direct prompt should be normalized");
+    assert_eq!(source, "manual_prompt");
+    assert!(
+        text.contains("__TARGET_TITLE__: Développeur Python"),
+        "text réel: {text}"
+    );
+}
+
+#[tokio::test]
+async fn resolver_normalizes_embedded_target_title_marker() {
+    let resolver = ContentResolver::new(Arc::new(MockScraper));
+    let (text, source) = resolver
+        .resolve("__TARGET_TITLE__: CV pour un poste de Développeur Python en alternance")
+        .await
+        .expect("embedded target title marker should be normalized");
+    assert_eq!(source, "manual_prompt");
+    assert!(
+        text.contains("__TARGET_TITLE__: Développeur Python"),
+        "text réel: {text}"
+    );
+}
+
+#[tokio::test]
 async fn resolver_keeps_meaningful_single_line_with_cookie_word() {
     let resolver = ContentResolver::new(Arc::new(NoisySingleLineScraper));
     let (text, source) = resolver
