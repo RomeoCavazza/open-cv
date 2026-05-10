@@ -19,22 +19,71 @@ fn default_limit() -> u32 {
 fn infer_business_category(slug: &str, title: &str) -> &'static str {
     let haystack = format!("{} {}", slug.to_lowercase(), title.to_lowercase());
 
-    if ["data", " ai", "ia", "intelligence artificielle", "llm", "langchain", "machine learning", "scientist"].iter().any(|n| haystack.contains(n)) {
+    if [
+        "data",
+        " ai",
+        "ia",
+        "intelligence artificielle",
+        "llm",
+        "langchain",
+        "machine learning",
+        "scientist",
+    ]
+    .iter()
+    .any(|n| haystack.contains(n))
+    {
         return "Data";
     }
-    if ["developpeur", "développeur", "software", "java", "api", "logiciel", "full stack", "embarqu", "engineering", "devops", "c++", "rust"].iter().any(|n| haystack.contains(n)) {
+    if [
+        "developpeur",
+        "développeur",
+        "software",
+        "java",
+        "api",
+        "logiciel",
+        "full stack",
+        "embarqu",
+        "engineering",
+        "devops",
+        "c++",
+        "rust",
+    ]
+    .iter()
+    .any(|n| haystack.contains(n))
+    {
         return "Software";
     }
-    if ["pilotage", "projet", "transformation", "strategie", "stratégie", "product", "manager", "management"].iter().any(|n| haystack.contains(n)) {
+    if [
+        "pilotage",
+        "projet",
+        "transformation",
+        "strategie",
+        "stratégie",
+        "product",
+        "manager",
+        "management",
+    ]
+    .iter()
+    .any(|n| haystack.contains(n))
+    {
         return "Product";
     }
-    if ["innovation", "fablab", "pédagog", "learning", "recherche"].iter().any(|n| haystack.contains(n)) {
+    if ["innovation", "fablab", "pédagog", "learning", "recherche"]
+        .iter()
+        .any(|n| haystack.contains(n))
+    {
         return "Innovation";
     }
-    if ["design", "ui", "ux", "graphiste"].iter().any(|n| haystack.contains(n)) {
+    if ["design", "ui", "ux", "graphiste"]
+        .iter()
+        .any(|n| haystack.contains(n))
+    {
         return "Design";
     }
-    if ["marketing", "communication", "seo", "content"].iter().any(|n| haystack.contains(n)) {
+    if ["marketing", "communication", "seo", "content"]
+        .iter()
+        .any(|n| haystack.contains(n))
+    {
         return "Marketing";
     }
     "Autres"
@@ -43,19 +92,25 @@ fn infer_business_category(slug: &str, title: &str) -> &'static str {
 fn public_offer_category(slug: &str, title: &str, raw: Option<&str>) -> String {
     let category = raw.unwrap_or("").trim();
     let category_lc = category.to_ascii_lowercase();
-    
-    let is_old_hardcoded = category_lc.contains("ingénierie logicielle") 
-        || category_lc.contains("pilotage de projet") 
+
+    let is_old_hardcoded = category_lc.contains("ingénierie logicielle")
+        || category_lc.contains("pilotage de projet")
         || category_lc.contains("transformation numérique")
         || category_lc.contains("digital learning");
-        
+
     let should_infer = category.is_empty()
         || is_old_hardcoded
         || matches!(
             category_lc.as_str(),
-            "inbox" | "legacy restored" | "autres" | "autre" | "others" | "other" | "data engineering & data science"
+            "inbox"
+                | "legacy restored"
+                | "autres"
+                | "autre"
+                | "others"
+                | "other"
+                | "data engineering & data science"
         );
-        
+
     if should_infer {
         infer_business_category(slug, title).to_string()
     } else {

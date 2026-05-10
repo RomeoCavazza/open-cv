@@ -67,8 +67,8 @@ pub async fn chat_stream_handler(
                         Event::default().data(content.clone())
                     }
                     ChatEvent::Mutation { .. } => {
-                        let json = serde_json::to_string(&chat_event)
-                            .unwrap_or_else(|_| "{}".to_string());
+                        let json =
+                            serde_json::to_string(&chat_event).unwrap_or_else(|_| "{}".to_string());
                         Event::default().event("mutation").data(json)
                     }
                     ChatEvent::Done => Event::default().event("done").data("{}"),

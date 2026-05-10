@@ -646,7 +646,9 @@ async fn instance_chat_stream_applies_json_mutation_before_streaming_message() {
     assert_eq!(text, "mise à jour appliquée");
 
     // Should contain a Mutation event with the updated instance
-    let has_mutation = events.iter().any(|e| matches!(e, ChatEvent::Mutation { .. }));
+    let has_mutation = events
+        .iter()
+        .any(|e| matches!(e, ChatEvent::Mutation { .. }));
     assert!(has_mutation, "stream should contain a mutation event");
 
     // Should end with Done

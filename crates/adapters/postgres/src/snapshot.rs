@@ -1,8 +1,8 @@
+use crate::helpers::map_sqlx;
 use async_trait::async_trait;
 use domain::{InstanceId, InstanceSnapshot};
-use ports::{SnapshotRepo, RepoError};
+use ports::{RepoError, SnapshotRepo};
 use sqlx::{PgPool, Row};
-use crate::helpers::map_sqlx;
 
 pub struct SnapshotRepoPg {
     pool: PgPool,
@@ -40,7 +40,10 @@ impl SnapshotRepo for SnapshotRepoPg {
         Ok(())
     }
 
-    async fn get_latest(&self, instance_id: InstanceId) -> Result<Option<InstanceSnapshot>, RepoError> {
+    async fn get_latest(
+        &self,
+        instance_id: InstanceId,
+    ) -> Result<Option<InstanceSnapshot>, RepoError> {
         let row = sqlx::query(
             r#"
             SELECT id, instance_id, version, resume_json, cover_letter_json, restitution, trigger_message, created_at
@@ -61,7 +64,8 @@ impl SnapshotRepo for SnapshotRepoPg {
                 instance_id: InstanceId::from_uuid(r.get("instance_id")),
                 version: r.get("version"),
                 resume_json: serde_json::from_value(r.get("resume_json")).unwrap_or_default(),
-                cover_letter_json: serde_json::from_value(r.get("cover_letter_json")).unwrap_or_default(),
+                cover_letter_json: serde_json::from_value(r.get("cover_letter_json"))
+                    .unwrap_or_default(),
                 restitution: serde_json::from_value(r.get("restitution")).unwrap_or_default(),
                 trigger_message: r.get("trigger_message"),
                 created_at: r.get("created_at"),
@@ -71,13 +75,12 @@ impl SnapshotRepo for SnapshotRepoPg {
     }
 
     async fn count_by_instance(&self, instance_id: InstanceId) -> Result<i32, RepoError> {
-        let count: i64 = sqlx::query_scalar(
-            "SELECT COUNT(*) FROM instance_snapshots WHERE instance_id = $1",
-        )
-        .bind(instance_id.as_uuid())
-        .fetch_one(&self.pool)
-        .await
-        .map_err(map_sqlx)?;
+        let count: i64 =
+            sqlx::query_scalar("SELECT COUNT(*) FROM instance_snapshots WHERE instance_id = $1")
+                .bind(instance_id.as_uuid())
+                .fetch_one(&self.pool)
+                .await
+                .map_err(map_sqlx)?;
 
         Ok(count as i32)
     }

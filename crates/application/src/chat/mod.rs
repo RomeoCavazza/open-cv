@@ -144,9 +144,11 @@ impl ChatWithApplicationUseCase {
 
             // --- Undo : restauration depuis le dernier snapshot ---
             if wants_undo(&req.message) {
-                tx.send(Ok(ChatEvent::status("Restauration de la version précédente...")))
-                    .await
-                    .ok();
+                tx.send(Ok(ChatEvent::status(
+                    "Restauration de la version précédente...",
+                )))
+                .await
+                .ok();
 
                 if let Some(ref snap_repo) = self.snapshot_repo {
                     if let Ok(Some(snapshot)) = snap_repo.get_latest(instance.id).await {
@@ -194,11 +196,7 @@ impl ChatWithApplicationUseCase {
 
                 // Snapshot avant mutation (si le repo est configuré)
                 if let Some(ref snap_repo) = self.snapshot_repo {
-                    let version = snap_repo
-                        .count_by_instance(instance.id)
-                        .await
-                        .unwrap_or(0)
-                        + 1;
+                    let version = snap_repo.count_by_instance(instance.id).await.unwrap_or(0) + 1;
                     let snapshot = domain::InstanceSnapshot::capture(
                         &instance,
                         version,
@@ -209,7 +207,12 @@ impl ChatWithApplicationUseCase {
 
                 let system_prompt = self.select_instance_system_prompt(true, false);
                 let user_input = self.build_instance_user_input(
-                    &instance, &profil, &offre, &history, &rag_context, &req,
+                    &instance,
+                    &profil,
+                    &offre,
+                    &history,
+                    &rag_context,
+                    &req,
                 );
 
                 let response_json = self
@@ -224,8 +227,7 @@ impl ChatWithApplicationUseCase {
                 let ai_message = self
                     .process_instance_mutation(&mut instance, new_data)
                     .await?;
-                let assistant_msg =
-                    Message::new(instance.id, MessageRole::Assistant, ai_message);
+                let assistant_msg = Message::new(instance.id, MessageRole::Assistant, ai_message);
                 self.message_repo.push(&assistant_msg).await?;
 
                 instance.updated_at = chrono::Utc::now();
@@ -249,7 +251,12 @@ impl ChatWithApplicationUseCase {
                 .ok();
 
             let user_input = self.build_instance_user_input(
-                &instance, &profil, &offre, &history, &rag_context, &req,
+                &instance,
+                &profil,
+                &offre,
+                &history,
+                &rag_context,
+                &req,
             );
             let system_prompt = self.select_instance_system_prompt(false, wants_id);
             let completion_req = ports::CompletionRequest {
@@ -322,10 +329,7 @@ impl ChatWithApplicationUseCase {
                 .await
                 .ok();
 
-            let rag_context = self
-                .loader
-                .get_rag_context(profil.id, &req.message)
-                .await?;
+            let rag_context = self.loader.get_rag_context(profil.id, &req.message).await?;
             let chat_history = extract_chat_history(&profil.notes);
             let offres = self.loader.offres.list_all().await?;
 
@@ -336,8 +340,8 @@ impl ChatWithApplicationUseCase {
                 .await
                 .ok();
 
-            let user_input = self
-                .build_global_user_input(&profil, &offres, &chat_history, &rag_context, &req);
+            let user_input =
+                self.build_global_user_input(&profil, &offres, &chat_history, &rag_context, &req);
 
             let completion_req = ports::CompletionRequest {
                 system: Some(crate::prompts::chat::GLOBAL_CHAT_SYSTEM.to_string()),

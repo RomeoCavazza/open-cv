@@ -116,7 +116,8 @@ impl HttpScraper {
                     }
 
                     let body = resp.text().await.unwrap_or_default();
-                    let err = ScrapeError::Other(format!("ScrapingAnt status {}: {}", status, body));
+                    let err =
+                        ScrapeError::Other(format!("ScrapingAnt status {}: {}", status, body));
                     let can_retry = should_retry_scrapingant(status, &body)
                         && attempt < SCRAPINGANT_MAX_ATTEMPTS;
                     if can_retry {
@@ -149,8 +150,7 @@ impl HttpScraper {
             }
         }
 
-        Err(last_error
-            .unwrap_or_else(|| ScrapeError::Other("ScrapingAnt retry failed".into())))
+        Err(last_error.unwrap_or_else(|| ScrapeError::Other("ScrapingAnt retry failed".into())))
     }
 }
 
@@ -388,10 +388,7 @@ fn collect_jobposting_fragments(value: &Value, out: &mut Vec<String>) {
             }
         }
         Value::Object(map) => {
-            if map
-                .get("@type")
-                .is_some_and(value_contains_jobposting_type)
-            {
+            if map.get("@type").is_some_and(value_contains_jobposting_type) {
                 push_json_text(map.get("title"), out);
                 push_json_text(map.get("description"), out);
                 push_json_text(map.get("responsibilities"), out);

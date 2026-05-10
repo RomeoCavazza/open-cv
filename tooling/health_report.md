@@ -1,14 +1,14 @@
 ==========================================
 RAPPORT DE SANTE INDUSTRIEL — RECRUITAI
 ==========================================
-Généré le : 2026-05-10 20:29:24
+Généré le : 2026-05-10 22:36:27
 
 ==========================================
 0. QUALITY GATE SUMMARY
 ==========================================
 | Check | Status |
 | :--- | :--- |
-| Formatting | FAIL |
+| Formatting | PASS |
 | Rust Lints | PASS |
 | JS Lints | PASS |
 | Security & Licenses | PASS |
@@ -21,7 +21,7 @@ Généré le : 2026-05-10 20:29:24
  Language              Files        Lines         Code     Comments       Blanks
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  CSS                       3         1576         1379           39          158
- JavaScript               27         3965         3333          125          507
+ JavaScript               27         4034         3401          124          509
  JSON                      2           30           30            0            0
  Just                      1          224          169           27           28
  Nix                       1           87           70            6           11
@@ -38,11 +38,11 @@ Généré le : 2026-05-10 20:29:24
  |- BASH                   4           38           26            8            4
  (Total)                              884           26          674          184
 ─────────────────────────────────────────────────────────────────────────────────
- Rust                     71        11111         9833           87         1191
+ Rust                     71        11849        10518           92         1239
  |- Markdown              32          199            0          181           18
- (Total)                            11310         9833          268         1209
+ (Total)                            12048        10518          273         1257
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- Total                   136        29616        24737         2670         2209
+ Total                   136        30423        25490         2674         2259
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
@@ -51,82 +51,6 @@ Généré le : 2026-05-10 20:29:24
 ==========================================
 ARBORESCENCE (EZA)
 ```
-.
-├── Cargo.lock
-├── Cargo.toml
-├── crates
-│   ├── adapters
-│   │   ├── llm_claude
-│   │   ├── llm_ollama
-│   │   ├── llm_openai
-│   │   ├── postgres
-│   │   └── scraper_http
-│   ├── api
-│   │   ├── Cargo.toml
-│   │   ├── src
-│   │   └── tests
-│   ├── application
-│   │   ├── Cargo.toml
-│   │   ├── src
-│   │   └── tests
-│   ├── domain
-│   │   ├── Cargo.toml
-│   │   └── src
-│   └── ports
-│       ├── Cargo.toml
-│       └── src
-├── docs
-│   ├── assets
-│   │   ├── canva.png
-│   │   ├── deps.svg
-│   │   ├── modules.svg
-│   │   ├── preview-cover-letter.png
-│   │   ├── preview-restitution.png
-│   │   └── preview-resume.png
-│   ├── audit.md
-│   ├── blueprint.md
-│   ├── data_management.md
-│   ├── design.md
-│   ├── instructions.md
-│   ├── project_map.md
-│   ├── README.md
-│   └── toolkit.md
-├── eslint.config.js
-├── flake.lock
-├── flake.nix
-├── Justfile
-├── migrations
-│   └── 0001_initial.sql
-├── package.json
-├── README.md
-├── rust-toolchain.toml
-├── stylelint.config.js
-├── tooling
-│   ├── deny.toml
-│   ├── eslint.config.js
-│   ├── health_report.md
-│   ├── knip.json
-│   ├── sonar-project.properties
-│   ├── stylelint.config.js
-│   └── tarpaulin.toml
-└── web
-    ├── assets
-    │   ├── css
-    │   ├── js
-    │   ├── sounds
-    │   └── templates
-    ├── cover-letter
-    │   ├── index.html
-    │   ├── script.js
-    │   └── style.css
-    ├── index.html
-    ├── restitution
-    │   └── index.html
-    └── resume
-        ├── assets
-        ├── index.html
-        ├── script.js
-        └── style.css
 ```
 
 VISUALISATIONS
@@ -163,29 +87,29 @@ info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/ports-
 info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/application-ef884d6faf032a14.d"
 info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/application-6866775b59a41fe0.d"
 info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/profil_test-a7e5eabec6905256.d"
-info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/adapter_llm_claude-30eca804f1f688e4.d"
-info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/adapter_llm_ollama-31676fa200553554.d"
 info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/adapter_llm_openai-ca623f5b383f03ed.d"
+info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/adapter_llm_claude-30eca804f1f688e4.d"
+info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/adapter_scraper_http-ffd8a4cf0073f0fb.d"
+info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/adapter_llm_claude-b553515234d2c2d5.d"
+info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/adapter_llm_ollama-31676fa200553554.d"
+info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/adapter_llm_openai-1ec1f36959e7306d.d"
 info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/adapter_scraper_http-2d95625e48a0b9f0.d"
 info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/adapter_llm_ollama-0d329a91cd76c3e9.d"
-info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/adapter_llm_openai-1ec1f36959e7306d.d"
-info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/adapter_llm_claude-b553515234d2c2d5.d"
-info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/adapter_scraper_http-ffd8a4cf0073f0fb.d"
 info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/adapter_postgres-fddb81576fca307a.d"
 info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/adapter_postgres-67daa008f0b294ca.d"
 info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/api-37f3a935bfdfcbcd.d"
 info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/api-d1ad98e1d2394783.d"
 info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/seed_blank-347cc6ed0329ab53.d"
-info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/seed_offers_instances-772bb3a8c1bf606e.d"
-info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/seed_profile-bcf3b4957182c5d8.d"
-info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/api-0c5b253ccb96fe24.d"
 info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/seed_profile-bf08b8648b186fd4.d"
-info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/seed_chunks-37c2555e91fdeca6.d"
-info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/seed_offers_instances-bfeb12868a141e1e.d"
-info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/seed_blank-0b5ddf04cd2598ad.d"
-info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/api_integration-b800eae36b90f3bf.d"
-info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/api-d28bb0a9a5aa5562.d"
+info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/seed_profile-bcf3b4957182c5d8.d"
 info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/seed_chunks-51615e55a2e2db49.d"
+info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/api-0c5b253ccb96fe24.d"
+info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/seed_offers_instances-bfeb12868a141e1e.d"
+info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/api_integration-b800eae36b90f3bf.d"
+info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/seed_blank-0b5ddf04cd2598ad.d"
+info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/api-d28bb0a9a5aa5562.d"
+info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/seed_chunks-37c2555e91fdeca6.d"
+info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/seed_offers_instances-772bb3a8c1bf606e.d"
 All deps seem to have been used.
 ```
 
@@ -479,7 +403,7 @@ HYGIENE FRONTEND (KNIP)
 
 
 Unused exports (1)
-showNotification  function  web/assets/js/render/audio.js:10:17
+showNotification  function  web/assets/js/render/audio.js:31:17
 ```
 
 ==========================================
@@ -488,23 +412,23 @@ showNotification  function  web/assets/js/render/audio.js:10:17
 ANALYSE DU BINAIRE (CARGO BLOAT)
 ```
  File  .text     Size Crate
-10.0%  25.2%   1.7MiB std
- 2.2%   5.5% 379.8KiB rustls
- 2.2%   5.5% 377.8KiB sqlx_postgres
- 1.7%   4.2% 292.3KiB ring
- 1.6%   4.1% 286.5KiB serde_json
- 1.6%   4.0% 273.6KiB sqlx_core
- 1.4%   3.6% 249.8KiB axum
- 1.3%   3.2% 221.5KiB application
- 1.3%   3.2% 219.1KiB tokio
- 1.1%   2.6% 182.8KiB adapter_postgres
- 1.0%   2.5% 174.2KiB domain
- 0.9%   2.4% 164.4KiB reqwest
- 0.9%   2.2% 153.0KiB regex_syntax
- 0.8%   2.1% 145.5KiB html5ever
- 0.8%   2.0% 141.7KiB hyper
-10.6%  26.6%   1.8MiB And 101 more crates. Use -n N to show more.
-39.8% 100.0%   6.8MiB .text section size, the file size is 17.0MiB
+ 8.9%  27.6% 891.5KiB std
+ 3.8%  11.8% 379.8KiB rustls
+ 3.0%   9.3% 301.8KiB sqlx_postgres
+ 2.9%   9.0% 292.3KiB ring
+ 1.6%   5.1% 164.8KiB sqlx_core
+ 1.4%   4.3% 139.8KiB tokio
+ 1.2%   3.8% 124.0KiB reqwest
+ 1.1%   3.3% 106.1KiB hyper_util
+ 0.8%   2.6%  83.0KiB hyper
+ 0.7%   2.2%  70.8KiB [Unknown]
+ 0.7%   2.1%  68.5KiB webpki
+ 0.5%   1.6%  51.8KiB http
+ 0.5%   1.5%  48.7KiB url
+ 0.4%   1.2%  39.6KiB serde_json
+ 0.4%   1.1%  35.8KiB adapter_postgres
+ 3.9%  12.1% 391.7KiB And 64 more crates. Use -n N to show more.
+32.3% 100.0%   3.2MiB .text section size, the file size is 9.8MiB
 
 Note: numbers above are a result of guesswork. They are not 100% correct and never will be.
 ```

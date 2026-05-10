@@ -100,9 +100,7 @@ pub fn wants_undo(message: &str) -> bool {
         "etat precedent",
     ];
 
-    undo_markers
-        .iter()
-        .any(|marker| lowered.contains(marker))
+    undo_markers.iter().any(|marker| lowered.contains(marker))
 }
 
 pub fn wants_identity(message: &str) -> bool {

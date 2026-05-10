@@ -235,7 +235,10 @@ impl ports::SnapshotRepo for MockRepos {
         let _ = snapshot;
         Ok(())
     }
-    async fn get_latest(&self, instance_id: InstanceId) -> Result<Option<domain::InstanceSnapshot>, RepoError> {
+    async fn get_latest(
+        &self,
+        instance_id: InstanceId,
+    ) -> Result<Option<domain::InstanceSnapshot>, RepoError> {
         let _ = instance_id;
         Ok(None)
     }

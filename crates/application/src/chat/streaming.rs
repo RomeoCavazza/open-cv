@@ -30,7 +30,14 @@ impl StreamOrchestrator {
                 instance_repo,
                 false, // done_emitted
             ),
-            |(mut stream, mut instance, mut full_response, message_repo, instance_repo, done_emitted)| async move {
+            |(
+                mut stream,
+                mut instance,
+                mut full_response,
+                message_repo,
+                instance_repo,
+                done_emitted,
+            )| async move {
                 if done_emitted {
                     return None;
                 }
@@ -40,12 +47,26 @@ impl StreamOrchestrator {
                         full_response.push_str(&token);
                         Some((
                             Ok(ChatEvent::token(token)),
-                            (stream, instance, full_response, message_repo, instance_repo, false),
+                            (
+                                stream,
+                                instance,
+                                full_response,
+                                message_repo,
+                                instance_repo,
+                                false,
+                            ),
                         ))
                     }
                     Some(Err(e)) => Some((
                         Err(e),
-                        (stream, instance, full_response, message_repo, instance_repo, false),
+                        (
+                            stream,
+                            instance,
+                            full_response,
+                            message_repo,
+                            instance_repo,
+                            false,
+                        ),
                     )),
                     None => {
                         if !full_response.is_empty() {
@@ -58,7 +79,14 @@ impl StreamOrchestrator {
                         // Emit Done then stop
                         Some((
                             Ok(ChatEvent::Done),
-                            (stream, instance, String::new(), message_repo, instance_repo, true),
+                            (
+                                stream,
+                                instance,
+                                String::new(),
+                                message_repo,
+                                instance_repo,
+                                true,
+                            ),
                         ))
                     }
                 }
@@ -92,10 +120,9 @@ impl StreamOrchestrator {
                             (stream, profil, full_response, profil_repo, false),
                         ))
                     }
-                    Some(Err(e)) => Some((
-                        Err(e),
-                        (stream, profil, full_response, profil_repo, false),
-                    )),
+                    Some(Err(e)) => {
+                        Some((Err(e), (stream, profil, full_response, profil_repo, false)))
+                    }
                     None => {
                         if !full_response.is_empty() {
                             push_chat_history(&mut profil.notes, "assistant", &full_response);

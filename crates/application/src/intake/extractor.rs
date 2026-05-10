@@ -9,7 +9,7 @@ use tracing::{info, warn};
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct MultiOffreExtraction {
-    /// Liste des offres identifiées dans le texte. 
+    /// Liste des offres identifiées dans le texte.
     /// Règle : Toujours renvoyer une liste, même s'il n'y a qu'une seule offre.
     pub offres: Vec<OffreExtraction>,
 }
@@ -18,7 +18,7 @@ pub struct MultiOffreExtraction {
 pub struct OffreExtraction {
     /// Nom du métier (ex: 'Développeur Java'). Retirer 'CV de' ou 'stp'.
     pub intitule: String,
-    /// Nom de l'entreprise ou administration (ex: 'Direction de la sécurité sociale', 'Google'). 
+    /// Nom de l'entreprise ou administration (ex: 'Direction de la sécurité sociale', 'Google').
     /// Pour le public, extraire l'entité la plus précise (Ministère, Direction ou Service).
     pub entreprise: String,
     pub localisation: Option<String>,
@@ -82,23 +82,31 @@ impl StructuredExtractor {
 
         match llm.extract_typed::<MultiOffreExtraction>(req).await {
             Ok(ext) => {
-                info!("extraction LLM réussie : {} offre(s) trouvée(s)", ext.offres.len());
-                ext.offres.into_iter().map(|ext| (
-                    ext.intitule,
-                    ext.entreprise,
-                    ext.localisation,
-                    ext.contrat,
-                    OffreStructured {
-                        resume_court: ext.resume_court,
-                        stack: ext.stack,
-                        missions: ext.missions,
-                        exigences: ext.exigences,
-                        soft_skills: ext.soft_skills,
-                        niveau_etudes: ext.niveau_etudes,
-                        type_contrat: ext.type_contrat,
-                        mots_cles: ext.mots_cles,
-                    },
-                )).collect()
+                info!(
+                    "extraction LLM réussie : {} offre(s) trouvée(s)",
+                    ext.offres.len()
+                );
+                ext.offres
+                    .into_iter()
+                    .map(|ext| {
+                        (
+                            ext.intitule,
+                            ext.entreprise,
+                            ext.localisation,
+                            ext.contrat,
+                            OffreStructured {
+                                resume_court: ext.resume_court,
+                                stack: ext.stack,
+                                missions: ext.missions,
+                                exigences: ext.exigences,
+                                soft_skills: ext.soft_skills,
+                                niveau_etudes: ext.niveau_etudes,
+                                type_contrat: ext.type_contrat,
+                                mots_cles: ext.mots_cles,
+                            },
+                        )
+                    })
+                    .collect()
             }
             Err(e) => {
                 warn!("extraction LLM échouée : {e}");

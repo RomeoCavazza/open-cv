@@ -85,7 +85,7 @@ impl CoverLetter {
     /// Vrai si la lettre a le contenu principal.
     pub fn est_complete(&self) -> bool {
         use ParagrapheRole::*;
-        // On assouplit : seule l'accroche est strictement requise pour ne pas rejeter 
+        // On assouplit : seule l'accroche est strictement requise pour ne pas rejeter
         // une génération entière si l'IA oublie la salutation ou la clôture.
         let roles_requis = [Accroche];
         roles_requis
