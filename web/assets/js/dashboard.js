@@ -13,7 +13,7 @@ import * as ui from './ui.js';
 import { safeClick } from './dom.js';
 import * as router from './router.js';
 import * as iframeRender from './render/iframe.js';
-import { EVENTS, emit, on } from './modules/events.js';
+import { EVENTS, on } from './modules/events.js';
 import { updateIframe } from './modules/view.js';
 import { ProfileController } from './controllers/ProfileController.js';
 import { OfferController } from './controllers/OfferController.js';
@@ -37,9 +37,18 @@ window.state = {
 };
 
 window.api = api;
+window.ingestController = ingestController;
 
 // --- Event Subscriptions ---
 on(EVENTS.OFFER_SELECTED, () => {
+    offerController.loadOffers();
+    updateIframe();
+});
+
+on(EVENTS.OFFER_INGESTED, (data) => {
+    if (data?.jobId) {
+        setActiveJobId(data.jobId);
+    }
     offerController.loadOffers();
     updateIframe();
 });
@@ -54,23 +63,44 @@ on(EVENTS.LLM_PROVIDER_CHANGED, (data) => {
 
 on(EVENTS.NOTIFICATION, (data) => ui.showToast(data.message, data.type || 'info'));
 
-on(EVENTS.GEN_STARTED, () => {
+function updateIngestButtonState() {
     const btn = document.getElementById('btn-ingest-run');
-    if (btn) { btn.disabled = true; btn._oldText = btn.textContent; btn.textContent = '...'; }
+    if (!btn) return;
+    btn.disabled = false;
+
+    const labelNode = btn.querySelector('[data-i18n="generate_app"]') || btn.querySelector('span');
+    const defaultLabel = labelNode?.dataset?.defaultLabel || labelNode?.textContent || 'Generate Application';
+    if (labelNode && !labelNode.dataset.defaultLabel) {
+        labelNode.dataset.defaultLabel = defaultLabel;
+    }
+
+    const queueSize = ingestController.getQueueSize();
+    const isProcessing = ingestController.isProcessing();
+    const label = queueSize <= 1
+        ? (isProcessing ? 'Generation en cours...' : defaultLabel)
+        : `Queue (${queueSize})`;
+
+    if (labelNode) {
+        labelNode.textContent = label;
+    } else {
+        btn.textContent = label;
+    }
+}
+
+on(EVENTS.GEN_STARTED, () => {
+    updateIngestButtonState();
+    offerController.loadOffers();
 });
 
 on(EVENTS.GEN_COMPLETED, () => {
-    const btn = document.getElementById('btn-ingest-run');
-    if (btn) { btn.disabled = false; btn.textContent = btn._oldText || 'Generate Application'; }
-    router.switchView('app');
+    updateIngestButtonState();
     offerController.loadOffers();
     updateIframe();
 });
 
 on(EVENTS.GEN_FAILED, (data) => {
-    const btn = document.getElementById('btn-ingest-run');
-    if (btn) { btn.disabled = false; btn.textContent = btn._oldText || 'Generate Application'; }
-    alert('Erreur: ' + (data.message || 'Inconnue'));
+    updateIngestButtonState();
+    ui.showToast('Erreur: ' + (data.message || 'Inconnue'), 'error');
 });
 
 // --- Initialization ---
@@ -78,6 +108,7 @@ on(EVENTS.GEN_FAILED, (data) => {
 async function init() {
     console.log("[Dashboard] Initializing...");
     attachGlobalEventListeners();
+    updateIngestButtonState();
     backgroundPollManager.start();
 
     try {
@@ -186,6 +217,15 @@ function attachGlobalEventListeners() {
 
     // Ingest Action
     safeClick('btn-ingest-run', () => ingestController.runIngest());
+    const jobInput = document.getElementById('job-input');
+    if (jobInput) {
+        jobInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
+                event.preventDefault();
+                ingestController.runIngest();
+            }
+        });
+    }
 
     // Chat Attachments
     safeClick('ai-chat-attach-btn', () => document.getElementById('ai-chat-file-input').click());
