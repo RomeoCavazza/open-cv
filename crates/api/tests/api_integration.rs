@@ -51,7 +51,7 @@ async fn setup_test_server() -> (TestServer, Arc<MockRepos>) {
         embedder: mock_embedder.clone(),
         llm_registry: Arc::new(llm_registry),
         generation_slots: Arc::new(Semaphore::new(2)),
-        generation_queue: Arc::new(Semaphore::new(20)),
+        generation_queue: Arc::new(Semaphore::new(8)),
     };
 
     let app = create_app(state);
@@ -226,6 +226,39 @@ async fn test_post_ingest_400_with_legacy_analysis_field() {
 
     let response = server.post("/api/ingest").json(&payload).await;
     assert!(response.status_code() == 400 || response.status_code() == 422);
+}
+
+#[tokio::test]
+async fn test_post_ingest_200_with_more_than_5_urls_truncates_input() {
+    let (server, repos) = setup_test_server().await;
+
+    let profil = Profil {
+        id: ProfilId::new(),
+        label: "Test".to_string(),
+        is_active: true,
+        content: ProfilContent::default(),
+        created_at: chrono::Utc::now(),
+        profile_photo: None,
+        calendar_pdf: None,
+        resume_template: None,
+        cover_letter_template: None,
+        notes: domain::JsonValue::Object(Default::default()),
+    };
+    repos.profils.lock().unwrap().insert(profil.id, profil);
+
+    let input = (1..=6)
+        .map(|i| format!("https://example.com/job-{i}"))
+        .collect::<Vec<_>>()
+        .join("\n");
+    let payload = serde_json::json!({ "input": input });
+
+    let response = server.post("/api/ingest").json(&payload).await;
+    response.assert_status_success();
+    let body = response.json::<serde_json::Value>();
+    assert_eq!(body["queue_limit"].as_u64(), Some(5));
+    assert_eq!(body["rejected_count"].as_u64(), Some(1));
+    assert_eq!(body["accepted_count"].as_u64(), Some(5));
+    assert_eq!(body["items"].as_array().map(|v| v.len()), Some(5));
 }
 
 #[tokio::test]

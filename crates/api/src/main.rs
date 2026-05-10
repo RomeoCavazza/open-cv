@@ -116,7 +116,7 @@ async fn main() -> anyhow::Result<()> {
         .ok()
         .and_then(|v| v.parse::<usize>().ok())
         .filter(|v| *v > 0)
-        .unwrap_or(20);
+        .unwrap_or(8);
     tracing::info!(
         generation_concurrency,
         generation_queue_capacity,

@@ -29,6 +29,13 @@ export class IngestController {
         const input = document.getElementById('job-input');
         const rawInput = input?.value?.trim();
         if (!input || !rawInput) return;
+        if (!this.hasSelectedDeliverables()) {
+            emit(EVENTS.NOTIFICATION, {
+                message: "Selectionne au moins un livrable",
+                type: 'error'
+            });
+            return;
+        }
 
         if (this.pendingBatches.length >= MAX_PENDING_BATCHES) {
             emit(EVENTS.NOTIFICATION, {
@@ -46,12 +53,12 @@ export class IngestController {
         input.value = '';
         if (this.isProcessing() || this.pendingBatches.length > 1) {
             emit(EVENTS.NOTIFICATION, {
-                message: "Lien ajouté à la file. Il apparaîtra dans l'INBOX dès que l'ingestion démarre.",
+                message: "Message envoyé avec succès",
                 type: 'info'
             });
         } else {
             emit(EVENTS.NOTIFICATION, {
-                message: "Lien envoyé ! Analyse et ingestion en cours...",
+                message: "Message envoyé avec succès",
                 type: 'success'
             });
         }
@@ -72,6 +79,11 @@ export class IngestController {
             resume: delivs?.querySelector('[data-deliv="resume"]')?.classList.contains('active') ?? true,
             cover_letter: delivs?.querySelector('[data-deliv="cover"]')?.classList.contains('active') ?? true,
         };
+    }
+
+    hasSelectedDeliverables() {
+        const options = this.readDeliverables();
+        return options.restitution || options.resume || options.cover_letter;
     }
 
     normalizeIngestItems(payload) {
@@ -106,6 +118,13 @@ export class IngestController {
 
     async processBatch(batch) {
         const ingestRes = await api.ingestOffer(batch.input);
+        if ((ingestRes?.rejected_count || 0) > 0 || (ingestRes?.failed_count || 0) > 0) {
+            const rejected = (ingestRes?.rejected_count || 0) + (ingestRes?.failed_count || 0);
+            emit(EVENTS.NOTIFICATION, {
+                message: `${rejected} lien(s) rejeté(s)`,
+                type: 'info'
+            });
+        }
         const items = this.normalizeIngestItems(ingestRes);
         if (!items.length) throw new Error("Échec ingestion: aucune instance créée");
 
@@ -157,13 +176,19 @@ export class IngestController {
             async () => {
                 while (cursor < queue.length) {
                     const current = queue[cursor++];
-                    emit(EVENTS.GEN_STARTED, { jobId: current.target });
-                    await api.generateApplication(
-                        current.target,
-                        provider,
-                        options,
-                        current.storageKey
-                    );
+                    try {
+                        const gen = await api.generateApplication(
+                            current.target,
+                            provider,
+                            options,
+                            current.storageKey
+                        );
+                        emit(EVENTS.GEN_STARTED, { jobId: current.storageKey || gen.slug || current.target });
+                    } catch (e) {
+                        emit(EVENTS.GEN_FAILED, {
+                            message: e?.message || `Generation echouee pour ${current.target}`
+                        });
+                    }
                 }
             }
         );

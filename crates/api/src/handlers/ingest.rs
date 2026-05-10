@@ -2,14 +2,23 @@ use crate::errors::ApiError;
 use crate::state::AppState;
 use application::intake::IntakeInput;
 use axum::{extract::State, Json};
+use futures::stream::{self, StreamExt};
 use serde::Deserialize;
+use std::collections::HashMap;
+use std::sync::Arc;
+use tokio::sync::Semaphore;
 use uuid::Uuid;
 
 mod logic;
 
 use logic::{build_generate_input, parse_input_items, resolve_ingest_profile, should_generate};
 
-#[derive(Deserialize)]
+const MAX_INGEST_ITEMS: usize = 5;
+const DEFAULT_INGEST_MAX_PARALLEL: usize = 2;
+const DEFAULT_INGEST_PER_HOST_MAX_PARALLEL: usize = 1;
+const ABSOLUTE_INGEST_MAX_PARALLEL: usize = 8;
+
+#[derive(Clone, Deserialize)]
 #[allow(dead_code)]
 pub struct IngestConfig {
     pub resume: bool,
@@ -36,67 +45,202 @@ pub async fn ingest_handler(
         return Err(ApiError::BadRequest("input vide".to_string()));
     }
 
+    let parsed_items = parse_input_items(&raw_input);
+    let rejected_count = parsed_items.len().saturating_sub(MAX_INGEST_ITEMS);
+    let items = parsed_items
+        .into_iter()
+        .take(MAX_INGEST_ITEMS)
+        .collect::<Vec<_>>();
+    let accepted_count = items.len();
+
     let profil =
         resolve_ingest_profile(state.intake_uc.profils.as_ref(), payload.profil_id).await?;
-    let items = parse_input_items(&raw_input);
 
     let llm_provider = payload
         .llm_provider
         .as_ref()
         .and_then(|p| state.llm_registry.get(p))
         .cloned();
+    let should_run_generation = should_generate(payload.config.as_ref());
+    let config = payload.config.clone();
+    let profil_id = profil.id;
 
-    let mut results = Vec::new();
+    let ingest_parallelism = read_usize_env(
+        "INGEST_MAX_PARALLEL",
+        DEFAULT_INGEST_MAX_PARALLEL,
+        ABSOLUTE_INGEST_MAX_PARALLEL,
+    );
+    let per_host_parallelism = read_usize_env(
+        "INGEST_PER_HOST_MAX_PARALLEL",
+        DEFAULT_INGEST_PER_HOST_MAX_PARALLEL,
+        ABSOLUTE_INGEST_MAX_PARALLEL,
+    );
 
-    for item in items {
-        let input = IntakeInput {
-            raw_input: item.clone(),
-            profil_id: profil.id,
-        };
+    // Per-host limiter: avoid hammering a single site (anti-bot / 423), while still parallelizing across domains.
+    let mut host_limiters: HashMap<String, Arc<Semaphore>> = HashMap::new();
+    let indexed_items = items
+        .into_iter()
+        .enumerate()
+        .map(|(idx, item)| {
+            let host_key = host_key_for_item(&item);
+            host_limiters
+                .entry(host_key.clone())
+                .or_insert_with(|| Arc::new(Semaphore::new(per_host_parallelism)));
+            (idx, item, host_key)
+        })
+        .collect::<Vec<_>>();
 
-        match state.intake_uc.execute(input, llm_provider.clone()).await {
-            Ok(outputs) => {
-                for output in outputs {
-                    // On ne déclenche la génération que si ce n'est PAS un doublon
-                    if !output.was_duplicate && should_generate(payload.config.as_ref()) {
-                        if let Some(instance) = state
-                            .instance_repo
-                            .get_by_id(output.instance_id)
-                            .await
-                            .map_err(|e| ApiError::Internal(e.to_string()))?
-                        {
-                            let gen_input = build_generate_input(
-                                instance,
-                                profil.id,
-                                payload
-                                    .config
-                                    .as_ref()
-                                    .expect("config presence checked by should_generate"),
-                            );
+    let host_limiters = Arc::new(host_limiters);
 
-                            state
-                                .generate_uc
-                                .execute(gen_input, llm_provider.clone())
-                                .await
-                                .map_err(|e| {
-                                    tracing::error!(error = %e, "Erreur lors de la génération des livrables");
-                                    ApiError::Internal(format!("Erreur de génération : {}", e))
-                                })?;
+    let task_results = stream::iter(indexed_items.into_iter().map(|(idx, item, host_key)| {
+        let state = state.clone();
+        let llm_provider = llm_provider.clone();
+        let host_limiters = host_limiters.clone();
+        let config = config.clone();
+
+        async move {
+            let Some(host_limiter) = host_limiters.get(&host_key).cloned() else {
+                return (
+                    idx,
+                    Vec::new(),
+                    Some(serde_json::json!({
+                        "input": item,
+                        "error": "Limiter introuvable pour cet hôte",
+                    })),
+                );
+            };
+
+            let _host_permit = match host_limiter.acquire_owned().await {
+                Ok(permit) => permit,
+                Err(_) => {
+                    return (
+                        idx,
+                        Vec::new(),
+                        Some(serde_json::json!({
+                            "input": item,
+                            "error": "Limiter fermé pour cet hôte",
+                        })),
+                    );
+                }
+            };
+
+            let input = IntakeInput {
+                raw_input: item.clone(),
+                profil_id,
+            };
+
+            match state.intake_uc.execute(input, llm_provider.clone()).await {
+                Ok(outputs) => {
+                    let mut item_results = Vec::new();
+
+                    for output in outputs {
+                        if !output.was_duplicate && should_run_generation {
+                            let cfg = match config.as_ref() {
+                                Some(c) => c,
+                                None => {
+                                    return (
+                                        idx,
+                                        item_results,
+                                        Some(serde_json::json!({
+                                            "input": item,
+                                            "error": "Configuration de génération absente",
+                                        })),
+                                    );
+                                }
+                            };
+
+                            let instance = match state.instance_repo.get_by_id(output.instance_id).await {
+                                Ok(Some(instance)) => instance,
+                                Ok(None) => {
+                                    return (
+                                        idx,
+                                        item_results,
+                                        Some(serde_json::json!({
+                                            "input": item,
+                                            "error": "Instance introuvable juste après ingestion",
+                                        })),
+                                    );
+                                }
+                                Err(e) => {
+                                    return (
+                                        idx,
+                                        item_results,
+                                        Some(serde_json::json!({
+                                            "input": item,
+                                            "error": format!("Erreur DB instance: {}", e),
+                                        })),
+                                    );
+                                }
+                            };
+
+                            let gen_input = build_generate_input(instance, profil_id, cfg);
+
+                            if let Err(e) =
+                                state.generate_uc.execute(gen_input, llm_provider.clone()).await
+                            {
+                                tracing::error!(
+                                    error = %e,
+                                    "Erreur lors de la génération des livrables"
+                                );
+                                return (
+                                    idx,
+                                    item_results,
+                                    Some(serde_json::json!({
+                                        "input": item,
+                                        "error": format!("Erreur de génération : {}", e),
+                                    })),
+                                );
+                            }
                         }
+
+                        item_results.push(serde_json::json!({
+                            "offer_slug": output.offre_slug,
+                            "instance_slug": output.instance_slug,
+                            "duplicate": output.was_duplicate,
+                        }));
                     }
 
-                    results.push(serde_json::json!({
-                        "offer_slug": output.offre_slug,
-                        "instance_slug": output.instance_slug,
-                        "duplicate": output.was_duplicate,
-                    }));
+                    (idx, item_results, None)
+                }
+                Err(e) => {
+                    tracing::error!(error = %e, input = %item, "Échec de l'ingestion d'un item");
+                    (
+                        idx,
+                        Vec::new(),
+                        Some(serde_json::json!({
+                            "input": item,
+                            "error": e.to_string(),
+                        })),
+                    )
                 }
             }
-            Err(e) => {
-                tracing::error!(error = %e, input = %item, "Échec de l'ingestion d'un item");
-                return Err(e.into());
-            }
         }
+    }))
+    .buffer_unordered(ingest_parallelism)
+    .collect::<Vec<_>>()
+    .await;
+
+    let mut ordered_task_results = task_results;
+    ordered_task_results.sort_by_key(|(idx, _, _)| *idx);
+
+    let mut results = Vec::new();
+    let mut item_errors = Vec::new();
+    for (_, item_results, maybe_error) in ordered_task_results {
+        results.extend(item_results);
+        if let Some(err) = maybe_error {
+            item_errors.push(err);
+        }
+    }
+
+    if results.is_empty() {
+        let detail = item_errors
+            .first()
+            .and_then(|e| e.get("error"))
+            .and_then(|e| e.as_str())
+            .unwrap_or("Aucun item ingéré.");
+        return Err(ApiError::BadRequest(format!(
+            "Aucune offre n'a pu être ingérée. {detail}"
+        )));
     }
 
     let job_id = results
@@ -107,15 +251,71 @@ pub async fn ingest_handler(
         .first()
         .and_then(|r| r["instance_slug"].as_str())
         .unwrap_or("");
+    let failed_count = item_errors.len();
+    let warning = {
+        let mut parts = Vec::new();
+        if rejected_count > 0 {
+            parts.push(format!(
+                "Seuls {} liens ont été pris en compte. {} lien(s) en trop ont été ignorés.",
+                MAX_INGEST_ITEMS,
+                rejected_count
+            ));
+        }
+        if failed_count > 0 {
+            parts.push(format!(
+                "{} lien(s) n'ont pas pu être ingérés (403/anti-bot, etc.).",
+                failed_count
+            ));
+        }
+        if parts.is_empty() {
+            None
+        } else {
+            Some(parts.join(" "))
+        }
+    };
 
     Ok(Json(serde_json::json!({
         "status": "ok",
         "job_id": job_id,
         "instance_id": instance_id,
+        "queue_limit": MAX_INGEST_ITEMS,
+        "accepted_count": accepted_count,
+        "rejected_count": rejected_count,
+        "failed_count": failed_count,
+        "warning": warning,
+        "errors": item_errors,
         "ingested": results
             .iter()
             .map(|r| r["instance_slug"].as_str().unwrap_or(""))
             .collect::<Vec<_>>(),
         "items": results,
     })))
+}
+
+fn read_usize_env(name: &str, default: usize, max: usize) -> usize {
+    std::env::var(name)
+        .ok()
+        .and_then(|v| v.parse::<usize>().ok())
+        .filter(|v| *v > 0)
+        .map(|v| v.min(max))
+        .unwrap_or(default)
+}
+
+fn host_key_for_item(item: &str) -> String {
+    let trimmed = item.trim();
+    if let Some(rest) = trimmed
+        .strip_prefix("https://")
+        .or_else(|| trimmed.strip_prefix("http://"))
+    {
+        let host = rest
+            .split('/')
+            .next()
+            .unwrap_or("")
+            .trim()
+            .to_ascii_lowercase();
+        if !host.is_empty() {
+            return host;
+        }
+    }
+    "__raw_text__".to_string()
 }

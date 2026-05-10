@@ -29,6 +29,7 @@ export function setupSelector(containerId) {
                 setDelivConfig({ ...delivConfig });
                 if (newVal) pill.classList.add('active');
                 else pill.classList.remove('active');
+                emit(EVENTS.DELIV_CONFIG_CHANGED, { ...delivConfig });
             }
         };
     });

@@ -20,14 +20,17 @@ import { OfferController } from './controllers/OfferController.js';
 import { IngestController } from './controllers/IngestController.js';
 import * as api from './api.js';
 import { backgroundPollManager } from './modules/background_poll.js';
-import { requestNotificationPermission } from './render/audio.js';
+import { primeAudioPlayback, requestNotificationPermission } from './render/audio.js';
 
 const profileController = new ProfileController();
 const offerController = new OfferController();
 const ingestController = new IngestController();
 
 // Enable notifications on first interaction
-document.addEventListener('click', () => requestNotificationPermission(), { once: true });
+document.addEventListener('click', () => {
+    requestNotificationPermission();
+    primeAudioPlayback();
+}, { once: true });
 
 // --- Legacy Context ---
 window.state = {
@@ -64,13 +67,16 @@ on(EVENTS.LLM_PROVIDER_CHANGED, (data) => {
         pill.classList.toggle('active', pill.dataset.provider === data.provider);
     });
 });
+on(EVENTS.DELIV_CONFIG_CHANGED, () => {
+    updateIngestButtonState();
+});
 
 on(EVENTS.NOTIFICATION, (data) => ui.showToast(data.message, data.type || 'info'));
 
 function updateIngestButtonState() {
     const btn = document.getElementById('btn-ingest-run');
     if (!btn) return;
-    btn.disabled = false;
+    btn.disabled = !ingestController.hasSelectedDeliverables();
 
     const labelNode = btn.querySelector('[data-i18n="generate_app"]') || btn.querySelector('span');
     const defaultLabel = labelNode?.dataset?.defaultLabel || labelNode?.textContent || 'Generate Application';

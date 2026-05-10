@@ -7,6 +7,27 @@ export function requestNotificationPermission() {
     }
 }
 
+let audioPrimed = false;
+
+export function primeAudioPlayback() {
+    if (audioPrimed) return;
+    audioPrimed = true;
+    try {
+        const sound = new Audio('/assets/sounds/bell.mp3');
+        sound.muted = true;
+        const maybePromise = sound.play();
+        if (maybePromise && typeof maybePromise.then === 'function') {
+            maybePromise
+                .then(() => {
+                    sound.pause();
+                    sound.currentTime = 0;
+                    sound.muted = false;
+                })
+                .catch(() => {});
+        }
+    } catch (_) {}
+}
+
 export function showNotification(title, body) {
     if ("Notification" in window && Notification.permission === "granted") {
         new Notification(title, {
@@ -18,9 +39,9 @@ export function showNotification(title, body) {
 
 export function playSuccessSound() {
     try {
-        // Debounce: prevent multiple tabs from playing sound at once (within 5s)
+        // Debounce: prevent overlapping sounds (within 1s)
         const lastPlayed = localStorage.getItem('last_success_sound_at');
-        if (lastPlayed && Date.now() - parseInt(lastPlayed) < 5000) {
+        if (lastPlayed && Date.now() - parseInt(lastPlayed) < 1000) {
             return;
         }
         localStorage.setItem('last_success_sound_at', Date.now().toString());

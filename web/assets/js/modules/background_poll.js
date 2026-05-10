@@ -87,6 +87,7 @@ class BackgroundPollManager {
         const controller = new AbortController();
         const jobState = {
             controller,
+            missingKeyRetries: 0,
             hasSeenActiveState: false
         };
         this.activeJobs.set(jobId, jobState);
@@ -99,7 +100,16 @@ class BackgroundPollManager {
             try {
                 let instance = null;
                 const target = JSON.parse(localStorage.getItem(storageKey));
-                if (!target) { this.stopPolling(jobId); return; }
+                if (!target) {
+                    jobState.missingKeyRetries += 1;
+                    if (jobState.missingKeyRetries <= 5) {
+                        setTimeout(poll, 300);
+                        return;
+                    }
+                    this.stopPolling(jobId);
+                    return;
+                }
+                jobState.missingKeyRetries = 0;
 
                 const res = await fetch(`/api/instances/${jobId}?t=${Date.now()}`, { signal: controller.signal });
                 
@@ -148,7 +158,7 @@ class BackgroundPollManager {
         const lastTriggered = target.last_triggered || 0;
         const updatedAt = new Date(instance.updated_at).getTime();
         const skew = updatedAt - lastTriggered;
-        const isDataFresh = skew >= -5000; // 5s margin for clock skew
+        const isDataFresh = skew >= -10000; // 10s margin for clock skew
 
         if (skew < 0 && skew > -5000) {
             console.debug(`[BackgroundPollManager] ${jobId} Clock skew detected: ${skew}ms (accepted within 5s)`);
@@ -172,18 +182,20 @@ class BackgroundPollManager {
         let changed = false;
         
         // Sync targets ONLY if data is fresh
-        // Sync targets ONLY if data is fresh
         if (isDataFresh) {
             if (target.restitution && instance.restitution) { 
                 target.restitution = false; changed = true; 
-                playSuccessSound(); // Play per-document success
+                console.log(`[BackgroundPollManager] ${jobId}: Restitution ready, playing sound.`);
+                playSuccessSound(); 
             }
             if (target.resume && instance.resume_json) { 
                 target.resume = false; changed = true; 
+                console.log(`[BackgroundPollManager] ${jobId}: Resume ready, playing sound.`);
                 playSuccessSound();
             }
             if (target.cover_letter && instance.cover_letter_json) { 
                 target.cover_letter = false; changed = true; 
+                console.log(`[BackgroundPollManager] ${jobId}: Cover Letter ready, playing sound.`);
                 playSuccessSound();
             }
         }
@@ -217,4 +229,3 @@ class BackgroundPollManager {
 }
 
 export const backgroundPollManager = new BackgroundPollManager();
-
