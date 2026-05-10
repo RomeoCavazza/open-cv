@@ -1,7 +1,7 @@
 ==========================================
 RAPPORT DE SANTE INDUSTRIEL — RECRUITAI
 ==========================================
-Généré le : 2026-05-10 23:13:10
+Généré le : 2026-05-10 23:16:21
 
 ==========================================
 0. QUALITY GATE SUMMARY
@@ -84,32 +84,32 @@ info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/domain
 info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/domain-7c551cfde9c257b0.d"
 info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/ports-1c14cd0f602bb202.d"
 info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/ports-eadb8a1d02398f28.d"
-info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/application-ef884d6faf032a14.d"
 info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/application-6866775b59a41fe0.d"
+info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/application-ef884d6faf032a14.d"
 info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/profil_test-a7e5eabec6905256.d"
 info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/adapter_llm_claude-30eca804f1f688e4.d"
-info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/adapter_llm_openai-ca623f5b383f03ed.d"
+info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/adapter_llm_ollama-31676fa200553554.d"
 info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/adapter_scraper_http-ffd8a4cf0073f0fb.d"
-info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/adapter_llm_openai-1ec1f36959e7306d.d"
+info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/adapter_llm_openai-ca623f5b383f03ed.d"
 info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/adapter_scraper_http-2d95625e48a0b9f0.d"
+info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/adapter_llm_openai-1ec1f36959e7306d.d"
 info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/adapter_llm_claude-b553515234d2c2d5.d"
 info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/adapter_llm_ollama-0d329a91cd76c3e9.d"
-info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/adapter_llm_ollama-31676fa200553554.d"
-info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/adapter_postgres-fddb81576fca307a.d"
 info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/adapter_postgres-67daa008f0b294ca.d"
-info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/api-d1ad98e1d2394783.d"
+info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/adapter_postgres-fddb81576fca307a.d"
 info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/api-37f3a935bfdfcbcd.d"
-info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/seed_blank-347cc6ed0329ab53.d"
-info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/seed_chunks-37c2555e91fdeca6.d"
-info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/seed_profile-bf08b8648b186fd4.d"
-info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/seed_chunks-51615e55a2e2db49.d"
-info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/api_integration-b800eae36b90f3bf.d"
-info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/api-d28bb0a9a5aa5562.d"
-info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/seed_profile-bcf3b4957182c5d8.d"
-info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/seed_blank-0b5ddf04cd2598ad.d"
-info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/seed_offers_instances-bfeb12868a141e1e.d"
+info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/api-d1ad98e1d2394783.d"
 info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/api-0c5b253ccb96fe24.d"
+info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/api-d28bb0a9a5aa5562.d"
+info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/api_integration-b800eae36b90f3bf.d"
+info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/seed_blank-0b5ddf04cd2598ad.d"
+info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/seed_blank-347cc6ed0329ab53.d"
+info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/seed_profile-bf08b8648b186fd4.d"
+info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/seed_profile-bcf3b4957182c5d8.d"
+info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/seed_offers_instances-bfeb12868a141e1e.d"
 info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/seed_offers_instances-772bb3a8c1bf606e.d"
+info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/seed_chunks-51615e55a2e2db49.d"
+info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/seed_chunks-37c2555e91fdeca6.d"
 All deps seem to have been used.
 ```
 
@@ -412,23 +412,23 @@ showNotification  function  web/assets/js/render/audio.js:31:17
 ANALYSE DU BINAIRE (CARGO BLOAT)
 ```
  File  .text     Size Crate
-10.0%  25.1%   1.7MiB std
- 2.2%   5.5% 379.8KiB rustls
- 2.2%   5.4% 377.8KiB sqlx_postgres
- 1.7%   4.2% 292.3KiB ring
- 1.6%   4.1% 286.7KiB serde_json
- 1.6%   3.9% 273.6KiB sqlx_core
- 1.4%   3.4% 237.2KiB axum
- 1.3%   3.3% 227.9KiB application
- 1.3%   3.2% 219.4KiB tokio
- 1.0%   2.6% 182.8KiB adapter_postgres
- 1.0%   2.5% 174.2KiB domain
- 1.0%   2.4% 168.5KiB api
- 0.9%   2.4% 164.4KiB reqwest
- 0.9%   2.2% 153.0KiB regex_syntax
- 0.8%   2.1% 145.5KiB html5ever
-10.6%  26.6%   1.8MiB And 101 more crates. Use -n N to show more.
-39.9% 100.0%   6.8MiB .text section size, the file size is 17.0MiB
+ 8.9%  27.6% 891.5KiB std
+ 3.8%  11.8% 379.8KiB rustls
+ 3.0%   9.3% 301.8KiB sqlx_postgres
+ 2.9%   9.0% 292.3KiB ring
+ 1.6%   5.1% 164.8KiB sqlx_core
+ 1.4%   4.3% 139.8KiB tokio
+ 1.2%   3.8% 124.0KiB reqwest
+ 1.1%   3.3% 106.1KiB hyper_util
+ 0.8%   2.6%  83.0KiB hyper
+ 0.7%   2.2%  70.8KiB [Unknown]
+ 0.7%   2.1%  68.5KiB webpki
+ 0.5%   1.6%  51.8KiB http
+ 0.5%   1.5%  48.7KiB url
+ 0.4%   1.2%  39.6KiB serde_json
+ 0.4%   1.1%  35.8KiB adapter_postgres
+ 3.9%  12.1% 391.7KiB And 64 more crates. Use -n N to show more.
+32.3% 100.0%   3.2MiB .text section size, the file size is 9.8MiB
 
 Note: numbers above are a result of guesswork. They are not 100% correct and never will be.
 ```
