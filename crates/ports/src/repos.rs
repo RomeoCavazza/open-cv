@@ -97,6 +97,21 @@ pub trait MessageRepo: Send + Sync {
     async fn delete_all_for_instance(&self, instance_id: InstanceId) -> Result<(), RepoError>;
 }
 
+#[async_trait]
+pub trait SnapshotRepo: Send + Sync {
+    /// Sauvegarde un snapshot de l'état actuel d'une instance.
+    async fn save(&self, snapshot: &domain::InstanceSnapshot) -> Result<(), RepoError>;
+
+    /// Récupère le dernier snapshot d'une instance (pour undo).
+    async fn get_latest(
+        &self,
+        instance_id: InstanceId,
+    ) -> Result<Option<domain::InstanceSnapshot>, RepoError>;
+
+    /// Compte le nombre de snapshots pour une instance (= numéro de version).
+    async fn count_by_instance(&self, instance_id: InstanceId) -> Result<i32, RepoError>;
+}
+
 #[derive(Debug, Error)]
 pub enum RepoError {
     #[error("erreur SQL : {0}")]

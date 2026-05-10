@@ -15,6 +15,7 @@ pub mod offre;
 pub mod profil;
 pub mod restitution;
 pub mod resume;
+pub mod snapshot;
 
 pub use chunk::*;
 pub use cover_letter::*;
@@ -27,3 +28,4 @@ pub use offre::*;
 pub use profil::*;
 pub use restitution::*;
 pub use resume::*;
+pub use snapshot::*;
