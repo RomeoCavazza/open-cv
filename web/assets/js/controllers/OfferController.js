@@ -24,8 +24,24 @@ export class OfferController {
         const loadSeq = ++this.offersLoadSeq;
         try {
             const data = await api.fetchOffers();
-            const offers = data.entries || [];
+            const offers = (data.entries || []).map((offer) => {
+                if (this.isLocallyGenerating(offer.job_id)) {
+                    return { ...offer, status: 'generating' };
+                }
+                return offer;
+            });
             if (loadSeq !== this.offersLoadSeq) return;
+
+            if (window.ingestController) {
+                const pending = window.ingestController.getAllPendingBatches().map((b, i) => ({
+                    job_id: `pending-${i}`,
+                    title: "Ingestion en cours...",
+                    entreprise: b.input.length > 45 ? b.input.substring(0, 45) + '...' : b.input,
+                    category: "INBOX",
+                    status: "generating"
+                }));
+                offers.unshift(...pending);
+            }
 
             const isAnyGenerating = offers.some(o => o.status && o.status.toLowerCase() === 'generating');
             if (isAnyGenerating) {
@@ -83,7 +99,7 @@ export class OfferController {
             });
 
             Object.keys(groups).sort().forEach(cat => {
-                const isDefault = cat === t.others || cat.toUpperCase().includes("INBOX");
+                const isDefault = cat.toUpperCase() === (t.others || "AUTRES").toUpperCase() || cat.toUpperCase().includes("INBOX");
                 const isCollapsed = collapsedOfferCategories.includes(cat);
                 let groupContainer = list;
 
@@ -147,7 +163,10 @@ export class OfferController {
                         });
                     };
 
-                    card.onclick = () => this.selectOffer(o.job_id);
+                    card.onclick = () => {
+                        if (o.job_id.startsWith('pending-')) return;
+                        this.selectOffer(o.job_id);
+                    };
                     groupContainer.appendChild(card);
                 });
             });
@@ -204,6 +223,17 @@ export class OfferController {
 
         } catch (e) {
             console.error('Impossible de charger les offres', e);
+        }
+    }
+
+    isLocallyGenerating(jobId) {
+        try {
+            const raw = localStorage.getItem(`generating_target_${jobId}`);
+            if (!raw) return false;
+            const target = JSON.parse(raw);
+            return Object.values(target || {}).some((v) => v === true);
+        } catch (_) {
+            return false;
         }
     }
 
@@ -270,6 +300,34 @@ export class OfferController {
 
             const actions = document.createElement('div');
             actions.className = 'old-offer-actions';
+            
+            if (offer.status && offer.status.toLowerCase() === 'generating') {
+                const spinner = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                spinner.setAttribute('viewBox', '0 0 24 24');
+                spinner.setAttribute('fill', 'none');
+                spinner.setAttribute('stroke', '#94a3b8');
+                spinner.setAttribute('stroke-width', '1.5');
+                spinner.style.width = '14px';
+                spinner.style.height = '14px';
+                spinner.style.animation = 'spin 1s linear infinite';
+                spinner.style.marginRight = '8px';
+                
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                path.setAttribute('stroke-linecap', 'round');
+                path.setAttribute('stroke-linejoin', 'round');
+                path.setAttribute('d', 'M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99');
+                
+                spinner.appendChild(path);
+                
+                if (!document.getElementById('spinner-style')) {
+                    const style = document.createElement('style');
+                    style.id = 'spinner-style';
+                    style.textContent = '@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }';
+                    document.head.appendChild(style);
+                }
+                
+                actions.appendChild(spinner);
+            }
 
             const archiveAction = offerRender.createOfferActionButton({
                 active: isArchived,
@@ -294,6 +352,7 @@ export class OfferController {
             item.appendChild(row);
 
             item.onclick = () => {
+                if (offer.job_id.startsWith('pending-')) return;
                 setActiveJobId(offer.job_id);
                 router.switchView('app');
                 this.loadOffers();
