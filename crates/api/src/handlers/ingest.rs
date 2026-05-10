@@ -55,41 +55,42 @@ pub async fn ingest_handler(
         };
 
         match state.intake_uc.execute(input, llm_provider.clone()).await {
-            Ok(output) => {
-                // On ne déclenche la génération que si ce n'est PAS un doublon
-                // pour éviter d'écraser le travail existant (CV/Lettre modifiés via le chat)
-                if !output.was_duplicate && should_generate(payload.config.as_ref()) {
-                    if let Some(instance) = state
-                        .instance_repo
-                        .get_by_id(output.instance_id)
-                        .await
-                        .map_err(|e| ApiError::Internal(e.to_string()))?
-                    {
-                        let gen_input = build_generate_input(
-                            instance,
-                            profil.id,
-                            payload
-                                .config
-                                .as_ref()
-                                .expect("config presence checked by should_generate"),
-                        );
-
-                        state
-                            .generate_uc
-                            .execute(gen_input, llm_provider.clone())
+            Ok(outputs) => {
+                for output in outputs {
+                    // On ne déclenche la génération que si ce n'est PAS un doublon
+                    if !output.was_duplicate && should_generate(payload.config.as_ref()) {
+                        if let Some(instance) = state
+                            .instance_repo
+                            .get_by_id(output.instance_id)
                             .await
-                            .map_err(|e| {
-                                tracing::error!(error = %e, "Erreur lors de la génération des livrables");
-                                ApiError::Internal(format!("Erreur de génération : {}", e))
-                            })?;
-                    }
-                }
+                            .map_err(|e| ApiError::Internal(e.to_string()))?
+                        {
+                            let gen_input = build_generate_input(
+                                instance,
+                                profil.id,
+                                payload
+                                    .config
+                                    .as_ref()
+                                    .expect("config presence checked by should_generate"),
+                            );
 
-                results.push(serde_json::json!({
-                    "offer_slug": output.offre_slug,
-                    "instance_slug": output.instance_slug,
-                    "duplicate": output.was_duplicate,
-                }));
+                            state
+                                .generate_uc
+                                .execute(gen_input, llm_provider.clone())
+                                .await
+                                .map_err(|e| {
+                                    tracing::error!(error = %e, "Erreur lors de la génération des livrables");
+                                    ApiError::Internal(format!("Erreur de génération : {}", e))
+                                })?;
+                        }
+                    }
+
+                    results.push(serde_json::json!({
+                        "offer_slug": output.offre_slug,
+                        "instance_slug": output.instance_slug,
+                        "duplicate": output.was_duplicate,
+                    }));
+                }
             }
             Err(e) => {
                 tracing::error!(error = %e, input = %item, "Échec de l'ingestion d'un item");

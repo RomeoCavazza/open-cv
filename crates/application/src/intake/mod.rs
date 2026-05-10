@@ -64,52 +64,58 @@ impl IntakeOffreUseCase {
         &self,
         input: IntakeInput,
         llm_override: Option<Arc<dyn LlmClient>>,
-    ) -> Result<IntakeOutput, AppError> {
+    ) -> Result<Vec<IntakeOutput>, AppError> {
         let (raw_text, source_url) = self.resolve_content(&input.raw_input).await?;
         let host = self.deduplicator.resolve_host(&source_url);
         let hash = self.deduplicator.compute_hash(&raw_text);
 
         if let Some(existing) = self.find_existing_offre(&source_url, &host, &hash).await? {
-            return self.handle_existing_offre(existing, input.profil_id).await;
+            let out = self.handle_existing_offre(existing, input.profil_id).await?;
+            return Ok(vec![out]);
         }
 
         info!("début extraction structurée via LLM");
-        let (intitule, entreprise, localisation, contrat, structured) =
-            self.extractor.extract(&raw_text, llm_override).await;
-        info!(entreprise = %entreprise, intitule = %intitule, "extraction terminée");
+        let extractions = self.extractor.extract(&raw_text, llm_override).await;
+        info!(count = extractions.len(), "extraction terminée");
 
-        let offre_id = OffreId::new();
-        let slug = extractor::build_offre_slug(&entreprise, &intitule);
-        let offre = self.build_offre(
-            offre_id,
-            slug.clone(),
-            source_url,
-            host,
-            hash,
-            entreprise,
-            intitule,
-            localisation,
-            contrat,
-            raw_text,
-            structured,
-        );
+        let mut outputs = Vec::new();
 
-        self.persist_offre(&offre).await?;
-        info!("création instance draft");
-        let instance = self
-            .create_draft_instance(offre_id, slug.clone(), input.profil_id)
-            .await
-            .map_err(|e| {
-                error!(error = %e, "échec création instance");
-                e
-            })?;
+        for (intitule, entreprise, localisation, contrat, structured) in extractions {
+            let offre_id = OffreId::new();
+            let slug = extractor::build_offre_slug(&entreprise, &intitule);
+            let offre = self.build_offre(
+                offre_id,
+                slug.clone(),
+                source_url.clone(), // On réutilise la même URL source pour le lot
+                host.clone(),
+                hash.clone(),
+                entreprise,
+                intitule,
+                localisation,
+                contrat,
+                raw_text.clone(),
+                structured,
+            );
 
-        Ok(IntakeOutput {
-            offre_slug: slug.to_string(),
-            instance_id: instance.id,
-            instance_slug: instance.slug.to_string(),
-            was_duplicate: false,
-        })
+            self.persist_offre(&offre).await?;
+            info!("création instance draft pour {}", slug);
+            let instance = self
+                .create_draft_instance(offre_id, slug.clone(), input.profil_id)
+                .await?;
+
+            outputs.push(IntakeOutput {
+                offre_slug: slug.to_string(),
+                instance_id: instance.id,
+                instance_slug: instance.slug.to_string(),
+                was_duplicate: false,
+            });
+        }
+
+        if outputs.is_empty() {
+            return Err(AppError::Validation("Aucune offre n'a pu être extraite".into()));
+        }
+
+        Ok(outputs)
     }
 
     async fn resolve_content(&self, raw_input: &str) -> Result<(String, String), AppError> {

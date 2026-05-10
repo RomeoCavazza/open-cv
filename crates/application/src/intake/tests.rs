@@ -54,11 +54,18 @@ fn slug_generation() {
 }
 
 #[test]
+fn slug_generation_without_company() {
+    let slug = build_offre_slug("Non spécifié", "Développeur Kotlin");
+    assert!(!slug.as_str().contains("non_specifie"));
+    assert!(slug.as_str().contains("developpeur"));
+}
+
+#[test]
 fn fallback_gives_first_line() {
     let (intitule, entreprise, _, _, structured) =
         fallback_extraction("Mon offre cool\nAutre ligne\nEncore");
     assert_eq!(intitule, "Mon offre cool");
-    assert_eq!(entreprise, "Non identifié");
+    assert_eq!(entreprise, "Non spécifié");
     assert!(structured.resume_court.contains("échouée"));
 }
 
@@ -96,9 +103,9 @@ async fn resolver_accepts_direct_prompt() {
         .await
         .expect("direct prompt should be accepted");
     assert_eq!(source, "manual_prompt");
-    assert!(text.to_lowercase().contains("demande de candidature"));
-    assert!(text.to_lowercase().contains("contexte"));
-    assert!(text.to_lowercase().contains("missions et profil"));
+    assert!(text.to_lowercase().contains("__target_title__"));
+    assert!(text.to_lowercase().contains("contexte de la demande"));
+    assert!(text.to_lowercase().contains("description déduite"));
 }
 
 #[tokio::test]

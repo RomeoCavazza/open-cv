@@ -3,6 +3,7 @@
 use crate::AppError;
 use ports::Scraper;
 use std::sync::Arc;
+use tracing::info;
 use url::Url;
 
 pub struct ContentResolver {
@@ -28,6 +29,35 @@ impl ContentResolver {
                 .map_err(|e| AppError::Validation(format!("Accès refusé par le site ({}). Essayez de copier-coller directement le texte de l'offre au lieu du lien.", e)))?;
             let canonical_source = canonicalize_source_url(&result.final_url);
             (result.raw_text, canonical_source)
+        } else if raw.starts_with('{') && raw.ends_with('}') {
+            // Tentative d'extraction intelligente si c'est un JSON (ex: export d'une liste d'offres)
+            match serde_json::from_str::<serde_json::Value>(raw) {
+                Ok(json) => {
+                    if let Some(url) = json.get("url").and_then(|v| v.as_str()) {
+                        info!("L'input est un JSON contenant une URL, on lance le scraping de {}", url);
+                        let (scraped_text, source_url) = Box::pin(self.resolve(url)).await?;
+                        
+                        // On injecte les métadonnées du JSON comme contexte pour l'extracteur
+                        let mut context = String::new();
+                        if let Some(t) = json.get("title").or_else(|| json.get("intitule")).and_then(|v| v.as_str()) {
+                            context.push_str(&format!("CONTEXTE_TITRE: {t}\n"));
+                        }
+                        if let Some(e) = json.get("company").or_else(|| json.get("entreprise")).and_then(|v| v.as_str()) {
+                            context.push_str(&format!("CONTEXTE_ENTREPRISE: {e}\n"));
+                        }
+                        
+                        let combined = if context.is_empty() {
+                            scraped_text
+                        } else {
+                            format!("{context}\n---\n\n{scraped_text}")
+                        };
+                        
+                        return Ok((combined, source_url));
+                    }
+                    (raw.to_string(), "manual_json".to_string())
+                }
+                Err(_) => (raw.to_string(), "manual".to_string()),
+            }
         } else {
             if is_direct_prompt(raw) {
                 (build_direct_prompt_offer(raw), "manual_prompt".to_string())
@@ -41,7 +71,9 @@ impl ContentResolver {
         };
 
         let raw_text = clean_raw_text(&raw_text_uncleaned);
-        validate_quality(&raw_text)?;
+        if source_url != "manual_prompt" {
+            validate_quality(&raw_text)?;
+        }
 
         Ok((raw_text, source_url))
     }
@@ -172,13 +204,13 @@ fn is_direct_prompt(raw: &str) -> bool {
 fn build_direct_prompt_offer(raw_prompt: &str) -> String {
     let target_title = extract_target_title(raw_prompt);
     format!(
-        "DEMANDE DE CANDIDATURE\n\
-         Titre visé: {target_title}\n\n\
-         CONTEXTE\n\
+        "__TARGET_TITLE__: {target_title}\n\
+         ENTREPRISE: Non spécifié\n\n\
+         CONTEXTE DE LA DEMANDE\n\
          {raw_prompt}\n\n\
-         MISSIONS ET PROFIL\n\
-         Le candidat souhaite générer une candidature pour le poste de {target_title}. \
-         Générer un contenu professionnel basé sur les standards du domaine."
+         DESCRIPTION DÉDUITE\n\
+         Il s'agit d'une demande directe pour générer une candidature au poste de {target_title}. \
+         L'analyse doit porter sur les standards de l'industrie pour ce métier."
     )
 }
 
@@ -186,6 +218,10 @@ fn extract_target_title(raw_prompt: &str) -> String {
     let trimmed = raw_prompt.trim().trim_matches('"').trim_matches('\'');
     let lower = trimmed.to_lowercase();
     let patterns = [
+        "génère-moi un cv de",
+        "génère-moi une lettre de",
+        "génère un cv de",
+        "génère une lettre de",
         "génère-moi un",
         "génère-moi une",
         "génère moi un",
@@ -216,12 +252,24 @@ fn extract_target_title(raw_prompt: &str) -> String {
         "rédige une",
         "rédiger un",
         "rédiger une",
+        "cv de",
+        "cv pour",
+        "cv",
+        "lettre pour",
+        "lettre de",
     ];
 
     for pattern in patterns {
         if let Some(idx) = lower.find(pattern) {
             let start = idx + pattern.len();
-            let candidate = trimmed[start..].trim().trim_matches('?').trim_matches('.').trim();
+            let candidate = trimmed[start..]
+                .trim()
+                .trim_matches('?')
+                .trim_matches('.')
+                .trim_end_matches(" stp")
+                .trim_end_matches(" s'il te plait")
+                .trim_end_matches(" please")
+                .trim();
             if !candidate.is_empty() {
                 return candidate.to_string();
             }
