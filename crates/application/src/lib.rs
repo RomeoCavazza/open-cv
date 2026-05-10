@@ -12,6 +12,7 @@ pub mod generate;
 pub mod intake;
 pub mod prompts;
 
+pub use chat::ChatEvent;
 pub use events::{EventBus, GenerationEvent, GenerationStep, StepStatus};
 pub use generate::{GenerateApplicationUseCase, GenerateError, GenerateInput, Livrables};
 pub use intake::{IntakeInput, IntakeOffreUseCase, IntakeOutput};
