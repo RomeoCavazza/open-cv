@@ -3,6 +3,7 @@ use api::state::AppState;
 use sqlx::postgres::PgPoolOptions;
 use std::collections::HashMap;
 use std::sync::Arc;
+use tokio::sync::Semaphore;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 #[tokio::main]
@@ -32,6 +33,7 @@ async fn main() -> anyhow::Result<()> {
     let chunk_repo = Arc::new(adapter_postgres::ChunkRepoPg::new(pool.clone()));
     let annexe_repo = Arc::new(adapter_postgres::AnnexeRepoPg::new(pool.clone()));
     let message_repo = Arc::new(adapter_postgres::MessageRepoPg::new(pool.clone()));
+    let snapshot_repo = Arc::new(adapter_postgres::SnapshotRepoPg::new(pool.clone()));
 
     // LLM Registry
     let mut llm_map: HashMap<String, Arc<dyn ports::LlmClient>> = HashMap::new();
@@ -105,6 +107,22 @@ async fn main() -> anyhow::Result<()> {
         scraper,
     ));
 
+    let generation_concurrency = std::env::var("GEN_QUEUE_CONCURRENCY")
+        .ok()
+        .and_then(|v| v.parse::<usize>().ok())
+        .filter(|v| *v > 0)
+        .unwrap_or(2);
+    let generation_queue_capacity = std::env::var("GEN_QUEUE_MAX_PENDING")
+        .ok()
+        .and_then(|v| v.parse::<usize>().ok())
+        .filter(|v| *v > 0)
+        .unwrap_or(20);
+    tracing::info!(
+        generation_concurrency,
+        generation_queue_capacity,
+        "queue de génération initialisée"
+    );
+
     let state = AppState {
         pool: pool.clone(),
         offre_repo,
@@ -115,8 +133,11 @@ async fn main() -> anyhow::Result<()> {
         chunk_repo,
         annexe_repo,
         message_repo,
+        snapshot_repo,
         embedder,
         llm_registry: Arc::new(llm_map),
+        generation_slots: Arc::new(Semaphore::new(generation_concurrency)),
+        generation_queue: Arc::new(Semaphore::new(generation_queue_capacity)),
     };
 
     let app = create_app(state);

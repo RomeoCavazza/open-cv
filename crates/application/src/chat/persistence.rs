@@ -2,6 +2,7 @@ use domain::{Instance, InstanceId, Offre, Profil, ProfilId};
 use ports::{AnnexeRepo, ChunkRepo, EmbedMode, Embedder, InstanceRepo, OffreRepo, ProfilRepo};
 use std::sync::Arc;
 
+#[derive(Clone)]
 pub struct ChatContextLoader {
     pub offres: Arc<dyn OffreRepo>,
     pub instances: Arc<dyn InstanceRepo>,

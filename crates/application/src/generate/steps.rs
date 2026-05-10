@@ -236,7 +236,16 @@ pub async fn maybe_generate_restitution(
         max_tokens: Some(4000),
     };
 
-    let response = llm.extract_typed(req).await;
+    let response: Result<Restitution, _> = match llm.extract_typed(req.clone()).await {
+        Ok(r) => Ok(r),
+        Err(e) => {
+            warn!(
+                "Restitution primary LLM failed: {}. Falling back to system LLM...",
+                e
+            );
+            this.llm.extract_typed(req).await
+        }
+    };
 
     let restitution: Restitution = response.map_err(|e| {
         error!("Restitution failed: {}", e);
@@ -279,7 +288,16 @@ pub async fn maybe_generate_resume(
         max_tokens: Some(4000),
     };
 
-    let response = llm.extract_typed(req).await;
+    let response: Result<Resume, _> = match llm.extract_typed(req.clone()).await {
+        Ok(r) => Ok(r),
+        Err(e) => {
+            warn!(
+                "Resume primary LLM failed: {}. Falling back to system LLM...",
+                e
+            );
+            this.llm.extract_typed(req).await
+        }
+    };
 
     let resume: Resume = response.map_err(|e| {
         error!("Resume generation failed: {}", e);
@@ -322,7 +340,16 @@ pub async fn maybe_generate_cover_letter(
         max_tokens: Some(2500),
     };
 
-    let response = llm.extract_typed(req).await;
+    let response: Result<CoverLetter, _> = match llm.extract_typed(req.clone()).await {
+        Ok(r) => Ok(r),
+        Err(e) => {
+            warn!(
+                "CoverLetter primary LLM failed: {}. Falling back to system LLM...",
+                e
+            );
+            this.llm.extract_typed(req).await
+        }
+    };
 
     let cover_letter: CoverLetter = response.map_err(|e| {
         error!("CoverLetter generation failed: {}", e);

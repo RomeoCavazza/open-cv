@@ -35,8 +35,8 @@ export class OfferController {
             if (window.ingestController) {
                 const pending = window.ingestController.getAllPendingBatches().map((b, i) => ({
                     job_id: `pending-${i}`,
-                    title: "Ingestion en cours...",
-                    entreprise: b.input.length > 45 ? b.input.substring(0, 45) + '...' : b.input,
+                    title: b.input.length > 60 ? b.input.substring(0, 60) + '...' : b.input,
+                    entreprise: "",
                     category: "INBOX",
                     status: "generating"
                 }));
@@ -145,23 +145,37 @@ export class OfferController {
                         status: o.status
                     });
 
-                    card.querySelector('[data-action="lock"]').onclick = (event) => {
-                        event.stopPropagation();
-                        this.mutateOfferFlags(o.job_id, (nextFlags) => {
-                            nextFlags.locked = !nextFlags.locked;
-                        });
-                    };
+                    const regenBtn = card.querySelector('[data-action="regenerate"]');
+                    if (regenBtn) {
+                        regenBtn.onclick = (event) => {
+                            event.stopPropagation();
+                            this.triggerRegeneration(o.job_id);
+                        };
+                    }
 
-                    card.querySelector('[data-action="archive"]').onclick = (event) => {
-                        event.stopPropagation();
-                        this.mutateOfferFlags(o.job_id, (nextFlags) => {
-                            nextFlags.archived = !nextFlags.archived;
-                            if (nextFlags.archived) {
-                                nextFlags.oldCv = false;
-                                nextFlags.deleted = false;
-                            }
-                        });
-                    };
+                    const lockBtn = card.querySelector('[data-action="lock"]');
+                    if (lockBtn) {
+                        lockBtn.onclick = (event) => {
+                            event.stopPropagation();
+                            this.mutateOfferFlags(o.job_id, (nextFlags) => {
+                                nextFlags.locked = !nextFlags.locked;
+                            });
+                        };
+                    }
+                    
+                    const archiveBtn = card.querySelector('[data-action="archive"]');
+                    if (archiveBtn) {
+                        archiveBtn.onclick = (event) => {
+                            event.stopPropagation();
+                            this.mutateOfferFlags(o.job_id, (nextFlags) => {
+                                nextFlags.archived = !nextFlags.archived;
+                                if (nextFlags.archived) {
+                                    nextFlags.oldCv = false;
+                                    nextFlags.deleted = false;
+                                }
+                            });
+                        };
+                    }
 
                     card.onclick = () => {
                         if (o.job_id.startsWith('pending-')) return;
@@ -300,53 +314,34 @@ export class OfferController {
 
             const actions = document.createElement('div');
             actions.className = 'old-offer-actions';
-            
-            if (offer.status && offer.status.toLowerCase() === 'generating') {
-                const spinner = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-                spinner.setAttribute('viewBox', '0 0 24 24');
-                spinner.setAttribute('fill', 'none');
-                spinner.setAttribute('stroke', '#94a3b8');
-                spinner.setAttribute('stroke-width', '1.5');
-                spinner.style.width = '14px';
-                spinner.style.height = '14px';
-                spinner.style.animation = 'spin 1s linear infinite';
+
+            const isGenerating = offer.status && offer.status.toLowerCase() === 'generating';
+
+            if (isGenerating) {
+                const spinner = offerRender.createDoubleSpanSpinner({ size: '14px', color: '#9ca3af' });
                 spinner.style.marginRight = '8px';
-                
-                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-                path.setAttribute('stroke-linecap', 'round');
-                path.setAttribute('stroke-linejoin', 'round');
-                path.setAttribute('d', 'M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99');
-                
-                spinner.appendChild(path);
-                
-                if (!document.getElementById('spinner-style')) {
-                    const style = document.createElement('style');
-                    style.id = 'spinner-style';
-                    style.textContent = '@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }';
-                    document.head.appendChild(style);
-                }
-                
                 actions.appendChild(spinner);
             }
 
-            const archiveAction = offerRender.createOfferActionButton({
-                active: isArchived,
-                action: 'archive',
-                ariaLabel: "Archiver l'offre",
-                iconPath: 'm20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z',
-            });
-            archiveAction.button.onclick = (event) => {
-                event.stopPropagation();
-                this.mutateOfferFlags(offer.job_id, (nextFlags) => {
-                    nextFlags.archived = !nextFlags.archived;
-                    if (nextFlags.archived) {
-                        nextFlags.oldCv = false;
-                        nextFlags.deleted = false;
-                    }
+            if (!isGenerating) {
+                const archiveAction = offerRender.createOfferActionButton({
+                    active: isArchived,
+                    action: 'archive',
+                    ariaLabel: "Archiver l'offre",
+                    iconPath: 'm20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z',
                 });
-            };
-
-            actions.appendChild(archiveAction.wrapper);
+                archiveAction.button.onclick = (event) => {
+                    event.stopPropagation();
+                    this.mutateOfferFlags(offer.job_id, (nextFlags) => {
+                        nextFlags.archived = !nextFlags.archived;
+                        if (nextFlags.archived) {
+                            nextFlags.oldCv = false;
+                            nextFlags.deleted = false;
+                        }
+                    });
+                };
+                actions.appendChild(archiveAction.wrapper);
+            }
             row.appendChild(text);
             row.appendChild(actions);
             item.appendChild(row);

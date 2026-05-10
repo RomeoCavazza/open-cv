@@ -102,6 +102,20 @@ pub async fn generate_instance(
         .map(|v| v == "true")
         .unwrap_or(true);
 
+    if !restitution && !resume && !cover_letter {
+        return Err(ApiError::BadRequest(
+            "Aucun livrable demandé (restitution/resume/cover_letter = false)".into(),
+        ));
+    }
+
+    if instance.status == domain::InstanceStatus::Generating {
+        info!(
+            slug = %slug_str,
+            "demande ignorée: génération déjà en cours pour cette instance"
+        );
+        return Ok(StatusCode::ACCEPTED);
+    }
+
     let input = application::generate::GenerateInput {
         offre_id: instance.offre_id,
         profil_id: instance.profil_id,
@@ -113,8 +127,33 @@ pub async fn generate_instance(
         },
     };
 
+    let queue_permit = state
+        .generation_queue
+        .clone()
+        .try_acquire_owned()
+        .map_err(|_| {
+            ApiError::TooManyRequests(
+                "File d'attente saturée (anti-spam). Réessaie dans quelques secondes.".into(),
+            )
+        })?;
+    let slots = state.generation_slots.clone();
+    let generate_uc = state.generate_uc.clone();
+
     tokio::spawn(async move {
-        match state.generate_uc.execute(input, llm_provider).await {
+        let _queue_permit = queue_permit;
+        let _slot_permit = match slots.acquire_owned().await {
+            Ok(permit) => permit,
+            Err(e) => {
+                error!(
+                    slug = %slug_str,
+                    error = %e,
+                    "impossible d'acquérir un slot de génération"
+                );
+                return;
+            }
+        };
+
+        match generate_uc.execute(input, llm_provider).await {
             Ok(_) => info!(slug = %slug_str, "génération terminée avec succès"),
             Err(e) => {
                 error!(slug = %slug_str, error = %e, "échec de la génération en arrière-plan")

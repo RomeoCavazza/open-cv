@@ -50,7 +50,12 @@
             cargo-bloat
             cargo-deny
             cargo-udeps
+            cargo-audit
+            cargo-modules
+            cargo-depgraph
+            graphviz
             tokei
+            eza
             jq
             just
           ];
@@ -64,16 +69,18 @@
             export PGPORT="''${PGPORT:-5432}"
             export RUST_LOG="''${RUST_LOG:-info,sqlx=warn,hyper=warn}"
 
-            echo ""
-            echo "  alternance dev shell ready"
-            echo ""
-            echo "  Useful commands:"
-            echo "    just db-init      # init local Postgres (first time)"
-            echo "    just db-up        # start Postgres"
-            echo "    just db-down      # stop Postgres"
-            echo "    just migrate      # run migrations"
-            echo "    just dev          # cargo watch -x 'run -p api'"
-            echo ""
+            if [[ -t 1 ]]; then
+              echo ""
+              echo "  alternance dev shell ready"
+              echo ""
+              echo "  Useful commands:"
+              echo "    just db-init      # init local Postgres (first time)"
+              echo "    just db-up        # start Postgres"
+              echo "    just db-down      # stop Postgres"
+              echo "    just migrate      # run migrations"
+              echo "    just dev          # cargo watch -x 'run -p api'"
+              echo ""
+            fi
           '';
         };
       });

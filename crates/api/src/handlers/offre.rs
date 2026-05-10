@@ -19,67 +19,51 @@ fn default_limit() -> u32 {
 fn infer_business_category(slug: &str, title: &str) -> &'static str {
     let haystack = format!("{} {}", slug.to_lowercase(), title.to_lowercase());
 
-    if [
-        "data",
-        " ai",
-        "ia",
-        "intelligence artificielle",
-        "llm",
-        "langchain",
-        "gallica",
-        "automation",
-        "scientist",
-        "machine learning",
-    ]
-    .iter()
-    .any(|needle| haystack.contains(needle))
-    {
-        return "Data Engineering & Data Science";
+    if ["data", " ai", "ia", "intelligence artificielle", "llm", "langchain", "machine learning", "scientist"].iter().any(|n| haystack.contains(n)) {
+        return "Data";
     }
-
-    if [
-        "developpeur",
-        "développeur",
-        "software",
-        "java",
-        "api",
-        "logiciel",
-        "full stack",
-        "full-stack",
-        "embarqu",
-        "engineering",
-    ]
-    .iter()
-    .any(|needle| haystack.contains(needle))
-    {
-        return "Ingénierie Logicielle Spécialisée (Embarqué, C++, Simulations, Systèmes)";
+    if ["developpeur", "développeur", "software", "java", "api", "logiciel", "full stack", "embarqu", "engineering", "devops", "c++", "rust"].iter().any(|n| haystack.contains(n)) {
+        return "Software";
     }
-
-    if [
-        "pilotage",
-        "projet",
-        "transformation",
-        "strategie",
-        "stratégie",
-    ]
-    .iter()
-    .any(|needle| haystack.contains(needle))
-    {
-        return "Pilotage de Projet, Stratégie IT & Transformation Numérique";
+    if ["pilotage", "projet", "transformation", "strategie", "stratégie", "product", "manager", "management"].iter().any(|n| haystack.contains(n)) {
+        return "Product";
     }
-
+    if ["innovation", "fablab", "pédagog", "learning", "recherche"].iter().any(|n| haystack.contains(n)) {
+        return "Innovation";
+    }
+    if ["design", "ui", "ux", "graphiste"].iter().any(|n| haystack.contains(n)) {
+        return "Design";
+    }
+    if ["marketing", "communication", "seo", "content"].iter().any(|n| haystack.contains(n)) {
+        return "Marketing";
+    }
     "Autres"
 }
 
 fn public_offer_category(slug: &str, title: &str, raw: Option<&str>) -> String {
     let category = raw.unwrap_or("").trim();
-    if category.is_empty()
-        || category.eq_ignore_ascii_case("inbox")
-        || category.eq_ignore_ascii_case("legacy restored")
-    {
+    let category_lc = category.to_ascii_lowercase();
+    
+    let is_old_hardcoded = category_lc.contains("ingénierie logicielle") 
+        || category_lc.contains("pilotage de projet") 
+        || category_lc.contains("transformation numérique")
+        || category_lc.contains("digital learning");
+        
+    let should_infer = category.is_empty()
+        || is_old_hardcoded
+        || matches!(
+            category_lc.as_str(),
+            "inbox" | "legacy restored" | "autres" | "autre" | "others" | "other" | "data engineering & data science"
+        );
+        
+    if should_infer {
         infer_business_category(slug, title).to_string()
     } else {
-        category.to_string()
+        let mut clean = category.to_string();
+        if clean.len() > 35 {
+            clean = format!("{}...", &clean[..32]);
+        }
+        clean
     }
 }
 

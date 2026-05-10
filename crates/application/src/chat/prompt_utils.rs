@@ -80,6 +80,31 @@ pub fn wants_mutation(message: &str) -> bool {
         .any(|marker| lowered.contains(marker))
 }
 
+pub fn wants_undo(message: &str) -> bool {
+    let lowered = message.to_lowercase();
+    let undo_markers = [
+        "annule",
+        "annuler",
+        "reviens",
+        "revenir",
+        "undo",
+        "version précédente",
+        "version precedente",
+        "défais",
+        "defais",
+        "restaure",
+        "restaurer",
+        "rollback",
+        "remets comme avant",
+        "état précédent",
+        "etat precedent",
+    ];
+
+    undo_markers
+        .iter()
+        .any(|marker| lowered.contains(marker))
+}
+
 pub fn wants_identity(message: &str) -> bool {
     let lowered = message.to_lowercase();
     let identity_markers = [

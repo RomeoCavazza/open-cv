@@ -86,19 +86,35 @@ pub async fn ingest_handler(
                 }
 
                 results.push(serde_json::json!({
-                    "slug": output.instance_slug,
+                    "offer_slug": output.offre_slug,
+                    "instance_slug": output.instance_slug,
                     "duplicate": output.was_duplicate,
                 }));
             }
             Err(e) => {
                 tracing::error!(error = %e, input = %item, "Échec de l'ingestion d'un item");
-                return Err(ApiError::Internal(format!("Erreur d'ingestion : {}", e)));
+                return Err(e.into());
             }
         }
     }
 
+    let job_id = results
+        .first()
+        .and_then(|r| r["offer_slug"].as_str())
+        .unwrap_or("");
+    let instance_id = results
+        .first()
+        .and_then(|r| r["instance_slug"].as_str())
+        .unwrap_or("");
+
     Ok(Json(serde_json::json!({
         "status": "ok",
-        "ingested": results.iter().map(|r| r["slug"].as_str().unwrap_or("")).collect::<Vec<_>>(),
+        "job_id": job_id,
+        "instance_id": instance_id,
+        "ingested": results
+            .iter()
+            .map(|r| r["instance_slug"].as_str().unwrap_or(""))
+            .collect::<Vec<_>>(),
+        "items": results,
     })))
 }

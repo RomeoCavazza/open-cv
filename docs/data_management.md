@@ -2,25 +2,25 @@
 
 Ce document décrit les outils et scripts disponibles pour gérer la base de données locale, réinitialiser l'application et charger des données de test.
 
-## 📦 Outils de Base
+## Outils de Base
 
 Le projet utilise **PostgreSQL** (stocké localement dans `.pg/` via Nix).
 Les commandes principales passent par le `Justfile`.
 
-### 1. Réinitialisation complète (`db-reset`)
+### 1. Réinitialisation complète (db-reset)
 Vide toutes les tables applicatives (offres, instances, messages, annexes, profils).
 ```bash
 just db-reset
 ```
 *Note : Cette commande redémarre Postgres s'il est arrêté.*
 
-### 2. Création d'un état vierge (`seed-blank`)
+### 2. Création d'un état vierge (seed-blank)
 Crée un profil actif minimal ("Nouveau Candidat") sans aucune expérience ni projet. Utile pour repartir de zéro.
 ```bash
 cargo run -p api --bin seed_blank
 ```
 
-## 🚀 Chargement du Profil Réel
+## Chargement du Profil Réel
 
 Pour importer vos données personnelles (Expériences, Formations, Projets) depuis les fichiers Markdown et JSON locaux.
 
@@ -35,7 +35,7 @@ just seed-profile
 cargo run -p api --bin seed_profile
 ```
 
-## 🛠️ Chargement des Offres et Instances
+## Chargement des Offres et Instances
 
 Pour charger des offres d'emploi de test et des candidatures associées.
 
@@ -45,7 +45,7 @@ just seed-data
 cargo run -p api --bin seed_offers_instances
 ```
 
-## 🔄 Workflow Recommandé pour Nettoyage
+## Workflow Recommandé pour Nettoyage
 
 Pour vider l'app et remettre uniquement votre profil à jour :
 ```bash

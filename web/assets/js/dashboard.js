@@ -13,7 +13,7 @@ import * as ui from './ui.js';
 import { safeClick } from './dom.js';
 import * as router from './router.js';
 import * as iframeRender from './render/iframe.js';
-import { EVENTS, on } from './modules/events.js';
+import { EVENTS, emit, on } from './modules/events.js';
 import { updateIframe } from './modules/view.js';
 import { ProfileController } from './controllers/ProfileController.js';
 import { OfferController } from './controllers/OfferController.js';
@@ -176,34 +176,53 @@ function attachGlobalEventListeners() {
         };
     });
 
-    safeClick('btn-reload-tab', () => {
-        if (!activeJobId) return;
+    window.triggerGeneration = async (jobId, provider, options) => {
+        if (!jobId) return;
 
-        console.log("[Dashboard] Spark regenerate triggered for:", activeJobId, "Tab:", activeTab);
-        
-        const iframe = document.getElementById('iframe-doc');
-        if (iframe && iframe.contentWindow && typeof iframe.contentWindow.handleGenerate === 'function') {
-            console.log("[Dashboard] Delegating generation to iframe handleGenerate()");
-            iframe.contentWindow.handleGenerate();
-            return;
+        // Optimistic UI: Set storage and update iframe immediately
+        try {
+            const key = 'generating_target_' + jobId;
+            const current = JSON.parse(localStorage.getItem(key) || '{}');
+            
+            // Only merge 'true' flags to avoid cutting off other active skeletons
+            const merged = { ...current };
+            Object.entries(options).forEach(([k, v]) => {
+                if (v === true) merged[k] = true;
+            });
+            
+            // Add a timestamp to detect stale data in the polleur
+            merged.last_triggered = Date.now();
+            
+            localStorage.setItem(key, JSON.stringify(merged));
+            
+            if (jobId === activeJobId) {
+                updateIframe();
+            }
+        } catch (e) {
+            console.error("[Dashboard] Failed to set optimistic gen state", e);
         }
 
-        // Fallback for when iframe is not fully loaded or missing handleGenerate
-        const provider = selectedLlmProvider || 'claude';
-        const options = {
+        const targetProvider = provider || selectedLlmProvider || 'claude';
+        
+        try {
+            await api.generateApplication(jobId, targetProvider, options);
+            emit(EVENTS.GEN_STARTED, { jobId });
+        } catch (err) {
+            ui.showToast(err.message, 'error');
+            if (jobId === activeJobId) {
+                updateIframe();
+            }
+        }
+    };
+
+    safeClick('btn-reload-tab', () => {
+        if (!activeJobId) return;
+        console.log("[Dashboard] Regenerate triggered for:", activeJobId, "Tab:", activeTab);
+        window.triggerGeneration(activeJobId, null, {
             restitution: activeTab === 'restitution',
             resume: activeTab === 'resume',
             cover_letter: activeTab === 'cover'
-        };
-
-        api.generateApplication(activeJobId, provider, options)
-            .then(() => {
-                setTimeout(updateIframe, 500); 
-            })
-            .catch(err => {
-                ui.showToast(err.message, 'error');
-                updateIframe();
-            });
+        });
     });
     safeClick('btn-download-pdf', () => {
         const iframe = document.getElementById('iframe-doc');

@@ -30,7 +30,7 @@ export class ProfileController {
             setVal('prof-firstname', content.profile?.firstname);
             setVal('prof-lastname', content.profile?.lastname);
             setVal('prof-title', content.profile?.title);
-            setVal('prof-offer-type', content.profile?.offer_type || "Alternance");
+            setVal('prof-offer-type', content.profile?.offer_type);
             setVal('prof-duration', content.apprenticeship?.duration);
             setVal('prof-rhythm', content.apprenticeship?.rhythm);
             setVal('prof-pitch', content.profile?.pitch);

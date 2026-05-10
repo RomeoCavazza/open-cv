@@ -2,6 +2,7 @@ use crate::errors::ApiError;
 use application::generate::{GenerateInput, Livrables};
 use domain::{Instance, Profil, ProfilId};
 use ports::ProfilRepo;
+use std::collections::HashSet;
 
 use super::IngestConfig;
 
@@ -24,26 +25,33 @@ pub(super) async fn resolve_ingest_profile(
 }
 
 pub(super) fn parse_input_items(input: &str) -> Vec<String> {
-    let lines: Vec<&str> = input
-        .lines()
-        .map(|line| line.trim())
-        .filter(|line| !line.is_empty())
-        .collect();
+    let mut urls = Vec::new();
+    let mut seen = HashSet::new();
 
-    let url_count = lines
-        .iter()
-        .filter(|line| line.starts_with("http://") || line.starts_with("https://"))
-        .count();
-
-    if url_count > 0 {
-        lines
-            .into_iter()
-            .filter(|line| line.starts_with("http://") || line.starts_with("https://"))
-            .map(|line| line.to_string())
-            .collect()
-    } else {
-        vec![input.to_string()]
+    for token in input.split_whitespace() {
+        let candidate = sanitize_url_token(token);
+        if candidate.starts_with("http://") || candidate.starts_with("https://") {
+            let normalized = candidate.to_string();
+            if seen.insert(normalized.clone()) {
+                urls.push(normalized);
+            }
+        }
     }
+
+    if urls.is_empty() {
+        vec![input.trim().to_string()]
+    } else {
+        urls
+    }
+}
+
+fn sanitize_url_token(token: &str) -> &str {
+    token.trim_matches(|c: char| {
+        matches!(
+            c,
+            '"' | '\'' | '<' | '>' | '(' | ')' | '[' | ']' | '{' | '}' | ',' | ';'
+        )
+    })
 }
 
 pub(super) fn should_generate(config: Option<&IngestConfig>) -> bool {
@@ -101,6 +109,24 @@ mod tests {
         let input = "https://example.com/job1\nsome random text\nhttps://example.com/job2";
         let items = parse_input_items(input);
         assert_eq!(items.len(), 2);
+    }
+
+    #[test]
+    fn extracts_urls_inside_sentences() {
+        let input = "LinkedIn: https://www.linkedin.com/jobs/view/1234567890/?trk=abc then Indeed https://www.indeed.com/viewjob?jk=abc123&from=share";
+        let items = parse_input_items(input);
+        assert_eq!(items.len(), 2);
+        assert!(items[0].contains("linkedin.com/jobs/view/1234567890"));
+        assert!(items[1].contains("indeed.com/viewjob?jk=abc123"));
+    }
+
+    #[test]
+    fn ignores_trailing_punctuation_for_urls() {
+        let input = "- https://www.linkedin.com/jobs/view/12345/, \n(https://www.indeed.com/viewjob?jk=abcde);";
+        let items = parse_input_items(input);
+        assert_eq!(items.len(), 2);
+        assert_eq!(items[0], "https://www.linkedin.com/jobs/view/12345/");
+        assert_eq!(items[1], "https://www.indeed.com/viewjob?jk=abcde");
     }
 
     #[test]

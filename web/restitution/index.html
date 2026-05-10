@@ -423,19 +423,10 @@
             });
         }
 
-        async function handleGenerate() {
-            try {
-                const provider = window.parent.state?.selectedLlmProvider || 'claude';
-                const jobId = instanceSlug || offerSlug;
-                const result = await window.parent.api.generateApplication(jobId, provider, { restitution: true }, offerSlug);
-                if (result && result.slug) {
-                    window._resolvedInstanceSlug = result.slug;
-                }
-                showGenerating();
-            } catch (e) {
-                console.error(e);
-                showEmpty(false);
-            }
+        function handleGenerate() {
+            const jobId = instanceSlug || offerSlug;
+            if (!jobId) return;
+            window.parent.triggerGeneration(jobId, null, { restitution: true });
         }
 
         // Reactive UI updates

@@ -181,15 +181,19 @@ just coverage
 ---
 
 ## TODO
+  ### PHASE A: Hardening Pipeline
+ - [x] **Industrial Scraping**: Integrated ScrapingAnt fallback for Cloudflare/Anti-bot.
+ - [x] **Direct Prompts**: Support generation without URLs (e.g., "Generate a DevOps CV") for generic deliverables.
+ - [x] **Async Queueing**: Orchestrated concurrent generations with semaphore-based queuing.
+ - [x] **Sidebar Sync**: Instant and accurate offer appearance after ingestion.
  
- ### PHASE A: Hardening Pipeline (The "66%")
- - [ ] **Industrial Scraping**: Validate platform parsing (LinkedIn, Indeed) and integrate ScrapingAnt fallback for Cloudflare/Anti-bot.
- - [ ] **Direct Prompts**: Support generation without URLs (e.g., "Generate a DevOps CV") for generic deliverables.
- - [ ] **Async Queueing**: Orchestrate concurrent generations with an anti-spam queue.
- - [ ] **Sidebar Sync**: Ensure instant and accurate offer appearance (Title/Company) after ingestion.
- 
- ### PHASE B: Chat Optimization (The "34%")
- - [ ] **JSON Mutations**: Enable LLM to directly modify document JSON structures via the chatbar.
- - [ ] **RAG Efficiency**: Verify 100% contextual injection (Profile + Chunks) into the LLM prompt.
- - [ ] **Liveliness UI**: Add reasoning/planning status indicators and hopping dot animations.
- - [ ] **Mini-Versioning**: Explore local diff tracking (mini-git style) for LLM-driven modifications.
+  ### PHASE B: Chat Optimization
+ - [x] **JSON Mutations**: Enable LLM to directly modify document JSON structures via the chatbar.
+ - [x] **RAG Efficiency**: Verify 100% contextual injection (Profile + Chunks) into the LLM prompt.
+ - [x] **Liveliness UI**: Add reasoning/planning status indicators and hopping dot animations.
+ - [x] **Mini-Versioning**: Implementation of snapshots and persistent "Undo" logic.
+
+  ### PHASE C: Production & Scalability
+ - [ ] **Job Persistence**: Transition to Postgres-backed background jobs.
+ - [ ] **Refactoring UI**: Migration to Alpine.js for reactive components.
+ - [ ] **Deployment**: Dockerization and Cloud CI/CD pipeline.

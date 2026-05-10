@@ -18,12 +18,17 @@ $$ LANGUAGE plpgsql;
 
 DROP TABLE IF EXISTS llm_calls CASCADE;
 DROP TABLE IF EXISTS messages CASCADE;
+DROP TABLE IF EXISTS instance_snapshots CASCADE;
 DROP TABLE IF EXISTS instances CASCADE;
 DROP TABLE IF EXISTS chunks CASCADE;
 DROP TABLE IF EXISTS profils CASCADE;
 DROP TABLE IF EXISTS offres CASCADE;
+DROP TABLE IF EXISTS annexes CASCADE;
+
 DROP TYPE IF EXISTS chunk_kind CASCADE;
 DROP TYPE IF EXISTS instance_status CASCADE;
+DROP TYPE IF EXISTS message_role CASCADE;
+
 DROP VIEW IF EXISTS v_llm_costs_daily CASCADE;
 
 -- ─────────────────────────────────────────────────────────────────────────
@@ -94,7 +99,6 @@ CREATE TABLE IF NOT EXISTS profils (
     label                   TEXT        NOT NULL,
     content                 JSONB       NOT NULL,
     is_active               BOOLEAN     NOT NULL DEFAULT false,
-    -- photo and calendar are stored as binary blobs; optional
     profile_photo           BYTEA,
     calendar_pdf            BYTEA,
     resume_template         JSONB,
@@ -180,6 +184,21 @@ CREATE INDEX IF NOT EXISTS messages_instance      ON messages(instance_id);
 CREATE INDEX IF NOT EXISTS messages_instance_time ON messages(instance_id, created_at);
 
 -- ─────────────────────────────────────────────────────────────────────────
+-- INSTANCE SNAPSHOTS (UNDO)
+-- ─────────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS instance_snapshots (
+    id                UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+    instance_id       UUID        NOT NULL REFERENCES instances(id) ON DELETE CASCADE,
+    version           INTEGER     NOT NULL DEFAULT 1,
+    resume_json       JSONB,
+    cover_letter_json JSONB,
+    restitution       JSONB,
+    trigger_message   TEXT,
+    created_at        TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS snapshots_instance ON instance_snapshots(instance_id, version DESC);
+
+-- ─────────────────────────────────────────────────────────────────────────
 -- LLM_CALLS
 -- ─────────────────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS llm_calls (
@@ -231,14 +250,4 @@ CREATE TABLE IF NOT EXISTS annexes (
     content BYTEA NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
-CREATE INDEX IF NOT EXISTS annexes_profil ON annexes(profil_id);UPDATE instances
-SET restitution = NULL
-WHERE restitution = 'null'::jsonb;
-
-UPDATE instances
-SET resume_json = NULL
-WHERE resume_json = 'null'::jsonb;
-
-UPDATE instances
-SET cover_letter_json = NULL
-WHERE cover_letter_json = 'null'::jsonb;
+CREATE INDEX IF NOT EXISTS annexes_profil ON annexes(profil_id);

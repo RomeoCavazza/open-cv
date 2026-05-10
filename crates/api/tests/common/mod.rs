@@ -229,6 +229,22 @@ impl MessageRepo for MockRepos {
     }
 }
 
+#[async_trait]
+impl ports::SnapshotRepo for MockRepos {
+    async fn save(&self, snapshot: &domain::InstanceSnapshot) -> Result<(), RepoError> {
+        let _ = snapshot;
+        Ok(())
+    }
+    async fn get_latest(&self, instance_id: InstanceId) -> Result<Option<domain::InstanceSnapshot>, RepoError> {
+        let _ = instance_id;
+        Ok(None)
+    }
+    async fn count_by_instance(&self, instance_id: InstanceId) -> Result<i32, RepoError> {
+        let _ = instance_id;
+        Ok(0)
+    }
+}
+
 pub struct MockEmbedder;
 #[async_trait]
 impl Embedder for MockEmbedder {

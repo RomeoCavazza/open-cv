@@ -7,6 +7,7 @@ use common::{MockEmbedder, MockLlm, MockRepos, MockScraper};
 use domain::{Profil, ProfilContent, ProfilId, ProfileSection};
 use std::collections::HashMap;
 use std::sync::Arc;
+use tokio::sync::Semaphore;
 
 async fn setup_test_server() -> (TestServer, Arc<MockRepos>) {
     let mock_repos = Arc::new(MockRepos::new());
@@ -46,8 +47,11 @@ async fn setup_test_server() -> (TestServer, Arc<MockRepos>) {
         chunk_repo: mock_repos.clone(),
         annexe_repo: mock_repos.clone(),
         message_repo: mock_repos.clone(),
+        snapshot_repo: mock_repos.clone(),
         embedder: mock_embedder.clone(),
         llm_registry: Arc::new(llm_registry),
+        generation_slots: Arc::new(Semaphore::new(2)),
+        generation_queue: Arc::new(Semaphore::new(20)),
     };
 
     let app = create_app(state);

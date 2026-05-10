@@ -220,6 +220,19 @@ impl GenerateApplicationUseCase {
             let restitution = self
                 .maybe_generate_restitution(input.livrables, &offre, instance_id, llm.clone())
                 .await?;
+            if let Some(ref generated_restitution) = restitution {
+                self.instances
+                    .update_livrables(
+                        instance_id,
+                        Some(generated_restitution.clone()),
+                        None,
+                        None,
+                        domain::InstanceStatus::Generating,
+                        Utc::now(),
+                    )
+                    .await
+                    .map_err(AppError::Repo)?;
+            }
 
             let mut retained = Vec::new();
             let mut plan = None;
@@ -266,6 +279,19 @@ impl GenerateApplicationUseCase {
             } else {
                 None
             };
+            if let Some(ref generated_resume) = resume {
+                self.instances
+                    .update_livrables(
+                        instance_id,
+                        None,
+                        Some(generated_resume.clone()),
+                        None,
+                        domain::InstanceStatus::Generating,
+                        Utc::now(),
+                    )
+                    .await
+                    .map_err(AppError::Repo)?;
+            }
 
             let cover_letter = if let Some(ref p) = plan {
                 self.maybe_generate_cover_letter(
@@ -281,6 +307,19 @@ impl GenerateApplicationUseCase {
             } else {
                 None
             };
+            if let Some(ref generated_cover_letter) = cover_letter {
+                self.instances
+                    .update_livrables(
+                        instance_id,
+                        None,
+                        None,
+                        Some(generated_cover_letter.clone()),
+                        domain::InstanceStatus::Generating,
+                        Utc::now(),
+                    )
+                    .await
+                    .map_err(AppError::Repo)?;
+            }
 
             // Étape 5 : VALIDATE
             self.events.started(instance_id, GenerationStep::Validate);

@@ -49,40 +49,60 @@ Le frontend est minimaliste pour garantir performance et pérennité :
 
 La priorité absolue est le **Hardening de la pipeline Data/AI** et l'optimisation de l'expérience interactive.
 
-### PHASE A : Hardening Pipeline (Le "66%")
+### PHASE A : Hardening Pipeline (Terminée)
 1. **Scraping Industriel** :
-    - [ ] Validation du parsing sur les plateformes majeures (LinkedIn, Indeed, Welcome to the Jungle).
-    - [ ] Implémentation du fallback **ScrapingAnt** (Proxy/Anti-bot/Cloudflare).
-    - [ ] Support des "Prompts Directs" : Génération sans URL (ex: "Génère un CV DevOps") -> CV/Lettre génériques.
+    - [x] Validation du parsing sur les plateformes majeures (LinkedIn, Indeed, Welcome to the Jungle).
+    - [x] Implémentation du fallback **ScrapingAnt** (Proxy/Anti-bot/Cloudflare).
+    - [x] Support des "Prompts Directs" : Génération sans URL.
 2. **Génération & Queueing** :
-    - [ ] Orchestration asynchrone pour gérer plusieurs liens à la suite.
-    - [ ] Mise en place d'une file d'attente (Queuing) et limite anti-spam.
-    - [ ] Synchronisation Sidebar : Apparition instantanée et correcte (Nom Offre/Recruteur) après ingestion.
+    - [x] Orchestration asynchrone pour gérer plusieurs liens à la suite.
+    - [x] Mise en place d'une file d'attente (Queuing) via sémaphores.
+    - [x] Synchronisation Sidebar : Apparition instantanée.
 
-### PHASE B : Intelligence Interactive (Le "34%")
+### PHASE B : Intelligence Interactive (Terminée)
 1. **Chatbar & RAG Optimization** :
-    - [ ] Vérification de l'injection Contextuelle : S'assurer que le profil et les chunks RAG sont transmis à 100%.
-    - [ ] **JSON Mutations** : Permettre au LLM de modifier directement la structure JSON des documents via le chat.
-    - [ ] Comportement LLM : Ajustement du ton et de l'efficacité en phase de "refining".
+    - [x] Vérification de l'injection Contextuelle : S'assurer que le profil et les chunks RAG sont transmis à 100%.
+    - [x] **JSON Mutations** : Permettre au LLM de modifier directement la structure JSON des documents via le chat.
+    - [x] Comportement LLM : Ajustement du ton et de l'efficacité en phase de "refining".
 2. **UI "Alive" & Versioning** :
-    - [ ] Micro-animations d'attente (dots, planning/reasoning/generating status).
-    - [ ] **Mini-Versioning** : Exploration d'un système de diffs local (inspiré de `mini-git`) pour naviguer dans l'historique des modifications LLM.
+    - [x] Micro-animations d'attente (status planning/reasoning/generating).
+    - [x] **Mini-Versioning** : Système de snapshots et Undo persistant en base de données.
 
 ## 8. Validation Q&A End-to-End
-Pour garantir une stabilité durable, les scénarios suivants doivent être validés manuellement et automatisés :
-- [ ] Ingestion d'une offre protégée par Cloudflare.
-- [ ] Génération concurrente de 3 instances en arrière-plan.
-- [ ] Modification d'un paragraphe du CV via le chat et validation du JSON résultant.
+Pour garantir une stabilité durable, les scénarios suivants sont validés :
+- [x] Ingestion d'une offre protégée par Cloudflare.
+- [x] Génération concurrente en arrière-plan.
+- [x] Modification d'un paragraphe du CV via le chat et validation du JSON résultant.
+- [x] Export PDF via l'interface.
 
 - [x] Génération via dashboard global (restitution, cv, cover letter).
 - [x] Génération via slots vides individuels.
 - [x] Régénération via icônes d'écrasement.
 - [x] Rendu immédiat post-génération (disparition du skeleton via BackgroundPollManager).
-- [ ] Cohérence du chat avec injection complète du `JSON.profile`.
+- [x] Cohérence du chat avec injection complète du `JSON.profile`.
+
+## 9. Phase C : Production & Scalability (Roadmap)
+
+Une fois le MVP stabilisé, la trajectoire de croissance s'articule autour de trois axes :
+
+### 9.1 Robustesse & Background Jobs
+*   **Problème** : `tokio::spawn` est volatile. Un crash serveur = perte des générations en cours.
+*   **Solution** : Implémenter une file d'attente persistante en base de données (`background_jobs`).
+*   **Impact** : Fiabilité 100% et possibilité de reprendre les tâches après redémarrage.
+
+### 9.2 Refactoring UI (Alpine.js / HTMX)
+*   **Problème** : Le Vanilla JS devient verbeux pour les interactions complexes.
+*   **Solution** : Migrer les composants interactifs (sidebar, chat, notifications) vers **Alpine.js**.
+*   **Impact** : Code frontend réduit de 40%, meilleure maintenabilité et réactivité accrue.
+
+### 9.3 Cloud Readiness & Docker
+*   **Packaging** : Création d'une image Docker multi-stage (binaire statique < 10MB).
+*   **Déploiement** : Configuration d'une pipeline CI/CD pour déploiement automatique sur Fly.io ou VPS NixOS.
+*   **Observabilité** : Utilisation de la vue SQL `v_llm_costs_daily` pour piloter les marges.
 
 ---
 
-## 9. Évolution du Frontend (Pistes de Réflexion)
+## 10. Évolution du Frontend (Pistes de Réflexion)
 
 Bien que l'approche **Vanilla JS** soit actuelle et ultra-performante, deux technologies s'alignent parfaitement avec la philosophie "minimaliste et robuste" du projet pour réduire la verbosité du code de manipulation du DOM :
 

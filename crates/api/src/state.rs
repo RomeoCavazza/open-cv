@@ -3,6 +3,7 @@ use application::intake::IntakeOffreUseCase;
 use ports::{InstanceRepo, LlmClient, OffreRepo};
 use std::collections::HashMap;
 use std::sync::Arc;
+use tokio::sync::Semaphore;
 
 #[derive(Clone)]
 pub struct AppState {
@@ -15,6 +16,9 @@ pub struct AppState {
     pub chunk_repo: Arc<dyn ports::ChunkRepo>,
     pub annexe_repo: Arc<dyn ports::AnnexeRepo>,
     pub message_repo: Arc<dyn ports::MessageRepo>,
+    pub snapshot_repo: Arc<dyn ports::SnapshotRepo>,
     pub embedder: Arc<dyn ports::Embedder>,
     pub llm_registry: Arc<HashMap<String, Arc<dyn LlmClient>>>,
+    pub generation_slots: Arc<Semaphore>,
+    pub generation_queue: Arc<Semaphore>,
 }

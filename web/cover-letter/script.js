@@ -1,26 +1,11 @@
 import { clear, el, svg, text } from '../assets/js/dom.js';
-import { playSuccessSound } from '../assets/js/render/audio.js';
 
 // Local flag removed in favor of localStorage
-window.handleGenerate = async () => {
+window.handleGenerate = () => {
   const urlParams = new URLSearchParams(window.location.search);
-  let jobId = urlParams.get('id') || urlParams.get('instance');
-  const offerId = urlParams.get('offer');
+  const jobId = urlParams.get('id') || urlParams.get('instance');
   if (!jobId) return;
-
-  const provider = window.parent.state?.selectedLlmProvider || 'claude';
-
-  try {
-    const result = await window.parent.api.generateApplication(jobId, provider, { cover_letter: true }, offerId);
-    if (result && result.slug) {
-        window._currentJobId = result.slug;
-    }
-    showGenerating();
-    if (!window.pollInterval) window.pollInterval = setInterval(loadCoverLetter, 2000);
-  } catch (e) {
-    console.error(e);
-    loadCoverLetter();
-  }
+  window.parent.triggerGeneration(jobId, null, { cover_letter: true });
 };
 
 function showGenerating() {

@@ -1,4 +1,5 @@
 use super::*;
+use crate::chat::chat_event::ChatEvent;
 use crate::chat::prompt_utils::MAX_CHAT_HISTORY_ENTRIES;
 use async_trait::async_trait;
 use chrono::Utc;
@@ -6,6 +7,7 @@ use domain::{
     Chunk, ChunkKind, Instance, InstanceId, InstanceStatus, JsonValue as DomainJsonValue, Offre,
     OffreId, OffreStructured, Profil, ProfilId, Slug,
 };
+use futures::StreamExt;
 use ports::{
     ChunkRepo, EmbedError, EmbedMode, Embedder, ExtractionRequest, InstanceRepo, LlmClient,
     LlmError, OffreRepo, ProfilRepo, RepoError,
@@ -554,6 +556,105 @@ async fn instance_chat_updates_documents_for_explicit_mutations() {
     let schema_text = requests[0].json_schema.to_string();
     assert!(schema_text.contains("\"resume\""));
     assert!(schema_text.contains("\"cover\""));
+
+    let instance_after = stores.instance.lock().unwrap().clone();
+    assert_eq!(
+        instance_after.resume_json.unwrap().accroche.titre,
+        "updated resume"
+    );
+    assert_eq!(
+        instance_after.cover_letter_json.unwrap().objet.libelle,
+        "updated cover"
+    );
+    assert_eq!(instance_after.status, InstanceStatus::Ready);
+    assert_eq!(stores.messages.lock().unwrap().len(), 2);
+}
+
+#[tokio::test]
+async fn instance_chat_stream_keeps_read_only_requests_as_token_stream() {
+    let (instance, profil, offre) = build_test_data();
+    let stores = Arc::new(TestStores::new(instance, profil, offre));
+    let usecase = build_usecase(stores.clone());
+
+    let instance_id_str = stores.instance.lock().unwrap().id.to_string();
+    let stream = usecase
+        .execute_stream(ChatRequest {
+            message: "comment je m'appelle ?".into(),
+            instance_id: Some(instance_id_str),
+            llm_provider: "ollama".into(),
+            attachments: vec![],
+        })
+        .await
+        .expect("stream should start");
+
+    let events: Vec<ChatEvent> = stream
+        .collect::<Vec<_>>()
+        .await
+        .into_iter()
+        .map(|item| item.expect("stream item should be ok"))
+        .collect();
+
+    // Extract token text
+    let text: String = events
+        .iter()
+        .filter_map(|e| match e {
+            ChatEvent::Token { content } => Some(content.as_str()),
+            _ => None,
+        })
+        .collect();
+
+    assert_eq!(text, "token1token2");
+    // Stream should end with Done
+    assert!(matches!(events.last(), Some(ChatEvent::Done)));
+    assert_eq!(stores.requests.lock().unwrap().len(), 0);
+    assert_eq!(stores.messages.lock().unwrap().len(), 2);
+}
+
+#[tokio::test]
+async fn instance_chat_stream_applies_json_mutation_before_streaming_message() {
+    let (instance, profil, offre) = build_test_data();
+    let stores = Arc::new(TestStores::new(instance, profil, offre));
+    let usecase = build_usecase(stores.clone());
+
+    let instance_id_str = stores.instance.lock().unwrap().id.to_string();
+    let stream = usecase
+        .execute_stream(ChatRequest {
+            message: "modifie mon CV et ma lettre pour mettre en avant Rust".into(),
+            instance_id: Some(instance_id_str),
+            llm_provider: "ollama".into(),
+            attachments: vec![],
+        })
+        .await
+        .expect("stream should start");
+
+    let events: Vec<ChatEvent> = stream
+        .collect::<Vec<_>>()
+        .await
+        .into_iter()
+        .map(|item| item.expect("stream item should be ok"))
+        .collect();
+
+    // Extract token text
+    let text: String = events
+        .iter()
+        .filter_map(|e| match e {
+            ChatEvent::Token { content } => Some(content.as_str()),
+            _ => None,
+        })
+        .collect();
+
+    assert_eq!(text, "mise à jour appliquée");
+
+    // Should contain a Mutation event with the updated instance
+    let has_mutation = events.iter().any(|e| matches!(e, ChatEvent::Mutation { .. }));
+    assert!(has_mutation, "stream should contain a mutation event");
+
+    // Should end with Done
+    assert!(matches!(events.last(), Some(ChatEvent::Done)));
+
+    let requests = stores.requests.lock().unwrap();
+    assert_eq!(requests.len(), 1);
+    assert!(requests[0].json_schema.to_string().contains("\"resume\""));
 
     let instance_after = stores.instance.lock().unwrap().clone();
     assert_eq!(

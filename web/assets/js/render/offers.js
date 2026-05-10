@@ -33,6 +33,36 @@ export function createOfferActionButton({ active, action, ariaLabel, iconPath })
 }
 
 /**
+ * Crée le spinner "Double Span" standard utilisé dans toute l'application.
+ */
+export function createDoubleSpanSpinner({ size = '14px', color = 'currentColor', className = '' } = {}) {
+    const spinner = svg('svg', {
+        viewBox: '0 0 24 24',
+        fill: 'none',
+        stroke: color,
+        'stroke-width': '1.5',
+        className: `spinner ${className}`,
+        style: `width: ${size}; height: ${size}; animation: spin 1s linear infinite;`
+    }, [
+        svg('path', {
+            'stroke-linecap': 'round',
+            'stroke-linejoin': 'round',
+            d: 'M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99'
+        })
+    ]);
+
+    // Ensure spin animation exists
+    if (!document.getElementById('spinner-style')) {
+        const style = document.createElement('style');
+        style.id = 'spinner-style';
+        style.textContent = '@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }';
+        document.head.appendChild(style);
+    }
+
+    return spinner;
+}
+
+/**
  * Crée une carte d'offre pour la sidebar.
  */
 export function createOfferCard(offer, { isActive, isLocked, isArchived, hasFlag, archivedView, status }) {
@@ -110,85 +140,60 @@ export function createOfferCard(offer, { isActive, isLocked, isArchived, hasFlag
         btn.setAttribute('aria-label', label);
         btn.className = 'offer-action-btn'; // Use class instead of inline style
         
-        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-        svg.setAttribute('viewBox', '0 0 24 24');
-        svg.setAttribute('fill', 'none');
-        svg.setAttribute('stroke', 'currentColor');
-        svg.setAttribute('stroke-width', '2');
-        svg.classList.add('offer-action-icon');
+        const svgElement = svg('svg', {
+            viewBox: '0 0 24 24',
+            fill: 'none',
+            stroke: 'currentColor',
+            'stroke-width': '2',
+            className: 'offer-action-icon',
+            style: 'width: 14px; height: 14px;'
+        }, [
+            svg('path', {
+                'stroke-linecap': 'round',
+                'stroke-linejoin': 'round',
+                d: path
+            })
+        ]);
+
         if (active) {
             btn.classList.add('is-active');
-            svg.classList.add('is-active');
+            svgElement.classList.add('is-active');
         }
         
-        const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        p.setAttribute('stroke-linecap', 'round');
-        p.setAttribute('stroke-linejoin', 'round');
-        p.setAttribute('d', path);
-        
-        svg.appendChild(p);
-        btn.appendChild(svg);
+        btn.appendChild(svgElement);
         return { wrapper: btn };
     };
 
-    if (!archivedView) {
-        const lockAction = createActionIcon(
-            'M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z',
-            isLocked, 'lock', "Verrouiller"
-        );
-        const archiveAction = createActionIcon(
-            'm20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z',
-            isArchived, 'archive', "Archiver"
-        );
-        actionsSlot.appendChild(lockAction.wrapper);
-        actionsSlot.appendChild(archiveAction.wrapper);
-    } else {
-        const restoreAction = createActionIcon(
-            'm20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5m8.25 3v6.75m0 0-3-3m3 3 3-3M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z',
-            false, 'restore-inbox', "Restaurer"
-        );
-        const deleteAction = createActionIcon(
-            'm20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5m6 4.125 2.25 2.25m0 0 2.25 2.25M12 13.875l2.25-2.25M12 13.875l-2.25 2.25M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z',
-            false, 'send-old', "Supprimer"
-        );
-        actionsSlot.appendChild(restoreAction.wrapper);
-        actionsSlot.appendChild(deleteAction.wrapper);
+    if (!isGenerating) {
+        if (!archivedView) {
+            const lockAction = createActionIcon(
+                'M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z',
+                isLocked, 'lock', "Verrouiller"
+            );
+            const archiveAction = createActionIcon(
+                'm20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z',
+                isArchived, 'archive', "Archiver"
+            );
+            actionsSlot.appendChild(lockAction.wrapper);
+            actionsSlot.appendChild(archiveAction.wrapper);
+        } else {
+            const restoreAction = createActionIcon(
+                'm20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5m8.25 3v6.75m0 0-3-3m3 3 3-3M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z',
+                false, 'restore-inbox', "Restaurer"
+            );
+            const deleteAction = createActionIcon(
+                'm20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5m6 4.125 2.25 2.25m0 0 2.25 2.25M12 13.875l2.25-2.25M12 13.875l-2.25 2.25M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z',
+                false, 'send-old', "Supprimer"
+            );
+            actionsSlot.appendChild(restoreAction.wrapper);
+            actionsSlot.appendChild(deleteAction.wrapper);
+        }
     }
 
     if (isGenerating) {
-        const spinner = document.createElement('div');
-        spinner.className = 'offer-generating-spinner';
-        spinner.style.display = 'flex';
-        spinner.style.alignItems = 'center';
-        spinner.style.justifyContent = 'center';
+        const spinner = createDoubleSpanSpinner({ size: '14px', color: '#9ca3af', className: 'offer-generating-spinner' });
         spinner.style.marginRight = '4px';
         spinner.title = 'Génération en cours...';
-        
-        const svgElement = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-        svgElement.setAttribute('viewBox', '0 0 24 24');
-        svgElement.setAttribute('fill', 'none');
-        svgElement.setAttribute('stroke', '#94a3b8');
-        svgElement.setAttribute('stroke-width', '1.5');
-        svgElement.style.width = '14px';
-        svgElement.style.height = '14px';
-        svgElement.style.animation = 'spin 1s linear infinite';
-        
-        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        path.setAttribute('stroke-linecap', 'round');
-        path.setAttribute('stroke-linejoin', 'round');
-        path.setAttribute('d', 'M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99');
-        
-        svgElement.appendChild(path);
-        spinner.appendChild(svgElement);
-        
-        // Add a global style for the spin animation if it doesn't exist
-        if (!document.getElementById('spinner-style')) {
-            const style = document.createElement('style');
-            style.id = 'spinner-style';
-            style.textContent = '@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }';
-            document.head.appendChild(style);
-        }
-        
         actionsSlot.insertBefore(spinner, actionsSlot.firstChild);
     }
 

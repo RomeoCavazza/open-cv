@@ -22,8 +22,9 @@ Architecture : **Hexagonale (Workspace Rust)**
 | :--- | :--- | :--- | :--- |
 | **Réactivité** | Manipulation directe du DOM via `getElementById`. | Code verbeux, difficile à maintenir si le nombre de livrables augmente. | **Moyenne** |
 | **Remédiation** | *Envisager Alpine.js ou HTMX pour simplifier la réactivité (voir Blueprint Section 9).* | | |
-| **Gestion d'État** | Fragmentation entre `window.state` et `localStorage`. | Risque de désynchronisation visuelle entre les iframes. | **Moyenne** |
-| **Centralisation** | Logique de polling historiquement dupliquée. | **Résolu** : Migration vers l'architecture *Master Poller* réactive. | **Check** |
+| **Gestion d'État** | Fragmentation entre `window.state` et `localStorage`. | **Résolu** : Synchronisation réactive via `GEN_STARTED` & storage events. | **Check** |
+| **Centralisation** | Logique de polling historiquement dupliquée. | **Résolu** : Master Poller implémenté (reste optimisation `postMessage`). | **Check** |
+| **Data-Binding** | Champs de profil pré-remplis par défaut (fallbacks hardcodés). | **Résolu** : Suppression des valeurs par défaut dans le JS pour respecter la nudité de la DB. | **Check** |
 
 ---
 
@@ -38,6 +39,13 @@ Architecture : **Hexagonale (Workspace Rust)**
 - **Atrocité du SQL métier** : Le trigger de catégorisation est une "boîte noire". Il devrait être migré vers une `OffreService` en Rust pour profiter du pattern matching.
 - **Atomicité des Livrables** : Le backend devrait supporter la mise à jour partielle des statuts (`resume_status: Ready`, `cover_letter_status: Generating`) pour une UX parfaite.
 
+### 2.3 État de la Synchronisation UI (Feedback Ingestion/Génération)
+- **Synchronisation Optimiste** : L'usage coordonné de `GEN_STARTED` et du `localStorage` garantit une cohérence visuelle instantanée entre la Sidebar (icône Double Span) et l'Iframe (Skeleton interne des templates). La coordination a été stabilisée en réintégrant le skeleton immédiat via `srcdoc` dans `view.js`.
+- **Intégrité du Profil** : Les mécanismes de chargement/sauvegarde du profil ont été audités. Les champs vides sont désormais correctement rendus comme tels, évitant les "fantômes" de session.
+- **Points d'attention (Optimisation)** :
+    - **Redondance du Polling** : Le parent (`Master Poller`) et l'Iframe effectuent actuellement des requêtes de statut en parallèle. Bien que l'impact réseau soit négligeable, une communication via `postMessage` permettrait d'éliminer cette redondance.
+    - **Poids du Rendu Sidebar** : La fonction `loadOffers()` reconstruit l'intégralité du DOM de la sidebar à chaque rafraîchissement. Pour des volumes importants d'offres (> 100), une approche par manipulation chirurgicale du DOM ou l'usage d'Alpine.js sera préférable pour maintenir la fluidité.
+
 ---
 
 ## 3. Plan d'Action (Hardening Roadmap)
@@ -49,11 +57,20 @@ Architecture : **Hexagonale (Workspace Rust)**
 ### Étape 2 : Excellence UX (En cours)
 - [x] **Master Poller** : Centraliser le polling réseau dans `dashboard.js` (Terminé).
 - [x] **Audio Feedback** : Notification sonore globale via `storage events` (Terminé).
+- [x] **Ingestion Flexible** : Autoriser les prompts courts (Terminé).
+- [x] **Unification des flux** : Les prompts directs sont traités comme des offres normales sans labels isolés (Terminé).
+- [x] **Fix Flash Skeleton** : Blocage de la navigation iframe pendant la génération pour éviter les flashs blancs (Terminé).
+- [x] **Optimisation Audio** : Notification sonore unique en fin de lot complet (Terminé).
 - [ ] **Partial Refresh** : Permettre de recharger un seul document sans rafraîchir toute l'instance.
 
-### Étape 3 : Nettoyage & Standardisation
-- [ ] **Migration Regex** : Sortir les Regex de catégorisation du SQL pour les mettre dans `crates/application`.
-- [ ] **Consolidation d'État** : Migrer `window.state` vers un `Store` minimaliste partagé.
+### Étape 3 : Nettoyage & Standardisation (Terminée)
+- [x] **Fusion des Migrations** : Schéma V1 unifié et table d'Undo (Terminé).
+- [x] **Snapshot & Undo** : Persistance réelle des versions précédentes pour le chat (Terminé).
+
+### Étape 4 : Scalability & Production (Next Steps)
+- [ ] **Job Persistence** : Migration vers une table de jobs Postgres pour garantir la reprise après crash.
+- [ ] **Refactoring UI** : Introduction d'Alpine.js pour simplifier la manipulation du DOM.
+- [ ] **Dockerization** : Création de l'image de production et déploiement cloud.
 
 ---
 

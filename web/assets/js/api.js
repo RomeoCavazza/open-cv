@@ -54,7 +54,14 @@ export async function ingestOffer(urlOrText) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ input: urlOrText })
     });
-    if (!res.ok) throw new Error('Ingest failed');
+    if (!res.ok) {
+        let msg = 'Ingest failed';
+        try {
+            const errData = await res.json();
+            if (errData.error) msg = errData.error;
+        } catch(e) {}
+        throw new Error(msg);
+    }
     return await res.json();
 }
 
@@ -84,11 +91,12 @@ export async function generateApplication(jobId, provider, options = {}, storage
         existingOpts = JSON.parse(localStorage.getItem('generating_target_' + key) || '{}');
     } catch(e) {}
 
-    const uiOpts = {
-        restitution: backendOpts.restitution || existingOpts.restitution || false,
-        resume: backendOpts.resume || existingOpts.resume || false,
-        cover_letter: backendOpts.cover_letter || existingOpts.cover_letter || false
-    };
+    // Merge existing states to avoid cutting off other active generations
+    const uiOpts = { ...existingOpts };
+    Object.entries(backendOpts).forEach(([k, v]) => {
+        if (v === true) uiOpts[k] = true;
+    });
+    uiOpts.last_triggered = Date.now();
     
     try {
         localStorage.setItem('generating_target_' + key, JSON.stringify(uiOpts));
@@ -106,6 +114,18 @@ export async function generateApplication(jobId, provider, options = {}, storage
     if (!res.ok) {
         const err = await res.text();
         console.error(`[API] Generation failed for ${targetId}:`, err);
+        try {
+            const keyName = 'generating_target_' + key;
+            const current = JSON.parse(localStorage.getItem(keyName) || '{}');
+            Object.entries(backendOpts).forEach(([k, v]) => {
+                if (v === true) current[k] = false;
+            });
+            if (Object.values(current).some(v => v === true)) {
+                localStorage.setItem(keyName, JSON.stringify(current));
+            } else {
+                localStorage.removeItem(keyName);
+            }
+        } catch (e) {}
         throw new Error('Generation failed: ' + err);
     }
     return { slug: targetId };

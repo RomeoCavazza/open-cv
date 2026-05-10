@@ -1,10 +1,13 @@
 use domain::{Message, MessageRole};
+use futures::{stream, StreamExt};
 use ports::{
     AnnexeRepo, ChunkRepo, Embedder, InstanceRepo, LlmClient, LlmError, MessageRepo, OffreRepo,
-    ProfilRepo,
+    ProfilRepo, SnapshotRepo,
 };
 use std::sync::Arc;
+use tokio::sync::mpsc;
 
+pub mod chat_event;
 pub mod persistence;
 pub mod prompt_utils;
 pub mod streaming;
@@ -13,17 +16,24 @@ pub mod types;
 #[cfg(test)]
 mod tests;
 
+pub use self::chat_event::ChatEvent;
 use self::persistence::ChatContextLoader;
 use self::prompt_utils::{
     build_offer_prompt_context, build_profile_prompt_context, extract_chat_history,
-    push_chat_history, render_chat_history_for_prompt, wants_identity, wants_mutation,
+    push_chat_history, render_chat_history_for_prompt, wants_identity, wants_mutation, wants_undo,
 };
-use self::streaming::StreamOrchestrator;
 pub use self::types::*;
 
+/// Capacité du channel mpsc pour le pipeline streaming.
+/// 32 événements de buffer suffisent largement : les tokens sont consommés
+/// quasi-immédiatement par le handler SSE.
+const STREAM_CHANNEL_CAPACITY: usize = 32;
+
+#[derive(Clone)]
 pub struct ChatWithApplicationUseCase {
     pub loader: ChatContextLoader,
     pub message_repo: Arc<dyn MessageRepo>,
+    pub snapshot_repo: Option<Arc<dyn SnapshotRepo>>,
     pub llm_registry: std::collections::HashMap<String, Arc<dyn LlmClient>>,
 }
 
@@ -49,8 +59,15 @@ impl ChatWithApplicationUseCase {
                 embedder,
             },
             message_repo,
+            snapshot_repo: None,
             llm_registry,
         }
+    }
+
+    /// Configure le repo de snapshots pour activer l'undo.
+    pub fn with_snapshot_repo(mut self, repo: Arc<dyn SnapshotRepo>) -> Self {
+        self.snapshot_repo = Some(repo);
+        self
     }
 
     pub async fn execute(&self, req: ChatRequest) -> anyhow::Result<ChatResponse> {
@@ -61,18 +78,315 @@ impl ChatWithApplicationUseCase {
         self.execute_global_chat(req).await
     }
 
+    /// Retourne un stream de `ChatEvent` avec liveliness intégrée.
+    ///
+    /// Le pipeline est exécuté dans un `tokio::spawn` qui pousse des
+    /// `ChatEvent::Status` à chaque phase de calcul, permettant au frontend
+    /// d'afficher des messages de progression en temps réel.
     pub async fn execute_stream(
         &self,
         req: ChatRequest,
-    ) -> anyhow::Result<ports::BoxStream<'static, Result<String, LlmError>>> {
-        if let Some(id) = req.instance_id.as_ref().filter(|s| !s.is_empty()) {
-            let id = id.to_string();
-            return self.execute_instance_chat_stream(&id, req).await;
-        }
-        self.execute_global_chat_stream(req).await
+    ) -> anyhow::Result<ports::BoxStream<'static, Result<ChatEvent, LlmError>>> {
+        let (tx, rx) = mpsc::channel::<Result<ChatEvent, LlmError>>(STREAM_CHANNEL_CAPACITY);
+        let this = self.clone();
+
+        tokio::spawn(async move {
+            if let Some(id) = req.instance_id.as_ref().filter(|s| !s.is_empty()) {
+                let id = id.to_string();
+                this.run_instance_pipeline(&id, req, tx).await;
+            } else {
+                this.run_global_pipeline(req, tx).await;
+            }
+        });
+
+        // Convertir le receiver mpsc en Stream
+        let stream = stream::unfold(rx, |mut rx| async move {
+            rx.recv().await.map(|item| (item, rx))
+        });
+
+        Ok(Box::pin(stream))
     }
 
-    // --- Instance Chat ---
+    // ─────────────────────────────────────────────────────────────────
+    // Pipeline Instance (mpsc-driven)
+    // ─────────────────────────────────────────────────────────────────
+
+    async fn run_instance_pipeline(
+        &self,
+        instance_id: &str,
+        req: ChatRequest,
+        tx: mpsc::Sender<Result<ChatEvent, LlmError>>,
+    ) {
+        let result: anyhow::Result<()> = async {
+            tx.send(Ok(ChatEvent::status("Chargement du contexte...")))
+                .await
+                .ok();
+
+            let (mut instance, profil, offre) =
+                self.loader.load_instance_context(instance_id).await?;
+            let llm = self.get_llm(&req.llm_provider)?;
+            let history = self.message_repo.list_by_instance_id(instance.id).await?;
+
+            tx.send(Ok(ChatEvent::status("Recherche dans votre parcours...")))
+                .await
+                .ok();
+
+            let rag_context = self
+                .loader
+                .get_rag_context(instance.profil_id, &req.message)
+                .await?;
+
+            let user_msg = Message::new(instance.id, MessageRole::User, req.message.clone());
+            self.message_repo.push(&user_msg).await?;
+
+            let wants_mut = wants_mutation(&req.message);
+            let wants_id = wants_identity(&req.message);
+
+            // --- Undo : restauration depuis le dernier snapshot ---
+            if wants_undo(&req.message) {
+                tx.send(Ok(ChatEvent::status("Restauration de la version précédente...")))
+                    .await
+                    .ok();
+
+                if let Some(ref snap_repo) = self.snapshot_repo {
+                    if let Ok(Some(snapshot)) = snap_repo.get_latest(instance.id).await {
+                        instance.resume_json = snapshot.resume_json;
+                        instance.cover_letter_json = snapshot.cover_letter_json;
+                        instance.restitution = snapshot.restitution;
+                        instance.updated_at = chrono::Utc::now();
+                        self.loader.instances.upsert(&instance).await?;
+
+                        let msg = "J'ai restauré la version précédente de vos documents.";
+                        let assistant_msg =
+                            Message::new(instance.id, MessageRole::Assistant, msg.to_string());
+                        self.message_repo.push(&assistant_msg).await?;
+
+                        for chunk in Self::chunk_response_for_stream(msg) {
+                            if tx.send(Ok(ChatEvent::token(chunk))).await.is_err() {
+                                return Ok(());
+                            }
+                        }
+                        tx.send(Ok(ChatEvent::mutation(instance))).await.ok();
+                        tx.send(Ok(ChatEvent::Done)).await.ok();
+                        return Ok(());
+                    }
+                }
+
+                // Pas de snapshot disponible
+                let msg = "Aucune version précédente disponible pour cette candidature.";
+                let assistant_msg =
+                    Message::new(instance.id, MessageRole::Assistant, msg.to_string());
+                self.message_repo.push(&assistant_msg).await?;
+                for chunk in Self::chunk_response_for_stream(msg) {
+                    if tx.send(Ok(ChatEvent::token(chunk))).await.is_err() {
+                        return Ok(());
+                    }
+                }
+                tx.send(Ok(ChatEvent::Done)).await.ok();
+                return Ok(());
+            }
+
+            // --- Mutation : modification du CV/LM ---
+            if wants_mut {
+                tx.send(Ok(ChatEvent::status("L'IA modifie vos documents...")))
+                    .await
+                    .ok();
+
+                // Snapshot avant mutation (si le repo est configuré)
+                if let Some(ref snap_repo) = self.snapshot_repo {
+                    let version = snap_repo
+                        .count_by_instance(instance.id)
+                        .await
+                        .unwrap_or(0)
+                        + 1;
+                    let snapshot = domain::InstanceSnapshot::capture(
+                        &instance,
+                        version,
+                        Some(req.message.clone()),
+                    );
+                    let _ = snap_repo.save(&snapshot).await;
+                }
+
+                let system_prompt = self.select_instance_system_prompt(true, false);
+                let user_input = self.build_instance_user_input(
+                    &instance, &profil, &offre, &history, &rag_context, &req,
+                );
+
+                let response_json = self
+                    .call_llm_extract(llm, system_prompt, user_input, true)
+                    .await?;
+                let new_data: ChatMutationOutput = serde_json::from_value(response_json)?;
+
+                tx.send(Ok(ChatEvent::status("Application des modifications...")))
+                    .await
+                    .ok();
+
+                let ai_message = self
+                    .process_instance_mutation(&mut instance, new_data)
+                    .await?;
+                let assistant_msg =
+                    Message::new(instance.id, MessageRole::Assistant, ai_message);
+                self.message_repo.push(&assistant_msg).await?;
+
+                instance.updated_at = chrono::Utc::now();
+                self.loader.instances.upsert(&instance).await?;
+
+                // Token chunks pour le message IA
+                for chunk in Self::chunk_response_for_stream(&assistant_msg.content) {
+                    if tx.send(Ok(ChatEvent::token(chunk))).await.is_err() {
+                        return Ok(());
+                    }
+                }
+                // Mutation + Done
+                tx.send(Ok(ChatEvent::mutation(instance))).await.ok();
+                tx.send(Ok(ChatEvent::Done)).await.ok();
+                return Ok(());
+            }
+
+            // Non-mutation : streaming LLM
+            tx.send(Ok(ChatEvent::status("L'IA réfléchit...")))
+                .await
+                .ok();
+
+            let user_input = self.build_instance_user_input(
+                &instance, &profil, &offre, &history, &rag_context, &req,
+            );
+            let system_prompt = self.select_instance_system_prompt(false, wants_id);
+            let completion_req = ports::CompletionRequest {
+                system: Some(system_prompt.to_string()),
+                messages: vec![ports::Message {
+                    role: ports::Role::User,
+                    content: user_input,
+                }],
+                model: None,
+                max_tokens: Some(4000),
+                temperature: None,
+            };
+
+            let mut llm_stream = llm.stream(completion_req).await?;
+            let mut full_response = String::new();
+
+            while let Some(result) = llm_stream.next().await {
+                match result {
+                    Ok(token) => {
+                        full_response.push_str(&token);
+                        if tx.send(Ok(ChatEvent::token(token))).await.is_err() {
+                            return Ok(());
+                        }
+                    }
+                    Err(e) => {
+                        let _ = tx.send(Err(e)).await;
+                        return Ok(());
+                    }
+                }
+            }
+
+            // Persist
+            if !full_response.is_empty() {
+                let assistant_msg =
+                    Message::new(instance.id, MessageRole::Assistant, full_response);
+                let _ = self.message_repo.push(&assistant_msg).await;
+                let mut instance = instance;
+                instance.updated_at = chrono::Utc::now();
+                let _ = self.loader.instances.upsert(&instance).await;
+            }
+
+            tx.send(Ok(ChatEvent::Done)).await.ok();
+            Ok(())
+        }
+        .await;
+
+        if let Err(e) = result {
+            let _ = tx.send(Ok(ChatEvent::error(e.to_string()))).await;
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    // Pipeline Global (mpsc-driven)
+    // ─────────────────────────────────────────────────────────────────
+
+    async fn run_global_pipeline(
+        &self,
+        req: ChatRequest,
+        tx: mpsc::Sender<Result<ChatEvent, LlmError>>,
+    ) {
+        let result: anyhow::Result<()> = async {
+            tx.send(Ok(ChatEvent::status("Chargement du profil...")))
+                .await
+                .ok();
+
+            let mut profil = self.loader.load_active_profil().await?;
+            let llm = self.get_llm(&req.llm_provider)?;
+
+            tx.send(Ok(ChatEvent::status("Recherche dans votre parcours...")))
+                .await
+                .ok();
+
+            let rag_context = self
+                .loader
+                .get_rag_context(profil.id, &req.message)
+                .await?;
+            let chat_history = extract_chat_history(&profil.notes);
+            let offres = self.loader.offres.list_all().await?;
+
+            push_chat_history(&mut profil.notes, "user", &req.message);
+            self.loader.profils.upsert(&profil).await?;
+
+            tx.send(Ok(ChatEvent::status("L'IA réfléchit...")))
+                .await
+                .ok();
+
+            let user_input = self
+                .build_global_user_input(&profil, &offres, &chat_history, &rag_context, &req);
+
+            let completion_req = ports::CompletionRequest {
+                system: Some(crate::prompts::chat::GLOBAL_CHAT_SYSTEM.to_string()),
+                messages: vec![ports::Message {
+                    role: ports::Role::User,
+                    content: user_input,
+                }],
+                model: None,
+                max_tokens: Some(4000),
+                temperature: None,
+            };
+
+            let mut llm_stream = llm.stream(completion_req).await?;
+            let mut full_response = String::new();
+
+            while let Some(result) = llm_stream.next().await {
+                match result {
+                    Ok(token) => {
+                        full_response.push_str(&token);
+                        if tx.send(Ok(ChatEvent::token(token))).await.is_err() {
+                            return Ok(());
+                        }
+                    }
+                    Err(e) => {
+                        let _ = tx.send(Err(e)).await;
+                        return Ok(());
+                    }
+                }
+            }
+
+            // Persist
+            if !full_response.is_empty() {
+                push_chat_history(&mut profil.notes, "assistant", &full_response);
+                let _ = self.loader.profils.upsert(&profil).await;
+            }
+
+            tx.send(Ok(ChatEvent::Done)).await.ok();
+            Ok(())
+        }
+        .await;
+
+        if let Err(e) = result {
+            let _ = tx.send(Ok(ChatEvent::error(e.to_string()))).await;
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    // Instance Chat (non-stream, inchangé)
+    // ─────────────────────────────────────────────────────────────────
 
     async fn execute_instance_chat(
         &self,
@@ -124,49 +438,9 @@ impl ChatWithApplicationUseCase {
         })
     }
 
-    async fn execute_instance_chat_stream(
-        &self,
-        instance_id: &str,
-        req: ChatRequest,
-    ) -> anyhow::Result<ports::BoxStream<'static, Result<String, LlmError>>> {
-        let (instance, profil, offre) = self.loader.load_instance_context(instance_id).await?;
-        let llm = self.get_llm(&req.llm_provider)?;
-        let history = self.message_repo.list_by_instance_id(instance.id).await?;
-        let rag_context = self
-            .loader
-            .get_rag_context(instance.profil_id, &req.message)
-            .await?;
-
-        let user_msg = Message::new(instance.id, MessageRole::User, req.message.clone());
-        self.message_repo.push(&user_msg).await?;
-
-        let user_input = self.render_instance_input_simple(
-            &instance,
-            &profil,
-            &offre,
-            &history,
-            &rag_context,
-            &req.message,
-        )?;
-
-        let completion_req = ports::CompletionRequest {
-            system: Some(crate::prompts::chat::INSTANCE_DEFAULT_SYSTEM.to_string()),
-            messages: vec![ports::Message::user(user_input)],
-            model: None,
-            max_tokens: Some(4000),
-            temperature: None,
-        };
-
-        let stream = llm.stream(completion_req).await?;
-        Ok(StreamOrchestrator::wrap_instance_stream(
-            stream,
-            instance,
-            self.message_repo.clone(),
-            self.loader.instances.clone(),
-        ))
-    }
-
-    // --- Global Chat ---
+    // ─────────────────────────────────────────────────────────────────
+    // Global Chat (non-stream, inchangé)
+    // ─────────────────────────────────────────────────────────────────
 
     async fn execute_global_chat(&self, req: ChatRequest) -> anyhow::Result<ChatResponse> {
         let mut profil = self.loader.load_active_profil().await?;
@@ -203,44 +477,9 @@ impl ChatWithApplicationUseCase {
         })
     }
 
-    async fn execute_global_chat_stream(
-        &self,
-        req: ChatRequest,
-    ) -> anyhow::Result<ports::BoxStream<'static, Result<String, LlmError>>> {
-        let mut profil = self.loader.load_active_profil().await?;
-        let llm = self.get_llm(&req.llm_provider)?;
-        let rag_context = self.loader.get_rag_context(profil.id, &req.message).await?;
-        let chat_history = extract_chat_history(&profil.notes);
-        let offres = self.loader.offres.list_all().await?;
-
-        push_chat_history(&mut profil.notes, "user", &req.message);
-        self.loader.profils.upsert(&profil).await?;
-
-        let user_input = self.render_global_input_simple(
-            &profil,
-            &offres,
-            &chat_history,
-            &rag_context,
-            &req.message,
-        )?;
-
-        let completion_req = ports::CompletionRequest {
-            system: Some(crate::prompts::chat::GLOBAL_CHAT_SYSTEM.to_string()),
-            messages: vec![ports::Message::user(user_input)],
-            model: None,
-            max_tokens: Some(4000),
-            temperature: None,
-        };
-
-        let stream = llm.stream(completion_req).await?;
-        Ok(StreamOrchestrator::wrap_global_stream(
-            stream,
-            profil,
-            self.loader.profils.clone(),
-        ))
-    }
-
-    // --- Helpers ---
+    // ─────────────────────────────────────────────────────────────────
+    // Helpers
+    // ─────────────────────────────────────────────────────────────────
 
     fn get_llm(&self, provider: &str) -> anyhow::Result<Arc<dyn LlmClient>> {
         self.llm_registry
@@ -404,62 +643,25 @@ impl ChatWithApplicationUseCase {
         Ok(ai_message)
     }
 
-    fn render_instance_input_simple(
-        &self,
-        instance: &domain::Instance,
-        profil: &domain::Profil,
-        offre: &domain::Offre,
-        history: &[domain::Message],
-        rag_context: &str,
-        message: &str,
-    ) -> anyhow::Result<String> {
-        let history_prompt = render_chat_history_for_prompt(history);
-        Ok(format!(
-            "IDENTITÉ DE L'UTILISATEUR (Profil complet):\n{}\n\n\
-            OFFRE CIBLÉE (fiche brute et structurée):\n{}\n\n\
-            ANALYSE DE L'OFFRE CIBLÉE (Restitution):\n{}\n\n\
-            FRAGMENTS DE PARCOURS (RAG):\n{}\n\n\
-            HISTORIQUE RÉCENT DU CHAT:\n{}\n\n\
-            DEMANDE DE L'UTILISATEUR: {}\n\n\
-            JSON ACTUEL DU CV: {}\n\n\
-            JSON ACTUEL DE LA LETTRE: {}",
-            serde_json::to_string_pretty(&build_profile_prompt_context(profil))?,
-            serde_json::to_string_pretty(&build_offer_prompt_context(offre))?,
-            serde_json::to_string_pretty(&instance.restitution)?,
-            rag_context,
-            history_prompt,
-            message,
-            serde_json::to_string_pretty(&instance.resume_json)?,
-            serde_json::to_string_pretty(&instance.cover_letter_json)?
-        ))
-    }
+    fn chunk_response_for_stream(text: &str) -> Vec<String> {
+        let mut chunks = Vec::new();
+        let mut current = String::new();
 
-    fn render_global_input_simple(
-        &self,
-        profil: &domain::Profil,
-        offres: &[domain::Offre],
-        chat_history: &[domain::Message],
-        rag_context: &str,
-        message: &str,
-    ) -> anyhow::Result<String> {
-        let history_prompt = render_chat_history_for_prompt(chat_history);
-        Ok(format!(
-            "IDENTITÉ DE L'UTILISATEUR (Profil complet):\n{}\n\n\
-            OFFRES DISPONIBLES EN BASE ({} offres):\n{}\n\n\
-            DÉTAILS DU PARCOURS (RAG):\n{}\n\n\
-            HISTORIQUE RÉCENT DU CHAT:\n{}\n\n\
-            DEMANDE DE L'UTILISATEUR: {}",
-            serde_json::to_string_pretty(&build_profile_prompt_context(profil))?,
-            offres.len(),
-            serde_json::to_string_pretty(
-                &offres
-                    .iter()
-                    .map(|o| (o.slug.to_string(), o.intitule.clone(), o.entreprise.clone()))
-                    .collect::<Vec<_>>()
-            )?,
-            rag_context,
-            history_prompt,
-            message
-        ))
+        for ch in text.chars() {
+            current.push(ch);
+            if ch == ' ' || current.len() >= 14 {
+                chunks.push(std::mem::take(&mut current));
+            }
+        }
+
+        if !current.is_empty() {
+            chunks.push(current);
+        }
+
+        if chunks.is_empty() {
+            chunks.push(String::new());
+        }
+
+        chunks
     }
 }

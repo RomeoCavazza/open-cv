@@ -38,69 +38,65 @@ export function renderIframeLoadingState(tab) {
                     display: flex;
                     flex-direction: column;
                     align-items: center;
-                    justify-content: center;
+                    justify-content: flex-start;
                     height: 100vh;
                     margin: 0;
+                    padding-top: 18vh;
                     overflow: hidden;
+                    text-align: center;
                 }
-                .spark-icon {
-                    width: 40px;
-                    height: 40px;
-                    color: #0052ff;
+                .icon-container {
+                    background: #eef2ff;
+                    width: 64px;
+                    height: 64px;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
                     margin-bottom: 24px;
-                    animation: pulse-spark 2s infinite ease-in-out;
+                }
+                .sparkles {
+                    width: 24px;
+                    height: 24px;
+                    color: #0052ff;
+                }
+                h2 {
+                    font-size: 20px;
+                    font-weight: 700;
+                    color: #1e293b;
+                    margin: 0 0 32px;
                 }
                 .skeleton-container {
-                    width: 80%;
-                    max-width: 500px;
+                    width: 100%;
+                    max-width: 400px;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 16px;
+                    margin: 0 auto;
                 }
-                .skeleton-line {
-                    height: 10px;
+                .skeleton-bar {
+                    height: 14px;
                     background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
                     background-size: 200% 100%;
                     animation: loading 1.5s infinite;
-                    border-radius: 5px;
-                    margin-bottom: 12px;
-                }
-                .skeleton-title {
-                    height: 20px;
-                    width: 60%;
-                    margin-bottom: 24px;
+                    border-radius: 4px;
                 }
                 @keyframes loading {
                     0% { background-position: 200% 0; }
                     100% { background-position: -200% 0; }
                 }
-                @keyframes pulse-spark {
-                    0%, 100% { transform: scale(1); opacity: 1; filter: drop-shadow(0 0 0px rgba(0,82,255,0)); }
-                    50% { transform: scale(1.1); opacity: 0.8; filter: drop-shadow(0 0 8px rgba(0,82,255,0.4)); }
-                }
-                .label {
-                    margin-top: 16px;
-                    font-size: 13px;
-                    font-weight: 600;
-                    color: #4b5563;
-                    letter-spacing: -0.01em;
-                }
-                .sub-label {
-                    margin-top: 4px;
-                    font-size: 11px;
-                    color: #9ca3af;
-                }
             </style>
         </head>
         <body>
-            <svg class="spark-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" />
-            </svg>
-            <div class="skeleton-container">
-                <div class="skeleton-line skeleton-title"></div>
-                <div class="skeleton-line" style="width: 100%"></div>
-                <div class="skeleton-line" style="width: 90%"></div>
-                <div class="skeleton-line" style="width: 40%"></div>
+            <div class="icon-container">
+                <svg class="sparkles" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>
             </div>
-            <div class="label">${label}</div>
-            <div class="sub-label">RecruitAI Intelligence</div>
+            <h2>${label}</h2>
+            <div class="skeleton-container">
+                <div class="skeleton-bar" style="width: 100%"></div>
+                <div class="skeleton-bar" style="width: 90%"></div>
+                <div class="skeleton-bar" style="width: 75%"></div>
+            </div>
         </body>
         </html>
     `;

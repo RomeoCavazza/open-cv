@@ -9,6 +9,7 @@ use serde_json::json;
 pub enum ApiError {
     BadRequest(String),
     NotFound(String),
+    TooManyRequests(String),
     Internal(String),
 }
 
@@ -33,6 +34,7 @@ impl IntoResponse for ApiError {
         let (status, message) = match self {
             Self::BadRequest(m) => (StatusCode::BAD_REQUEST, m),
             Self::NotFound(m) => (StatusCode::NOT_FOUND, m),
+            Self::TooManyRequests(m) => (StatusCode::TOO_MANY_REQUESTS, m),
             Self::Internal(m) => (StatusCode::INTERNAL_SERVER_ERROR, m),
         };
         (status, Json(json!({ "error": message }))).into_response()

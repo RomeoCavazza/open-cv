@@ -132,13 +132,39 @@ fn extract_linkedin_job_id(path: &str) -> Option<String> {
 
 fn is_direct_prompt(raw: &str) -> bool {
     let normalized = raw.trim().to_lowercase();
-    let has_prompt_verb = ["genere", "génère", "generate", "cree", "crée", "create"]
-        .iter()
-        .any(|kw| normalized.contains(kw));
+    let has_prompt_verb = [
+        "genere",
+        "génère",
+        "générer",
+        "generate",
+        "cree",
+        "crée",
+        "créer",
+        "create",
+        "fait",
+        "fais",
+        "faire",
+        "build",
+        "rédige",
+        "rédiger",
+        "write",
+    ]
+    .iter()
+    .any(|kw| normalized.contains(kw));
 
-    let has_deliverable = ["cv", "resume", "lettre", "profil", "profile"]
-        .iter()
-        .any(|kw| normalized.contains(kw));
+    let has_deliverable = [
+        "cv",
+        "resume",
+        "résumé",
+        "lettre",
+        "profil",
+        "profile",
+        "restitution",
+        "analyse",
+        "analysis",
+    ]
+    .iter()
+    .any(|kw| normalized.contains(kw));
 
     has_prompt_verb || has_deliverable
 }
@@ -146,33 +172,13 @@ fn is_direct_prompt(raw: &str) -> bool {
 fn build_direct_prompt_offer(raw_prompt: &str) -> String {
     let target_title = extract_target_title(raw_prompt);
     format!(
-        "OFFRE GENERIQUE - PROMPT DIRECT\n\
-         Demande utilisateur: {raw_prompt}\n\
-         Intitule cible: {target_title}\n\
-         Entreprise: Entreprise cible (non specifiee)\n\
-         Localisation: Flexible / a definir\n\
-         Contrat: A definir\n\n\
+        "DEMANDE DE CANDIDATURE\n\
+         Titre visé: {target_title}\n\n\
          CONTEXTE\n\
-         Cette offre est creee a partir d'un prompt direct sans URL source. \
-         Le moteur doit produire une candidature generique, credibile et actionnable.\n\n\
-         MISSIONS\n\
-         - Concevoir et implementer des solutions adaptees au role cible.\n\
-         - Prioriser la qualite, la fiabilite, la documentation et la maintenance.\n\
-         - Collaborer avec les equipes produit, engineering et operations.\n\
-         - Contribuer a l'amelioration continue des pratiques techniques.\n\n\
-         PROFIL RECHERCHE\n\
-         - Excellente capacite de structuration et de communication.\n\
-         - Maitrise des fondamentaux du poste vise et des bonnes pratiques.\n\
-         - Approche pragmatique, autonomie, sens des responsabilites.\n\
-         - Capacite a apprendre vite et a transmettre les connaissances.\n\n\
-         COMPETENCES ET STACK\n\
-         - Stack technique ou fonctionnelle a adapter selon le role cible.\n\
-         - Experience operationnelle sur des projets concrets.\n\
-         - Methodes de travail collaboratives et culture de feedback.\n\n\
-         EXIGENCES\n\
-         - Rigueur, curiosite, esprit d'initiative.\n\
-         - Capacite a traduire un besoin metier en plan d'action clair.\n\
-         - Souci de l'impact, des resultats et de la valeur livree."
+         {raw_prompt}\n\n\
+         MISSIONS ET PROFIL\n\
+         Le candidat souhaite générer une candidature pour le poste de {target_title}. \
+         Générer un contenu professionnel basé sur les standards du domaine."
     )
 }
 
@@ -180,10 +186,16 @@ fn extract_target_title(raw_prompt: &str) -> String {
     let trimmed = raw_prompt.trim().trim_matches('"').trim_matches('\'');
     let lower = trimmed.to_lowercase();
     let patterns = [
+        "génère-moi un",
+        "génère-moi une",
+        "génère moi un",
+        "génère moi une",
         "génère un",
         "génère une",
         "genere un",
         "genere une",
+        "générer un",
+        "générer une",
         "generate a",
         "generate an",
         "generate",
@@ -194,12 +206,22 @@ fn extract_target_title(raw_prompt: &str) -> String {
         "crée une",
         "cree un",
         "cree une",
+        "fais-moi un",
+        "fais-moi une",
+        "fais moi un",
+        "fais moi une",
+        "fait moi un",
+        "fait moi une",
+        "rédige un",
+        "rédige une",
+        "rédiger un",
+        "rédiger une",
     ];
 
     for pattern in patterns {
-        if let Some(rest) = lower.strip_prefix(pattern) {
-            let start = trimmed.len() - rest.len();
-            let candidate = trimmed[start..].trim();
+        if let Some(idx) = lower.find(pattern) {
+            let start = idx + pattern.len();
+            let candidate = trimmed[start..].trim().trim_matches('?').trim_matches('.').trim();
             if !candidate.is_empty() {
                 return candidate.to_string();
             }

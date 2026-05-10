@@ -1,5 +1,6 @@
 use crate::errors::ApiError;
 use crate::state::AppState;
+use application::chat::ChatEvent;
 use axum::{
     extract::State,
     response::{sse::Event, Json, Sse},
@@ -20,7 +21,8 @@ pub async fn chat_handler(
         state.message_repo.clone(),
         state.embedder.clone(),
         state.llm_registry.as_ref().clone(),
-    );
+    )
+    .with_snapshot_repo(state.snapshot_repo.clone());
 
     let res = usecase
         .execute(req)
@@ -43,7 +45,8 @@ pub async fn chat_stream_handler(
         state.message_repo.clone(),
         state.embedder.clone(),
         state.llm_registry.as_ref().clone(),
-    );
+    )
+    .with_snapshot_repo(state.snapshot_repo.clone());
 
     let stream = usecase
         .execute_stream(req)
@@ -53,8 +56,26 @@ pub async fn chat_stream_handler(
     let sse_stream = futures::stream::unfold(stream, |mut s| async move {
         use futures::StreamExt;
         match s.next().await {
-            Some(Ok(token)) => {
-                let event = Event::default().data(token);
+            Some(Ok(chat_event)) => {
+                let event = match &chat_event {
+                    ChatEvent::Status { content } => {
+                        Event::default().event("status").data(content.clone())
+                    }
+                    ChatEvent::Token { content } => {
+                        // Tokens are sent as plain data (default event type "message")
+                        // for backward compatibility with existing SSE parsing
+                        Event::default().data(content.clone())
+                    }
+                    ChatEvent::Mutation { .. } => {
+                        let json = serde_json::to_string(&chat_event)
+                            .unwrap_or_else(|_| "{}".to_string());
+                        Event::default().event("mutation").data(json)
+                    }
+                    ChatEvent::Done => Event::default().event("done").data("{}"),
+                    ChatEvent::Error { message } => {
+                        Event::default().event("error").data(message.clone())
+                    }
+                };
                 Some((Ok(event), s))
             }
             Some(Err(e)) => {

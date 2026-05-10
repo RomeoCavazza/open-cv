@@ -485,14 +485,10 @@ textarea:focus { border-color: var(--primary); }
     color: var(--heading);
 }
 
-/* Regenerate button is always partially visible as a visual cue */
-.offer-action-btn[data-action="regenerate"] {
-    opacity: 0.4;
-}
+/* Regenerate button follows standard visibility (invisible by default) */
 .offer-card:hover .offer-action-btn[data-action="regenerate"],
 .old-offer-item:hover .offer-action-btn[data-action="regenerate"] {
     opacity: 1;
-    color: var(--primary);
 }
 
 /* Keep archived icon visible too if it's the 'active' one? 
@@ -716,6 +712,68 @@ textarea:focus { border-color: var(--primary); }
     opacity: 1 !important;
 }
 
+.ai-status-message {
+    margin-bottom: 18px;
+}
+
+.ai-status-label {
+    font-size: 10px;
+    font-weight: 800;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 4px;
+}
+
+.ai-status-row {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    border: 1px solid var(--hairline);
+    border-radius: 12px;
+    background: #f8fafc;
+}
+
+.ai-status-phase {
+    font-size: 12px;
+    color: var(--heading);
+    font-weight: 600;
+}
+
+.ai-status-dots {
+    display: inline-flex;
+    align-items: flex-end;
+    gap: 4px;
+}
+
+.ai-status-dots span {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--primary);
+    animation: ai-hop 0.9s ease-in-out infinite;
+}
+
+.ai-status-dots span:nth-child(2) {
+    animation-delay: 0.12s;
+}
+
+.ai-status-dots span:nth-child(3) {
+    animation-delay: 0.24s;
+}
+
+@keyframes ai-hop {
+    0%, 80%, 100% {
+        transform: translateY(0);
+        opacity: 0.35;
+    }
+    40% {
+        transform: translateY(-4px);
+        opacity: 1;
+    }
+}
+
 @media (max-width: 1280px) {
     .sidebar-right { display: none; }
 }
@@ -779,4 +837,24 @@ textarea:focus { border-color: var(--primary); }
 
 @keyframes slide-out {
     to { transform: translateX(100%); opacity: 0; }
+}
+
+/* --- MUTATION SYNC ANIMATION --- */
+.mutation-pop {
+    animation: mutation-flash 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes mutation-flash {
+    0% {
+        box-shadow: 0 0 0 0 rgba(0, 82, 255, 0.4);
+        transform: scale(1);
+    }
+    30% {
+        box-shadow: 0 0 0 6px rgba(0, 82, 255, 0.15);
+        transform: scale(1.005);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(0, 82, 255, 0);
+        transform: scale(1);
+    }
 }
