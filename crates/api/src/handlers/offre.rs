@@ -17,17 +17,26 @@ fn default_limit() -> u32 {
 }
 
 fn infer_business_category(slug: &str, title: &str) -> &'static str {
-    let haystack = format!("{} {}", slug.to_lowercase(), title.to_lowercase());
+    let haystack = format!(" {} {} ", slug.to_lowercase(), title.to_lowercase());
 
     if [
         "data",
-        " ai",
-        "ia",
+        " ai ",
+        " ia ",
         "intelligence artificielle",
         "llm",
         "langchain",
         "machine learning",
         "scientist",
+        "statistique",
+        "analyst",
+        " business intelligence ",
+        " bi ",
+        " sql ",
+        "pandas",
+        "spark",
+        "tableau",
+        "powerbi",
     ]
     .iter()
     .any(|n| haystack.contains(n))
@@ -39,14 +48,31 @@ fn infer_business_category(slug: &str, title: &str) -> &'static str {
         "développeur",
         "software",
         "java",
+        "python",
+        "javascript",
+        "js",
+        "typescript",
+        "ts",
+        "kotlin",
+        "swift",
+        "ios",
+        "android",
+        "mobile",
         "api",
         "logiciel",
         "full stack",
+        "fullstack",
+        "frontend",
+        "backend",
+        "front-end",
+        "back-end",
         "embarqu",
         "engineering",
         "devops",
         "c++",
         "rust",
+        "react",
+        "node",
     ]
     .iter()
     .any(|n| haystack.contains(n))
@@ -62,6 +88,9 @@ fn infer_business_category(slug: &str, title: &str) -> &'static str {
         "product",
         "manager",
         "management",
+        "agile",
+        "scrum",
+        "owner",
     ]
     .iter()
     .any(|n| haystack.contains(n))
@@ -74,13 +103,13 @@ fn infer_business_category(slug: &str, title: &str) -> &'static str {
     {
         return "Innovation";
     }
-    if ["design", "ui", "ux", "graphiste"]
+    if ["design", "ui", "ux", "graphiste", "maquette"]
         .iter()
         .any(|n| haystack.contains(n))
     {
         return "Design";
     }
-    if ["marketing", "communication", "seo", "content"]
+    if ["marketing", "communication", "seo", "content", "réseaux sociaux"]
         .iter()
         .any(|n| haystack.contains(n))
     {
