@@ -65,3 +65,9 @@ Ce document répertorie les outils et commandes essentiels pour la maintenance, 
 - Git : Système de contrôle de version.
 - Nix : Gestionnaire de paquets et d'environnements reproductibles.
 - Just (via Justfile) : Lanceur de commandes (command runner).
+
+## 9. Commandes Projet (Recommandées)
+- `just ci` : Pipeline locale complète (`health` + `audit` + `test`).
+- `just dev` : Lance l'API (`cargo run -p api --bin api`).
+- `just watch` : Lance l'API avec auto-reload (`cargo watch`, nécessite `cargo-watch`).
+- `just db-reset` : Purge des tables applicatives locales.

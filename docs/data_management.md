@@ -34,6 +34,7 @@ just seed-profile
 # ou
 cargo run -p api --bin seed_profile
 ```
+*Note : le script applique aussi des post-traitements métier (normalisation de sections, enrichissements de liens) à partir de `data/user/profil_to_upload.md`.*
 
 ## Chargement des Offres et Instances
 

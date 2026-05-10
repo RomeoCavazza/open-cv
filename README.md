@@ -16,30 +16,6 @@ This project is a local application-generation engine. It ingests job postings, 
 
 ---
 
-## System Workflow
-
-```mermaid
-flowchart LR
-    User[User]
-    UI[Static web frontend]
-    API[Backend API Rust Axum]
-    APP[Application use cases]
-    LLM[LLM API / Local AI]
-    PG[(PostgreSQL)]
-    Render[HTML renderers: Resume, Cover Letter, Analysis]
-
-    User --> UI
-    UI --> API
-    UI --> Render
-    API --> APP
-    APP --> PG
-    APP --> LLM
-    PG --> API
-    API --> UI
-```
-
----
-
 ## Previews
 
 ### Job Analysis
@@ -77,6 +53,7 @@ flowchart LR
 The workflow is driven by the Rust backend and can be summarized in seven main steps:
 
 1. **Ingestion**: a job posting is sent to the API, deduplicated, normalized, and stored in `offres`.
+   Intake accepts up to **5 requests per batch** (URLs and/or prompt-demands); extra requests are ignored and reported in the API warning payload.
 2. **Analysis**: the posting is structured to extract responsibilities, stack, and key signals.
 3. **Context selection**: the active profile and its chunks are loaded from PostgreSQL.
 4. **Generation**: the application produces a structured analysis, a tailored resume, and a targeted cover letter.
@@ -137,6 +114,7 @@ flowchart TD
 - [docs/toolkit.md](docs/toolkit.md) : Liste des outils et commandes de diagnostic.
 - [docs/project_map.md](docs/project_map.md) : Cartographie détaillée de l'arborescence.
 - [docs/instructions.md](docs/instructions.md) : Setup et commandes courantes.
+- [docs/data_management.md](docs/data_management.md) : Reset DB, seeding profil et jeux de données locaux.
 - [docs/design.md](docs/design.md) : Direction visuelle et principes UI.
 
 ---

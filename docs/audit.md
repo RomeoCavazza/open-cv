@@ -1,6 +1,6 @@
 # Audit Technique & Hardening Roadmap - RecruitAI
 
-Date de l'audit : 9 mai 2026
+Date de l'audit : 10 mai 2026
 Statut global : **Sain & Industriel**
 Architecture : **Hexagonale (Workspace Rust)**
 
@@ -14,14 +14,13 @@ Architecture : **Hexagonale (Workspace Rust)**
 | **Logique métier SQL** | La classification des offres (`fn_infer_offre_category`) est figée dans un trigger SQL via Regex. | Difficile à tester unitairement et à faire évoluer sans migration DB. | **Moyenne** |
 | **Couplage d'État** | Un seul `status` global par `Instance` dans la DB. | Impossible de savoir si c'est le CV ou la Lettre qui a échoué précisément. | **Moyenne** |
 | **Erreurs de Troncature** | Risque de saturation de contexte LLM sur les gros profils. | `LlmError::Truncated` non géré de manière élégante (échec sec). | **Basse** |
-| **Optimisation Binaire** | Taille actuelle : **6.2 MiB**. | Aucun risque réel, performance excellente, mais divergence avec les docs précédents. | **Basse** |
+| **Optimisation Binaire** | Taille binaire à suivre via `tooling/health_report.md` (varie selon le profil de build). | Aucun risque réel, performance excellente, mais la valeur chiffrée devient vite obsolète en doc. | **Basse** |
 
 ### 1.2 Frontend (Vanilla JS)
 
 | Composant | Problématique | Risque | Priorité |
 | :--- | :--- | :--- | :--- |
-| **Réactivité** | Manipulation directe du DOM via `getElementById`. | Code verbeux, difficile à maintenir si le nombre de livrables augmente. | **Moyenne** |
-| **Remédiation** | *Envisager Alpine.js ou HTMX pour simplifier la réactivité (voir Blueprint Section 9).* | | |
+| **Réactivité** | Manipulation directe du DOM via `getElementById` (piste: Alpine.js/HTMX, voir Blueprint section 9). | Code verbeux, difficile à maintenir si le nombre de livrables augmente. | **Moyenne** |
 | **Gestion d'État** | Fragmentation entre `window.state` et `localStorage`. | **Résolu** : Synchronisation réactive via `GEN_STARTED` & storage events. | **Check** |
 | **Centralisation** | Logique de polling historiquement dupliquée. | **Résolu** : Master Poller implémenté (reste optimisation `postMessage`). | **Check** |
 | **Data-Binding** | Champs de profil pré-remplis par défaut (fallbacks hardcodés). | **Résolu** : Suppression des valeurs par défaut dans le JS pour respecter la nudité de la DB. | **Check** |
@@ -42,15 +41,15 @@ Architecture : **Hexagonale (Workspace Rust)**
 ### 2.3 État de la Synchronisation UI (Feedback Ingestion/Génération)
 - **Synchronisation Optimiste** : L'usage coordonné de `GEN_STARTED` et du `localStorage` garantit une cohérence visuelle instantanée entre la Sidebar (icône Double Span) et l'Iframe (Skeleton interne des templates). La coordination a été stabilisée en réintégrant le skeleton immédiat via `srcdoc` dans `view.js`.
 - **Intégrité du Profil** : Les mécanismes de chargement/sauvegarde du profil ont été audités. Les champs vides sont désormais correctement rendus comme tels, évitant les "fantômes" de session.
-- **Points d'attention (Optimisation)** :
-    - **Redondance du Polling** : Le parent (`Master Poller`) et l'Iframe effectuent actuellement des requêtes de statut en parallèle. Bien que l'impact réseau soit négligeable, une communication via `postMessage` permettrait d'éliminer cette redondance.
-    - **Poids du Rendu Sidebar** : La fonction `loadOffers()` reconstruit l'intégralité du DOM de la sidebar à chaque rafraîchissement. Pour des volumes importants d'offres (> 100), une approche par manipulation chirurgicale du DOM ou l'usage d'Alpine.js sera préférable pour maintenir la fluidité.
+Points d'attention (Optimisation) :
+- **Redondance du Polling** : Le parent (`Master Poller`) et l'Iframe effectuent actuellement des requêtes de statut en parallèle. Bien que l'impact réseau soit négligeable, une communication via `postMessage` permettrait d'éliminer cette redondance.
+- **Poids du Rendu Sidebar** : La fonction `loadOffers()` reconstruit l'intégralité du DOM de la sidebar à chaque rafraîchissement. Pour des volumes importants d'offres (> 100), une approche par manipulation chirurgicale du DOM ou l'usage d'Alpine.js sera préférable pour maintenir la fluidité.
 
 ---
 
 ## 3. Plan d'Action (Hardening Roadmap)
 
-### Étape 1 : Robustesse Système (Immediate)
+### Étape 1 : Robustesse Système (Immédiat)
 - [ ] **Job Persistence** : Introduire une table `background_jobs` pour que `tokio::spawn` puisse reprendre après un crash.
 - [ ] **Validation de Troncature** : Implémenter un découpage (chunking) intelligent des profils trop longs avant l'envoi au LLM.
 
@@ -67,8 +66,7 @@ Architecture : **Hexagonale (Workspace Rust)**
 - [x] **Fusion des Migrations** : Schéma V1 unifié et table d'Undo (Terminé).
 - [x] **Snapshot & Undo** : Persistance réelle des versions précédentes pour le chat (Terminé).
 
-### Étape 4 : Scalability & Production (Next Steps)
-- [ ] **Job Persistence** : Migration vers une table de jobs Postgres pour garantir la reprise après crash.
+### Étape 4 : Scalabilité & Production (Prochaines étapes)
 - [ ] **Refactoring UI** : Introduction d'Alpine.js pour simplifier la manipulation du DOM.
 - [ ] **Dockerization** : Création de l'image de production et déploiement cloud.
 

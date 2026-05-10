@@ -72,5 +72,5 @@ Le frontend fonctionne en architecture modulaire orientée contrôleurs, avec un
 ## Dette Technique & Cleanup
 
 - **LlmError::Truncated** : Remplacer le smoke test manuel par un test unitaire permanent.
-- **scraper_ant** : Implémenter l'adapter comme fallback HTTP pour contourner les protections anti-bot.
-- **seed_offers_instances.rs** : Supprimer les types `Legacy*` et le code de migration associé.
+- **Statuts par livrable** : Introduire des statuts indépendants (`resume`, `cover_letter`, `restitution`) pour un suivi plus fin en UI.
+- **Jobs persistants** : Remplacer la dépendance à `tokio::spawn` volatil par une file de jobs en base.

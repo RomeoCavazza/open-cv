@@ -38,7 +38,13 @@ Once inside `nix develop`, the daily workflow is simple:
    ```bash
    just dev
    ```
-   `just dev` uses `cargo watch`, so the server reloads automatically when Rust files change.
+   `just dev` runs `cargo run -p api --bin api`.
+
+Optional hot-reload mode (requires `cargo-watch`):
+```bash
+just watch
+```
+`just watch` uses `cargo watch -x 'run -p api --bin api'`.
 
 The server starts on **http://localhost:8000**.
 
@@ -63,6 +69,7 @@ The project uses a `.env` file to store the keys required for generation.
 ## Useful Commands
 
 - `just db-down`: stop the PostgreSQL server cleanly.
+- `just ci`: run the full local quality gate (`health`, `audit`, `test`).
 - `rm -rf target`: remove build artifacts if you want to reclaim disk space.
 - `rm -rf .pg`: remove the local database only after stopping Postgres with `just db-down`.
 - `cargo check --workspace`: verify that the Rust workspace still compiles.

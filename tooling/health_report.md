@@ -1,7 +1,7 @@
 ==========================================
 RAPPORT DE SANTE INDUSTRIEL — RECRUITAI
 ==========================================
-Généré le : 2026-05-10 23:16:21
+Généré le : 2026-05-10 23:30:23
 
 ==========================================
 0. QUALITY GATE SUMMARY
@@ -34,15 +34,15 @@ Généré le : 2026-05-10 23:16:21
  |- JavaScript             1          145          130            3           12
  (Total)                             1242         1185            4           53
 ─────────────────────────────────────────────────────────────────────────────────
- Markdown                 10          846            0          666          180
- |- BASH                   4           38           26            8            4
- (Total)                              884           26          674          184
+ Markdown                 10          839            0          662          177
+ |- BASH                   4           39           27            8            4
+ (Total)                              878           27          670          181
 ─────────────────────────────────────────────────────────────────────────────────
  Rust                     71        11932        10595           93         1244
  |- Markdown              32          199            0          181           18
  (Total)                            12131        10595          274         1262
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- Total                   136        30506        25567         2675         2264
+ Total                   136        30500        25568         2671         2261
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
@@ -80,36 +80,36 @@ advisories ok, bans ok, licenses ok, sources ok
 ==========================================
 DEPENDANCES INUTILISEES (UDEPS)
 ```
-info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/domain-849bcc345b31b740.d"
 info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/domain-7c551cfde9c257b0.d"
+info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/domain-849bcc345b31b740.d"
 info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/ports-1c14cd0f602bb202.d"
 info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/ports-eadb8a1d02398f28.d"
-info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/application-6866775b59a41fe0.d"
 info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/application-ef884d6faf032a14.d"
+info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/application-6866775b59a41fe0.d"
 info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/profil_test-a7e5eabec6905256.d"
+info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/adapter_llm_openai-ca623f5b383f03ed.d"
 info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/adapter_llm_claude-30eca804f1f688e4.d"
 info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/adapter_llm_ollama-31676fa200553554.d"
 info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/adapter_scraper_http-ffd8a4cf0073f0fb.d"
-info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/adapter_llm_openai-ca623f5b383f03ed.d"
+info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/adapter_llm_ollama-0d329a91cd76c3e9.d"
 info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/adapter_scraper_http-2d95625e48a0b9f0.d"
 info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/adapter_llm_openai-1ec1f36959e7306d.d"
 info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/adapter_llm_claude-b553515234d2c2d5.d"
-info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/adapter_llm_ollama-0d329a91cd76c3e9.d"
 info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/adapter_postgres-67daa008f0b294ca.d"
 info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/adapter_postgres-fddb81576fca307a.d"
-info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/api-37f3a935bfdfcbcd.d"
 info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/api-d1ad98e1d2394783.d"
-info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/api-0c5b253ccb96fe24.d"
-info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/api-d28bb0a9a5aa5562.d"
-info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/api_integration-b800eae36b90f3bf.d"
-info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/seed_blank-0b5ddf04cd2598ad.d"
-info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/seed_blank-347cc6ed0329ab53.d"
-info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/seed_profile-bf08b8648b186fd4.d"
-info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/seed_profile-bcf3b4957182c5d8.d"
+info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/api-37f3a935bfdfcbcd.d"
 info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/seed_offers_instances-bfeb12868a141e1e.d"
+info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/api-0c5b253ccb96fe24.d"
+info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/api_integration-b800eae36b90f3bf.d"
+info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/seed_profile-bf08b8648b186fd4.d"
 info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/seed_offers_instances-772bb3a8c1bf606e.d"
 info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/seed_chunks-51615e55a2e2db49.d"
+info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/seed_blank-347cc6ed0329ab53.d"
+info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/seed_profile-bcf3b4957182c5d8.d"
+info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/api-d28bb0a9a5aa5562.d"
 info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/seed_chunks-37c2555e91fdeca6.d"
+info: Loading depinfo from "/home/tco/Bureau/alternance/target/debug/deps/seed_blank-0b5ddf04cd2598ad.d"
 All deps seem to have been used.
 ```
 
@@ -412,23 +412,23 @@ showNotification  function  web/assets/js/render/audio.js:31:17
 ANALYSE DU BINAIRE (CARGO BLOAT)
 ```
  File  .text     Size Crate
- 8.9%  27.6% 891.5KiB std
- 3.8%  11.8% 379.8KiB rustls
- 3.0%   9.3% 301.8KiB sqlx_postgres
- 2.9%   9.0% 292.3KiB ring
- 1.6%   5.1% 164.8KiB sqlx_core
- 1.4%   4.3% 139.8KiB tokio
- 1.2%   3.8% 124.0KiB reqwest
- 1.1%   3.3% 106.1KiB hyper_util
- 0.8%   2.6%  83.0KiB hyper
- 0.7%   2.2%  70.8KiB [Unknown]
- 0.7%   2.1%  68.5KiB webpki
- 0.5%   1.6%  51.8KiB http
- 0.5%   1.5%  48.7KiB url
- 0.4%   1.2%  39.6KiB serde_json
- 0.4%   1.1%  35.8KiB adapter_postgres
- 3.9%  12.1% 391.7KiB And 64 more crates. Use -n N to show more.
-32.3% 100.0%   3.2MiB .text section size, the file size is 9.8MiB
+ 8.4%  28.0% 747.6KiB std
+ 4.1%  13.5% 361.5KiB rustls
+ 3.4%  11.3% 301.3KiB sqlx_postgres
+ 3.3%  11.0% 292.3KiB ring
+ 2.1%   7.1% 190.2KiB sqlx_core
+ 1.5%   5.1% 135.9KiB tokio
+ 0.8%   2.7%  70.8KiB [Unknown]
+ 0.8%   2.5%  67.9KiB webpki
+ 0.6%   2.1%  56.1KiB seed_profile
+ 0.5%   1.7%  44.2KiB url
+ 0.5%   1.6%  42.4KiB adapter_postgres
+ 0.4%   1.4%  37.0KiB serde_json
+ 0.3%   1.1%  30.6KiB chrono
+ 0.3%   1.1%  28.9KiB idna
+ 0.2%   0.7%  18.3KiB tracing
+ 2.4%   7.9% 211.6KiB And 49 more crates. Use -n N to show more.
+29.9% 100.0%   2.6MiB .text section size, the file size is 8.7MiB
 
 Note: numbers above are a result of guesswork. They are not 100% correct and never will be.
 ```

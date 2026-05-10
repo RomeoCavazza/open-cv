@@ -45,7 +45,7 @@ Le frontend est minimaliste pour garantir performance et pérennité :
 - chunks : Fragments de profil vectorisés pour le RAG.
 - instances : Lien profil-offre + historique des messages de chat.
 
-## 7. Roadmap et Hardening (Phase MVP 66% -> 100%)
+## 7. Roadmap et Hardening (MVP stabilisé)
 
 La priorité absolue est le **Hardening de la pipeline Data/AI** et l'optimisation de l'expérience interactive.
 
@@ -57,6 +57,8 @@ La priorité absolue est le **Hardening de la pipeline Data/AI** et l'optimisati
 2. **Génération & Queueing** :
     - [x] Orchestration asynchrone pour gérer plusieurs liens à la suite.
     - [x] Mise en place d'une file d'attente (Queuing) via sémaphores.
+    - [x] Limitation dure des demandes d'ingestion (max 5 par requête) avec compteur de demandes ignorées.
+    - [x] Support hybride URL + prompts directs dans un même input.
     - [x] Synchronisation Sidebar : Apparition instantanée.
 
 ### PHASE B : Intelligence Interactive (Terminée)
@@ -72,6 +74,8 @@ La priorité absolue est le **Hardening de la pipeline Data/AI** et l'optimisati
 Pour garantir une stabilité durable, les scénarios suivants sont validés :
 - [x] Ingestion d'une offre protégée par Cloudflare.
 - [x] Génération concurrente en arrière-plan.
+- [x] Limite d'ingestion (>5 demandes) avec rejet explicite du surplus.
+- [x] Ingestion hybride (liens + demandes textuelles) dans une seule soumission.
 - [x] Modification d'un paragraphe du CV via le chat et validation du JSON résultant.
 - [x] Export PDF via l'interface.
 
@@ -81,7 +85,7 @@ Pour garantir une stabilité durable, les scénarios suivants sont validés :
 - [x] Rendu immédiat post-génération (disparition du skeleton via BackgroundPollManager).
 - [x] Cohérence du chat avec injection complète du `JSON.profile`.
 
-## 9. Phase C : Production & Scalability (Roadmap)
+## 9. Phase C : Production & Scalabilité (Roadmap)
 
 Une fois le MVP stabilisé, la trajectoire de croissance s'articule autour de trois axes :
 
@@ -106,12 +110,12 @@ Une fois le MVP stabilisé, la trajectoire de croissance s'articule autour de tr
 
 Bien que l'approche **Vanilla JS** soit actuelle et ultra-performante, deux technologies s'alignent parfaitement avec la philosophie "minimaliste et robuste" du projet pour réduire la verbosité du code de manipulation du DOM :
 
-### 9.1 HTMX (Le choix du Server-Side)
+### 10.1 HTMX (Le choix du Server-Side)
 - **Concept** : Permet d'effectuer des requêtes AJAX, de gérer des WebSockets et des Server-Sent Events directement via des attributs HTML.
 - **Avantage pour RecruitAI** : Au lieu de recevoir du JSON et de reconstruire le DOM en JS (ex: la sidebar des offres), Axum pourrait renvoyer directement un fragment HTML.
 - **Bénéfice** : Suppression de 50% du code JS côté client. Cohérence totale avec la puissance du backend Rust.
 
-### 9.2 Alpine.js (Le "Tailwind du JS")
+### 10.2 Alpine.js (Le "Tailwind du JS")
 - **Concept** : Un framework déclaratif ultra-léger (8kb) qui s'utilise directement dans le HTML pour gérer les états locaux (modals, onglets, toggles).
 - **Avantage pour RecruitAI** : Remplacerait les `document.getElementById` verbeux pour la gestion des pillules LLM (`llm-pill`) et des états d'affichage des boutons.
 - **Bénéfice** : Code frontend plus lisible, déclaratif et plus facile à maintenir sans ajouter de complexe de build (pas de npm/webpack nécessaire).
