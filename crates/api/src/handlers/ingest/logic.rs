@@ -38,11 +38,23 @@ pub(super) fn parse_input_items(input: &str) -> Vec<String> {
         }
     }
 
-    if !urls.is_empty() {
-        return urls;
+    let mut items = urls;
+    let non_url_text = strip_urls_from_input(input);
+    let mut text_items = parse_text_items(&non_url_text);
+    items.append(&mut text_items);
+
+    if !items.is_empty() {
+        return items;
     }
 
+    vec![input.trim().to_string()]
+}
+
+fn parse_text_items(input: &str) -> Vec<String> {
     let trimmed = input.trim();
+    if trimmed.is_empty() {
+        return vec![];
+    }
     let quoted_titles = extract_quoted_titles(trimmed);
     if quoted_titles.len() >= 2 {
         return quoted_titles
@@ -56,6 +68,17 @@ pub(super) fn parse_input_items(input: &str) -> Vec<String> {
     }
 
     vec![trimmed.to_string()]
+}
+
+fn strip_urls_from_input(input: &str) -> String {
+    input
+        .split_whitespace()
+        .filter(|token| {
+            let candidate = sanitize_url_token(token);
+            !(candidate.starts_with("http://") || candidate.starts_with("https://"))
+        })
+        .collect::<Vec<_>>()
+        .join(" ")
 }
 
 fn sanitize_url_token(token: &str) -> &str {
@@ -159,7 +182,10 @@ mod tests {
     fn mixed_urls_and_text() {
         let input = "https://example.com/job1\nsome random text\nhttps://example.com/job2";
         let items = parse_input_items(input);
-        assert_eq!(items.len(), 2);
+        assert_eq!(items.len(), 3);
+        assert_eq!(items[0], "https://example.com/job1");
+        assert_eq!(items[1], "https://example.com/job2");
+        assert!(items[2].contains("some random text"));
     }
 
     #[test]
@@ -202,5 +228,14 @@ mod tests {
         assert!(items[0].contains("Data Scientist"));
         assert!(items[1].contains("Data Engineer"));
         assert_ne!(items[0], items[1]);
+    }
+
+    #[test]
+    fn keeps_hybrid_url_and_prompt_request() {
+        let input = "https://www.pass.fonction-publique.gouv.fr/offre/apprentie-appui-au-pilotage-strategique-du-systeme-dinformation-de-la-securite-sociale\nFais-moi un CV pour un poste de Développeur Python en alternance. Mets l'intitulé exact \"Développeur Python\".";
+        let items = parse_input_items(input);
+        assert_eq!(items.len(), 2);
+        assert!(items[0].starts_with("https://www.pass.fonction-publique.gouv.fr/offre/"));
+        assert!(items[1].contains("Développeur Python"));
     }
 }
