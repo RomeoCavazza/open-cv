@@ -38,16 +38,22 @@ pub(super) fn parse_input_items(input: &str) -> Vec<String> {
         }
     }
 
-    let mut items = urls;
-    let non_url_text = strip_urls_from_input(input);
-    let mut text_items = parse_text_items(&non_url_text);
-    items.append(&mut text_items);
-
-    if !items.is_empty() {
+    if !urls.is_empty() {
+        let mut items = urls;
+        let non_url_text = strip_urls_from_input(input);
+        let mut text_items = parse_text_items(&non_url_text);
+        if should_keep_text_items_with_urls(&text_items) {
+            items.append(&mut text_items);
+        }
         return items;
     }
 
-    vec![input.trim().to_string()]
+    let text_items = parse_text_items(input);
+    if text_items.is_empty() {
+        vec![input.trim().to_string()]
+    } else {
+        text_items
+    }
 }
 
 fn parse_text_items(input: &str) -> Vec<String> {
@@ -79,6 +85,49 @@ fn strip_urls_from_input(input: &str) -> String {
         })
         .collect::<Vec<_>>()
         .join(" ")
+}
+
+fn should_keep_text_items_with_urls(text_items: &[String]) -> bool {
+    if text_items.is_empty() {
+        return false;
+    }
+    if text_items.len() > 1 {
+        // Cas de split multi-demandes (intitulés multiples)
+        return true;
+    }
+    looks_like_actionable_prompt(&text_items[0])
+}
+
+fn looks_like_actionable_prompt(text: &str) -> bool {
+    let normalized = text.trim().to_lowercase();
+    if normalized.is_empty() {
+        return false;
+    }
+    let prompt_markers = [
+        "genere",
+        "génère",
+        "générer",
+        "generate",
+        "cree",
+        "crée",
+        "créer",
+        "create",
+        "fait",
+        "fais",
+        "faire",
+        "build",
+        "rédige",
+        "rédiger",
+        "write",
+        "cv",
+        "resume",
+        "résumé",
+        "lettre",
+        "restitution",
+        "intitulé exact",
+        "intitule exact",
+    ];
+    prompt_markers.iter().any(|kw| normalized.contains(kw))
 }
 
 fn sanitize_url_token(token: &str) -> &str {
@@ -182,10 +231,9 @@ mod tests {
     fn mixed_urls_and_text() {
         let input = "https://example.com/job1\nsome random text\nhttps://example.com/job2";
         let items = parse_input_items(input);
-        assert_eq!(items.len(), 3);
+        assert_eq!(items.len(), 2);
         assert_eq!(items[0], "https://example.com/job1");
         assert_eq!(items[1], "https://example.com/job2");
-        assert!(items[2].contains("some random text"));
     }
 
     #[test]
