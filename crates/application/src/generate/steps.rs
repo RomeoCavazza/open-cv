@@ -351,12 +351,26 @@ pub async fn maybe_generate_cover_letter(
         }
     };
 
-    let cover_letter: CoverLetter = response.map_err(|e| {
+    let mut cover_letter: CoverLetter = response.map_err(|e| {
         error!("CoverLetter generation failed: {}", e);
         this.events
             .failed(instance_id, GenerationStep::CoverLetter, e.to_string());
         AppError::Other(e.to_string())
     })?;
+
+    // Force la date réelle pour éviter toute hallucination du LLM
+    let now = chrono::Local::now();
+    let months = [
+        "janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre",
+        "octobre", "novembre", "décembre",
+    ];
+    use chrono::Datelike;
+    cover_letter.destinataire.date = format!(
+        "{} {} {}",
+        now.day(),
+        months[now.month() as usize - 1],
+        now.year()
+    );
 
     this.events
         .done(instance_id, GenerationStep::CoverLetter, None);

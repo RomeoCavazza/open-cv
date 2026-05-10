@@ -37,10 +37,11 @@ pub const RESUME_SYSTEM: &str = "Tu produis des CV en français extrêmement pro
 
 pub const RESUME_INSTRUCTION: &str = "Génère un CV parfaitement adapté à cette offre. Le titre du CV doit impérativement refléter l'intitulé professionnel de l'offre fournie.";
 
-pub const COVER_LETTER_SYSTEM: &str = "Tu rédiges des lettres de motivation en français. \
-                                       Tu suis la structure : salutation, accroche, projets, vous, \
-                                       pourquoi, clôture. Tu n'inventes rien. Tu es concret, sobre, \
-                                       sans formules grandiloquentes ni emphase artificielle.";
+pub const COVER_LETTER_SYSTEM: &str = "Tu rédiges des lettres de motivation en français.\n\
+                                        RÈGLES CRITIQUES :\n\
+                                        1. DATE : Utilise IMPÉRATIVEMENT la 'Date du jour' fournie dans les informations générales pour remplir le champ 'destinataire.date'. Ne l'invente pas.\n\
+                                        2. STRUCTURE : Respecte la structure salutation, accroche, projets, vous, pourquoi, clôture.\n\
+                                        3. TON : Sois concret, sobre, sans emphase artificielle. Ne crée jamais d'expériences que le candidat n'a pas.";
 
 pub const COVER_LETTER_INSTRUCTION: &str =
     "Rédige une lettre de motivation pour cette offre, en respectant \

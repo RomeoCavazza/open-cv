@@ -1,3 +1,4 @@
+use chrono::Datelike;
 use domain::{Chunk, CoverLetter, InstanceId, Offre, Profil, Restitution, Resume, Slug};
 
 use super::{CandidaturePlan, GenerateError};
@@ -19,6 +20,18 @@ pub fn build_generation_input(
     retained: &[Chunk],
     plan: &CandidaturePlan,
 ) -> String {
+    let now = chrono::Local::now();
+    let months = [
+        "janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre",
+        "octobre", "novembre", "décembre",
+    ];
+    let date_str = format!(
+        "{} {} {}",
+        now.day(),
+        months[now.month() as usize - 1],
+        now.year()
+    );
+
     let chunks_listing = retained
         .iter()
         .map(|c| format!("### {} — {}\n{}", c.kind.as_str(), c.titre, c.content))
@@ -26,7 +39,8 @@ pub fn build_generation_input(
         .join("\n\n");
 
     format!(
-        "## OFFRE\nEntreprise: {}\nIntitulé: {}\nLocalisation: {}\n\n## RÉSUMÉ DE L'OFFRE\n{}\n\n## STACK\n{}\n\n## MISSIONS\n{}\n\n## EXIGENCES\n{}\n\n## PLAN STRATÉGIQUE\nAngle: {}\nForces à souligner: {}\nMots-clés critiques: {}\n\n## PROFIL CANDIDAT\n{}\n\n## CHUNKS PERTINENTS DU PROFIL\n{}",
+        "## INFOS GÉNÉRALES\nDate du jour: {}\n\n## OFFRE\nEntreprise: {}\nIntitulé: {}\nLocalisation: {}\n\n## RÉSUMÉ DE L'OFFRE\n{}\n\n## STACK\n{}\n\n## MISSIONS\n{}\n\n## EXIGENCES\n{}\n\n## PLAN STRATÉGIQUE\nAngle: {}\nForces à souligner: {}\nMots-clés critiques: {}\n\n## PROFIL CANDIDAT\n{}\n\n## CHUNKS PERTINENTS DU PROFIL\n{}",
+        date_str,
         offre.entreprise,
         offre.intitule,
         offre.localisation.as_deref().unwrap_or("non précisé"),
