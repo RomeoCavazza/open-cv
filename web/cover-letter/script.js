@@ -60,6 +60,10 @@ async function loadCoverLetter() {
         genTarget.cover_letter = false;
         localStorage.setItem('generating_target_' + storageKey, JSON.stringify(genTarget));
       }
+      
+      const errorBanner = document.getElementById('error-banner');
+      if (errorBanner) errorBanner.style.display = (status === 'failed') ? 'block' : 'none';
+
       showContent();
       renderTemplateCoverLetter(instance.cover_letter_json);
       applyPreviewScale();

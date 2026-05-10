@@ -234,6 +234,9 @@
             l'analyse</button>
     </div>
 
+    <div id="error-banner" style="display:none; background: #fee2e2; color: #991b1b; padding: 8px 12px; font-size: 12px; border-bottom: 1px solid #fecaca; text-align: center;">
+        ⚠️ Une erreur est survenue pendant la génération (certains éléments peuvent être incomplets).
+    </div>
     <div id="generating-state"
         style="display: flex; flex-direction: column; align-items: center; justify-content: flex-start; height: 100vh; width: 100%; padding-top: 18vh; text-align: center;">
         <div
@@ -376,6 +379,13 @@
                             genTarget.restitution = false;
                             localStorage.setItem('generating_target_' + storageKey, JSON.stringify(genTarget));
                         }
+                        
+                        // Show error banner if partial success but global failure
+                        const errorBanner = document.getElementById('error-banner');
+                        if (errorBanner) {
+                            errorBanner.style.display = (status === 'failed') ? 'block' : 'none';
+                        }
+
                         renderRestitution(instance.restitution);
                         showContent();
                         if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }

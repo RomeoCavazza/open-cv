@@ -23,18 +23,26 @@ export async function updateIframe(options = {}) {
     // Optimistically show skeleton if we know the backend is working on this tab
     const isGenerating = (() => {
         try {
-            const raw = localStorage.getItem(`generating_target_${offerSlug}`);
+            const key = `generating_target_${offerSlug}`;
+            const raw = localStorage.getItem(key);
             if (!raw) return false;
             const target = JSON.parse(raw);
             const targetKey = activeTab === 'cover' ? 'cover_letter' : activeTab;
-            return target[targetKey] === true;
-        } catch (_) { return false; }
+            const active = target[targetKey] === true;
+            if (active) {
+                console.log(`[VIEW-DEBUG] ${offerSlug} flag:`, target);
+            }
+            return active;
+        } catch (e) { 
+            console.error("[View] Error checking generation status:", e);
+            return false; 
+        }
     })();
 
     if (isGenerating) {
-        console.log(`[View] ${offerSlug} is generating ${activeTab}, showing skeleton.`);
+        console.log(`[View] ${offerSlug} is still generating ${activeTab}, showing skeleton.`);
         iframeRender.renderIframeLoadingState(activeTab);
-        return; // Prevent iframe navigation during generation to avoid flash/white screen
+        return; 
     }
 
     try {

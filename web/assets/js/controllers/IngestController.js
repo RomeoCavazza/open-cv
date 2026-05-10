@@ -92,8 +92,8 @@ export class IngestController {
             this.currentBatch = batch;
             emit(EVENTS.GEN_STARTED, { pending: this.getQueueSize(), processing: true });
             try {
-                await this.processBatch(batch);
-                emit(EVENTS.GEN_COMPLETED, { pending: this.pendingBatches.length });
+                const data = await this.processBatch(batch);
+                emit(EVENTS.INGEST_COMPLETED, data);
             } catch (e) {
                 emit(EVENTS.GEN_FAILED, { message: e.message });
             } finally {

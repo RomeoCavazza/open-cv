@@ -238,13 +238,24 @@ fn validate_outputs_rejects_empty_resume() {
 #[test]
 fn validate_outputs_rejects_incomplete_cover_letter() {
     let offre = build_test_offre();
+    // Missing Accroche -> should fail
     let cover_letter =
-        build_test_cover_letter(&[ParagrapheRole::Salutation, ParagrapheRole::Accroche]);
+        build_test_cover_letter(&[ParagrapheRole::Salutation, ParagrapheRole::Cloture]);
     let result = validate_outputs(&offre, None, None, Some(&cover_letter));
 
     assert!(
         matches!(result, Err(GenerateError::Invalide(message)) if message.contains("lettre incomplète"))
     );
+}
+
+#[test]
+fn validate_outputs_accepts_minimal_cover_letter() {
+    let offre = build_test_offre();
+    // Only Accroche -> should pass
+    let cover_letter = build_test_cover_letter(&[ParagrapheRole::Accroche]);
+    let result = validate_outputs(&offre, None, None, Some(&cover_letter));
+
+    assert!(result.is_ok());
 }
 
 #[test]

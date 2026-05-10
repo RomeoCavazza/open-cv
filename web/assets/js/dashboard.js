@@ -96,6 +96,15 @@ on(EVENTS.GEN_STARTED, () => {
     offerController.loadOffers();
 });
 
+on(EVENTS.INGEST_COMPLETED, (data) => {
+    updateIngestButtonState();
+    offerController.loadOffers();
+    // Grace period to ensure backend instance is ready for fetch
+    setTimeout(() => {
+        updateIframe();
+    }, 1000);
+});
+
 on(EVENTS.GEN_COMPLETED, () => {
     updateIngestButtonState();
     offerController.loadOffers();

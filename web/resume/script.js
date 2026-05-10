@@ -60,6 +60,10 @@ async function loadCV() {
                 genTarget.resume = false;
                 localStorage.setItem('generating_target_' + storageKey, JSON.stringify(genTarget));
             }
+            
+            const errorBanner = document.getElementById('error-banner');
+            if (errorBanner) errorBanner.style.display = (status === 'failed') ? 'block' : 'none';
+
             showContent();
             renderTemplateResume(instance.resume_json);
             applyPreviewScale();

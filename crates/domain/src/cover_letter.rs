@@ -82,10 +82,12 @@ impl CoverLetter {
             .map(|p| p.contenu.as_str())
     }
 
-    /// Vrai si la lettre a tous les paragraphes essentiels.
+    /// Vrai si la lettre a le contenu principal.
     pub fn est_complete(&self) -> bool {
         use ParagrapheRole::*;
-        let roles_requis = [Salutation, Accroche, Cloture];
+        // On assouplit : seule l'accroche est strictement requise pour ne pas rejeter 
+        // une génération entière si l'IA oublie la salutation ou la clôture.
+        let roles_requis = [Accroche];
         roles_requis
             .iter()
             .all(|r| self.paragraphes.iter().any(|p| p.role == *r))
@@ -142,10 +144,10 @@ mod tests {
     }
 
     #[test]
-    fn incomplete_sans_cloture() {
+    fn complete_avec_accroche() {
         use ParagrapheRole::*;
-        let l = lettre_avec(&[Salutation, Accroche]);
-        assert!(!l.est_complete());
+        let l = lettre_avec(&[Accroche]);
+        assert!(l.est_complete());
     }
 
     #[test]

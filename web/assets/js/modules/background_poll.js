@@ -98,39 +98,37 @@ class BackgroundPollManager {
 
             try {
                 let instance = null;
-                let res = await fetch(`/api/instances/${jobId}?t=${Date.now()}`, { signal: controller.signal });
+                const target = JSON.parse(localStorage.getItem(storageKey));
+                if (!target) { this.stopPolling(jobId); return; }
+
+                const res = await fetch(`/api/instances/${jobId}?t=${Date.now()}`, { signal: controller.signal });
                 
-                if (res.ok) {
-                    instance = await res.json();
-                } else if (!jobId.includes('__')) {
-                    // Try by offer slug
+                if (!res.ok) {
                     const resOffre = await fetch(`/api/offres/${jobId}/instance?t=${Date.now()}`, { signal: controller.signal });
                     if (resOffre.ok) {
                         instance = await resOffre.json();
-                    }
-                }
-
-                if (!instance) {
-                    retryCount++;
-                    if (retryCount > 3) {
-                        console.warn(`[BackgroundPollManager] ${jobId} not found. Cleaning up stale flag.`);
-                        localStorage.removeItem(storageKey);
-                        this.stopPolling(jobId);
+                        this.processUpdate(instance, target, storageKey, jobId, poll, jobState);
                         return;
                     }
-                    setTimeout(poll, 3000);
+
+                    retryCount++;
+                    if (retryCount >= 3) {
+                        console.warn(`[BackgroundPollManager] ${jobId} not found after 3 attempts. Cleaning up.`);
+                        this.stopPolling(jobId);
+                        localStorage.removeItem(storageKey);
+                        emit(EVENTS.UPDATE_IFRAME);
+                        return;
+                    }
+                    setTimeout(poll, 2000);
                     return;
                 }
-
-                retryCount = 0; // Reset on success
                 
-                // Check for active state in API response
+                instance = await res.json();
+                this.processUpdate(instance, target, storageKey, jobId, poll, jobState);
                 const status = instance.status.toLowerCase();
                 if (status === 'generating' || status === 'pending') {
                     jobState.hasSeenActiveState = true;
                 }
-
-                this.processUpdate(instance, target, storageKey, jobId, poll, jobState);
             } catch (e) {
                 if (e.name === 'AbortError') return;
                 setTimeout(poll, 3000);
@@ -149,13 +147,19 @@ class BackgroundPollManager {
         // Versioning check: Is the data in the API fresh or from a previous run?
         const lastTriggered = target.last_triggered || 0;
         const updatedAt = new Date(instance.updated_at).getTime();
-        const isDataFresh = updatedAt >= (lastTriggered - 2000); // 2s margin for clock skew
+        const skew = updatedAt - lastTriggered;
+        const isDataFresh = skew >= -5000; // 5s margin for clock skew
+
+        if (skew < 0 && skew > -5000) {
+            console.debug(`[BackgroundPollManager] ${jobId} Clock skew detected: ${skew}ms (accepted within 5s)`);
+        }
 
         console.log(`[BackgroundPollManager] ${jobId} Status: ${status}, Fresh: ${isDataFresh}, ActiveSeen: ${jobState.hasSeenActiveState}`);
 
         // Race condition protection: If backend says done but it's old data, ignore it.
-        if (isBackendDone && !isDataFresh && stillWaitingInUi) {
-            console.log(`[BackgroundPollManager] ${jobId}: Ignoring stale backend state.`);
+        // EXCEPT if it's a FAILURE: we'd rather show the error/empty state than stay on a skeleton.
+        if (isBackendDone && !isDataFresh && stillWaitingInUi && status !== 'failed') {
+            console.log(`[BackgroundPollManager] ${jobId}: Ignoring stale backend state (Skew: ${skew}ms).`);
             setTimeout(next, 2000);
             return;
         }
@@ -168,19 +172,32 @@ class BackgroundPollManager {
         let changed = false;
         
         // Sync targets ONLY if data is fresh
+        // Sync targets ONLY if data is fresh
         if (isDataFresh) {
-            if (target.restitution && instance.restitution) { target.restitution = false; changed = true; }
-            if (target.resume && instance.resume_json) { target.resume = false; changed = true; }
-            if (target.cover_letter && instance.cover_letter_json) { target.cover_letter = false; changed = true; }
+            if (target.restitution && instance.restitution) { 
+                target.restitution = false; changed = true; 
+                playSuccessSound(); // Play per-document success
+            }
+            if (target.resume && instance.resume_json) { 
+                target.resume = false; changed = true; 
+                playSuccessSound();
+            }
+            if (target.cover_letter && instance.cover_letter_json) { 
+                target.cover_letter = false; changed = true; 
+                playSuccessSound();
+            }
         }
 
         // Handle termination
-        if (isBackendDone && isDataFresh) {
-            // Force clear if backend is done for this run
+        if ((isBackendDone && isDataFresh) || status === 'failed') {
+            // Force clear if backend is done for this run or if it failed
             Object.keys(target).forEach(k => {
                 if (k !== 'last_triggered') target[k] = false;
             });
             changed = true;
+            if (status === 'failed') {
+                console.warn(`[BackgroundPollManager] ${jobId} FAILED. Clearing skeletons.`);
+            }
         }
 
         if (changed) {
@@ -191,13 +208,6 @@ class BackgroundPollManager {
         const isFullyDoneNow = !Object.entries(target).some(([k, v]) => k !== 'last_triggered' && v === true);
 
         if (isFullyDoneNow) {
-            // Only play sound if it was a SUCCESS and we actually saw it happening
-            if (status === 'ready' && jobState.hasSeenActiveState) {
-                console.log(`[BackgroundPollManager] ${jobId} SUCCESS (ready). Playing sound.`);
-                playSuccessSound();
-            } else if (status === 'failed') {
-                console.log(`[BackgroundPollManager] ${jobId} FAILED. No sound.`);
-            }
             this.stopPolling(jobId);
             emit(EVENTS.UPDATE_IFRAME); // Final refresh
         } else {
