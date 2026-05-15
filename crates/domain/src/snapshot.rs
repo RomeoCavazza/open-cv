@@ -14,6 +14,7 @@ pub struct InstanceSnapshot {
     pub resume_json: Option<Resume>,
     pub cover_letter_json: Option<CoverLetter>,
     pub restitution: Option<Restitution>,
+    pub content_hash: String,
     pub trigger_message: Option<String>,
     pub created_at: DateTime<Utc>,
 }
@@ -32,6 +33,7 @@ impl InstanceSnapshot {
             resume_json: instance.resume_json.clone(),
             cover_letter_json: instance.cover_letter_json.clone(),
             restitution: instance.restitution.clone(),
+            content_hash: String::new(),
             trigger_message: trigger_message.into(),
             created_at: Utc::now(),
         }

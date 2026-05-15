@@ -193,10 +193,38 @@ CREATE TABLE IF NOT EXISTS instance_snapshots (
     resume_json       JSONB,
     cover_letter_json JSONB,
     restitution       JSONB,
+    content_hash      TEXT        NOT NULL,
     trigger_message   TEXT,
     created_at        TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS snapshots_instance ON instance_snapshots(instance_id, version DESC);
+CREATE UNIQUE INDEX IF NOT EXISTS snapshots_instance_content_hash_uq
+    ON instance_snapshots(instance_id, content_hash);
+CREATE INDEX IF NOT EXISTS snapshots_resume_json_gin
+    ON instance_snapshots USING gin (resume_json jsonb_path_ops);
+CREATE INDEX IF NOT EXISTS snapshots_cover_letter_json_gin
+    ON instance_snapshots USING gin (cover_letter_json jsonb_path_ops);
+CREATE INDEX IF NOT EXISTS snapshots_restitution_gin
+    ON instance_snapshots USING gin (restitution jsonb_path_ops);
+
+CREATE OR REPLACE FUNCTION fn_block_instance_snapshots_mutation()
+RETURNS TRIGGER AS $$
+BEGIN
+    RAISE EXCEPTION 'instance_snapshots est immuable : UPDATE/DELETE interdits';
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS tg_block_instance_snapshots_update ON instance_snapshots;
+CREATE TRIGGER tg_block_instance_snapshots_update
+    BEFORE UPDATE ON instance_snapshots
+    FOR EACH ROW
+    EXECUTE FUNCTION fn_block_instance_snapshots_mutation();
+
+DROP TRIGGER IF EXISTS tg_block_instance_snapshots_delete ON instance_snapshots;
+CREATE TRIGGER tg_block_instance_snapshots_delete
+    BEFORE DELETE ON instance_snapshots
+    FOR EACH ROW
+    EXECUTE FUNCTION fn_block_instance_snapshots_mutation();
 
 -- ─────────────────────────────────────────────────────────────────────────
 -- LLM_CALLS

@@ -20,9 +20,24 @@ impl SnapshotRepo for SnapshotRepoPg {
         sqlx::query(
             r#"
             INSERT INTO instance_snapshots (
-                id, instance_id, version, resume_json, cover_letter_json, restitution, trigger_message, created_at
+                id, instance_id, version, resume_json, cover_letter_json, restitution, content_hash, trigger_message, created_at
             )
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+            VALUES (
+                $1, $2, $3, $4, $5, $6,
+                encode(
+                    digest(
+                        jsonb_build_object(
+                            'resume_json', COALESCE($4::jsonb, 'null'::jsonb),
+                            'cover_letter_json', COALESCE($5::jsonb, 'null'::jsonb),
+                            'restitution', COALESCE($6::jsonb, 'null'::jsonb)
+                        )::text,
+                        'sha256'
+                    ),
+                    'hex'
+                ),
+                $7, $8
+            )
+            ON CONFLICT (instance_id, content_hash) DO NOTHING
             "#,
         )
         .bind(snapshot.id)
@@ -46,7 +61,7 @@ impl SnapshotRepo for SnapshotRepoPg {
     ) -> Result<Option<InstanceSnapshot>, RepoError> {
         let row = sqlx::query(
             r#"
-            SELECT id, instance_id, version, resume_json, cover_letter_json, restitution, trigger_message, created_at
+            SELECT id, instance_id, version, resume_json, cover_letter_json, restitution, content_hash, trigger_message, created_at
             FROM instance_snapshots
             WHERE instance_id = $1
             ORDER BY version DESC
@@ -67,6 +82,78 @@ impl SnapshotRepo for SnapshotRepoPg {
                 cover_letter_json: serde_json::from_value(r.get("cover_letter_json"))
                     .unwrap_or_default(),
                 restitution: serde_json::from_value(r.get("restitution")).unwrap_or_default(),
+                content_hash: r.get("content_hash"),
+                trigger_message: r.get("trigger_message"),
+                created_at: r.get("created_at"),
+            })
+        })
+        .transpose()
+    }
+
+    async fn list_by_instance(
+        &self,
+        instance_id: InstanceId,
+    ) -> Result<Vec<InstanceSnapshot>, RepoError> {
+        let rows = sqlx::query(
+            r#"
+            SELECT id, instance_id, version, resume_json, cover_letter_json, restitution, content_hash, trigger_message, created_at
+            FROM instance_snapshots
+            WHERE instance_id = $1
+            ORDER BY version DESC
+            "#,
+        )
+        .bind(instance_id.as_uuid())
+        .fetch_all(&self.pool)
+        .await
+        .map_err(map_sqlx)?;
+
+        let mut snapshots = Vec::new();
+        for r in rows {
+            snapshots.push(InstanceSnapshot {
+                id: r.get("id"),
+                instance_id: InstanceId::from_uuid(r.get("instance_id")),
+                version: r.get("version"),
+                resume_json: serde_json::from_value(r.get("resume_json")).unwrap_or_default(),
+                cover_letter_json: serde_json::from_value(r.get("cover_letter_json"))
+                    .unwrap_or_default(),
+                restitution: serde_json::from_value(r.get("restitution")).unwrap_or_default(),
+                content_hash: r.get("content_hash"),
+                trigger_message: r.get("trigger_message"),
+                created_at: r.get("created_at"),
+            });
+        }
+
+        Ok(snapshots)
+    }
+
+    async fn get_by_version(
+        &self,
+        instance_id: InstanceId,
+        version: i32,
+    ) -> Result<Option<InstanceSnapshot>, RepoError> {
+        let row = sqlx::query(
+            r#"
+            SELECT id, instance_id, version, resume_json, cover_letter_json, restitution, content_hash, trigger_message, created_at
+            FROM instance_snapshots
+            WHERE instance_id = $1 AND version = $2
+            "#,
+        )
+        .bind(instance_id.as_uuid())
+        .bind(version)
+        .fetch_optional(&self.pool)
+        .await
+        .map_err(map_sqlx)?;
+
+        row.map(|r| {
+            Ok(InstanceSnapshot {
+                id: r.get("id"),
+                instance_id: InstanceId::from_uuid(r.get("instance_id")),
+                version: r.get("version"),
+                resume_json: serde_json::from_value(r.get("resume_json")).unwrap_or_default(),
+                cover_letter_json: serde_json::from_value(r.get("cover_letter_json"))
+                    .unwrap_or_default(),
+                restitution: serde_json::from_value(r.get("restitution")).unwrap_or_default(),
+                content_hash: r.get("content_hash"),
                 trigger_message: r.get("trigger_message"),
                 created_at: r.get("created_at"),
             })
