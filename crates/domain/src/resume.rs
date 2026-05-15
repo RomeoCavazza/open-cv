@@ -9,38 +9,49 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]
 pub struct Resume {
+    #[serde(default)]
     pub identite: Identite,
+    #[serde(default)]
     pub accroche: Accroche,
+    #[serde(default)]
     pub contact: Contact,
+    #[serde(default)]
     pub competences: Vec<GroupeCompetences>,
+    #[serde(default)]
     pub experiences: Vec<Experience>,
+    #[serde(default)]
     pub formations: Vec<Formation>,
+    #[serde(default)]
     pub projets: Vec<Projet>,
+    #[serde(default)]
     pub langues: Vec<Langue>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]
 pub struct Identite {
+    #[serde(default)]
     pub nom_complet: String,
     pub photo_url: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]
 pub struct Accroche {
-    /// Ex: "ALTERNANCE — DÉVELOPPEUR IA"
+    #[serde(default)]
     pub titre: String,
-    /// 3-4 lignes adaptées à l'offre.
+    #[serde(default)]
     pub paragraphe: String,
-    /// "24 mois — à partir de septembre 2026"
+    #[serde(default)]
     pub duree: String,
-    /// "6 semaines en entreprise / 2 semaines en cours"
+    #[serde(default)]
     pub rythme: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]
 pub struct Contact {
+    #[serde(default)]
     pub localisation: String,
     pub telephone: Option<String>,
+    #[serde(default)]
     pub email: String,
     pub site_web: Option<String>,
     pub linkedin: Option<String>,
@@ -49,43 +60,52 @@ pub struct Contact {
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]
 pub struct GroupeCompetences {
-    /// "Programmation", "MLOps", "Algorithmie", etc.
+    #[serde(default)]
     pub categorie: String,
+    #[serde(default)]
     pub items: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]
 pub struct Experience {
+    #[serde(default)]
     pub poste: String,
+    #[serde(default)]
     pub entreprise: String,
     pub localisation: Option<String>,
-    /// "Janvier-Juin 2026" ou "2025 — Présent".
+    #[serde(default)]
     pub periode: String,
-    /// 2-4 bullets adaptés à l'offre. Pas de phrases à rallonge.
+    #[serde(default)]
     pub bullets: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]
 pub struct Formation {
+    #[serde(default)]
     pub etablissement: String,
     pub localisation: Option<String>,
+    #[serde(default)]
     pub periode: String,
+    #[serde(default)]
     pub diplome: String,
     pub details: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]
 pub struct Projet {
+    #[serde(default)]
     pub nom: String,
-    /// "(2025 — Présent)" ou similaire.
+    #[serde(default)]
     pub periode: String,
+    #[serde(default)]
     pub bullets: Vec<String>,
     pub lien: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]
 pub struct Langue {
+    #[serde(default)]
     pub langue: String,
-    /// "natif", "C1", "B2", etc.
+    #[serde(default)]
     pub niveau: String,
 }

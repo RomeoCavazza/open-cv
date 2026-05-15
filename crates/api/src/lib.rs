@@ -12,7 +12,10 @@ pub(crate) mod handlers;
 pub mod state;
 
 use crate::handlers::{
-    chat::{chat_handler, chat_stream_handler},
+    chat::{
+        chat_handler, chat_stream_handler, list_snapshots_handler, restore_snapshot_handler,
+        undo_handler,
+    },
     ingest::ingest_handler,
     instance::{
         generate_instance, get_instance_by_offre_slug, get_instance_by_slug,
@@ -82,6 +85,9 @@ pub fn create_app(state: AppState) -> Router {
         )
         .route("/api/chat", post(chat_handler))
         .route("/api/chat/stream", post(chat_stream_handler))
+        .route("/api/chat/undo", post(undo_handler))
+        .route("/api/instances/:id/snapshots", get(list_snapshots_handler))
+        .route("/api/instances/:id/restore", post(restore_snapshot_handler))
         .route("/api/ingest", post(ingest_handler))
         .nest_service(
             "/assets",

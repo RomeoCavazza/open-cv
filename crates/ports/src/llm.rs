@@ -7,8 +7,24 @@
 
 use async_trait::async_trait;
 pub use futures::stream::BoxStream;
-use serde::de::DeserializeOwned;
+use serde::Serialize;
 use thiserror::Error;
+
+#[derive(Debug, Clone, Serialize)]
+pub struct LlmTool {
+    pub name: String,
+    pub description: String,
+    pub input_schema: serde_json::Value,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ToolChoice {
+    Auto,
+    None,
+    Required,
+    Tool { name: String },
+}
 
 #[derive(Debug, Clone)]
 pub struct CompletionRequest {
@@ -17,11 +33,45 @@ pub struct CompletionRequest {
     pub model: Option<String>,
     pub max_tokens: Option<u32>,
     pub temperature: Option<f32>,
+    pub tools: Vec<LlmTool>,
+    pub tool_choice: ToolChoice,
+}
+
+#[derive(Debug, Clone)]
+pub enum StreamChunk {
+    /// Token de texte (réponse directe ou texte entre tool calls)
+    TextDelta { text: String },
+
+    /// Un tool call commence.
+    ToolCallStart { id: String, name: String },
+
+    /// Fragment des arguments en streaming (JSON partiel).
+    ToolCallArgsDelta { id: String, delta: String },
+
+    /// Tool call terminé avec ses arguments complets et parsés.
+    ToolCallEnd {
+        id: String,
+        name: String,
+        arguments: serde_json::Value,
+    },
+
+    /// Fin du stream ou du tour LLM.
+    Done { stop_reason: StopReason },
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum StopReason {
+    EndTurn,      // Le LLM a fini de parler
+    ToolUse,      // Le LLM attend l'exécution de tools
+    MaxTokens,    // Tronqué
+    StopSequence, // Arrêt sur séquence
+    Other(String),
 }
 
 #[derive(Debug, Clone)]
 pub struct CompletionResponse {
     pub text: String,
+    pub tool_calls: Vec<ToolCall>,
     pub model: String,
     pub tokens_in: u32,
     pub tokens_out: u32,
@@ -29,9 +79,28 @@ pub struct CompletionResponse {
 }
 
 #[derive(Debug, Clone)]
+pub struct ToolCall {
+    pub id: String,
+    pub name: String,
+    pub arguments: serde_json::Value,
+}
+
+#[derive(Debug, Clone)]
 pub enum MessageContent {
     Text(String),
-    Image { data: Vec<u8>, content_type: String },
+    Image {
+        data: Vec<u8>,
+        content_type: String,
+    },
+    ToolResult {
+        tool_use_id: String,
+        content: String,
+    },
+    ToolUse {
+        id: String,
+        name: String,
+        input: serde_json::Value,
+    },
 }
 
 #[derive(Debug, Clone)]
@@ -53,12 +122,22 @@ impl Message {
             content: vec![MessageContent::Text(text.into())],
         }
     }
+    pub fn tool_result(id: impl Into<String>, content: impl Into<String>) -> Self {
+        Self {
+            role: Role::Tool,
+            content: vec![MessageContent::ToolResult {
+                tool_use_id: id.into(),
+                content: content.into(),
+            }],
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Role {
     User,
     Assistant,
+    Tool,
 }
 
 #[derive(Debug, Clone)]
@@ -88,26 +167,26 @@ pub struct ExtractionResponse {
 
 #[async_trait]
 pub trait LlmClient: Send + Sync {
-    /// Génération texte libre.
+    /// Génération texte libre (obsolète bientôt au profit de stream).
     async fn complete(&self, req: CompletionRequest) -> Result<CompletionResponse, LlmError>;
 
-    /// Génération structurée. On précise un schéma JSON, on récupère un JSON et le raw.
+    /// Génération structurée (obsolète bientôt au profit de stream).
     async fn extract(&self, req: ExtractionRequest) -> Result<ExtractionResponse, LlmError>;
 
-    /// Génération texte libre avec streaming.
+    /// Génération streamée avec support natif des tools.
     async fn stream(
         &self,
         req: CompletionRequest,
-    ) -> Result<BoxStream<'static, Result<String, LlmError>>, LlmError>;
+    ) -> Result<BoxStream<'static, Result<StreamChunk, LlmError>>, LlmError>;
 
-    /// Identifiant du provider, utilisé dans `llm_calls.provider`.
+    /// Identifiant du provider.
     fn name(&self) -> &'static str;
 }
 
 #[async_trait]
 pub trait LlmClientExt: LlmClient {
-    /// Extraction typée avec observabilité intégrée.
-    async fn extract_typed<T: DeserializeOwned>(
+    /// Extraction typée.
+    async fn extract_typed<T: serde::de::DeserializeOwned>(
         &self,
         req: ExtractionRequest,
     ) -> Result<T, LlmError> {

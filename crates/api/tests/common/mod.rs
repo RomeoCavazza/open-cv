@@ -5,7 +5,7 @@ use domain::{
 use ports::{
     AnnexeRepo, ChunkRepo, CompletionRequest, CompletionResponse, EmbedError, EmbedMode, Embedder,
     ExtractionRequest, InstanceRepo, LlmClient, LlmError, MessageRepo, OffreRepo, ProfilRepo,
-    RepoError, ScrapeError, ScrapeResult, Scraper,
+    RepoError, ScrapeError, ScrapeResult, Scraper, StopReason, StreamChunk,
 };
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
@@ -242,6 +242,21 @@ impl ports::SnapshotRepo for MockRepos {
         let _ = instance_id;
         Ok(None)
     }
+    async fn list_by_instance(
+        &self,
+        instance_id: InstanceId,
+    ) -> Result<Vec<domain::InstanceSnapshot>, RepoError> {
+        let _ = instance_id;
+        Ok(vec![])
+    }
+    async fn get_by_version(
+        &self,
+        instance_id: InstanceId,
+        version: i32,
+    ) -> Result<Option<domain::InstanceSnapshot>, RepoError> {
+        let _ = (instance_id, version);
+        Ok(None)
+    }
     async fn count_by_instance(&self, instance_id: InstanceId) -> Result<i32, RepoError> {
         let _ = instance_id;
         Ok(0)
@@ -270,6 +285,7 @@ impl LlmClient for MockLlm {
         let _ = req;
         Ok(CompletionResponse {
             text: "Mock response".to_string(),
+            tool_calls: vec![],
             model: "mock".to_string(),
             tokens_in: 0,
             tokens_out: 0,
@@ -328,8 +344,18 @@ impl LlmClient for MockLlm {
     async fn stream(
         &self,
         _req: ports::CompletionRequest,
-    ) -> Result<ports::BoxStream<'static, Result<String, LlmError>>, LlmError> {
-        let stream = futures::stream::iter(vec![Ok("token1".into()), Ok("token2".into())]);
+    ) -> Result<ports::BoxStream<'static, Result<StreamChunk, LlmError>>, LlmError> {
+        let stream = futures::stream::iter(vec![
+            Ok(StreamChunk::TextDelta {
+                text: "token1".into(),
+            }),
+            Ok(StreamChunk::TextDelta {
+                text: "token2".into(),
+            }),
+            Ok(StreamChunk::Done {
+                stop_reason: StopReason::EndTurn,
+            }),
+        ]);
         Ok(Box::pin(stream))
     }
 

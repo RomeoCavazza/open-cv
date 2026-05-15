@@ -109,9 +109,15 @@ fn infer_business_category(slug: &str, title: &str) -> &'static str {
     {
         return "Design";
     }
-    if ["marketing", "communication", "seo", "content", "réseaux sociaux"]
-        .iter()
-        .any(|n| haystack.contains(n))
+    if [
+        "marketing",
+        "communication",
+        "seo",
+        "content",
+        "réseaux sociaux",
+    ]
+    .iter()
+    .any(|n| haystack.contains(n))
     {
         return "Marketing";
     }

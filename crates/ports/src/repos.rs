@@ -108,6 +108,19 @@ pub trait SnapshotRepo: Send + Sync {
         instance_id: InstanceId,
     ) -> Result<Option<domain::InstanceSnapshot>, RepoError>;
 
+    /// Liste tous les snapshots d'une instance ordonnés par version décroissante.
+    async fn list_by_instance(
+        &self,
+        instance_id: InstanceId,
+    ) -> Result<Vec<domain::InstanceSnapshot>, RepoError>;
+
+    /// Récupère une version spécifique.
+    async fn get_by_version(
+        &self,
+        instance_id: InstanceId,
+        version: i32,
+    ) -> Result<Option<domain::InstanceSnapshot>, RepoError>;
+
     /// Compte le nombre de snapshots pour une instance (= numéro de version).
     async fn count_by_instance(&self, instance_id: InstanceId) -> Result<i32, RepoError>;
 }

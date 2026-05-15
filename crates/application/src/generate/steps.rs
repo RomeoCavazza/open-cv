@@ -361,8 +361,18 @@ pub async fn maybe_generate_cover_letter(
     // Force la date réelle pour éviter toute hallucination du LLM
     let now = chrono::Local::now();
     let months = [
-        "janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre",
-        "octobre", "novembre", "décembre",
+        "janvier",
+        "février",
+        "mars",
+        "avril",
+        "mai",
+        "juin",
+        "juillet",
+        "août",
+        "septembre",
+        "octobre",
+        "novembre",
+        "décembre",
     ];
     use chrono::Datelike;
     cover_letter.destinataire.date = format!(

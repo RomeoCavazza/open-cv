@@ -22,8 +22,18 @@ pub fn build_generation_input(
 ) -> String {
     let now = chrono::Local::now();
     let months = [
-        "janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre",
-        "octobre", "novembre", "décembre",
+        "janvier",
+        "février",
+        "mars",
+        "avril",
+        "mai",
+        "juin",
+        "juillet",
+        "août",
+        "septembre",
+        "octobre",
+        "novembre",
+        "décembre",
     ];
     let date_str = format!(
         "{} {} {}",

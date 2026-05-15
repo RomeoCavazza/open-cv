@@ -71,24 +71,37 @@ struct AnthropicRequest {
     tools: Option<Vec<AnthropicTool>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     tool_choice: Option<serde_json::Value>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    stream: Option<bool>,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize, Clone)]
 struct AnthropicMessage {
     role: String,
     content: Vec<AnthropicContentBlock>,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize, Clone)]
 #[serde(tag = "type")]
 enum AnthropicContentBlock {
     #[serde(rename = "text")]
     Text { text: String },
     #[serde(rename = "image")]
     Image { source: AnthropicImageSource },
+    #[serde(rename = "tool_use")]
+    ToolUse {
+        id: String,
+        name: String,
+        input: serde_json::Value,
+    },
+    #[serde(rename = "tool_result")]
+    ToolResult {
+        tool_use_id: String,
+        content: String,
+    },
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize, Clone)]
 struct AnthropicImageSource {
     #[serde(rename = "type")]
     source_type: String, // "base64"
@@ -96,7 +109,7 @@ struct AnthropicImageSource {
     data: String,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize, Clone)]
 struct AnthropicTool {
     name: String,
     description: String,
@@ -111,22 +124,20 @@ struct AnthropicResponse {
     stop_reason: Option<String>,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 #[serde(tag = "type")]
 enum ContentBlock {
     #[serde(rename = "text")]
     Text { text: String },
     #[serde(rename = "tool_use")]
     ToolUse {
-        #[allow(dead_code)]
         id: String,
-        #[allow(dead_code)]
         name: String,
         input: serde_json::Value,
     },
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 struct Usage {
     input_tokens: u32,
     output_tokens: u32,
@@ -137,11 +148,75 @@ struct AnthropicError {
     error: AnthropicErrorDetail,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 struct AnthropicErrorDetail {
     message: String,
     #[serde(rename = "type")]
     error_type: String,
+}
+
+// ─── Anthropic Streaming Types ─────────────────────────────────────────
+
+#[derive(Deserialize, Debug)]
+#[allow(dead_code)]
+#[serde(tag = "type")]
+enum AnthropicStreamEvent {
+    #[serde(rename = "message_start")]
+    MessageStart { message: AnthropicStreamMessage },
+    #[serde(rename = "content_block_start")]
+    ContentBlockStart {
+        index: usize,
+        content_block: ContentBlock,
+    },
+    #[serde(rename = "content_block_delta")]
+    ContentBlockDelta {
+        index: usize,
+        delta: ContentBlockDelta,
+    },
+    #[serde(rename = "content_block_stop")]
+    ContentBlockStop { index: usize },
+    #[serde(rename = "message_delta")]
+    MessageDelta {
+        delta: MessageDelta,
+        usage: Option<UsageDelta>,
+    },
+    #[serde(rename = "message_stop")]
+    MessageStop,
+    #[serde(rename = "ping")]
+    Ping,
+    #[serde(rename = "error")]
+    Error { error: AnthropicErrorDetail },
+}
+
+#[derive(Deserialize, Debug)]
+#[allow(dead_code)]
+struct AnthropicStreamMessage {
+    id: String,
+    role: String,
+    model: String,
+    usage: Usage,
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(tag = "type")]
+enum ContentBlockDelta {
+    #[serde(rename = "text_delta")]
+    TextDelta { text: String },
+    #[serde(rename = "input_json_delta")]
+    InputJsonDelta { partial_json: String },
+}
+
+#[derive(Deserialize, Debug)]
+#[allow(dead_code)]
+struct MessageDelta {
+    stop_reason: Option<String>,
+    stop_sequence: Option<String>,
+}
+
+#[derive(Deserialize, Debug)]
+#[allow(dead_code)]
+struct UsageDelta {
+    output_tokens: u32,
 }
 
 // ─── Trait implementation ──────────────────────────────────────────────
@@ -157,6 +232,7 @@ impl LlmClient for ClaudeClient {
                 role: match m.role {
                     Role::User => "user".into(),
                     Role::Assistant => "assistant".into(),
+                    Role::Tool => "user".into(), // Claude simule le tool result par un message user
                 },
                 content: m
                     .content
@@ -174,6 +250,20 @@ impl LlmClient for ClaudeClient {
                                 },
                             }
                         }
+                        ports::MessageContent::ToolUse { id, name, input } => {
+                            AnthropicContentBlock::ToolUse {
+                                id: id.clone(),
+                                name: name.clone(),
+                                input: input.clone(),
+                            }
+                        }
+                        ports::MessageContent::ToolResult {
+                            tool_use_id,
+                            content,
+                        } => AnthropicContentBlock::ToolResult {
+                            tool_use_id: tool_use_id.clone(),
+                            content: content.clone(),
+                        },
                     })
                     .collect(),
             })
@@ -185,8 +275,29 @@ impl LlmClient for ClaudeClient {
             system: req.system,
             messages,
             temperature: req.temperature,
-            tools: None,
-            tool_choice: None,
+            tools: if req.tools.is_empty() {
+                None
+            } else {
+                Some(
+                    req.tools
+                        .into_iter()
+                        .map(|t| AnthropicTool {
+                            name: t.name,
+                            description: t.description,
+                            input_schema: t.input_schema,
+                        })
+                        .collect(),
+                )
+            },
+            tool_choice: match req.tool_choice {
+                ports::ToolChoice::Auto => Some(serde_json::json!({ "type": "auto" })),
+                ports::ToolChoice::None => None,
+                ports::ToolChoice::Required => Some(serde_json::json!({ "type": "any" })),
+                ports::ToolChoice::Tool { name } => {
+                    Some(serde_json::json!({ "type": "tool", "name": name }))
+                }
+            },
+            stream: None,
         };
 
         let start = std::time::Instant::now();
@@ -234,18 +345,25 @@ impl LlmClient for ClaudeClient {
         let parsed: AnthropicResponse =
             serde_json::from_str(&raw).map_err(|e| LlmError::Json(e.to_string()))?;
 
-        let text = parsed
-            .content
-            .iter()
-            .filter_map(|b| match b {
-                ContentBlock::Text { text } => Some(text.as_str()),
-                _ => None,
-            })
-            .collect::<Vec<_>>()
-            .join("");
+        let mut text = String::new();
+        let mut tool_calls = Vec::new();
+
+        for block in &parsed.content {
+            match block {
+                ContentBlock::Text { text: t } => text.push_str(t),
+                ContentBlock::ToolUse { id, name, input } => {
+                    tool_calls.push(ports::ToolCall {
+                        id: id.clone(),
+                        name: name.clone(),
+                        arguments: input.clone(),
+                    });
+                }
+            }
+        }
 
         Ok(CompletionResponse {
             text,
+            tool_calls,
             model: parsed.model,
             tokens_in: parsed.usage.input_tokens,
             tokens_out: parsed.usage.output_tokens,
@@ -295,6 +413,7 @@ impl LlmClient for ClaudeClient {
                                     },
                                 })
                             }
+                            _ => {}
                         }
                     }
                     blocks
@@ -306,6 +425,7 @@ impl LlmClient for ClaudeClient {
                 "type": "tool",
                 "name": req.schema_name,
             })),
+            stream: None,
         };
 
         let start = std::time::Instant::now();
@@ -389,10 +509,193 @@ impl LlmClient for ClaudeClient {
 
     async fn stream(
         &self,
-        _req: CompletionRequest,
-    ) -> Result<ports::BoxStream<'static, Result<String, LlmError>>, LlmError> {
-        Err(LlmError::Other(
-            "Streaming non implémenté pour Claude".into(),
-        ))
+        req: CompletionRequest,
+    ) -> Result<ports::BoxStream<'static, Result<ports::StreamChunk, LlmError>>, LlmError> {
+        let messages: Vec<AnthropicMessage> = req
+            .messages
+            .iter()
+            .map(|m| AnthropicMessage {
+                role: match m.role {
+                    Role::User => "user".into(),
+                    Role::Assistant => "assistant".into(),
+                    Role::Tool => "user".into(),
+                },
+                content: m
+                    .content
+                    .iter()
+                    .map(|c| match c {
+                        ports::MessageContent::Text(text) => {
+                            AnthropicContentBlock::Text { text: text.clone() }
+                        }
+                        ports::MessageContent::Image { data, content_type } => {
+                            AnthropicContentBlock::Image {
+                                source: AnthropicImageSource {
+                                    source_type: "base64".into(),
+                                    media_type: content_type.clone(),
+                                    data: base64::engine::general_purpose::STANDARD.encode(data),
+                                },
+                            }
+                        }
+                        ports::MessageContent::ToolUse { id, name, input } => {
+                            AnthropicContentBlock::ToolUse {
+                                id: id.clone(),
+                                name: name.clone(),
+                                input: input.clone(),
+                            }
+                        }
+                        ports::MessageContent::ToolResult {
+                            tool_use_id,
+                            content,
+                        } => AnthropicContentBlock::ToolResult {
+                            tool_use_id: tool_use_id.clone(),
+                            content: content.clone(),
+                        },
+                    })
+                    .collect(),
+            })
+            .collect();
+
+        let body = AnthropicRequest {
+            model: req.model.unwrap_or_else(|| self.model.clone()),
+            max_tokens: req.max_tokens.unwrap_or(4096),
+            system: req.system,
+            messages,
+            temperature: req.temperature,
+            tools: if req.tools.is_empty() {
+                None
+            } else {
+                Some(
+                    req.tools
+                        .into_iter()
+                        .map(|t| AnthropicTool {
+                            name: t.name,
+                            description: t.description,
+                            input_schema: t.input_schema,
+                        })
+                        .collect(),
+                )
+            },
+            tool_choice: match req.tool_choice {
+                ports::ToolChoice::Auto => Some(serde_json::json!({ "type": "auto" })),
+                ports::ToolChoice::None => None,
+                ports::ToolChoice::Required => Some(serde_json::json!({ "type": "any" })),
+                ports::ToolChoice::Tool { name } => {
+                    Some(serde_json::json!({ "type": "tool", "name": name }))
+                }
+            },
+            stream: Some(true),
+        };
+
+        let resp = self
+            .http
+            .post(ANTHROPIC_API_URL)
+            .headers(self.headers()?)
+            .json(&body)
+            .send()
+            .await
+            .map_err(|e| LlmError::Http(e.to_string()))?;
+
+        if resp.status() != 200 {
+            let status = resp.status().as_u16();
+            let body = resp.text().await.unwrap_or_default();
+            return Err(LlmError::ProviderStatus { status, body });
+        }
+
+        use futures::{StreamExt, TryStreamExt};
+        let bytes_stream = resp.bytes_stream();
+        let mut buffer = String::new();
+
+        struct ToolState {
+            id: String,
+            name: String,
+            args: String,
+        }
+        let mut current_tool: Option<ToolState> = None;
+
+        let chunk_stream = bytes_stream
+            .map(move |res| {
+                let bytes = res.map_err(|e| LlmError::Http(e.to_string()))?;
+                let chunk = String::from_utf8_lossy(&bytes);
+                buffer.push_str(&chunk);
+
+                let mut chunks = Vec::new();
+                while let Some(pos) = buffer.find("\n\n") {
+                    let full_block = buffer.drain(..pos + 2).collect::<String>();
+                    for line in full_block.lines() {
+                        if let Some(data) = line.strip_prefix("data: ") {
+                            if let Ok(event) = serde_json::from_str::<AnthropicStreamEvent>(data) {
+                                match event {
+                                    AnthropicStreamEvent::ContentBlockStart {
+                                        content_block: ContentBlock::ToolUse { id, name, .. },
+                                        ..
+                                    } => {
+                                        current_tool = Some(ToolState {
+                                            id: id.clone(),
+                                            name: name.clone(),
+                                            args: String::new(),
+                                        });
+                                        chunks.push(Ok(ports::StreamChunk::ToolCallStart {
+                                            id,
+                                            name,
+                                        }));
+                                    }
+                                    AnthropicStreamEvent::ContentBlockDelta { delta, .. } => {
+                                        match delta {
+                                            ContentBlockDelta::TextDelta { text } => {
+                                                chunks.push(Ok(ports::StreamChunk::TextDelta {
+                                                    text,
+                                                }));
+                                            }
+                                            ContentBlockDelta::InputJsonDelta { partial_json } => {
+                                                if let Some(ref mut tool) = current_tool {
+                                                    tool.args.push_str(&partial_json);
+                                                    chunks.push(Ok(
+                                                        ports::StreamChunk::ToolCallArgsDelta {
+                                                            id: tool.id.clone(),
+                                                            delta: partial_json,
+                                                        },
+                                                    ));
+                                                }
+                                            }
+                                        }
+                                    }
+                                    AnthropicStreamEvent::ContentBlockStop { .. } => {
+                                        if let Some(tool) = current_tool.take() {
+                                            let arguments = serde_json::from_str(&tool.args)
+                                                .unwrap_or(serde_json::Value::Null);
+                                            chunks.push(Ok(ports::StreamChunk::ToolCallEnd {
+                                                id: tool.id,
+                                                name: tool.name,
+                                                arguments,
+                                            }));
+                                        }
+                                    }
+                                    AnthropicStreamEvent::MessageDelta { delta, .. } => {
+                                        if let Some(reason) = delta.stop_reason {
+                                            let stop_reason = match reason.as_str() {
+                                                "end_turn" => ports::StopReason::EndTurn,
+                                                "tool_use" => ports::StopReason::ToolUse,
+                                                "max_tokens" => ports::StopReason::MaxTokens,
+                                                "stop_sequence" => ports::StopReason::StopSequence,
+                                                _ => ports::StopReason::Other(reason),
+                                            };
+                                            chunks
+                                                .push(Ok(ports::StreamChunk::Done { stop_reason }));
+                                        }
+                                    }
+                                    AnthropicStreamEvent::Error { error } => {
+                                        chunks.push(Err(LlmError::Other(error.message)));
+                                    }
+                                    _ => {}
+                                }
+                            }
+                        }
+                    }
+                }
+                Ok(futures::stream::iter(chunks))
+            })
+            .try_flatten();
+
+        Ok(Box::pin(chunk_stream))
     }
 }

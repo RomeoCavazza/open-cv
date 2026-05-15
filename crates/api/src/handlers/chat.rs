@@ -88,3 +88,86 @@ pub async fn chat_stream_handler(
 
     Ok(Sse::new(sse_stream))
 }
+
+#[derive(serde::Deserialize)]
+pub struct UndoRequest {
+    pub instance_id: String,
+}
+
+pub async fn undo_handler(
+    State(state): State<AppState>,
+    Json(req): Json<UndoRequest>,
+) -> Result<Json<domain::Instance>, ApiError> {
+    let usecase = application::chat::ChatWithApplicationUseCase::new(
+        state.offre_repo.clone(),
+        state.instance_repo.clone(),
+        state.profil_repo.clone(),
+        state.annexe_repo.clone(),
+        state.chunk_repo.clone(),
+        state.message_repo.clone(),
+        state.embedder.clone(),
+        state.llm_registry.as_ref().clone(),
+    )
+    .with_snapshot_repo(state.snapshot_repo.clone());
+
+    let instance = usecase
+        .undo(&req.instance_id)
+        .await
+        .map_err(|e| ApiError::Internal(e.to_string()))?;
+
+    Ok(Json(instance))
+}
+
+pub async fn list_snapshots_handler(
+    State(state): State<AppState>,
+    axum::extract::Path(instance_id): axum::extract::Path<String>,
+) -> Result<Json<Vec<domain::InstanceSnapshot>>, ApiError> {
+    let usecase = application::chat::ChatWithApplicationUseCase::new(
+        state.offre_repo.clone(),
+        state.instance_repo.clone(),
+        state.profil_repo.clone(),
+        state.annexe_repo.clone(),
+        state.chunk_repo.clone(),
+        state.message_repo.clone(),
+        state.embedder.clone(),
+        state.llm_registry.as_ref().clone(),
+    )
+    .with_snapshot_repo(state.snapshot_repo.clone());
+
+    let snapshots = usecase
+        .list_snapshots(&instance_id)
+        .await
+        .map_err(|e| ApiError::Internal(e.to_string()))?;
+
+    Ok(Json(snapshots))
+}
+
+#[derive(serde::Deserialize)]
+pub struct RestoreRequest {
+    pub version: i32,
+}
+
+pub async fn restore_snapshot_handler(
+    State(state): State<AppState>,
+    axum::extract::Path(instance_id): axum::extract::Path<String>,
+    Json(req): Json<RestoreRequest>,
+) -> Result<Json<domain::Instance>, ApiError> {
+    let usecase = application::chat::ChatWithApplicationUseCase::new(
+        state.offre_repo.clone(),
+        state.instance_repo.clone(),
+        state.profil_repo.clone(),
+        state.annexe_repo.clone(),
+        state.chunk_repo.clone(),
+        state.message_repo.clone(),
+        state.embedder.clone(),
+        state.llm_registry.as_ref().clone(),
+    )
+    .with_snapshot_repo(state.snapshot_repo.clone());
+
+    let instance = usecase
+        .restore_snapshot(&instance_id, req.version)
+        .await
+        .map_err(|e| ApiError::Internal(e.to_string()))?;
+
+    Ok(Json(instance))
+}

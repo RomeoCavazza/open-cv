@@ -13,38 +13,51 @@ use crate::resume::{Contact, Identite};
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]
 pub struct CoverLetter {
+    #[serde(default)]
     pub expediteur: Expediteur,
+    #[serde(default)]
     pub destinataire: Destinataire,
+    #[serde(default)]
     pub objet: Objet,
     /// Paragraphes dans l'ordre de rendu, avec leur rôle typé.
+    #[serde(default)]
     pub paragraphes: Vec<Paragraphe>,
+    #[serde(default)]
     pub signature: Signature,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]
 pub struct Expediteur {
+    #[serde(default)]
     pub identite: Identite,
+    #[serde(default)]
     pub contact: Contact,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]
 pub struct Destinataire {
+    #[serde(default)]
     pub entreprise: String,
     /// Format libre : "25 avril 2026". L'extraction LLM la formate en français.
+    #[serde(default)]
     pub date: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]
 pub struct Objet {
     /// "ALTERNANCE", "STAGE", "CDI"... — la catégorie en MAJ pour le rendu.
+    #[serde(default)]
     pub categorie: String,
     /// "ALTERNANCE — INGÉNIEUR IA"
+    #[serde(default)]
     pub libelle: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]
 pub struct Paragraphe {
+    #[serde(default)]
     pub role: ParagrapheRole,
+    #[serde(default)]
     pub contenu: String,
 }
 
@@ -69,7 +82,9 @@ pub enum ParagrapheRole {
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]
 pub struct Signature {
     /// "Cordialement,"
+    #[serde(default)]
     pub formule_politesse: String,
+    #[serde(default)]
     pub nom: String,
 }
 

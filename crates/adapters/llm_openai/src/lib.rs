@@ -158,6 +158,7 @@ impl LlmClient for OpenAiClient {
                 role: match m.role {
                     Role::User => "user".into(),
                     Role::Assistant => "assistant".into(),
+                    Role::Tool => "tool".into(),
                 },
                 content: OpenAiContent::Blocks(
                     m.content
@@ -177,6 +178,9 @@ impl LlmClient for OpenAiClient {
                                     },
                                 }
                             }
+                            _ => OpenAiContentBlock::Text {
+                                text: "[Unsupported]".into(),
+                            },
                         })
                         .collect(),
                 ),
@@ -230,6 +234,7 @@ impl LlmClient for OpenAiClient {
 
         Ok(CompletionResponse {
             text,
+            tool_calls: Vec::new(),
             model: parsed.model,
             tokens_in: parsed.usage.prompt_tokens,
             tokens_out: parsed.usage.completion_tokens,
@@ -272,6 +277,7 @@ impl LlmClient for OpenAiClient {
                                 },
                             })
                         }
+                        _ => {}
                     }
                 }
                 blocks
@@ -365,9 +371,9 @@ impl LlmClient for OpenAiClient {
     async fn stream(
         &self,
         _req: CompletionRequest,
-    ) -> Result<ports::BoxStream<'static, Result<String, LlmError>>, LlmError> {
+    ) -> Result<ports::BoxStream<'static, Result<ports::StreamChunk, LlmError>>, LlmError> {
         Err(LlmError::Other(
-            "Streaming non implémenté pour OpenAI".into(),
+            "Streaming non implémenté pour OpenAI dans cette version".into(),
         ))
     }
 }
