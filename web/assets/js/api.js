@@ -135,3 +135,25 @@ export async function updateAnnexe(_id, _payload) {
     // Endpoint non expose pour l'instant; on garde la fonction pour l'API UI.
     return Promise.resolve();
 }
+
+export async function fetchInstanceSnapshots(instanceId) {
+    const res = await fetch(`/api/instances/${encodeURIComponent(instanceId)}/snapshots?t=${Date.now()}`, {
+        cache: 'no-store'
+    });
+    if (!res.ok) throw new Error(`Impossible de charger les versions (${res.status})`);
+    return await res.json();
+}
+
+export async function restoreInstanceSnapshot(instanceId, version) {
+    const res = await fetch(`/api/instances/${encodeURIComponent(instanceId)}/restore`, {
+        method: 'POST',
+        cache: 'no-store',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ version })
+    });
+    if (!res.ok) {
+        const body = await res.text();
+        throw new Error(body || `Impossible de restaurer la version ${version}`);
+    }
+    return await res.json();
+}

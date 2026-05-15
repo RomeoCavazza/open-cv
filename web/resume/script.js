@@ -64,8 +64,9 @@ async function loadCV() {
             const errorBanner = document.getElementById('error-banner');
             if (errorBanner) errorBanner.style.display = (status === 'failed') ? 'block' : 'none';
 
+            const fallbackContact = await fetchActiveProfileContact();
             showContent();
-            renderTemplateResume(instance.resume_json);
+            renderTemplateResume(instance.resume_json, fallbackContact);
             applyPreviewScale();
         } else if (genTarget.resume) {
             if (status === 'failed') {
@@ -80,6 +81,25 @@ async function loadCV() {
         }
     } catch (e) {
         console.error("Unable to load CV:", e);
+    }
+}
+
+async function fetchActiveProfileContact() {
+    try {
+        const res = await fetch(`/api/profile/active?t=${Date.now()}`);
+        if (!res.ok) return null;
+        const profil = await res.json();
+        const p = profil?.content?.profile || {};
+        return {
+            localisation: p.location || '',
+            telephone: p.phone || '',
+            email: p.email || '',
+            site_web: p.website || '',
+            linkedin: p.linkedin || '',
+            github: p.github || ''
+        };
+    } catch (_) {
+        return null;
     }
 }
 
@@ -136,11 +156,21 @@ function renderEmptyResumeState(jobId, isInstanceGenerating = false) {
     if (window.lucide) lucide.createIcons();
 }
 
-function renderTemplateResume(data) {
+function renderTemplateResume(data, fallbackContact = null) {
     if (!data || !data.identite) {
         console.error("Données de CV invalides ou incomplètes", data);
         return;
     }
+
+    const cvContact = data.contact || {};
+    const mergedContact = {
+        localisation: cvContact.localisation || fallbackContact?.localisation || '',
+        telephone: cvContact.telephone || fallbackContact?.telephone || '',
+        email: cvContact.email || fallbackContact?.email || '',
+        site_web: cvContact.site_web || fallbackContact?.site_web || '',
+        linkedin: cvContact.linkedin || fallbackContact?.linkedin || '',
+        github: cvContact.github || fallbackContact?.github || ''
+    };
 
     // Profile Basic
     document.getElementById('name').textContent = data.identite.nom_complet || "";
@@ -154,14 +184,17 @@ function renderTemplateResume(data) {
 
     // Sidebar Contact
     const setT = (id, val) => { const e = document.getElementById(id); if(e) e.textContent = val || ""; };
-    setT('location', data.contact.localisation);
-    setT('email', data.contact.email);
-    setT('phone', data.contact.telephone);
+    setT('location', mergedContact.localisation);
+    setT('email', mergedContact.email);
+    setT('phone', mergedContact.telephone);
+    setT('website', mergedContact.site_web || 'Site web');
+    setT('linkedin', mergedContact.linkedin || 'LinkedIn');
+    setT('github', mergedContact.github || 'GitHub');
 
     // Links
-    safeSetHref('website-link', data.contact.site_web ? "https://" + data.contact.site_web : "#");
-    safeSetHref('linkedin-link', data.contact.linkedin ? "https://www.linkedin.com/in/" + data.contact.linkedin : "#");
-    safeSetHref('github-link', data.contact.github ? "https://github.com/" + data.contact.github : "#");
+    safeSetHref('website-link', canonicalWebsiteUrl(mergedContact.site_web));
+    safeSetHref('linkedin-link', canonicalLinkedinUrl(mergedContact.linkedin));
+    safeSetHref('github-link', canonicalGithubUrl(mergedContact.github));
 
     // Header Meta
     setT('duration', data.accroche.duree);
@@ -265,7 +298,81 @@ function createEducationBlock(edu) {
 
 function safeSetHref(id, url) {
     const el = document.getElementById(id);
-    if (el) el.href = url;
+    if (!el) return;
+    const finalUrl = url || '#';
+    if (finalUrl === '#') {
+        el.removeAttribute('href');
+        el.removeAttribute('target');
+        el.removeAttribute('rel');
+    } else {
+        el.href = finalUrl;
+        el.setAttribute('target', '_blank');
+        el.setAttribute('rel', 'noopener noreferrer');
+    }
+}
+
+function parseHttpUrl(value) {
+    if (!value) return null;
+    const trimmed = String(value).trim();
+    if (!trimmed) return null;
+
+    try {
+        return new URL(trimmed);
+    } catch (_) {
+        try {
+            return new URL(`https://${trimmed}`);
+        } catch (_) {
+            return null;
+        }
+    }
+}
+
+function canonicalWebsiteUrl(value) {
+    const url = parseHttpUrl(value);
+    if (!url) return '#';
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') return '#';
+    return url.toString();
+}
+
+function canonicalLinkedinUrl(value) {
+    const raw = String(value || '').trim();
+    if (!raw) return '#';
+
+    const parsed = parseHttpUrl(raw);
+    if (parsed && parsed.hostname.toLowerCase().includes('linkedin.')) {
+        const path = parsed.pathname.replace(/\/+$/, '');
+        return path ? `https://www.linkedin.com${path}` : 'https://www.linkedin.com/';
+    }
+
+    const handle = raw
+        .replace(/^https?:\/\//i, '')
+        .replace(/^www\./i, '')
+        .replace(/^linkedin\.com\//i, '')
+        .replace(/^in\//i, '')
+        .replace(/^\/+/, '')
+        .replace(/\/+$/, '');
+    if (!handle) return '#';
+    return `https://www.linkedin.com/in/${handle}`;
+}
+
+function canonicalGithubUrl(value) {
+    const raw = String(value || '').trim();
+    if (!raw) return '#';
+
+    const parsed = parseHttpUrl(raw);
+    if (parsed && parsed.hostname.toLowerCase().includes('github.com')) {
+        const path = parsed.pathname.replace(/\/+$/, '');
+        return path ? `https://github.com${path}` : 'https://github.com/';
+    }
+
+    const handle = raw
+        .replace(/^https?:\/\//i, '')
+        .replace(/^www\./i, '')
+        .replace(/^github\.com\//i, '')
+        .replace(/^\/+/, '')
+        .replace(/\/+$/, '');
+    if (!handle) return '#';
+    return `https://github.com/${handle}`;
 }
 
 function applyPreviewScale() {
