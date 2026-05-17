@@ -1,4 +1,7 @@
-use super::helpers::{build_generation_input, build_query_text, truncate};
+use super::helpers::{
+    build_generation_input, build_query_text, harmonize_resume_contact_from_profile,
+    sanitize_resume_experiences, sanitize_resume_structure, truncate,
+};
 use super::{
     CandidaturePlan, GenerateApplicationUseCase, GenerateError, Livrables, RerankResponse,
 };
@@ -299,12 +302,22 @@ pub async fn maybe_generate_resume(
         }
     };
 
-    let resume: Resume = response.map_err(|e| {
+    let mut resume: Resume = response.map_err(|e| {
         error!("Resume generation failed: {}", e);
         this.events
             .failed(instance_id, GenerationStep::Resume, e.to_string());
         AppError::Other(e.to_string())
     })?;
+
+    let removed = sanitize_resume_experiences(offre, profil, &mut resume);
+    if removed > 0 {
+        warn!(
+            "Resume sanitizer removed {} generated experience(s) that matched the target offer",
+            removed
+        );
+    }
+    sanitize_resume_structure(&mut resume);
+    harmonize_resume_contact_from_profile(profil, &mut resume);
 
     this.events.done(instance_id, GenerationStep::Resume, None);
     Ok(Some(resume))

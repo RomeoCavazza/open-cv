@@ -7,29 +7,51 @@ use serde::{Deserialize, Serialize};
 use std::sync::{Arc, OnceLock};
 use tracing::{info, warn};
 
+/// Serde helper: deserializes `null` as `""` instead of failing.
+mod null_as_empty {
+    use serde::{self, Deserialize, Deserializer};
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<String, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let opt = Option::<String>::deserialize(deserializer)?;
+        Ok(opt.unwrap_or_default())
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct MultiOffreExtraction {
     /// Liste des offres identifiées dans le texte.
     /// Règle : Toujours renvoyer une liste, même s'il n'y a qu'une seule offre.
+    #[serde(default)]
     pub offres: Vec<OffreExtraction>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct OffreExtraction {
     /// Nom du métier (ex: 'Développeur Java'). Retirer 'CV de' ou 'stp'.
+    #[serde(default, deserialize_with = "null_as_empty::deserialize")]
     pub intitule: String,
     /// Nom de l'entreprise ou administration (ex: 'Direction de la sécurité sociale', 'Google').
     /// Pour le public, extraire l'entité la plus précise (Ministère, Direction ou Service).
+    #[serde(default, deserialize_with = "null_as_empty::deserialize")]
     pub entreprise: String,
     pub localisation: Option<String>,
     pub contrat: Option<String>,
+    #[serde(default, deserialize_with = "null_as_empty::deserialize")]
     pub resume_court: String,
+    #[serde(default)]
     pub stack: Vec<String>,
+    #[serde(default)]
     pub missions: Vec<String>,
+    #[serde(default)]
     pub exigences: Vec<String>,
+    #[serde(default)]
     pub soft_skills: Vec<String>,
     pub niveau_etudes: Option<String>,
     pub type_contrat: Option<String>,
+    #[serde(default)]
     pub mots_cles: Vec<String>,
 }
 

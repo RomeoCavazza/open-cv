@@ -6,6 +6,19 @@ use ports::{ChunkRepo, Embedder, InstanceRepo, LlmClient, OffreRepo, ProfilRepo}
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
+
+/// Serde helper: deserializes `null` as `""` instead of failing.
+mod null_as_empty {
+    use serde::{self, Deserialize, Deserializer};
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<String, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let opt = Option::<String>::deserialize(deserializer)?;
+        Ok(opt.unwrap_or_default())
+    }
+}
 use tracing::info;
 
 use crate::events::{EventBus, GenerationStep};
@@ -85,15 +98,21 @@ pub enum GenerateError {
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct RerankResponse {
+    #[serde(default)]
     pub indices_retenus: Vec<usize>,
+    #[serde(default, deserialize_with = "null_as_empty::deserialize")]
     pub raisonnement: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct CandidaturePlan {
+    #[serde(default, deserialize_with = "null_as_empty::deserialize")]
     pub angle: String,
+    #[serde(default)]
     pub forces_a_souligner: Vec<String>,
+    #[serde(default)]
     pub mots_cles_critiques: Vec<String>,
+    #[serde(default)]
     pub faiblesses_a_adresser: Vec<String>,
 }
 

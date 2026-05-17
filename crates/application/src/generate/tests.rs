@@ -1,4 +1,7 @@
-use super::helpers::{build_generation_input, build_slug, truncate, validate_outputs};
+use super::helpers::{
+    build_generation_input, build_slug, harmonize_resume_contact_from_profile,
+    sanitize_resume_experiences, truncate, validate_outputs,
+};
 use super::*;
 use chrono::Utc;
 use domain::{
@@ -42,8 +45,15 @@ fn build_test_profil() -> Profil {
         content: domain::ProfilContent {
             profile: domain::ProfileSection {
                 title: "Ingénieur logiciel".into(),
+                location: "Paris, 11e arr.".into(),
                 ..Default::default()
             },
+            experiences: vec![domain::ExperienceEntry {
+                role: "Développeur Rust".into(),
+                company: "ACME".into(),
+                period: "2023 - 2025".into(),
+                description: vec!["Conception backend".into()],
+            }],
             ..Default::default()
         },
         is_active: true,
@@ -210,7 +220,7 @@ fn build_generation_input_includes_core_sections() {
     assert!(output.contains("Localisation: non précisé"));
     assert!(output.contains("## PLAN STRATÉGIQUE"));
     assert!(output.contains("Angle: Mettre en avant l'impact produit"));
-    assert!(output.contains("### experience — Stage Rust"));
+    assert!(output.contains("### EXPÉRIENCE #1 (STAGE/EMPLOI)"));
     assert!(output.contains("Développement backend"));
 }
 
@@ -313,4 +323,72 @@ fn merge_generated_outputs_preserves_existing_resume_and_cover_letter() {
             .map(|cover_letter| cover_letter.paragraphes.len()),
         previous_cover_letter_paragraph_count
     );
+}
+
+#[test]
+fn sanitize_resume_experiences_removes_target_offer_projection() {
+    let offre = Offre {
+        entreprise: "Ministère du Travail, de la Santé et des Solidarités".into(),
+        intitule: "Appui au pilotage stratégique du système d'information de la Sécurité Sociale"
+            .into(),
+        ..build_test_offre()
+    };
+    let profil = build_test_profil();
+    let mut resume = build_test_resume(
+        vec![
+            domain::Experience {
+                poste: "Appui au pilotage stratégique du système d'information de la Sécurité Sociale".into(),
+                entreprise: "Ministère du Travail, de la Santé et des Solidarités".into(),
+                localisation: None,
+                periode: "15 mai 2026 - 14 mai 2028".into(),
+                bullets: vec!["Appui stratégique".into()],
+            },
+            domain::Experience {
+                poste: "Développeur Rust".into(),
+                entreprise: "ACME".into(),
+                localisation: None,
+                periode: "2023 - 2025".into(),
+                bullets: vec!["Conception backend".into()],
+            },
+        ],
+        vec![domain::Formation {
+            etablissement: "EPITECH".into(),
+            localisation: None,
+            periode: "2026 - 2028".into(),
+            diplome: "MSc".into(),
+            details: None,
+        }],
+    );
+
+    let removed = sanitize_resume_experiences(&offre, &profil, &mut resume);
+
+    assert_eq!(removed, 1);
+    assert_eq!(resume.experiences.len(), 1);
+    assert_eq!(resume.experiences[0].entreprise, "ACME");
+}
+
+#[test]
+fn harmonize_resume_contact_from_profile_overrides_location() {
+    let profil = build_test_profil();
+    let mut resume = build_test_resume(
+        vec![domain::Experience {
+            poste: "Dev".into(),
+            entreprise: "ACME".into(),
+            localisation: None,
+            periode: "2024".into(),
+            bullets: vec![],
+        }],
+        vec![domain::Formation {
+            etablissement: "EPITECH".into(),
+            localisation: None,
+            periode: "2026 - 2028".into(),
+            diplome: "MSc".into(),
+            details: None,
+        }],
+    );
+
+    resume.contact.localisation = "Paris, 7e arrondissement".into();
+    harmonize_resume_contact_from_profile(&profil, &mut resume);
+
+    assert_eq!(resume.contact.localisation, "Paris, 11e arr.");
 }
