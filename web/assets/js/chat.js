@@ -256,29 +256,27 @@ function ensureConversationPanel() {
     if (!header) return null;
 
     let panel = header.querySelector('.ai-conversation-panel');
-    if (panel) return panel;
+    if (!panel) {
+        panel = document.createElement('div');
+        panel.className = 'ai-conversation-panel';
+        header.prepend(panel);
+    }
 
-    panel = document.createElement('div');
-    panel.className = 'ai-conversation-panel';
-    panel.innerHTML = `
-        <div class="ai-conversation-head">
-            <button type="button" class="ai-chat-toolbar-btn ai-conversation-new" title="Nouveau chat">
-                <span>+</span>
-            </button>
-            <input type="text" class="ai-chat-search" placeholder="Rechercher (Ctrl+K)" aria-label="Recherche conversations" />
-        </div>
-        <div class="ai-conversation-list"></div>
-    `;
-    header.prepend(panel);
-
-    panel.querySelector('.ai-conversation-new')?.addEventListener('click', () => {
-        createNewConversation();
-    });
-
-    panel.querySelector('.ai-chat-search')?.addEventListener('input', (event) => {
-        conversationSearchQuery = String(event.target?.value || '');
-        renderConversationPanel();
-    });
+    // Always ensure the internal structure is present and listeners are fresh
+    if (!panel.querySelector('.ai-conversation-tabs-container')) {
+        panel.innerHTML = `
+            <div class="ai-conversation-tabs-container">
+                <div class="ai-conversation-list"></div>
+                <button type="button" class="ai-chat-toolbar-btn ai-conversation-new" title="Nouveau chat">
+                    <span>+</span>
+                </button>
+            </div>
+        `;
+        
+        panel.querySelector('.ai-conversation-new')?.addEventListener('click', () => {
+            createNewConversation();
+        });
+    }
 
     return panel;
 }
@@ -375,7 +373,7 @@ function renderConversationPanel() {
     }
 
     if (!Array.isArray(chatThreads) || chatThreads.length === 0) {
-        setConversationListHtml('<div class="ai-conversation-empty">Aucune conversation.</div>');
+        setConversationListHtml('');
         return;
     }
 
@@ -390,63 +388,28 @@ function renderConversationPanel() {
     }
 
     if (filtered.length === 0) {
-        setConversationListHtml('<div class="ai-conversation-empty">Aucun chat trouvé.</div>');
+        setConversationListHtml('');
         return;
     }
 
-    const visible = !currentConversationId ? filtered.slice(0, 5) : filtered;
-    const groups = { today: [], yesterday: [], week: [], older: [] };
-    visible.forEach((thread) => {
-        const group = getThreadDateGroup(thread.updated_at);
-        if (!groups[group]) groups[group] = [];
-        groups[group].push(thread);
-    });
-
-    const labels = {
-        today: "Aujourd'hui",
-        yesterday: 'Hier',
-        week: 'Cette semaine',
-        older: 'Plus ancien'
-    };
-
-    const html = ['today', 'yesterday', 'week', 'older']
-        .map((group) => {
-            const rows = groups[group];
-            if (!rows || rows.length === 0) return '';
-            const rowsHtml = rows
-                .map((thread) => {
-                    const active = thread.id === currentConversationId ? 'active' : '';
-                    const title = escapeHtml(getConversationTitle(thread));
-                    const context = escapeHtml(thread.context || 'Global');
-                    const when = escapeHtml(formatRelativeTime(thread.updated_at));
-                    return `
-                        <div class="ai-conversation-row ${active}" data-chat-id="${thread.id}">
-                            <div class="ai-conversation-main">
-                                <div class="ai-conversation-row-title">${title}</div>
-                                <div class="ai-conversation-row-sub">${context}</div>
-                            </div>
-                            <div class="ai-conversation-meta">
-                                <span class="ai-conversation-when">${when}</span>
-                                <button type="button" class="ai-conversation-delete" data-chat-delete="${thread.id}" title="Masquer">×</button>
-                            </div>
-                        </div>
-                    `;
-                })
-                .join('');
+    const html = filtered
+        .map((thread) => {
+            const active = thread.id === currentConversationId ? 'active' : '';
+            const title = escapeHtml(getConversationTitle(thread));
             return `
-                <section class="ai-conversation-group">
-                    <div class="ai-conversation-group-title">${labels[group]}</div>
-                    ${rowsHtml}
-                </section>
+                <div class="ai-conversation-tab ${active}" data-chat-id="${thread.id}">
+                    <span class="ai-conversation-tab-title">${title}</span>
+                    <button type="button" class="ai-conversation-tab-close" data-chat-delete="${thread.id}" title="Masquer">×</button>
+                </div>
             `;
         })
         .join('');
 
     setConversationListHtml(html);
 
-    document.querySelectorAll('.ai-conversation-row').forEach((row) => {
+    document.querySelectorAll('.ai-conversation-tab').forEach((row) => {
         row.addEventListener('click', (event) => {
-            if (event.target.closest('.ai-conversation-delete')) return;
+            if (event.target.closest('.ai-conversation-tab-close')) return;
             const id = row.dataset.chatId;
             if (!id) return;
             currentConversationId = id;
@@ -457,7 +420,7 @@ function renderConversationPanel() {
         });
     });
 
-    document.querySelectorAll('.ai-conversation-delete').forEach((btn) => {
+    document.querySelectorAll('.ai-conversation-tab-close').forEach((btn) => {
         btn.addEventListener('click', (event) => {
             event.stopPropagation();
             const id = btn.dataset.chatDelete;

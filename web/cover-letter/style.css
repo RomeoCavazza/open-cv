@@ -136,6 +136,15 @@ body.is-framed .a4-page {
     margin-bottom: 8px;
 }
 
+.author-contact a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.author-contact a:hover {
+    text-decoration: underline;
+}
+
 .author-links {
     display: inline-flex;
     align-items: center;

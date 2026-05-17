@@ -1,9 +1,22 @@
 import { clear, el, svg, text } from '../assets/js/dom.js';
+import {
+    safeSetHref,
+    canonicalEmailHref,
+    canonicalPhoneHref,
+    canonicalWebsiteUrl,
+    canonicalLinkedinUrl,
+    canonicalGithubUrl,
+    formatPhoneDisplay,
+    firstCanonicalUrl,
+} from '../assets/js/utils.js';
 
 // Local flag removed in favor of localStorage
 window.handleGenerate = () => {
     const urlParams = new URLSearchParams(window.location.search);
-    const jobId = urlParams.get('id') || urlParams.get('instance');
+    // Use the offer slug as the canonical key — it matches activeJobId in the dashboard
+    // and the generating_target_ localStorage key used by view.js and background_poll.
+    const offerSlug = urlParams.get('offer');
+    const jobId = offerSlug || urlParams.get('id') || urlParams.get('instance');
     if (!jobId) return;
     window.parent.triggerGeneration(jobId, null, { resume: true });
 };
@@ -163,42 +176,99 @@ function renderTemplateResume(data, fallbackContact = null) {
     }
 
     const cvContact = data.contact || {};
+    const websiteUrl = firstCanonicalUrl(
+        [cvContact.site_web, fallbackContact?.site_web],
+        canonicalWebsiteUrl
+    );
+    const linkedinUrl = firstCanonicalUrl(
+        [cvContact.linkedin, fallbackContact?.linkedin],
+        canonicalLinkedinUrl
+    );
+    const githubUrl = firstCanonicalUrl(
+        [cvContact.github, fallbackContact?.github],
+        canonicalGithubUrl
+    );
+
     const mergedContact = {
-        localisation: cvContact.localisation || fallbackContact?.localisation || '',
+        localisation: fallbackContact?.localisation || cvContact.localisation || '',
         telephone: cvContact.telephone || fallbackContact?.telephone || '',
         email: cvContact.email || fallbackContact?.email || '',
-        site_web: cvContact.site_web || fallbackContact?.site_web || '',
-        linkedin: cvContact.linkedin || fallbackContact?.linkedin || '',
-        github: cvContact.github || fallbackContact?.github || ''
+        site_web: websiteUrl === '#' ? '' : websiteUrl,
+        linkedin: linkedinUrl === '#' ? '' : linkedinUrl,
+        github: githubUrl === '#' ? '' : githubUrl
     };
 
     // Profile Basic
-    document.getElementById('name').textContent = data.identite.nom_complet || "";
-    document.getElementById('title').textContent = data.accroche.titre || "";
-    document.getElementById('pitch').textContent = data.accroche.paragraphe || "";
+    const upperName = String(data.identite.nom_complet || "").toLocaleUpperCase('fr-FR');
+    const upperTitle = String(data.accroche.titre || "").toLocaleUpperCase('fr-FR');
+    document.getElementById('name').textContent = upperName;
+    document.getElementById('title').textContent = upperTitle;
+    let pitch = data.accroche.paragraphe || "";
+    // Audit & fix redundancy: strip "Titre: ..." if present
+    pitch = pitch.replace(/^Titre\s*:\s*/i, "");
+    // If the pitch still starts with the title, strip it
+    if (upperTitle && pitch.toUpperCase().startsWith(upperTitle)) {
+        pitch = pitch.substring(upperTitle.length).replace(/^[\s,—:.-]+/, "");
+    }
+    document.getElementById('pitch').textContent = pitch;
     
     const profileImg = document.getElementById('profile-img');
     if (profileImg) {
-        profileImg.src = data.identite.photo_url || 'assets/profile-picture.jpg';
+        // Normalize legacy URL: old instances may have /api/profile/photo instead of /api/profile/active/photo
+        let photoUrl = data.identite.photo_url || 'assets/profile-picture.jpg';
+        if (photoUrl === '/api/profile/photo') photoUrl = '/api/profile/active/photo';
+        profileImg.src = photoUrl;
+        profileImg.onerror = () => { profileImg.src = 'assets/profile-picture.jpg'; };
     }
 
-    // Sidebar Contact
     const setT = (id, val) => { const e = document.getElementById(id); if(e) e.textContent = val || ""; };
+
+    // Sidebar Headers
+    setT('contact-title', 'CONTACT');
+    setT('skills-title', 'COMPÉTENCES');
+    setT('languages-title', 'LANGUES');
+
+    // Sidebar Contact
+    const formattedPhone = formatPhoneDisplay(mergedContact.telephone);
     setT('location', mergedContact.localisation);
     setT('email', mergedContact.email);
-    setT('phone', mergedContact.telephone);
-    setT('website', mergedContact.site_web || 'Site web');
-    setT('linkedin', mergedContact.linkedin || 'LinkedIn');
-    setT('github', mergedContact.github || 'GitHub');
+    setT('phone', formattedPhone);
+    setT('website', 'Site web');
+    setT('linkedin', 'LinkedIn');
+    setT('github', 'GitHub');
+
+    // Main Headers
+    setT('experiences-title', 'EXPÉRIENCES');
+    setT('education-title', 'FORMATIONS');
 
     // Links
-    safeSetHref('website-link', canonicalWebsiteUrl(mergedContact.site_web));
-    safeSetHref('linkedin-link', canonicalLinkedinUrl(mergedContact.linkedin));
-    safeSetHref('github-link', canonicalGithubUrl(mergedContact.github));
+    safeSetHref('email-link', canonicalEmailHref(mergedContact.email));
+    safeSetHref('phone-link', canonicalPhoneHref(mergedContact.telephone));
+    safeSetHref('website-link', websiteUrl);
+    safeSetHref('linkedin-link', linkedinUrl);
+    safeSetHref('github-link', githubUrl);
 
     // Header Meta
-    setT('duration', data.accroche.duree);
-    setT('rhythm', data.accroche.rythme);
+    const durationEl = document.getElementById('duration');
+    const rhythmEl = document.getElementById('rhythm');
+    const durationLabel = document.getElementById('duration-label');
+    const rhythmLabel = document.getElementById('rhythm-label');
+
+    if (data.accroche.duree) {
+        if (durationLabel) durationLabel.textContent = 'Durée :';
+        if (durationEl) durationEl.textContent = data.accroche.duree;
+        durationEl?.parentElement?.classList.remove('hidden');
+    } else {
+        durationEl?.parentElement?.classList.add('hidden');
+    }
+
+    if (data.accroche.rythme) {
+        if (rhythmLabel) rhythmLabel.textContent = 'Rythme :';
+        if (rhythmEl) rhythmEl.textContent = data.accroche.rythme;
+        rhythmEl?.parentElement?.classList.remove('hidden');
+    } else {
+        rhythmEl?.parentElement?.classList.add('hidden');
+    }
 
     // Skills
     const skillsContainer = document.getElementById('skills-container');
@@ -217,9 +287,10 @@ function renderTemplateResume(data, fallbackContact = null) {
     if (langContainer) {
         clear(langContainer);
         (data.langues || []).forEach((lang) => {
+            const level = formatLanguageLevel(lang.niveau);
             langContainer.appendChild(el('div', { className: 'contact-item' }, [
                 el('strong', { text: `${lang.langue} :` }),
-                text(` ${lang.niveau}`),
+                text(` ${level}`),
             ]));
         });
     }
@@ -260,7 +331,7 @@ function renderTemplateResume(data, fallbackContact = null) {
         (data.formations || []).forEach(edu => {
             eduContainer.appendChild(el('div', { className: 'edu-item' }, [
                 el('strong', { text: edu.etablissement }),
-                edu.periode ? text(` (${edu.periode})`) : null,
+                edu.periode ? el('span', { className: 'period', text: ` (${edu.periode})` }) : null,
                 el('span', { className: 'degree', text: edu.diplome }),
             ]));
         });
@@ -289,90 +360,20 @@ function createExperienceBlock({ title, sub, period, description, project = fals
 }
 
 function createEducationBlock(edu) {
+    const degrees = (edu.degree || '').split('\n').map(d => d.trim()).filter(Boolean);
+    
     return el('div', { className: 'edu-item' }, [
         el('strong', { text: edu.school }),
         edu.period ? text(` (${edu.period})`) : null,
-        el('span', { className: 'degree', text: edu.degree }),
+        ...degrees.map(d => el('span', { className: 'degree', text: d })),
     ]);
 }
 
-function safeSetHref(id, url) {
-    const el = document.getElementById(id);
-    if (!el) return;
-    const finalUrl = url || '#';
-    if (finalUrl === '#') {
-        el.removeAttribute('href');
-        el.removeAttribute('target');
-        el.removeAttribute('rel');
-    } else {
-        el.href = finalUrl;
-        el.setAttribute('target', '_blank');
-        el.setAttribute('rel', 'noopener noreferrer');
-    }
-}
-
-function parseHttpUrl(value) {
-    if (!value) return null;
-    const trimmed = String(value).trim();
-    if (!trimmed) return null;
-
-    try {
-        return new URL(trimmed);
-    } catch (_) {
-        try {
-            return new URL(`https://${trimmed}`);
-        } catch (_) {
-            return null;
-        }
-    }
-}
-
-function canonicalWebsiteUrl(value) {
-    const url = parseHttpUrl(value);
-    if (!url) return '#';
-    if (url.protocol !== 'http:' && url.protocol !== 'https:') return '#';
-    return url.toString();
-}
-
-function canonicalLinkedinUrl(value) {
+function formatLanguageLevel(value) {
     const raw = String(value || '').trim();
-    if (!raw) return '#';
-
-    const parsed = parseHttpUrl(raw);
-    if (parsed && parsed.hostname.toLowerCase().includes('linkedin.')) {
-        const path = parsed.pathname.replace(/\/+$/, '');
-        return path ? `https://www.linkedin.com${path}` : 'https://www.linkedin.com/';
-    }
-
-    const handle = raw
-        .replace(/^https?:\/\//i, '')
-        .replace(/^www\./i, '')
-        .replace(/^linkedin\.com\//i, '')
-        .replace(/^in\//i, '')
-        .replace(/^\/+/, '')
-        .replace(/\/+$/, '');
-    if (!handle) return '#';
-    return `https://www.linkedin.com/in/${handle}`;
-}
-
-function canonicalGithubUrl(value) {
-    const raw = String(value || '').trim();
-    if (!raw) return '#';
-
-    const parsed = parseHttpUrl(raw);
-    if (parsed && parsed.hostname.toLowerCase().includes('github.com')) {
-        const path = parsed.pathname.replace(/\/+$/, '');
-        return path ? `https://github.com${path}` : 'https://github.com/';
-    }
-
-    const handle = raw
-        .replace(/^https?:\/\//i, '')
-        .replace(/^www\./i, '')
-        .replace(/^github\.com\//i, '')
-        .replace(/^\/+/, '')
-        .replace(/\/+$/, '');
-    if (!handle) return '#';
-    return `https://github.com/${handle}`;
+    if (!raw) return '';
+    if (raw.toLowerCase() === 'natif') return 'Natif';
+    return raw;
 }
 
 function applyPreviewScale() {

@@ -7,7 +7,7 @@
     --font-main: 'Inter', -apple-system, sans-serif;
     --a4-width: 210mm;
     --a4-height: 297mm;
-    --cv-header-height: 290px;
+    --cv-header-height: 270px;
     --cv-bottom-safe: 24px;
 }
 
@@ -110,7 +110,7 @@ body.is-framed .a4-page {
 .header-overlay {
     background-color: var(--cv-blue);
     width: 80%;
-    height: 220px;
+    height: 195px;
     border-radius: 60px;
     display: flex;
     flex-direction: column;
@@ -182,11 +182,21 @@ body.is-framed .a4-page {
 .header-meta {
     font-size: 0.7rem;
     /* Légère augmentation pour lisibilité */
-    font-weight: 600;
+    font-weight: 400;
     display: flex;
     flex-direction: column;
     gap: 4px;
     color: white;
+}
+
+#duration-label,
+#rhythm-label {
+    font-weight: 700;
+}
+
+#duration,
+#rhythm {
+    font-weight: 300 !important;
 }
 
 /* --- CONTENT (Full Black) --- */
@@ -205,7 +215,7 @@ body.is-framed .a4-page {
     border-radius: 0 60px 60px 0;
     padding: 25px 15px 25px 20px; /* +3% padding vertical */
     align-self: start;
-    margin-top: 38px;
+    margin-top: 24px;
     height: fit-content;
     color: var(--cv-ink);
     -webkit-print-color-adjust: exact;
@@ -221,12 +231,11 @@ body.is-framed .a4-page {
 }
 
 .section h3 {
-    font-size: 1rem;
-    color: var(--cv-muted);
-    /* Gris plus clair */
-    margin-bottom: 12px;
-    font-weight: 800;
-    letter-spacing: 0.05em;
+    font-size: 0.9rem !important;
+    color: var(--cv-ink) !important;
+    margin-bottom: 10px !important;
+    font-weight: 400 !important;
+    letter-spacing: 0.05em !important;
 }
 
 .contact-info,
@@ -261,6 +270,15 @@ body.is-framed .a4-page {
     /* Indique l'interactivité au survol */
 }
 
+#website-link:hover span {
+    text-decoration: underline;
+}
+
+#email-link:hover span,
+#phone-link:hover span {
+    text-decoration: underline;
+}
+
 .icon-img {
     width: 0.9rem;
     height: 0.9rem;
@@ -286,7 +304,7 @@ body.is-framed .a4-page {
 
 /* --- MAIN BODY (Full Black) --- */
 .main-body {
-    padding-top: 38px;
+    padding-top: 24px;
     /* Ajusté pour s'aligner sur la bordure de 4px de la sidebar */
     padding-left: 30px;
     color: var(--cv-ink);
@@ -294,13 +312,11 @@ body.is-framed .a4-page {
 }
 
 .main-body h2 {
-    font-size: 1.1rem;
-    /* de 1.2rem */
-    font-weight: 800;
-    margin-top: 0;
-    /* Assure le départ en haut */
-    margin-bottom: 20px;
-    color: var(--cv-muted);
+    font-size: 1rem !important;
+    font-weight: 400 !important;
+    margin-top: 0 !important;
+    margin-bottom: 18px !important;
+    color: var(--cv-ink) !important;
 }
 
 .exp-item {
@@ -376,6 +392,7 @@ body.is-framed .a4-page {
 
 .edu-item .period {
     font-style: italic;
+    color: var(--cv-muted);
 }
 
 .edu-item .degree {
@@ -384,6 +401,7 @@ body.is-framed .a4-page {
     /* Harmonisation finale */
     font-style: normal;
     color: var(--cv-ink);
+    white-space: pre-line;
 }
 
 

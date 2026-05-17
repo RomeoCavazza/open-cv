@@ -1,9 +1,20 @@
 import { clear, el, svg, text } from '../assets/js/dom.js';
+import {
+  safeSetHref,
+  canonicalEmailHref,
+  canonicalPhoneHref,
+  canonicalWebsiteUrl,
+  canonicalLinkedinUrl,
+  canonicalGithubUrl,
+  formatPhoneDisplay
+} from '../assets/js/utils.js';
 
 // Local flag removed in favor of localStorage
 window.handleGenerate = () => {
   const urlParams = new URLSearchParams(window.location.search);
-  const jobId = urlParams.get('id') || urlParams.get('instance');
+  // Use the offer slug as the canonical key — matches activeJobId in the dashboard
+  const offerSlug = urlParams.get('offer');
+  const jobId = offerSlug || urlParams.get('id') || urlParams.get('instance');
   if (!jobId) return;
   window.parent.triggerGeneration(jobId, null, { cover_letter: true });
 };
@@ -139,12 +150,11 @@ function renderEmptyCoverLetterState(jobId, isInstanceGenerating = false) {
 function renderTemplateCoverLetter(data) {
   setText("author-name", data.expediteur.identite.nom_complet);
   setText("author-address", data.expediteur.contact.localisation);
-  setText("author-phone", data.expediteur.contact.telephone);
-  setText("author-email", data.expediteur.contact.email);
 
-  setLink("author-linkedin", data.expediteur.contact.linkedin);
-  setLink("author-github", data.expediteur.contact.github);
-  setLink("author-website", data.expediteur.contact.site_web);
+  // Robust link handling
+  safeSetHref("author-linkedin", canonicalLinkedinUrl(data.expediteur.contact.linkedin));
+  safeSetHref("author-github", canonicalGithubUrl(data.expediteur.contact.github));
+  safeSetHref("author-website", canonicalWebsiteUrl(data.expediteur.contact.site_web));
 
   setText("letter-company", data.destinataire.entreprise);
   setText("letter-date", data.destinataire.date);
@@ -153,9 +163,11 @@ function renderTemplateCoverLetter(data) {
   if (subjectEl) {
     subjectEl.replaceChildren();
     const strong = document.createElement('strong');
-    strong.textContent = data.objet.categorie + " — ";
+    const category = String(data.objet?.categorie || '').trim();
+    const subjectLabel = stripLeadingCategory(data.objet?.libelle, category);
+    strong.textContent = category ? `${category} — ` : '';
     subjectEl.appendChild(strong);
-    subjectEl.appendChild(document.createTextNode(data.objet.libelle));
+    subjectEl.appendChild(document.createTextNode(subjectLabel));
   }
 
   const salutationPara = data.paragraphes.find(p => p.role === 'salutation');
@@ -185,6 +197,16 @@ function renderTemplateCoverLetter(data) {
   if (window.lucide?.createIcons) {
     window.lucide.createIcons();
   }
+}
+
+function stripLeadingCategory(label, category) {
+  const raw = String(label || '').trim();
+  if (!raw) return '';
+  if (!category) return raw;
+
+  const escaped = category.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const pattern = new RegExp(`^${escaped}\\s*[—-:]\\s*`, 'i');
+  return raw.replace(pattern, '').trim();
 }
 
 function setPitchBlock(letter) {
@@ -243,14 +265,6 @@ function setText(id, value) {
   if (el && value) {
     el.textContent = value;
   }
-}
-
-function setLink(id, value) {
-  const el = document.getElementById(id);
-  if (!el || !value) return;
-
-  const href = /^https?:\/\//i.test(value) ? value : `https://${value}`;
-  el.href = href;
 }
 
 function applyPreviewScale() {

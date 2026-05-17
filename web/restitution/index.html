@@ -434,7 +434,8 @@
         }
 
         function handleGenerate() {
-            const jobId = instanceSlug || offerSlug;
+            // Use offer slug as canonical key — matches activeJobId in the dashboard
+            const jobId = offerSlug || instanceSlug;
             if (!jobId) return;
             window.parent.triggerGeneration(jobId, null, { restitution: true });
         }
