@@ -167,6 +167,16 @@ impl LlmClient for OllamaClient {
             });
         }
 
+        let mut options = serde_json::json!({
+            "num_ctx": 16384,
+        });
+        if let Some(t) = req.temperature {
+            options.as_object_mut().unwrap().insert("temperature".into(), serde_json::json!(t));
+        }
+        if let Some(max) = req.max_tokens {
+            options.as_object_mut().unwrap().insert("num_predict".into(), serde_json::json!(max));
+        }
+
         let body = OllamaChatRequest {
             model: req.model.unwrap_or_else(|| self.model.clone()),
             messages,
@@ -176,10 +186,7 @@ impl LlmClient for OllamaClient {
             } else {
                 None
             },
-            options: req
-                .temperature
-                .map(|t| serde_json::json!({ "temperature": t, "num_ctx": 16384 }))
-                .or_else(|| Some(serde_json::json!({ "num_ctx": 16384 }))),
+            options: Some(options),
             tools: if req.tools.is_empty() {
                 None
             } else {
@@ -259,6 +266,7 @@ impl LlmClient for OllamaClient {
     #[instrument(skip(self, req), fields(model = %self.model, schema = %req.schema_name))]
     async fn extract(&self, req: ExtractionRequest) -> Result<ports::ExtractionResponse, LlmError> {
         let mut messages = Vec::new();
+        let has_system = req.system.is_some();
         if let Some(sys) = req.system {
             messages.push(OllamaMessage {
                 role: "system".into(),
@@ -269,18 +277,14 @@ impl LlmClient for OllamaClient {
             });
         }
 
-        let instruction = format!(
-            "{}\n\nTu DOIS répondre UNIQUEMENT avec un objet JSON valide respectant ce schéma :\n{}",
-            req.instruction,
-            serde_json::to_string_pretty(&req.json_schema).expect("schema is always serializable")
-        );
-
-        let mut text_input = instruction;
+        let mut text_input = String::new();
         let mut images = Vec::new();
         for content in req.input {
             match content {
                 ports::MessageContent::Text(t) => {
-                    text_input.push_str("\n\n---\n\n");
+                    if !text_input.is_empty() {
+                        text_input.push_str("\n\n---\n\n");
+                    }
                     text_input.push_str(&t);
                 }
                 ports::MessageContent::Image { data, .. } => {
@@ -289,6 +293,20 @@ impl LlmClient for OllamaClient {
                 _ => {}
             }
         }
+
+        // On place les instructions et le schéma à la FIN pour une meilleure attention (recency effect)
+        let instruction_block = format!(
+            "\n\n### INSTRUCTIONS DE SORTIE\n{}\n\nTu DOIS répondre UNIQUEMENT avec un objet JSON valide respectant ce schéma :\n{}",
+            req.instruction,
+            serde_json::to_string_pretty(&req.json_schema).expect("schema is always serializable")
+        );
+        text_input.push_str(&instruction_block);
+
+        tracing::info!(
+            system = has_system,
+            input_len = text_input.len(),
+            "envoi requête extraction à Ollama"
+        );
 
         messages.push(OllamaMessage {
             role: "user".into(),
@@ -319,6 +337,13 @@ impl LlmClient for OllamaClient {
             }
         }
 
+        let mut options = serde_json::json!({
+            "num_ctx": 16384,
+        });
+        if let Some(max) = req.max_tokens {
+            options.as_object_mut().unwrap().insert("num_predict".into(), serde_json::json!(max));
+        }
+
         let body = OllamaChatRequest {
             model: req.model.unwrap_or_else(|| self.model.clone()),
             messages,
@@ -328,10 +353,7 @@ impl LlmClient for OllamaClient {
             } else {
                 Some(serde_json::json!("json"))
             },
-            options: Some(serde_json::json!({
-                "num_ctx": 16384,
-                "num_predict": req.max_tokens
-            })),
+            options: Some(options),
             tools: None,
             tool_choice: None,
         };
@@ -479,15 +501,22 @@ impl LlmClient for OllamaClient {
             });
         }
 
+        let mut options = serde_json::json!({
+            "num_ctx": 16384,
+        });
+        if let Some(t) = req.temperature {
+            options.as_object_mut().unwrap().insert("temperature".into(), serde_json::json!(t));
+        }
+        if let Some(max) = req.max_tokens {
+            options.as_object_mut().unwrap().insert("num_predict".into(), serde_json::json!(max));
+        }
+
         let body = OllamaChatRequest {
             model: req.model.unwrap_or_else(|| self.model.clone()),
             messages,
             stream: true,
             format: None,
-            options: req
-                .temperature
-                .map(|t| serde_json::json!({ "temperature": t, "num_ctx": 16384 }))
-                .or_else(|| Some(serde_json::json!({ "num_ctx": 16384 }))),
+            options: Some(options),
             tools: if req.tools.is_empty() {
                 None
             } else {

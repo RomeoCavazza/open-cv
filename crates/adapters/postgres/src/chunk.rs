@@ -77,6 +77,8 @@ impl ChunkRepo for ChunkRepoPg {
                 .collect::<Vec<_>>()
                 .join(",")
         );
+        let metadata = serde_json::to_value(&chunk.metadata).map_err(|e| RepoError::Other(e.to_string()))?;
+
         sqlx::query(
             r#"
             INSERT INTO chunks (id, profil_id, kind, titre, content, metadata, embedding, created_at)
@@ -93,7 +95,7 @@ impl ChunkRepo for ChunkRepoPg {
         .bind(chunk.kind.as_str())
         .bind(&chunk.titre)
         .bind(&chunk.content)
-        .bind(serde_json::to_value(&chunk.metadata).unwrap_or(serde_json::Value::Null))
+        .bind(metadata)
         .bind(embedding_str)
         .bind(chunk.created_at)
         .execute(&self.pool)

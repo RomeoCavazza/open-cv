@@ -11,6 +11,19 @@ use serde::{Deserialize, Serialize};
 
 use crate::resume::{Contact, Identite};
 
+/// Serde helper: deserializes `null` as `""` instead of failing.
+mod null_as_empty {
+    use serde::{self, Deserialize, Deserializer};
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<String, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let opt = Option::<String>::deserialize(deserializer)?;
+        Ok(opt.unwrap_or_default())
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]
 pub struct CoverLetter {
     #[serde(default)]
@@ -36,20 +49,20 @@ pub struct Expediteur {
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]
 pub struct Destinataire {
-    #[serde(default)]
+    #[serde(default, deserialize_with = "null_as_empty::deserialize")]
     pub entreprise: String,
     /// Format libre : "25 avril 2026". L'extraction LLM la formate en français.
-    #[serde(default)]
+    #[serde(default, deserialize_with = "null_as_empty::deserialize")]
     pub date: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]
 pub struct Objet {
     /// "ALTERNANCE", "STAGE", "CDI"... — la catégorie en MAJ pour le rendu.
-    #[serde(default)]
+    #[serde(default, deserialize_with = "null_as_empty::deserialize")]
     pub categorie: String,
     /// "ALTERNANCE — INGÉNIEUR IA"
-    #[serde(default)]
+    #[serde(default, deserialize_with = "null_as_empty::deserialize")]
     pub libelle: String,
 }
 
@@ -57,7 +70,7 @@ pub struct Objet {
 pub struct Paragraphe {
     #[serde(default)]
     pub role: ParagrapheRole,
-    #[serde(default)]
+    #[serde(default, deserialize_with = "null_as_empty::deserialize")]
     pub contenu: String,
 }
 
@@ -82,9 +95,9 @@ pub enum ParagrapheRole {
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]
 pub struct Signature {
     /// "Cordialement,"
-    #[serde(default)]
+    #[serde(default, deserialize_with = "null_as_empty::deserialize")]
     pub formule_politesse: String,
-    #[serde(default)]
+    #[serde(default, deserialize_with = "null_as_empty::deserialize")]
     pub nom: String,
 }
 
