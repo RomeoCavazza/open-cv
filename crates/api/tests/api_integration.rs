@@ -208,6 +208,7 @@ async fn test_post_ingest_200_with_restitution() {
     });
 
     let response = server.post("/api/ingest").json(&payload).await;
+    println!("RESPONSE: {}", response.text());
     response.assert_status_success();
 }
 

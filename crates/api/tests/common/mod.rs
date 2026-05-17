@@ -294,19 +294,21 @@ impl LlmClient for MockLlm {
     }
     async fn extract(&self, req: ExtractionRequest) -> Result<ports::ExtractionResponse, LlmError> {
         let value = match req.schema_name.as_str() {
-            "OffreExtraction" => serde_json::json!({
-                "intitule": "Mock Job",
-                "entreprise": "Mock Corp",
-                "localisation": "Paris",
-                "contrat": "CDI",
-                "resume_court": "A short summary",
-                "stack": ["Rust", "Axum"],
-                "missions": ["Developing", "Testing"],
-                "exigences": ["Degree in CS"],
-                "soft_skills": ["Teamwork"],
-                "niveau_etudes": "Master",
-                "type_contrat": "Full-time",
-                "mots_cles": ["software", "rust"]
+            "MultiOffreExtraction" => serde_json::json!({
+                "offres": [{
+                    "intitule": "Mock Job",
+                    "entreprise": "Mock Corp",
+                    "localisation": "Paris",
+                    "contrat": "CDI",
+                    "resume_court": "A short summary",
+                    "stack": ["Rust", "Axum"],
+                    "missions": ["Developing", "Testing"],
+                    "exigences": ["Degree in CS"],
+                    "soft_skills": ["Teamwork"],
+                    "niveau_etudes": "Master",
+                    "type_contrat": "Full-time",
+                    "mots_cles": ["software", "rust"]
+                }]
             }),
             "RerankResponse" => serde_json::json!({
                 "indices_retenus": [0],

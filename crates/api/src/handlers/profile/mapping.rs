@@ -57,8 +57,10 @@ pub(super) fn apply_profile_update(
     profil: &mut Profil,
     new_content: SerdeJsonValue,
 ) -> Result<(), ApiError> {
-    let content = serde_json::from_value::<domain::ProfilContent>(new_content)
+    let mut content = serde_json::from_value::<domain::ProfilContent>(new_content)
         .map_err(|e| ApiError::BadRequest(format!("Invalid profile payload: {e}")))?;
+
+    content.profile.location = normalize_location(&content.profile.location);
 
     profil.content = content;
     extract_profile_photo(profil);
@@ -151,6 +153,136 @@ fn extract_calendar_pdf(profil: &mut Profil) {
                 }
             }
         }
+    }
+}
+
+fn normalize_location(raw: &str) -> String {
+    let normalized_space = raw.split_whitespace().collect::<Vec<_>>().join(" ");
+    let trimmed = normalized_space.trim();
+    if trimmed.is_empty() {
+        return String::new();
+    }
+
+    if let Some(arr) = extract_paris_arrondissement(trimmed) {
+        return format!("Paris, {} arr.", format_arrondissement(arr));
+    }
+
+    trimmed.to_string()
+}
+
+fn extract_paris_arrondissement(input: &str) -> Option<u8> {
+    let lower = input.to_lowercase();
+    if !lower.contains("paris") {
+        return None;
+    }
+
+    // Ex: 75011 => 11e
+    if let Some(code) = lower
+        .split(|c: char| !c.is_ascii_digit())
+        .find(|chunk| chunk.len() == 5 && chunk.starts_with("75"))
+    {
+        if let Ok(postal) = code.parse::<u32>() {
+            let district = (postal % 100) as u8;
+            if (1..=20).contains(&district) {
+                return Some(district);
+            }
+        }
+    }
+
+    // Ex: Paris 11e / Paris, 11e arrondissement / Paris XIe
+    let token = lower
+        .replace([',', '.'], " ")
+        .split_whitespace()
+        .map(str::to_string)
+        .collect::<Vec<_>>();
+
+    for part in token {
+        if let Some(n) = parse_arrondissement_token(&part) {
+            return Some(n);
+        }
+    }
+
+    None
+}
+
+fn parse_arrondissement_token(token: &str) -> Option<u8> {
+    if token.is_empty() {
+        return None;
+    }
+
+    let digits = token
+        .chars()
+        .take_while(|c| c.is_ascii_digit())
+        .collect::<String>();
+    if !digits.is_empty() {
+        if let Ok(n) = digits.parse::<u8>() {
+            if (1..=20).contains(&n) {
+                return Some(n);
+            }
+        }
+    }
+
+    // XIe / xie / xiiie...
+    let roman = token
+        .chars()
+        .take_while(|c| matches!(c.to_ascii_lowercase(), 'i' | 'v' | 'x' | 'l' | 'c' | 'd' | 'm'))
+        .collect::<String>();
+    if roman.is_empty() {
+        return None;
+    }
+    let n = roman_to_int(&roman)?;
+    if (1..=20).contains(&n) {
+        return Some(n as u8);
+    }
+    None
+}
+
+fn roman_to_int(roman: &str) -> Option<u32> {
+    fn value(c: char) -> Option<u32> {
+        match c.to_ascii_uppercase() {
+            'I' => Some(1),
+            'V' => Some(5),
+            'X' => Some(10),
+            'L' => Some(50),
+            'C' => Some(100),
+            'D' => Some(500),
+            'M' => Some(1000),
+            _ => None,
+        }
+    }
+
+    let chars = roman.chars().collect::<Vec<_>>();
+    if chars.is_empty() {
+        return None;
+    }
+
+    let mut total = 0u32;
+    let mut i = 0usize;
+    while i < chars.len() {
+        let current = value(chars[i])?;
+        let next = if i + 1 < chars.len() {
+            value(chars[i + 1])?
+        } else {
+            0
+        };
+
+        if next > current {
+            total = total.saturating_add(next.saturating_sub(current));
+            i += 2;
+        } else {
+            total = total.saturating_add(current);
+            i += 1;
+        }
+    }
+
+    Some(total)
+}
+
+fn format_arrondissement(n: u8) -> String {
+    if n == 1 {
+        "1er".to_string()
+    } else {
+        format!("{n}e")
     }
 }
 
@@ -322,5 +454,42 @@ mod tests {
         assert_eq!(headers[1].0, CONTENT_DISPOSITION.as_str());
         assert!(headers[1].1.contains("cv.pdf"));
         assert_eq!(body, b"hello");
+    }
+
+    #[test]
+    fn apply_profile_update_normalizes_paris_location() {
+        let mut profil = build_profile(true);
+        let new_content = json!({
+            "profile": {
+                "firstname": "Updated",
+                "lastname": "",
+                "title": "",
+                "offer_type": "",
+                "pitch": "",
+                "location": "paris 11e arrondissement",
+                "phone": "",
+                "email": "",
+                "linkedin": "",
+                "website": "",
+                "github": "",
+                "image": ""
+            },
+            "apprenticeship": {
+                "duration": "",
+                "rhythm": ""
+            },
+            "experiences": [],
+            "projects": [],
+            "education": [],
+            "skills": [],
+            "languages": [],
+            "documents": {
+                "resume_template": {"foo": "bar"}
+            }
+        });
+
+        let _ = apply_profile_update(&mut profil, new_content);
+
+        assert_eq!(profil.content.profile.location, "Paris, 11e arr.");
     }
 }
