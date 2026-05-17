@@ -63,7 +63,7 @@
           shellHook = ''
             export OPENSSL_DIR="${pkgs.openssl.dev}"
             export PKG_CONFIG_PATH="${pkgs.openssl.dev}/lib/pkgconfig:${pkgs.openssl.dev}/share/pkgconfig"
-            export DATABASE_URL="''${DATABASE_URL:-postgres://alternance:alternance@localhost:5432/alternance}"
+            export DATABASE_URL="''${DATABASE_URL:-postgresql:///alternance?host=$PWD/.pg&user=alternance}"
             export PGDATA="''${PGDATA:-$PWD/.pg}"
             export PGHOST="''${PGHOST:-$PWD/.pg}"
             export PGPORT="''${PGPORT:-5432}"
